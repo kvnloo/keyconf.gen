@@ -3,12 +3,16 @@ import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
 
 const base = process.env.KEYCONF_BASE_URL ?? 'http://localhost:3000/';
+const headed = process.env.KEYCONF_HEADED === '1';
 const browser = await chromium.launch({
-  args: [
-    '--use-gl=angle',
-    '--use-angle=swiftshader',
-    '--enable-unsafe-swiftshader',
-  ],
+  headless: !headed,
+  args: headed
+    ? []
+    : [
+        '--use-gl=angle',
+        '--use-angle=swiftshader',
+        '--enable-unsafe-swiftshader',
+      ],
 });
 const evidence = [];
 const button = (surface, name) =>
@@ -20,6 +24,11 @@ try {
   });
   await context.addInitScript(() => {
     let count = 0;
+    const resume = Reflect.get(AudioContext.prototype, 'resume');
+    AudioContext.prototype.resume = async function (...args) {
+      await resume.apply(this, args);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    };
     const start = Reflect.get(AudioBufferSourceNode.prototype, 'start');
     AudioBufferSourceNode.prototype.start = function (...args) {
       count++;
@@ -39,7 +48,7 @@ try {
     )
       external.push(request.url());
   });
-  await page.goto(base);
+  await page.goto(new URL('#studio', base).href);
   await page
     .locator('.save-state')
     .filter({ hasText: 'Saved on this device' })
@@ -135,6 +144,9 @@ try {
     await page.getByRole('textbox', { name: 'Build name' }).inputValue(),
     buildName,
   );
+  await page.waitForFunction(
+    () => document.activeElement?.id === 'start-typing-test',
+  );
   assert.ok(
     await button(page, 'Start typing test').evaluate(
       (element) => element === document.activeElement,
@@ -155,7 +167,7 @@ try {
     reducedMotion: 'reduce',
   });
   const phone = await mobile.newPage();
-  await phone.goto(base);
+  await phone.goto(new URL('#studio', base).href);
   await button(phone, 'Start typing test').tap();
   const phoneFrame = phone.frameLocator('.typing-frame');
   await phoneFrame.locator('#words .word').first().waitFor();
@@ -194,7 +206,7 @@ try {
         })
       : route.continue(),
   );
-  await broken.goto(base);
+  await broken.goto(new URL('#studio', base).href);
   await button(broken, 'Start typing test').click();
   await button(broken, 'Retry typing test').waitFor({ timeout: 35000 });
   fail = false;

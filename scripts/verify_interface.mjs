@@ -74,7 +74,15 @@ async function audit(name) {
     violations: result.violations,
     incomplete: result.incomplete,
   });
-  if (result.violations.length) console.log('Audit findings:', name, result.violations.map((v) => ({id: v.id, targets: v.nodes.map((n) => n.target)})));
+  if (result.violations.length)
+    console.log(
+      'Audit findings:',
+      name,
+      result.violations.map((v) => ({
+        id: v.id,
+        targets: v.nodes.map((n) => n.target),
+      })),
+    );
 }
 
 async function keyboardUntil(predicate) {
@@ -103,18 +111,23 @@ async function keyboardUntil(predicate) {
 }
 
 try {
-  await page.goto(base);
+  await page.goto(new URL('#studio', base).href);
   await page
     .locator('.save-state')
     .filter({ hasText: 'Saved on this device' })
     .waitFor();
+  await tab('Design').click();
+  await page.locator('.brand').focus();
   await keyboardUntil((item) => item.name === 'Share build');
   await page.keyboard.press('Enter');
   await page.locator('dialog[open]').waitFor();
   for (let i = 0; i < 7; i++) {
     await page.keyboard.press('Tab');
     assert.ok(
-      await page.evaluate(() => !document.hasFocus() || !!document.activeElement.closest('dialog')),
+      await page.evaluate(
+        () =>
+          !document.hasFocus() || !!document.activeElement.closest('dialog'),
+      ),
       'Dialog focus escaped',
     );
   }
@@ -194,7 +207,13 @@ try {
   console.log(
     'PASS: actual 200% browser zoom reflows all primary panels and dialogs; export and close remain reachable.',
   );
-  assert.deepEqual(reports.filter((report) => report.violations.length).map((report) => report.name), [], 'Accessibility violations, see outputs/interface-audit.json');
+  assert.deepEqual(
+    reports
+      .filter((report) => report.violations.length)
+      .map((report) => report.name),
+    [],
+    'Accessibility violations, see outputs/interface-audit.json',
+  );
 } finally {
   await mkdir('outputs', { recursive: true });
   await writeFile(

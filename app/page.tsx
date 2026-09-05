@@ -18,7 +18,7 @@ import {
   Layers,
   RotateCcw,
   ArrowUpRight,
-  Keyboard,
+  ArrowRight,
   Plus,
   Check,
   Volume2,
@@ -39,6 +39,12 @@ import {
 import KeyboardScene, { type SceneOptions } from './keyboard-scene';
 import ImportDialog from './import-dialog';
 import TypingTest from './typing-test';
+import VolumeDial from './volume-dial';
+import { FeaturedGallery, FeaturedInspector } from './featured-gallery';
+import { featuredBuilds, customizeFeatured } from '../lib/featured-builds';
+import { encodeDeck } from '../lib/control-deck';
+import TechnologyGuide from './technology-guide';
+import './studio.css';
 import SoundReferences, { type SoundReference } from './sound-references';
 import type { SamplePreview } from '../lib/audio-preview';
 import SampleWaveform from './sample-waveform';
@@ -70,9 +76,20 @@ const serverHash = () => '';
 
 export default function Home() {
   const [notice, setNotice] = useState('');
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(''), 7000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
   const hash = useSyncExternalStore(subscribeLocation, currentHash, serverHash);
   const manager = useBuild(setNotice, {
-    shortcutsEnabled: !hash.startsWith('#deck'),
+    shortcutsEnabled: [
+      '#studio',
+      '#sound',
+      '#play',
+      '#build-settings',
+      '#fit-checks',
+    ].includes(hash),
   });
   const [deckSessions, setDeckSessions] = useState(
     new Map<DeckId, DeckBuild>(),
@@ -136,7 +153,12 @@ export default function Home() {
       />
     );
   return (
-    <KeyboardStudio manager={manager} notice={notice} setNotice={setNotice} />
+    <KeyboardStudio
+      hash={hash}
+      manager={manager}
+      notice={notice}
+      setNotice={setNotice}
+    />
   );
 }
 
@@ -205,14 +227,44 @@ const sources = [
 type Tab = 'design' | 'parts' | 'sound';
 type Modal = 'import' | 'research' | 'share' | null;
 function KeyboardStudio({
+  hash,
   manager,
   notice,
   setNotice,
 }: {
+  hash: string;
   manager: ReturnType<typeof useBuild>;
   notice: string;
   setNotice: (notice: string) => void;
 }) {
+  const screen =
+    hash === '' || hash === '#home'
+      ? 'home'
+      : hash === '#sound'
+        ? 'sound'
+        : hash === '#play'
+          ? 'play'
+          : hash === '#discover' || hash === '#research'
+            ? 'discover'
+            : 'build';
+  const landing = screen === 'home';
+  useEffect(() => {
+    if (
+      ![
+        '',
+        '#home',
+        '#studio',
+        '#sound',
+        '#play',
+        '#discover',
+        '#research',
+      ].includes(hash)
+    )
+      return;
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    document.querySelector('.config-scroll')?.scrollTo({ top: 0 });
+  }, [hash]);
+  const [featured, setFeatured] = useState(featuredBuilds[0]);
   const {
     build,
     ready,
@@ -239,23 +291,41 @@ function KeyboardStudio({
   const setLayout = (layout: typeof build.layout) => edit({ layout });
   const [exploded, setExploded] = useState(false);
   const [view, setView] = useState('perspective');
-  const [experience, setExperience] = useState<'builder' | 'focus' | 'typing'>(
-    'builder',
-  );
+  const [focusAt, setFocusAt] = useState<string | null>(null);
+  const returnToTypingLauncher = useRef(false);
+  useEffect(() => {
+    if (screen !== 'build' || !returnToTypingLauncher.current) return;
+    returnToTypingLauncher.current = false;
+    document.getElementById('start-typing-test')?.focus();
+  }, [screen]);
+  const experience =
+    focusAt === hash ? 'focus' : screen === 'play' ? 'typing' : 'builder';
+  function setExperience(next: 'builder' | 'focus' | 'typing') {
+    setFocusAt(next === 'focus' ? hash : null);
+    if (next === 'typing') window.location.hash = 'play';
+    else if (next === 'builder' && screen === 'play')
+      window.location.assign('#studio');
+  }
   const focusMode = experience === 'focus';
   useEffect(() => {
     if (!focusMode) return;
     const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setExperience('builder');
+      if (event.key === 'Escape') setFocusAt(null);
     };
     window.addEventListener('keydown', escape);
     return () => window.removeEventListener('keydown', escape);
   }, [focusMode]);
-  const [tab, setActiveTab] = useState<Tab>('design');
+  const [buildTab, setActiveTab] = useState<'design' | 'parts'>('parts');
+  const tab: Tab = screen === 'sound' ? 'sound' : buildTab;
   const [reference, setReference] = useState<SoundReference | null>(null);
   function setTab(value: Tab) {
     setReference(null);
-    setActiveTab(value);
+    document.querySelector('.config-scroll')?.scrollTo({ top: 0 });
+    if (value === 'sound') window.location.assign('#sound');
+    else {
+      setActiveTab(value);
+      window.location.assign('#studio');
+    }
   }
   const [modal, setModal] = useState<Modal>(null);
   const [enabled, setEnabled] = useState(false);
@@ -279,18 +349,49 @@ function KeyboardStudio({
   const audio = useRef<KeyboardAudio | null>(null);
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
   const audioAction = useRef({ revision: 0 });
-  const options = useMemo<SceneOptions>(
-    () => ({
-      ...palette,
-      caseColor,
-      device: { kind: 'keyboard', layout },
+  const visibleBuild =
+    landing && featured.kind === 'keyboard' ? featured.build : build;
+  const playbackEnabled = enabled && !landing && screen !== 'discover';
+  const options = useMemo<SceneOptions>(() => {
+    if (landing && featured.kind === 'control-deck') {
+      const { colors, device, lighting, dial } = featured.build;
+      return {
+        alpha: colors.keys,
+        mod: colors.commands,
+        accent: colors.keys,
+        space: colors.wide,
+        caseColor: colors.case,
+        finish: 'Aluminum',
+        profile: 'Sculpted',
+        device: { kind: 'control-deck', model: device, lighting, dial },
+        exploded,
+        view,
+        environment: 'desk',
+      };
+    }
+    return {
+      ...visibleBuild.palette,
+      caseColor: visibleBuild.caseColor,
+      device: { kind: 'keyboard', layout: visibleBuild.layout },
       exploded,
       view,
-      finish,
-      profile,
-    }),
-    [palette, caseColor, layout, exploded, view, finish, profile],
-  );
+      finish: visibleBuild.finish,
+      profile: visibleBuild.profile,
+      environment: landing ? 'desk' : 'studio',
+    };
+  }, [visibleBuild, landing, featured, exploded, view]);
+  function customizePreview() {
+    if (featured.kind === 'control-deck') {
+      window.location.hash = 'deck=' + encodeDeck(featured.build);
+      return;
+    }
+    edit(customizeFeatured(featured, build));
+    setActiveTab('parts');
+    setExploded(false);
+    setView('perspective');
+    window.location.assign('#studio');
+    setNotice(featured.name + ' opened. Undo returns to your previous build.');
+  }
   const parts = useMemo(() => [...catalog, ...imports], [imports]);
   const checks = useMemo(
     () => checkBuild(selection, parts, layout),
@@ -299,7 +400,7 @@ function KeyboardStudio({
   const blocked = checks.filter((c) => c.status === 'incompatible').length;
   const sound = useMemo<SoundSettings>(
     () => ({
-      enabled,
+      enabled: playbackEnabled,
       character,
       volume,
       damping,
@@ -308,7 +409,7 @@ function KeyboardStudio({
         ? { kind: 'recorded', id: pack.id }
         : { kind: 'synthesized' },
     }),
-    [enabled, character, volume, damping, finish, pack],
+    [playbackEnabled, character, volume, damping, finish, pack],
   );
   const soundRef = useRef(sound);
   useEffect(() => {
@@ -324,7 +425,10 @@ function KeyboardStudio({
         () => buildRef.current,
         (input) => {
           const palette = palettes.find((p) => p.name === input.palette);
-          if (palette) edit({ layout: input.layout, palette });
+          if (palette) {
+            edit({ layout: input.layout, palette });
+            window.location.assign('#studio');
+          }
         },
       ),
     [edit],
@@ -393,8 +497,8 @@ function KeyboardStudio({
     };
   }, [pack, loadAttempt]);
   useEffect(() => {
-    audio.current?.setLevel(enabled, volume);
-  }, [enabled, volume]);
+    audio.current?.setLevel(playbackEnabled, volume);
+  }, [playbackEnabled, volume]);
 
   function stopDemo() {
     audioAction.current.revision++;
@@ -406,6 +510,21 @@ function KeyboardStudio({
       new CustomEvent('keyconf-demo', { detail: { reset: true } }),
     );
   }
+  useEffect(() => {
+    const leave = () => {
+      audioAction.current.revision++;
+      timers.current.forEach(clearTimeout);
+      timers.current.clear();
+      audio.current?.stop();
+      setDemo(false);
+      setReference(null);
+      window.dispatchEvent(
+        new CustomEvent('keyconf-demo', { detail: { reset: true } }),
+      );
+    };
+    window.addEventListener('hashchange', leave);
+    return () => window.removeEventListener('hashchange', leave);
+  }, []);
   async function enableSound(action = audioAction.current.revision) {
     setReference(null);
     try {
@@ -546,41 +665,53 @@ function KeyboardStudio({
   }
   return (
     <main
-      className={experience === 'builder' ? undefined : experience + '-mode'}
+      className={
+        'studio-shell screen-' +
+        screen +
+        (experience === 'builder' ? '' : ' ' + experience + '-mode')
+      }
     >
       <a className="skip-link" href="#build-settings">
         Skip to build settings
       </a>
-      <header className="header">
-        <button
-          className="brand"
-          onClick={() => {
-            setTab('design');
-            window.scrollTo({ top: 0 });
-          }}
-        >
-          <Keyboard size={25} /> keyconf<span>studio</span>
-        </button>
-        <nav>
-          <button
-            className={tab === 'design' ? 'nav-active' : ''}
-            onClick={() => setTab('design')}
+      <header className="header studio-header">
+        <a className="brand" href="#home">
+          keyconf <span>beta</span>
+        </a>
+        <nav aria-label="Studio pages">
+          <a
+            href="#studio"
+            aria-current={screen === 'build' || landing ? 'page' : undefined}
           >
-            Builder
-          </button>
-          <button
-            className={tab === 'parts' ? 'nav-active' : ''}
-            onClick={() => setTab('parts')}
+            Build
+          </a>
+          <a
+            href="#sound"
+            aria-current={screen === 'sound' ? 'page' : undefined}
           >
-            Parts library
-          </button>
-          <button onClick={() => setModal('research')}>
-            Research <ArrowUpRight size={12} />
-          </button>
+            Sound
+          </a>
+          <a href="#play" aria-current={screen === 'play' ? 'page' : undefined}>
+            Play
+          </a>
+          <a
+            href="#discover"
+            aria-current={screen === 'discover' ? 'page' : undefined}
+          >
+            Discover
+          </a>
         </nav>
-        <button className="button secondary" onClick={() => setModal('import')}>
-          <Plus size={16} /> Import a website
-        </button>
+        <div className="header-utilities">
+          <a className="header-resume" href="#studio">
+            Resume build <ArrowUpRight size={13} />
+          </a>
+          <button
+            className="button secondary"
+            onClick={() => setModal('import')}
+          >
+            <Plus size={16} /> Import a website
+          </button>
+        </div>
       </header>
       <div className="build-bar">
         <label className="build-name">
@@ -657,33 +788,70 @@ function KeyboardStudio({
             onRelease={release}
             onExit={() => {
               stopDemo();
+              returnToTypingLauncher.current = true;
               setExperience('builder');
-              requestAnimationFrame(() =>
-                document.getElementById('start-typing-test')?.focus(),
-              );
             }}
           />
         )}
         <section className="stage">
           <div className="stage-heading">
             <div className="eyebrow">
-              YOUR WORKBENCH <span>{layout}%</span>
+              {landing
+                ? 'KEYBOARDS FOR GREATER IDEAS'
+                : screen === 'sound'
+                  ? 'THE SOUND LAB'
+                  : 'YOUR WORKBENCH'}{' '}
+              {!landing && <span>{layout}%</span>}
             </div>
-            <h1>Make it yours.</h1>
-            <p>Choose a color. Press a key. Find your feel.</p>
-            <button
-              id="start-typing-test"
-              className="button secondary compact typing-launch"
-              onClick={() => {
-                stopDemo();
-                setReference(null);
-                setExperience('typing');
-                void enableSound();
-                window.scrollTo({ top: 0 });
-              }}
-            >
-              <Play size={14} /> Start typing test
-            </button>
+            <h1>
+              {landing ? (
+                <>
+                  Make it
+                  <br />
+                  yours.
+                </>
+              ) : screen === 'sound' ? (
+                'Hear the difference.'
+              ) : (
+                'Make it yours.'
+              )}
+            </h1>
+            <p>
+              {landing ? (
+                <>
+                  Design. Experiment. Hear. Build.
+                  <br />A better keyboard starts here.
+                </>
+              ) : screen === 'sound' ? (
+                'Listen closely. Find your feel.'
+              ) : (
+                'Every part. Every detail. Your call.'
+              )}
+            </p>
+            {landing ? (
+              <div className="landing-actions">
+                <button className="button" onClick={customizePreview}>
+                  Start building <ArrowRight size={18} />
+                </button>
+                <a href="#studio">
+                  Resume {build.name} <ArrowUpRight size={13} />
+                </a>
+              </div>
+            ) : (
+              <button
+                id="start-typing-test"
+                className="button secondary compact typing-launch"
+                onClick={async () => {
+                  stopDemo();
+                  const action = audioAction.current.revision;
+                  await enableSound(action);
+                  if (action !== audioAction.current.revision) return;
+                  setExperience('typing');
+                }}
+              >
+                <Play size={14} /> Start typing test
+              </button>
+            )}
           </div>
           <div className="study-label">
             <span className="status-dot" /> 3D design study{' '}
@@ -694,20 +862,23 @@ function KeyboardStudio({
             onPress={press}
             onRelease={release}
           />
-          <button
-            className={'sound-toggle ' + (enabled ? 'on' : '')}
-            aria-label={enabled ? 'Mute keyboard' : 'Enable keyboard sound'}
-            disabled={!enabled && sampleState !== 'ready'}
-            onClick={() => {
-              if (enabled) {
-                stopDemo();
-                setEnabled(false);
-              } else void enableSound();
-            }}
-          >
-            {enabled ? <Volume2 size={17} /> : <VolumeX size={17} />}
-            <span>{enabled ? 'Sound on' : 'Sound off'}</span>
-          </button>
+          {!landing && (
+            <VolumeDial
+              value={volume}
+              enabled={enabled}
+              canEnable={sampleState === 'ready'}
+              onChange={(volume) =>
+                edit({ audio: { ...build.audio, volume } }, 'volume')
+              }
+              onCommit={commit}
+              onToggle={() => {
+                if (enabled) {
+                  stopDemo();
+                  setEnabled(false);
+                } else void enableSound();
+              }}
+            />
+          )}
           <div className="stage-bottom">
             <div className="view-controls">
               <button
@@ -735,7 +906,11 @@ function KeyboardStudio({
                 onClick={() => setExperience(focusMode ? 'builder' : 'focus')}
               >
                 {focusMode ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-                {focusMode ? 'Back to builder' : 'Focus'}
+                {focusMode
+                  ? landing
+                    ? 'Back to preview'
+                    : 'Back to builder'
+                  : 'Focus'}
               </button>
             </div>
             <span>
@@ -747,6 +922,64 @@ function KeyboardStudio({
               </span>
             </span>
           </div>
+          {screen === 'sound' && !focusMode && (
+            <section
+              className="sound-audition"
+              aria-label="Audition your typing sound"
+            >
+              <div className="audition-title">
+                <span>{pack?.name ?? 'Synthesized study'}</span>
+                <small>
+                  {pack ? 'Recorded reference' : 'Approximate sound'}
+                </small>
+              </div>
+              <SampleWaveform
+                preview={currentRecording?.preview ?? null}
+                synthesized={!pack}
+                playing={demo}
+              />
+              <div className="audition-keys">
+                <button
+                  disabled={sampleState !== 'ready'}
+                  onClick={() => void playSequence(['KeyA'])}
+                >
+                  <kbd>A</kbd> Letter key
+                </button>
+                <button
+                  disabled={sampleState !== 'ready'}
+                  onClick={() => void playSequence(['Space'])}
+                >
+                  <kbd>space</kbd> Spacebar
+                </button>
+              </div>
+              <button
+                className="button full"
+                disabled={sampleState !== 'ready'}
+                onClick={() => {
+                  if (demo) stopDemo();
+                  else
+                    void playSequence([
+                      'KeyM',
+                      'KeyA',
+                      'KeyK',
+                      'KeyE',
+                      'Space',
+                      'KeyI',
+                      'KeyT',
+                      'Space',
+                      'KeyY',
+                      'KeyO',
+                      'KeyU',
+                      'KeyR',
+                      'KeyS',
+                    ]);
+                }}
+              >
+                {demo ? <VolumeX size={15} /> : <Play size={15} />}
+                {demo ? 'Stop playback' : 'Try a typing sequence'}
+              </button>
+            </section>
+          )}
           <div className="stage-caption">
             <span>
               STUDY / {layout} <i>·</i> {palette.name.toUpperCase()}
@@ -760,6 +993,22 @@ function KeyboardStudio({
             </span>
           </div>
         </section>
+        {landing && (
+          <FeaturedGallery
+            selected={featured.id}
+            onSelect={(preset) => {
+              setFeatured(preset);
+              setExploded(false);
+              setView('perspective');
+            }}
+          />
+        )}
+        {landing && (
+          <FeaturedInspector
+            featured={featured}
+            onCustomize={customizePreview}
+          />
+        )}
         <aside
           className="config"
           id="build-settings"
@@ -1045,51 +1294,6 @@ function KeyboardStudio({
                     </button>
                   </p>
                 )}
-                <SampleWaveform
-                  preview={currentRecording?.preview ?? null}
-                  synthesized={!pack}
-                  playing={demo}
-                />
-                <div className="audition-keys">
-                  <button
-                    disabled={sampleState !== 'ready'}
-                    onClick={() => void playSequence(['KeyA'])}
-                  >
-                    <kbd>A</kbd> Letter key
-                  </button>
-                  <button
-                    disabled={sampleState !== 'ready'}
-                    onClick={() => void playSequence(['Space'])}
-                  >
-                    <kbd>space</kbd> Spacebar
-                  </button>
-                </div>
-                <button
-                  className="button full"
-                  disabled={sampleState !== 'ready'}
-                  onClick={() => {
-                    if (demo) stopDemo();
-                    else
-                      void playSequence([
-                        'KeyM',
-                        'KeyA',
-                        'KeyK',
-                        'KeyE',
-                        'Space',
-                        'KeyI',
-                        'KeyT',
-                        'Space',
-                        'KeyY',
-                        'KeyO',
-                        'KeyU',
-                        'KeyR',
-                        'KeyS',
-                      ]);
-                  }}
-                >
-                  {demo ? <VolumeX size={15} /> : <Play size={15} />}
-                  {demo ? 'Stop playback' : 'Try a typing sequence'}
-                </button>
                 <div className="last-key">
                   Last key <kbd>{lastKey || '—'}</kbd>
                 </div>
@@ -1142,7 +1346,7 @@ function KeyboardStudio({
                   id="volume"
                   type="range"
                   min="0"
-                  max="1"
+                  max="2"
                   step=".01"
                   value={volume}
                   onChange={(e) =>
@@ -1236,6 +1440,28 @@ function KeyboardStudio({
           </button>
         </div>
       )}
+      {screen === 'discover' && (
+        <section className="discover-page">
+          <div className="discover-heading">
+            <div>
+              <div className="eyebrow">KNOW WHAT GOES INTO IT</div>
+              <h1>Find your next favorite.</h1>
+              <p>Parts, possibilities, and the sources behind them.</p>
+            </div>
+            <button className="button" onClick={() => setModal('import')}>
+              <Plus size={16} /> Import a website
+            </button>
+          </div>
+          <TechnologyGuide />
+          <ResearchLibrary />
+        </section>
+      )}
+      {landing && (
+        <footer className="landing-footer">
+          <span>DREAM / EXPERIMENT / BUILD / REPEAT</span>
+          <span>Same keys. A different story.</span>
+        </footer>
+      )}
       <dialog
         ref={dialog}
         className={'modal ' + (modal === 'research' ? 'research-modal' : '')}
@@ -1301,73 +1527,76 @@ function KeyboardStudio({
           </div>
         )}
         {modal === 'import' && <ImportDialog onAdd={addParts} />}{' '}
-        {modal === 'research' && (
-          <div>
-            <div className="eyebrow">THE REFERENCE LIBRARY</div>
-            <h2>Good builds start with evidence.</h2>
-            <p className="muted">
-              Research reviewed September 5, 2026. This is the foundation for
-              the catalog, asset pipeline, and sound library, not an exhaustive
-              keyboard database.
-            </p>
-            <ResearchProducts />
-            <div className="deck-entry-links">
-              <a className="button secondary" href="#deck/grok-bot">
-                Explore Grok Bot <ArrowUpRight size={15} />
-              </a>
-              <a className="button secondary" href="#deck/codex-micro">
-                Explore Codex Micro <ArrowUpRight size={15} />
-              </a>
-            </div>
-            <div className="dataset-summary">
-              <div>
-                <strong>7,267</strong>
-                <span>firmware definitions</span>
-              </div>
-              <div>
-                <strong>9,047</strong>
-                <span>QMK layouts</span>
-              </div>
-              <div>
-                <strong>28</strong>
-                <span>research sources</span>
-              </div>
-            </div>
-            <p className="muted">
-              Definitions include overlapping versions and are not unique retail
-              keyboards. The research catalog separates retail products,
-              firmware, measurements, and compatibility evidence.
-            </p>
-            <a
-              className="button secondary"
-              href="https://github.com/kvnloo/keyconf.gen/blob/main/docs/research.md"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Read the full database &amp; switch research{' '}
-              <ArrowUpRight size={15} />
-            </a>
-            <div className="research-grid">
-              {sources.map((s) => (
-                <a key={s.url} href={s.url} target="_blank" rel="noreferrer">
-                  <small>{s.by}</small>
-                  <h3>
-                    {s.title}
-                    <ArrowUpRight size={16} />
-                  </h3>
-                  <p>{s.text}</p>
-                </a>
-              ))}
-            </div>
-            <p className="muted">
-              All 3D assets in this study were generated for Keyconf using
-              Blender. Material colors, silhouettes, and synthesized sound are
-              illustrative. Imported listings do not grant permission to
-              reproduce their images, CAD, or audio.
-            </p>
-          </div>
-        )}
+        {modal === 'research' && <ResearchLibrary />}
       </dialog>
     </main>
+  );
+}
+
+function ResearchLibrary() {
+  return (
+    <div>
+      <div className="eyebrow">THE REFERENCE LIBRARY</div>
+      <h2>Good builds start with evidence.</h2>
+      <p className="muted">
+        Research reviewed September 5, 2026. This is the foundation for the
+        catalog, asset pipeline, and sound library, not an exhaustive keyboard
+        database.
+      </p>
+      <ResearchProducts />
+      <div className="deck-entry-links">
+        <a className="button secondary" href="#deck/grok-bot">
+          Explore Grok Bot <ArrowUpRight size={15} />
+        </a>
+        <a className="button secondary" href="#deck/codex-micro">
+          Explore Codex Micro <ArrowUpRight size={15} />
+        </a>
+      </div>
+      <div className="dataset-summary">
+        <div>
+          <strong>7,267</strong>
+          <span>firmware definitions</span>
+        </div>
+        <div>
+          <strong>9,047</strong>
+          <span>QMK layouts</span>
+        </div>
+        <div>
+          <strong>28</strong>
+          <span>research sources</span>
+        </div>
+      </div>
+      <p className="muted">
+        Definitions include overlapping versions and are not unique retail
+        keyboards. The research catalog separates retail products, firmware,
+        measurements, and compatibility evidence.
+      </p>
+      <a
+        className="button secondary"
+        href="https://github.com/kvnloo/keyconf.gen/blob/main/docs/research.md"
+        target="_blank"
+        rel="noreferrer"
+      >
+        Read the full database &amp; switch research <ArrowUpRight size={15} />
+      </a>
+      <div className="research-grid">
+        {sources.map((s) => (
+          <a key={s.url} href={s.url} target="_blank" rel="noreferrer">
+            <small>{s.by}</small>
+            <h3>
+              {s.title}
+              <ArrowUpRight size={16} />
+            </h3>
+            <p>{s.text}</p>
+          </a>
+        ))}
+      </div>
+      <p className="muted">
+        Keyboard models were created for Keyconf in Blender; the desk objects
+        are original Three.js geometry. Material colors, silhouettes, and
+        synthesized sound are illustrative. Imported listings do not grant
+        permission to reproduce their images, CAD, or audio.
+      </p>
+    </div>
   );
 }

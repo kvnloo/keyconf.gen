@@ -39,6 +39,7 @@ jobs:
           fi
           npm run verify:browser
           npm run verify:interface
+          npm run verify:featured
           npm run verify:decks
           npm run verify:typing
       - run: npm run build:pages

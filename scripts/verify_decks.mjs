@@ -41,6 +41,7 @@ async function openContext(options = {}) {
 }
 
 async function keyboardState() {
+  await page.getByRole('tab', { name: 'Design', exact: true }).click();
   return {
     name: await page
       .getByRole('textbox', { name: 'Build name', exact: true })
@@ -64,6 +65,7 @@ try {
   await page
     .getByRole('textbox', { name: 'Build name', exact: true })
     .fill('Deck shortcut isolation');
+  await page.getByRole('tab', { name: 'Design', exact: true }).click();
   await page.getByRole('button', { name: '75%', exact: true }).click();
   await page
     .getByRole('combobox', { name: 'Case material', exact: true })

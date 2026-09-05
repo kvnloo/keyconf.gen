@@ -38,7 +38,7 @@ try {
   page.on('pageerror', (error) =>
     console.error('Browser error:', error.message),
   );
-  await page.goto(base);
+  await page.goto(new URL('#studio', base).href);
   await saved(page);
   await page
     .getByRole('textbox', { name: 'Build name', exact: true })
@@ -95,7 +95,7 @@ try {
     await friendPage.getByRole('textbox', { name: 'Build name' }).inputValue(),
     'Portable violet build',
   );
-  assert.equal(new URL(friendPage.url()).hash, '');
+  assert.equal(new URL(friendPage.url()).hash, '#studio');
   await tab(friendPage, 'Components').click();
   assert.ok(await button(friendPage, 'Case Violet case fixture').isVisible());
   assert.ok(await button(friendPage, 'Enable keyboard sound').isVisible());
@@ -122,10 +122,12 @@ try {
   const audioContext = await browser.newContext();
   await audioContext.addInitScript(() => {
     const active = new Set();
+    let starts = 0;
     const start = Reflect.get(AudioBufferSourceNode.prototype, 'start');
     const stop = Reflect.get(AudioBufferSourceNode.prototype, 'stop');
     AudioBufferSourceNode.prototype.start = function (...args) {
       active.add(this);
+      starts++;
       this.addEventListener('ended', () => active.delete(this));
       return start.apply(this, args);
     };
@@ -134,6 +136,7 @@ try {
       return stop.apply(this, args);
     };
     window.keyconfAudioProbe = () => active.size;
+    window.keyconfAudioStarts = () => starts;
   });
   const audioPage = await audioContext.newPage();
   let failRecordings = true;
@@ -141,7 +144,7 @@ try {
     if (failRecordings) await route.fulfill({ status: 503, body: '' });
     else await route.continue();
   });
-  await audioPage.goto(base);
+  await audioPage.goto(new URL('#studio', base).href);
   await tab(audioPage, 'Sound').click();
   await audioPage
     .getByRole('alert')
@@ -152,16 +155,38 @@ try {
   await button(audioPage, 'Try again').click();
   await button(audioPage, 'Try a typing sequence').click();
   await button(audioPage, 'Stop playback').waitFor();
-  assert.ok((await audioPage.evaluate(() => window.keyconfAudioProbe())) > 0);
+  assert.ok((await audioPage.evaluate(() => window.keyconfAudioStarts())) > 0);
   await audioPage.getByRole('combobox', { name: 'Typing sound' }).click();
   await audioPage
     .getByRole('option', { name: 'Cherry MX Blue', exact: true })
     .click();
   await button(audioPage, 'Try a typing sequence').waitFor();
   assert.equal(await audioPage.evaluate(() => window.keyconfAudioProbe()), 0);
-  await button(audioPage, 'space Spacebar').click();
-  await button(audioPage, 'Mute keyboard').click();
-  assert.equal(await audioPage.evaluate(() => window.keyconfAudioProbe()), 0);
+  const muteCheck = await audioPage.evaluate(async () => {
+    const button = (name) =>
+      Array.from(document.querySelectorAll('button')).find(
+        (item) =>
+          (item.getAttribute('aria-label') ?? item.textContent.trim()) === name,
+      );
+    button('Try a typing sequence').click();
+    // Observe and cancel within the page so transport delays cannot outlast the short recordings.
+    await new Promise((resolve, reject) => {
+      const deadline = performance.now() + 3000;
+      const check = () => {
+        if (window.keyconfAudioProbe() > 0) resolve();
+        else if (performance.now() > deadline)
+          reject(new Error('No scheduled recording started'));
+        else requestAnimationFrame(check);
+      };
+      check();
+    });
+    const before = window.keyconfAudioProbe();
+    button('Mute keyboard').click();
+    return { before, after: window.keyconfAudioProbe() };
+  });
+  assert.ok(muteCheck.before > 0);
+  assert.equal(muteCheck.after, 0);
+  await button(audioPage, 'Enable keyboard sound').waitFor();
   console.log(
     'PASS: failed sample loads retry; preset changes and mute cancel actual scheduled audio nodes.',
   );
@@ -178,7 +203,7 @@ try {
     }
   });
   const deniedPage = await denied.newPage();
-  await deniedPage.goto(base);
+  await deniedPage.goto(new URL('#studio', base).href);
   await deniedPage
     .locator('.save-state')
     .filter({ hasText: 'Session only. Download to keep.' })

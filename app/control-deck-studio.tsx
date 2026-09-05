@@ -170,6 +170,7 @@ export default function ControlDeckStudio({
       profile: 'Sculpted',
       exploded,
       view,
+      environment: 'studio',
     }),
     [build, exploded, view],
   );

@@ -1,0 +1,100 @@
+.volume-dial {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 14px 7px 7px;
+  color: #ebeee8;
+  background: #202a26ed;
+  border: 1px solid #ffffff32;
+  border-radius: 50px;
+  box-shadow: 0 8px 24px #00000014;
+}
+.volume-mute {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+.volume-knob {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  padding: 5px;
+  background: conic-gradient(from 225deg, #789987 0deg 270deg, #313d36 270deg);
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+}
+.volume-knob-face {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #6c766e, #2e3630);
+  border: 1px solid #a8b5aa55;
+  box-shadow:
+    0 3px 5px #0007,
+    inset 0 1px 2px #ffffff38;
+}
+.volume-knob-face > span {
+  position: absolute;
+  width: 2px;
+  height: 10px;
+  background: #eff4e8;
+  border-radius: 2px;
+  left: calc(50% - 1px);
+  top: 4px;
+}
+.volume-reading {
+  min-width: 43px;
+}
+.volume-reading > span {
+  display: block;
+  color: #b8c5bc;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.volume-reading output {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+}
+.volume-reading small {
+  font-size: 11px;
+  margin-left: 2px;
+}
+.stage > .volume-dial {
+  position: absolute;
+  z-index: 3;
+  bottom: 125px;
+  right: 28px;
+}
+.volume-dial :focus-visible {
+  outline-color: #d1ebcf;
+}
+@media (max-width: 700px) {
+  .stage > .volume-dial {
+    bottom: 118px;
+    right: 14px;
+  }
+}
+
+.volume-knob-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  margin: 0;
+  z-index: 1;
+  cursor: ns-resize;
+  touch-action: none;
+}
+.volume-knob:has(:focus-visible) {
+  outline: 2px solid #d1ebcf;
+  outline-offset: 4px;
+}

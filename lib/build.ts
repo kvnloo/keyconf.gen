@@ -50,6 +50,7 @@ export const caseColors = [
 export const layouts = ['60', '65', '75'] as const;
 export const finishes = ['Aluminum', 'Polycarbonate', 'Brass'] as const;
 export const profiles = ['Sculpted', 'Tall sculpted', 'Low uniform'] as const;
+export const maxVolume = 2;
 export type Build = {
   version: 1;
   name: string;
@@ -185,7 +186,10 @@ export function parseBuild(value: unknown): Build {
       audio.character === 'tactile' ||
       audio.character === 'clicky'
     ) ||
-    !unit(audio.volume) ||
+    typeof audio.volume !== 'number' ||
+    !Number.isFinite(audio.volume) ||
+    audio.volume < 0 ||
+    audio.volume > maxVolume ||
     !unit(audio.damping)
   )
     throw new Error(

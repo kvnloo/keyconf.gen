@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import type { Build, Palette } from './build';
 import { legendInk } from './appearance';
+import { createDeskScene } from './desk-scene';
 
 export type SceneOptions = Pick<Build, 'caseColor' | 'finish' | 'profile'> &
   Omit<Palette, 'name'> & {
@@ -17,6 +18,7 @@ export type SceneOptions = Pick<Build, 'caseColor' | 'finish' | 'profile'> &
         };
     exploded: boolean;
     view: string;
+    environment: 'desk' | 'studio';
   };
 export type SceneStatus =
   | { kind: 'loading' | 'ready' }
@@ -113,6 +115,7 @@ export function createKeyboardScene(
   light.shadow.camera.right = 14;
   light.shadow.camera.top = 12;
   light.shadow.camera.bottom = -12;
+  light.shadow.radius = 4;
   light.shadow.normalBias = 0.03;
   light.shadow.bias = -0.0001;
   scene.add(light);
@@ -127,6 +130,8 @@ export function createKeyboardScene(
   ground.position.y = -0.22;
   ground.receiveShadow = true;
   scene.add(ground);
+  const desk = createDeskScene();
+  scene.add(desk.group);
   const grain = new Uint8Array(128 * 128 * 4);
   for (let i = 0; i < grain.length; i += 4) {
     const value = 150 + Math.floor(Math.random() * 80);
@@ -148,11 +153,15 @@ export function createKeyboardScene(
     }
   }
   function appearance(snap = false) {
+    desk.group.visible = options.environment === 'desk';
+    ground.visible = !desk.group.visible;
     const lighting =
       options.device.kind === 'control-deck'
         ? options.device.lighting
         : 'Studio';
-    light.color.set(lighting === 'Daylight' ? '#fff1db' : '#ffffff');
+    light.color.set(
+      lighting === 'Daylight' || desk.group.visible ? '#fff1db' : '#ffffff',
+    );
     light.intensity = lighting === 'After hours' ? 0.7 : 2.2;
     fill.intensity = lighting === 'After hours' ? 0.3 : 0.8;
     scene.environmentIntensity = lighting === 'After hours' ? 0.35 : 0.7;
@@ -190,7 +199,13 @@ export function createKeyboardScene(
   }
   function setView() {
     const deck = options.device.kind === 'control-deck';
-    const distance = deck ? (options.exploded ? 0.55 : 0.46) : 1;
+    const distance = deck
+      ? options.exploded
+        ? 0.55
+        : 0.46
+      : options.environment === 'desk'
+        ? 1.12
+        : 1;
     focusHeight = deck && options.exploded ? 1.35 : 0.4;
     controls.minDistance = options.device.kind === 'control-deck' ? 7 : 12;
     cameraTarget =
@@ -200,7 +215,7 @@ export function createKeyboardScene(
           ? new THREE.Vector3(0, 6, 25)
           : deck
             ? new THREE.Vector3(-7, 27, 14)
-            : new THREE.Vector3(7, 15, 19);
+            : new THREE.Vector3(-7, 18, 21);
     cameraTarget.multiplyScalar(distance);
     wake();
   }
@@ -550,7 +565,10 @@ export function createKeyboardScene(
       callbacks = handlers;
       const modelChanged =
         modelIdFor(next.device) !== modelIdFor(options.device);
-      const viewChanged = next.view !== options.view || modelChanged;
+      const viewChanged =
+        next.view !== options.view ||
+        modelChanged ||
+        next.environment !== options.environment;
       const assemblyChanged = next.exploded !== options.exploded;
       const changed = JSON.stringify(options) !== JSON.stringify(next);
       options = next;
@@ -585,6 +603,7 @@ export function createKeyboardScene(
       renderer.domElement.removeEventListener('pointerdown', pointerdown);
       renderer.domElement.removeEventListener('webglcontextlost', contextLost);
       loaded.forEach(disposeModel);
+      desk.dispose();
       ground.geometry.dispose();
       ground.material.dispose();
       noise.dispose();

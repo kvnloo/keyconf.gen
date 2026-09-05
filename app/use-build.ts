@@ -87,7 +87,7 @@ export function useBuild(
         window.history.replaceState(
           null,
           '',
-          location.pathname + location.search,
+          location.pathname + location.search + '#studio',
         );
         notify('Shared build opened. Changes save on this device.');
       } catch (error) {
