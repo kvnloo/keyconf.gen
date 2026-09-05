@@ -30,3 +30,11 @@ All six interface domains were reviewed at source level: accessibility, layout, 
 - [ ] Refine the listening experience.
 - [ ] Complete interaction and presentation verification.
 - [ ] Publish the finished release and record remaining data limits.
+
+## Reliable workbench implementation
+
+Implemented a versioned build document shared by configuration, history, browser autosave, file restore and portable links. The link contains only selected imported parts and does not require server accounts or a matching local library. Opening a shared link consumes its URL fragment so subsequent refreshes restore the edited local build. Audio enablement remains a user action.
+
+Added undo/redo with grouped color, volume and text gestures and a 60-edit history bound. Invalid imported parts cannot claim manufacturer compatibility or inject unsafe source URLs. Invalid saved builds retain a recovery copy before autosave can replace them; storage failure is visible. Added a share dialog, filename-independent JSON restore, accessible settings tabs, a stable notification region, mobile research access and cancellable import requests.
+
+Verified: 16 tests pass, including full portable round trips with selected imports, Unicode, malformed settings, unsafe links, forged compatibility evidence, wrong-category components, undo branching and grouped edits. Type checking and the Sites production build pass. Local route responds HTTP 200. Browser interaction, rendering quality, and storage-denial behavior remain unverified. The optional lint command also exposes existing React-compiler/accessibility issues and several new warnings; these are tracked for the completion pass and are not represented as passing.

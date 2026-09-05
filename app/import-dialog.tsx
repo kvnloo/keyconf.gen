@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Check, Globe, LoaderCircle } from 'lucide-react';
 import { categories, type Part, type Category } from '../lib/catalog';
 import {
@@ -46,7 +46,13 @@ export default function ImportDialog({
   const [category, setCategory] = useState<Category>('case');
   const [raw, setRaw] = useState('');
   const [added, setAdded] = useState(false);
+  const request = useRef<AbortController | null>(null);
+  const urlInput = useRef<HTMLInputElement>(null);
+  useEffect(() => () => request.current?.abort(), []);
   async function preview() {
+    request.current?.abort();
+    const controller = new AbortController();
+    request.current = controller;
     setBusy(true);
     setError('');
     setResult(null);
@@ -77,6 +83,7 @@ export default function ImportDialog({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: source }),
+            signal: controller.signal,
           },
         );
         const data: unknown = await response.json();
@@ -95,9 +102,11 @@ export default function ImportDialog({
         setSelected(new Set(data.products.map((_, i) => i)));
       }
     } catch (e) {
+      if (controller.signal.aborted) return;
       setError(e instanceof Error ? e.message : 'Import failed.');
+      urlInput.current?.focus();
     } finally {
-      setBusy(false);
+      if (!controller.signal.aborted) setBusy(false);
     }
   }
   function add() {
@@ -126,8 +135,16 @@ export default function ImportDialog({
           ]
         : [],
     );
-    onAdd(parts);
-    setAdded(true);
+    try {
+      onAdd(parts);
+      setAdded(true);
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'These products could not be added. Try a smaller selection.',
+      );
+    }
   }
   return (
     <div className="import-content">
@@ -139,24 +156,36 @@ export default function ImportDialog({
         Paste a website or product URL. Review what we find before adding it to
         your parts library.
       </p>
-      <label htmlFor="store-url">Website URL</label>
-      <div className="url-row">
-        <input
-          id="store-url"
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://your-favorite-store.com"
-        />
-        <button className="button" disabled={busy || !url} onClick={preview}>
-          {busy ? (
-            <LoaderCircle className="spin" size={17} />
-          ) : (
-            <ArrowUpRight size={17} />
-          )}{' '}
-          {busy ? 'Reading…' : 'Preview'}
-        </button>
-      </div>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          void preview();
+        }}
+      >
+        <label htmlFor="store-url">Website URL</label>
+        <div className="url-row">
+          <input
+            id="store-url"
+            ref={urlInput}
+            name="store-url"
+            type="url"
+            required
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? 'import-error' : 'import-support'}
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://your-favorite-store.com"
+          />
+          <button className="button" type="submit" disabled={busy}>
+            {busy ? (
+              <LoaderCircle className="spin" size={17} />
+            ) : (
+              <ArrowUpRight size={17} />
+            )}{' '}
+            {busy ? 'Reading…' : 'Preview'}
+          </button>
+        </div>
+      </form>
       <details>
         <summary>Have a product data export?</summary>
         <p className="muted">
@@ -169,14 +198,14 @@ export default function ImportDialog({
           placeholder={'{"@type":"Product","name":"My keyboard"}'}
         />
       </details>
-      <p className="import-note">
+      <p className="import-note" id="import-support">
         Supports product structured data and public Shopify catalogs. Some
         stores require a dedicated importer. No compatibility or asset rights
         are inferred.
       </p>
       {error && (
-        <p className="error-box" role="alert">
-          {error}
+        <p className="error-box" role="alert" id="import-error">
+          {error} Check the URL and try again, or paste product data above.
         </p>
       )}
       {result && (

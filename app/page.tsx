@@ -15,59 +15,30 @@ import {
   CircleAlert,
   ChevronRight,
   Play,
+  Undo2,
+  Redo2,
+  Share2,
+  Upload,
+  Shuffle,
 } from 'lucide-react';
 import KeyboardScene, { type SceneOptions } from './keyboard-scene';
 import ImportDialog from './import-dialog';
 import SoundReferences from './sound-references';
-import { soundPacks, type SoundPack } from '../lib/sound-packs';
-import { registerStudioTools } from '../lib/webmcp';
+import { useBuild } from './use-build';
 import {
-  catalog,
-  categories,
-  initialSelection,
-  checkBuild,
-  type Part,
-  type Selection,
-} from '../lib/catalog';
+  palettes,
+  caseColors,
+  layouts,
+  finishes,
+  profiles,
+  encodeBuild,
+  readBuildFile,
+  parseCustomParts,
+} from '../lib/build';
+import { soundPacks } from '../lib/sound-packs';
+import { registerStudioTools } from '../lib/webmcp';
+import { catalog, categories, checkBuild, type Part } from '../lib/catalog';
 import { KeyboardAudio, type SoundSettings } from '../lib/audio';
-const palettes = [
-  {
-    name: 'Matcha & cream',
-    alpha: '#e8e2cd',
-    mod: '#cec5aa',
-    accent: '#db7843',
-    space: '#acbca0',
-  },
-  {
-    name: 'Midnight',
-    alpha: '#3e454a',
-    mod: '#272e33',
-    accent: '#c67746',
-    space: '#667c7a',
-  },
-  {
-    name: 'Porcelain',
-    alpha: '#f0f0e9',
-    mod: '#d6d9d9',
-    accent: '#518ba4',
-    space: '#99b7c6',
-  },
-  {
-    name: 'Botanical',
-    alpha: '#d8e0ca',
-    mod: '#9aa78b',
-    accent: '#53725e',
-    space: '#53725e',
-  },
-];
-const caseColors = [
-  { name: 'Champagne', color: '#c5b792' },
-  { name: 'Silver', color: '#deded6' },
-  { name: 'Graphite', color: '#454c4b' },
-  { name: 'Sage', color: '#a9b5a3' },
-  { name: 'Copper', color: '#b17152' },
-  { name: 'Slate', color: '#606a84' },
-];
 const sources = [
   {
     title: 'The original reference',
@@ -119,41 +90,40 @@ const sources = [
   },
 ];
 type Tab = 'design' | 'parts' | 'sound';
-type Modal = 'import' | 'research' | null;
-function storedParts(value: unknown): value is Part[] {
-  return (
-    Array.isArray(value) &&
-    value.every(
-      (p) =>
-        typeof p === 'object' &&
-        p !== null &&
-        ['id', 'name', 'brand', 'detail', 'source', 'family'].every(
-          (k) => k in p && typeof Reflect.get(p, k) === 'string',
-        ) &&
-        categories.includes(p.category) &&
-        p.evidence === 'unknown',
-    )
-  );
-}
+type Modal = 'import' | 'research' | 'share' | null;
 export default function Home() {
-  const [palette, setPalette] = useState(palettes[0]);
-  const [caseColor, setCaseColor] = useState('#c5b792');
-  const [layout, setLayout] = useState('60');
+  const [notice, setNotice] = useState('');
+  const {
+    build,
+    ready,
+    saveState,
+    edit,
+    commit,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = useBuild(setNotice);
+  const {
+    palette,
+    caseColor,
+    layout,
+    finish,
+    profile,
+    selection,
+    customParts: imports,
+  } = build;
+  const { character, volume, damping } = build.audio;
+  const pack = soundPacks.find((p) => p.id === build.audio.source) ?? null;
+  const setPalette = (palette: typeof build.palette) => edit({ palette });
+  const setLayout = (layout: typeof build.layout) => edit({ layout });
   const [exploded, setExploded] = useState(false);
   const [view, setView] = useState('perspective');
-  const [finish, setFinish] = useState('Aluminum');
-  const [profile, setProfile] = useState('Sculpted');
   const [tab, setTab] = useState<Tab>('design');
   const [modal, setModal] = useState<Modal>(null);
-  const [selection, setSelection] = useState<Selection>(initialSelection);
-  const [imports, setImports] = useState<Part[]>([]);
-  const [notice, setNotice] = useState('');
   const [enabled, setEnabled] = useState(false);
-  const [character, setCharacter] =
-    useState<SoundSettings['character']>('linear');
-  const [volume, setVolume] = useState(0.45);
-  const [damping, setDamping] = useState(0.55);
-  const [pack, setPack] = useState<SoundPack | null>(soundPacks[1]);
+  const [shareUrl, setShareUrl] = useState('');
+  const buildFile = useRef<HTMLInputElement>(null);
   const [sampleState, setSampleState] = useState<'loading' | 'ready' | 'error'>(
     'loading',
   );
@@ -202,14 +172,6 @@ export default function Home() {
   );
   useEffect(() => {
     audio.current = new KeyboardAudio();
-    try {
-      const saved: unknown = JSON.parse(
-        localStorage.getItem('keyconf-parts') || '[]',
-      );
-      if (storedParts(saved)) setImports(saved);
-    } catch {
-      setNotice('Saved parts could not be loaded. You can import them again.');
-    }
     return () => {
       audioAction.current++;
       audio.current?.close();
@@ -336,19 +298,53 @@ export default function Home() {
     const merged = Array.from(
       new Map([...imports, ...incoming].map((p) => [p.id, p])).values(),
     );
-    setImports(merged);
+    edit({ customParts: parseCustomParts(merged) });
+    setNotice(incoming.length + ' parts added to this build.');
+  }
+  async function shareBuild() {
     try {
-      localStorage.setItem('keyconf-parts', JSON.stringify(merged));
-      setNotice(incoming.length + ' parts added to this browser.');
-    } catch {
+      const url = new URL(window.location.href);
+      url.hash = 'build=' + encodeBuild(build);
+      setShareUrl(url.href);
+      setModal('share');
+      try {
+        await navigator.clipboard.writeText(url.href);
+        setNotice(
+          'Build link copied. Anyone with the link can open this design.',
+        );
+      } catch {
+        setNotice('Select and copy the build link below.');
+      }
+    } catch (error) {
       setNotice(
-        'Parts added for this session. Browser storage is unavailable.',
+        error instanceof Error
+          ? error.message
+          : 'The build link could not be created. Download the build instead.',
       );
     }
   }
+  async function openBuild(file: File | undefined) {
+    if (!file) return;
+    try {
+      if (file.size > 1_000_000)
+        throw new Error('Choose a Keyconf build file under 1 MB.');
+      const restored = readBuildFile(await file.text());
+      stopDemo();
+      edit(restored);
+      setNotice('Build opened. Undo returns to your previous design.');
+    } catch (error) {
+      setNotice(
+        error instanceof Error
+          ? error.message
+          : 'The build file could not be opened.',
+      );
+    }
+  }
+
   function exportBuild() {
     const data = {
       version: 1,
+      build,
       visualStudy: options,
       components: categories.map((c) =>
         parts.find((p) => p.id === selection[c]),
@@ -375,6 +371,9 @@ export default function Home() {
   }
   return (
     <main>
+      <a className="skip-link" href="#build-settings">
+        Skip to build settings
+      </a>
       <header className="header">
         <a className="brand" href="./">
           <Keyboard size={25} /> keyconf<span>studio</span>
@@ -400,17 +399,85 @@ export default function Home() {
           <Plus size={16} /> Import a website
         </button>
       </header>
+      <div className="build-bar">
+        <label className="build-name">
+          <span className="sr-only">Build name</span>
+          <input
+            value={build.name}
+            maxLength={80}
+            onChange={(e) => edit({ name: e.target.value }, 'name')}
+            onBlur={(e) => {
+              if (!e.target.value.trim()) edit({ name: 'Untitled build' });
+              commit();
+            }}
+          />
+        </label>
+        <span className="save-state" role="status">
+          {saveState === 'saved'
+            ? 'Saved on this device'
+            : saveState === 'saving'
+              ? 'Saving…'
+              : saveState === 'unavailable'
+                ? 'Session only. Download to keep.'
+                : 'Opening build…'}
+        </span>
+        <div className="build-actions">
+          <button
+            className="icon-button"
+            aria-label="Undo change"
+            title="Undo (Ctrl/⌘ Z)"
+            disabled={!ready || !canUndo}
+            onClick={undo}
+          >
+            <Undo2 size={17} />
+          </button>
+          <button
+            className="icon-button"
+            aria-label="Redo change"
+            title="Redo (Ctrl/⌘ Shift Z)"
+            disabled={!ready || !canRedo}
+            onClick={redo}
+          >
+            <Redo2 size={17} />
+          </button>
+          <button
+            className="icon-button"
+            aria-label="Open build file"
+            title="Open build file"
+            onClick={() => buildFile.current?.click()}
+          >
+            <Upload size={17} />
+          </button>
+          <button
+            className="button secondary compact"
+            disabled={!ready}
+            onClick={shareBuild}
+          >
+            <Share2 size={15} /> Share build
+          </button>
+          <input
+            ref={buildFile}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={(e) => {
+              void openBuild(e.target.files?.[0]);
+              e.target.value = '';
+            }}
+          />
+        </div>
+      </div>
       <div className="workspace">
         <section className="stage">
           <div className="stage-heading">
             <div className="eyebrow">
-              YOUR WORKBENCH <span>01</span>
+              YOUR WORKBENCH <span>{layout}%</span>
             </div>
-            <h1>A little more you.</h1>
-            <p>Every detail, down to the last key.</p>
+            <h1>Make it yours.</h1>
+            <p>Choose a color. Press a key. Find your feel.</p>
           </div>
           <div className="study-label">
-            <span className="status-dot" /> Original Blender study{' '}
+            <span className="status-dot" /> 3D design study{' '}
             <ArrowUpRight size={13} />
           </div>
           <KeyboardScene
@@ -466,11 +533,15 @@ export default function Home() {
                 ? pack
                   ? `${pack.name} · recorded reference`
                   : 'Synthesized sound · approximate'
-                : 'Designed in Blender. Made yours here.'}
+                : 'A space to try things.'}
             </span>
           </div>
         </section>
-        <aside className="config">
+        <aside
+          className="config"
+          id="build-settings"
+          aria-label="Keyboard configuration"
+        >
           <div className="config-title">
             <h2>Your build</h2>
             <span className="pill">Live preview</span>
@@ -484,6 +555,28 @@ export default function Home() {
               <button
                 key={t}
                 role="tab"
+                id={'tab-' + t}
+                aria-controls={'panel-' + t}
+                tabIndex={tab === t ? 0 : -1}
+                onKeyDown={(event) => {
+                  const tabs: Tab[] = ['design', 'parts', 'sound'];
+                  const index = tabs.indexOf(t);
+                  const next =
+                    event.key === 'ArrowRight'
+                      ? tabs[(index + 1) % tabs.length]
+                      : event.key === 'ArrowLeft'
+                        ? tabs[(index + tabs.length - 1) % tabs.length]
+                        : event.key === 'Home'
+                          ? tabs[0]
+                          : event.key === 'End'
+                            ? tabs[tabs.length - 1]
+                            : undefined;
+                  if (next) {
+                    event.preventDefault();
+                    setTab(next);
+                    document.getElementById('tab-' + next)?.focus();
+                  }
+                }}
                 aria-selected={tab === t}
                 onClick={() => setTab(t)}
               >
@@ -495,7 +588,13 @@ export default function Home() {
               </button>
             ))}
           </div>
-          <div className="config-scroll" role="tabpanel">
+          <div
+            className="config-scroll"
+            role="tabpanel"
+            id={'panel-' + tab}
+            aria-labelledby={'tab-' + tab}
+            tabIndex={0}
+          >
             {tab === 'design' && (
               <>
                 <section>
@@ -505,7 +604,7 @@ export default function Home() {
                   </div>
                   <label>Layout</label>
                   <div className="segmented">
-                    {['60', '65', '75'].map((x) => (
+                    {layouts.map((x) => (
                       <button
                         key={x}
                         aria-pressed={x === layout}
@@ -520,9 +619,12 @@ export default function Home() {
                   <select
                     id="finish"
                     value={finish}
-                    onChange={(e) => setFinish(e.target.value)}
+                    onChange={(e) => {
+                      const finish = finishes.find((x) => x === e.target.value);
+                      if (finish) edit({ finish });
+                    }}
                   >
-                    {['Aluminum', 'Polycarbonate', 'Brass'].map((x) => (
+                    {finishes.map((x) => (
                       <option key={x}>{x}</option>
                     ))}
                   </select>
@@ -540,7 +642,7 @@ export default function Home() {
                         style={{ background: x.color }}
                         aria-label={x.name + ' case'}
                         aria-pressed={caseColor === x.color}
-                        onClick={() => setCaseColor(x.color)}
+                        onClick={() => edit({ caseColor: x.color })}
                       >
                         {caseColor === x.color && <Check size={15} />}
                       </button>
@@ -594,26 +696,58 @@ export default function Home() {
                             aria-label={zone + ' color'}
                             value={palette[zone]}
                             onChange={(e) =>
-                              setPalette({
-                                ...palette,
-                                name: 'Custom',
-                                [zone]: e.target.value,
-                              })
+                              edit(
+                                {
+                                  palette: {
+                                    ...palette,
+                                    name: 'Custom',
+                                    [zone]: e.target.value,
+                                  },
+                                },
+                                'color-' + zone,
+                              )
                             }
+                            onBlur={commit}
                           />
                         </label>
                       ))}
                     </div>
                   </details>
+                  <button
+                    className="text-button"
+                    onClick={() => {
+                      const next =
+                        palettes[
+                          (palettes.indexOf(palette) +
+                            1 +
+                            Math.floor(Math.random() * (palettes.length - 1))) %
+                            palettes.length
+                        ];
+                      edit({
+                        palette: next,
+                        caseColor:
+                          caseColors[
+                            Math.floor(Math.random() * caseColors.length)
+                          ].color,
+                      });
+                    }}
+                  >
+                    <Shuffle size={15} /> Surprise me
+                  </button>
                   <label htmlFor="profile">
                     Keycap silhouette <span>Illustrative</span>
                   </label>
                   <select
                     id="profile"
                     value={profile}
-                    onChange={(e) => setProfile(e.target.value)}
+                    onChange={(e) => {
+                      const profile = profiles.find(
+                        (x) => x === e.target.value,
+                      );
+                      if (profile) edit({ profile });
+                    }}
                   >
-                    {['Sculpted', 'Tall sculpted', 'Low uniform'].map((p) => (
+                    {profiles.map((p) => (
                       <option key={p}>{p}</option>
                     ))}
                   </select>
@@ -638,7 +772,9 @@ export default function Home() {
                       id={'part-' + c}
                       value={selection[c]}
                       onChange={(e) =>
-                        setSelection({ ...selection, [c]: e.target.value })
+                        edit({
+                          selection: { ...selection, [c]: e.target.value },
+                        })
                       }
                     >
                       {parts
@@ -728,11 +864,9 @@ export default function Home() {
                   value={pack?.id ?? 'synthesized'}
                   onChange={(event) => {
                     stopDemo();
-                    setPack(
-                      soundPacks.find(
-                        (item) => item.id === event.target.value,
-                      ) ?? null,
-                    );
+                    edit({
+                      audio: { ...build.audio, source: event.target.value },
+                    });
                   }}
                 >
                   <optgroup label="Recorded switches">
@@ -798,7 +932,7 @@ export default function Home() {
                       onChange={(e) => {
                         const v = e.target.value;
                         if (v === 'linear' || v === 'tactile' || v === 'clicky')
-                          setCharacter(v);
+                          edit({ audio: { ...build.audio, character: v } });
                       }}
                     >
                       <option value="linear">Soft linear</option>
@@ -815,7 +949,19 @@ export default function Home() {
                       max="1"
                       step=".01"
                       value={damping}
-                      onChange={(e) => setDamping(Number(e.target.value))}
+                      onChange={(e) =>
+                        edit(
+                          {
+                            audio: {
+                              ...build.audio,
+                              damping: Number(e.target.value),
+                            },
+                          },
+                          'damping',
+                        )
+                      }
+                      onPointerUp={commit}
+                      onBlur={commit}
                     />
                   </>
                 )}
@@ -829,7 +975,19 @@ export default function Home() {
                   max="1"
                   step=".01"
                   value={volume}
-                  onChange={(e) => setVolume(Number(e.target.value))}
+                  onChange={(e) =>
+                    edit(
+                      {
+                        audio: {
+                          ...build.audio,
+                          volume: Number(e.target.value),
+                        },
+                      },
+                      'volume',
+                    )
+                  }
+                  onPointerUp={commit}
+                  onBlur={commit}
                 />
                 <div className="recording-note">
                   <Volume2 size={18} />
@@ -877,11 +1035,20 @@ export default function Home() {
               <Download size={16} /> Export your build
             </button>
             <small>Visual study · Product dimensions not verified</small>
+            <button
+              className="text-button research-entry"
+              onClick={() => setModal('research')}
+            >
+              Research & sources <ArrowUpRight size={14} />
+            </button>
           </div>
         </aside>
       </div>
+      <div className="sr-only" role="status" aria-live="polite">
+        {notice}
+      </div>
       {notice && (
-        <div className="toast" role="status">
+        <div className="toast">
           {notice}
           <button
             onClick={() => setNotice('')}
@@ -894,6 +1061,13 @@ export default function Home() {
       <dialog
         ref={dialog}
         className={'modal ' + (modal === 'research' ? 'research-modal' : '')}
+        aria-label={
+          modal === 'import'
+            ? 'Import products'
+            : modal === 'share'
+              ? 'Share build'
+              : 'Research library'
+        }
         onCancel={() => setModal(null)}
         onClick={(e) => {
           if (e.target === e.currentTarget) setModal(null);
@@ -906,6 +1080,53 @@ export default function Home() {
         >
           <X size={20} />
         </button>
+        {modal === 'share' && (
+          <div className="share-content">
+            <div className="modal-icon">
+              <Share2 size={24} />
+            </div>
+            <h2>Pass it around.</h2>
+            <p className="muted">
+              This link includes your design, selected components and sound
+              preference. Your friend can make it their own.
+            </p>
+            <label htmlFor="share-link">Build link</label>
+            <input
+              id="share-link"
+              type="url"
+              value={shareUrl}
+              readOnly
+              onFocus={(e) => e.target.select()}
+            />
+            <div className="share-actions">
+              <button
+                className="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(shareUrl);
+                    setNotice('Build link copied.');
+                  } catch {
+                    setNotice(
+                      'Select the link and copy it with your keyboard or browser menu.',
+                    );
+                  }
+                }}
+              >
+                Copy link <Share2 size={16} />
+              </button>
+              <button className="button secondary" onClick={exportBuild}>
+                <Download size={16} /> Download build
+              </button>
+            </div>
+            <p className="muted" role="status">
+              {notice}
+            </p>
+            <p className="muted">
+              Anyone with the link can read the included product details. Sound
+              starts muted when they open it.
+            </p>
+          </div>
+        )}
         {modal === 'import' && <ImportDialog onAdd={addParts} />}{' '}
         {modal === 'research' && (
           <div>

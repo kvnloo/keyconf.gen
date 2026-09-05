@@ -7,7 +7,10 @@ A keyboard configurator built with React, Three.js, and original Blender geometr
 - Preview public product data from JSON-LD and Shopify, then explicitly add reviewed products to a browser-local library.
 - Type with seven recorded switch presets, including separate presses/releases, or explore the optional synthesized sound study.
 - Search 266 attributed switch-test videos and play the original recordings through YouTube.
-- Export a build with its selected components, evidence links, and limitations.
+- Name a build, undo/redo edits, restore it after refresh, and share a self-contained link.
+- Download or open a build file with its selected components, evidence links, and limitations.
+
+The active [product goal](docs/product-goal.md) defines release acceptance criteria. [Product progress](docs/product-progress.md) records verified work and remaining gaps.
 
 ## Development
 

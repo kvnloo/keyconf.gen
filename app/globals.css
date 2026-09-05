@@ -1,11 +1,14 @@
 @import 'tailwindcss';
 :root {
   --ink: #282e29;
-  --muted: #71766d;
+  --muted: #5f675d;
+  --focus: #326344;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --chrome-height: 146px;
   --line: #e2e5dd;
   --paper: #fafbf7;
   --green: #2b4b37;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans, Arial), Helvetica, sans-serif;
   color: var(--ink);
   background: var(--paper);
 }
@@ -39,15 +42,14 @@ button {
   border: 0;
   background: none;
 }
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible {
-  outline: 2px solid #467654;
+:focus-visible {
+  outline: 2px solid var(--focus);
   outline-offset: 4px;
 }
-button:hover {
-  filter: brightness(0.96);
+@media (hover: hover) {
+  button:not(:disabled):hover {
+    filter: brightness(0.96);
+  }
 }
 .header {
   height: 82px;
@@ -113,7 +115,7 @@ nav {
 .workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 365px;
-  min-height: calc(100dvh - 82px);
+  min-height: calc(100dvh - var(--chrome-height));
 }
 .stage {
   position: relative;
@@ -142,7 +144,7 @@ nav {
   border: 1px solid #bdc6b6;
   border-radius: 4px;
   padding: 3px 5px;
-  font-size: 10px;
+  font-size: 12px;
 }
 h1 {
   font-family: Georgia, 'Times New Roman', serif;
@@ -266,7 +268,7 @@ h2 {
 }
 .pill {
   color: #5f7555;
-  font-size: 11px;
+  font-size: 12px;
   border-radius: 5px;
   background: #edf2e6;
   padding: 5px 8px;
@@ -282,7 +284,7 @@ h2 {
   margin-bottom: 23px;
 }
 .section-label > span {
-  font-size: 11px;
+  font-size: 12px;
   font-family: monospace;
   color: #8b9384;
 }
@@ -471,7 +473,7 @@ select {
     font-size: 39px;
   }
   .stage-bottom > span {
-    font-size: 11px;
+    font-size: 12px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -489,13 +491,13 @@ select {
   font-size: 14px;
 }
 .config {
-  height: calc(100dvh - 82px);
-  min-height: 720px;
+  height: calc(100dvh - var(--chrome-height));
+  min-height: 610px;
   display: flex;
   flex-direction: column;
 }
 .workspace .stage {
-  min-height: 720px;
+  min-height: 610px;
 }
 .config-title {
   margin-bottom: 20px;
@@ -542,7 +544,7 @@ select {
 }
 .config-footer small {
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
 }
 .full {
   width: 100%;
@@ -635,7 +637,7 @@ select {
   display: flex;
   gap: 8px;
   align-items: flex-start;
-  font-size: 11px;
+  font-size: 12px;
   color: #7f8776;
   line-height: 1.5;
   margin-top: 8px;
@@ -679,7 +681,7 @@ select {
 }
 .fit-check em {
   font-style: normal;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #8c8c68;
@@ -886,7 +888,7 @@ kbd {
   font-size: 14px;
 }
 .result-heading span {
-  font-size: 11px;
+  font-size: 12px;
   color: #87937a;
 }
 .import-list {
@@ -915,14 +917,14 @@ kbd {
   display: block;
 }
 .import-product small {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   display: block;
   margin-top: 4px;
 }
 .import-results > small {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 12px;
 }
@@ -942,7 +944,7 @@ kbd {
   background: #fff;
 }
 .research-grid small {
-  font-size: 11px;
+  font-size: 12px;
   color: #7f8c74;
 }
 .research-grid h3 {
@@ -1007,7 +1009,7 @@ button:disabled {
     grid-template-columns: 1fr;
   }
   .stage-caption span:first-child {
-    font-size: 10px;
+    font-size: 12px;
   }
   .url-row {
     flex-direction: column;
@@ -1099,7 +1101,7 @@ button:disabled {
 .sound-results small {
   margin-top: 4px;
   color: #686c60;
-  font-size: 11px;
+  font-size: 12px;
 }
 .reference-player {
   margin: 16px 0;
@@ -1141,4 +1143,289 @@ button:disabled {
   display: block;
   color: #656a5b;
   line-height: 1.5;
+}
+
+/* Workbench controls */
+.build-bar {
+  min-height: 64px;
+  padding: 10px 36px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.build-name {
+  min-width: 0;
+  max-width: 240px;
+}
+.build-name input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid transparent;
+  padding: 8px 10px;
+  margin-inline-start: -10px;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 15px;
+}
+.build-name input:hover,
+.build-name input:focus-visible {
+  border-color: var(--line);
+  background: white;
+}
+.save-state {
+  color: var(--muted);
+  font-size: 12px;
+}
+.build-actions {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.icon-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 7px;
+}
+.compact {
+  padding: 9px 13px;
+}
+.share-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-block: 18px;
+}
+.skip-link {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 100;
+  padding: 12px 16px;
+  background: var(--green);
+  color: white;
+  border-radius: 8px;
+  transform: translateY(-150%);
+}
+.skip-link:focus {
+  transform: none;
+}
+.research-entry {
+  justify-content: center;
+  padding: 5px;
+  min-height: 30px;
+}
+.config label,
+.palette,
+.segmented button {
+  font-size: 14px;
+}
+.palette-colors {
+  flex-shrink: 0;
+}
+.swatches {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.swatches button {
+  width: 32px;
+  height: 32px;
+}
+.swatches button svg {
+  background: white;
+  border-radius: 50%;
+  padding: 2px;
+  color: var(--ink);
+  box-sizing: content-box;
+}
+.config-scroll {
+  overscroll-behavior: contain;
+  scroll-padding: 16px;
+}
+.config-scroll:focus-visible {
+  outline-offset: -2px;
+}
+.modal {
+  overscroll-behavior: contain;
+}
+.modal-close {
+  min-width: 40px;
+  min-height: 40px;
+  justify-content: center;
+  align-items: center;
+}
+.toast button {
+  min-width: 32px;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+}
+.toast button:focus-visible {
+  outline-color: white;
+}
+.save-state,
+.last-key,
+.config label span {
+  font-variant-numeric: tabular-nums;
+}
+.sound-toggle,
+.view-controls button {
+  min-height: 40px;
+}
+.model-status {
+  z-index: 2;
+}
+.muted,
+.part-detail,
+.fit-check small {
+  overflow-wrap: anywhere;
+}
+@media (prefers-reduced-motion: no-preference) {
+  button {
+    transition:
+      scale 150ms var(--ease),
+      background-color 150ms var(--ease),
+      color 150ms var(--ease),
+      opacity 150ms var(--ease);
+  }
+  button:not(:disabled):active {
+    scale: 0.96;
+  }
+  .modal[open] {
+    animation: dialog-enter 180ms var(--ease);
+  }
+  @keyframes dialog-enter {
+    from {
+      opacity: 0;
+      translate: 0 6px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+}
+@media (max-width: 900px) {
+  .build-bar {
+    gap: 12px;
+  }
+  .save-state {
+    max-width: 130px;
+  }
+}
+@media (max-width: 760px) {
+  .build-bar {
+    padding: 10px 18px;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+  .build-name {
+    flex: 1;
+    max-width: none;
+    min-width: 100px;
+  }
+  .save-state {
+    order: 3;
+    max-width: none;
+    width: 100%;
+    font-size: 12px;
+  }
+  .build-actions {
+    gap: 0;
+  }
+  .build-actions .icon-button {
+    min-width: 34px;
+  }
+  input,
+  select,
+  textarea,
+  .modal input[type='url'],
+  .build-name input,
+  .modal textarea {
+    font-size: 16px;
+  }
+  .workspace .stage {
+    min-height: 480px;
+  }
+  .scene-host {
+    inset: 90px 0 90px;
+    min-height: 280px;
+  }
+  .stage-heading {
+    left: 22px;
+    top: 22px;
+  }
+  .stage h1 {
+    font-size: 34px;
+    margin-block: 10px;
+  }
+  .stage-heading p {
+    display: none;
+  }
+  .stage-bottom {
+    left: 16px;
+    right: 16px;
+    gap: 10px;
+  }
+  .stage-caption {
+    padding-inline: 20px;
+  }
+  .config {
+    padding: 24px 20px;
+  }
+  .config-title {
+    margin-bottom: 18px;
+  }
+  .config-tabs {
+    position: sticky;
+    top: 0;
+    background: var(--paper);
+    z-index: 4;
+    padding-top: 12px;
+  }
+  .swatches button {
+    width: 34px;
+    height: 34px;
+  }
+  .header > .button {
+    max-width: 160px;
+    font-size: 14px;
+  }
+  .brand span {
+    display: none;
+  }
+}
+@media (max-width: 390px) {
+  .build-name {
+    flex-basis: 100%;
+  }
+  .build-actions {
+    margin: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .build-actions .compact {
+    flex: 1;
+  }
+  .dataset-summary {
+    gap: 8px;
+  }
+  .dataset-summary strong {
+    font-size: 25px;
+  }
+}
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight;
+  }
+  button[aria-pressed='true'],
+  button[aria-selected='true'] {
+    border: 2px solid Highlight;
+  }
 }
