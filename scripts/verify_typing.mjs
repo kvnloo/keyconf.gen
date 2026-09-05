@@ -139,6 +139,7 @@ try {
   await frame.locator('#nextTestButton').click();
   await frame.locator('#wordsInput').waitFor({ state: 'visible' });
   await button(page, 'Back to builder').click();
+  await page.locator('.typing-frame').waitFor({ state: 'detached' });
   assert.equal(await page.locator('.typing-frame').count(), 0);
   assert.equal(
     await page.getByRole('textbox', { name: 'Build name' }).inputValue(),
