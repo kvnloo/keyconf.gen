@@ -24,8 +24,8 @@ All six interface domains were reviewed at source level: accessibility, layout, 
 
 - [x] Create the active goal and write the product completion contract.
 - [x] Inspect the existing primary flow and identify source-level gaps.
-- [ ] Ship reliable state, undo/redo, portable sharing and import recovery.
-- [ ] Improve the scene and input lifecycle.
+- [x] Implement reliable state, undo/redo, portable sharing and import recovery.
+- [x] Improve the scene and input lifecycle. Full device verification remains in the completion pass.
 - [ ] Expose and expand useful product evidence.
 - [ ] Refine the listening experience.
 - [ ] Complete interaction and presentation verification.
@@ -38,3 +38,22 @@ Implemented a versioned build document shared by configuration, history, browser
 Added undo/redo with grouped color, volume and text gestures and a 60-edit history bound. Invalid imported parts cannot claim manufacturer compatibility or inject unsafe source URLs. Invalid saved builds retain a recovery copy before autosave can replace them; storage failure is visible. Added a share dialog, filename-independent JSON restore, accessible settings tabs, a stable notification region, mobile research access and cancellable import requests.
 
 Verified: 16 tests pass, including full portable round trips with selected imports, Unicode, malformed settings, unsafe links, forged compatibility evidence, wrong-category components, undo branching and grouped edits. Type checking and the Sites production build pass. Local route responds HTTP 200. Browser interaction, rendering quality, and storage-denial behavior remain unverified. The optional lint command also exposes existing React-compiler/accessibility issues and several new warnings; these are tracked for the completion pass and are not represented as passing.
+
+## Scene and first runtime checks
+
+The scene now keeps one renderer across layout changes and caches the three loaded models. Animated keys, component layers and materials are indexed once. Camera and key transitions use elapsed time, respond to reduced-motion changes, and stop requesting frames after settling. Hidden and offscreen rendering pauses. Async model loads ignore stale selections and dispose their resources on teardown. Added model retry, graphics-reset recovery, keyboard camera controls and a full-workbench Focus view with Escape exit.
+
+Changed the lighting to preserve more material color and adapted field of view to the viewport aspect ratio. A narrow-screen inspection found cropped keys; the revised framing shows the entire model at the 320 px viewport. Page Tab navigation is no longer intercepted by the simulated keyboard. The 3D engine loads as a separate chunk.
+
+Live checks in the existing in-app browser:
+
+- Selected 65%, Porcelain and Brass. Undo restored Aluminum; redo restored Brass. A reload restored 65%, Porcelain and Brass.
+- ArrowRight moved the settings selection from Design to Components.
+- Share produced a self-contained build link; Escape dismissed the dialog. Portable decoding on another browser origin is not yet verified. The attempted 127.0.0.1 preview is not forwarded by this environment.
+- Tab from the canvas reached the sound toggle instead of getting trapped.
+- Entered Focus on a narrow viewport; its Back to builder control was visible and Escape exited.
+- Inspected the default large viewport, 1280 × 900 and 320 × 780. At the narrow viewport, document scroll width matched client width, and the keyboard fit after the camera adjustment. Other widths, 200% zoom and reduced-motion rendering remain pending.
+- Read the actual renderer frame counter twice while idle; it stayed at 38. This verifies idle stopping in the observed state, not a general FPS or hardware-performance claim.
+- The runtime check exposed a pre-existing development asset-path failure. `index.html` hardcoded the GitHub Pages base path even for localhost, producing model and sample 404s. It now uses Vite's BASE_URL placeholder. The model loaded and sound became available after the fix.
+
+Remaining acceptance work: catalog and technology presentation, more deliberate sound interaction, complete responsive/accessibility review, remaining lint issues, source-format compatibility for legacy exports, complete published sharing tests, and a final deployment audit. The goal remains active.

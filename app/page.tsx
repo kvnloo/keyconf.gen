@@ -20,6 +20,8 @@ import {
   Share2,
   Upload,
   Shuffle,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import KeyboardScene, { type SceneOptions } from './keyboard-scene';
 import ImportDialog from './import-dialog';
@@ -119,6 +121,15 @@ export default function Home() {
   const setLayout = (layout: typeof build.layout) => edit({ layout });
   const [exploded, setExploded] = useState(false);
   const [view, setView] = useState('perspective');
+  const [focusMode, setFocusMode] = useState(false);
+  useEffect(() => {
+    if (!focusMode) return;
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setFocusMode(false);
+    };
+    window.addEventListener('keydown', escape);
+    return () => window.removeEventListener('keydown', escape);
+  }, [focusMode]);
   const [tab, setTab] = useState<Tab>('design');
   const [modal, setModal] = useState<Modal>(null);
   const [enabled, setEnabled] = useState(false);
@@ -370,7 +381,7 @@ export default function Home() {
     setNotice('Build exported with sources and compatibility notes.');
   }
   return (
-    <main>
+    <main className={focusMode ? 'focus-mode' : undefined}>
       <a className="skip-link" href="#build-settings">
         Skip to build settings
       </a>
@@ -520,6 +531,13 @@ export default function Home() {
                 }}
               >
                 <RotateCcw size={16} />
+              </button>
+              <button
+                aria-pressed={focusMode}
+                onClick={() => setFocusMode(!focusMode)}
+              >
+                {focusMode ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                {focusMode ? 'Back to builder' : 'Focus'}
               </button>
             </div>
             <span>Drag to orbit · Scroll to zoom · Type to try</span>

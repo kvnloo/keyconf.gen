@@ -1429,3 +1429,42 @@ button:disabled {
     border: 2px solid Highlight;
   }
 }
+
+.focus-mode .header,
+.focus-mode .build-bar,
+.focus-mode .config {
+  display: none;
+}
+.focus-mode .workspace {
+  display: block;
+  min-height: 100dvh;
+}
+.focus-mode .workspace .stage {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  min-height: 0;
+}
+.focus-mode .stage-heading {
+  display: none;
+}
+.focus-mode .scene-host {
+  inset: 35px 0 100px;
+}
+.focus-mode .sound-toggle {
+  top: 28px;
+}
+.focus-mode .study-label {
+  left: 28px;
+  right: auto;
+}
+@media (max-width: 760px) {
+  .view-controls button {
+    padding: 8px;
+    min-width: 36px;
+  }
+  .view-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
