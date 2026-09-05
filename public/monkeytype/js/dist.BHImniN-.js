@@ -1,0 +1,1 @@
+import{r as e}from"./vendor.tc8wkxOc.js";export{e as domToCanvas};

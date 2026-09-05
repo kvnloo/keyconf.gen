@@ -1,0 +1,1143 @@
+diff --git c/KEYCONF_BUILD.md w/KEYCONF_BUILD.md
+new file mode 100644
+index 0000000..b9f2f80
+--- /dev/null
++++ w/KEYCONF_BUILD.md
+@@ -0,0 +1,20 @@
++# Keyconf guest build of Monkeytype
++
++Upstream: https://github.com/monkeytypegame/monkeytype
++Revision: 91bd24bb8513785c7364cbea29296ff7adafac41 (26.32.0)
++Modified by Keyconf on 2026-09-05. This is an independent guest integration, not an official Monkeytype service.
++
++Download and extract source-code.tar.gz, source-languages.tar.xz and source-assets.tar.gz into the same directory. Each archive starts with monkeytype/. Together they contain the complete corresponding source and static assets, including the pinned dependency lockfile. Run inside monkeytype/:
++
++```
++# Requires Node 24 and pnpm 11.21.0
++pnpm --filter @monkeytype/frontend... install --frozen-lockfile
++pnpm exec turbo run build --filter='@monkeytype/frontend^...'
++RECAPTCHA_SITE_KEY='' BACKEND_URL='/monkeytype/guest-api' pnpm --filter @monkeytype/frontend exec vite build
++```
++
++Serve frontend/dist/ at a directory URL with index.html. Remove sw.js, workbox-*.js and manifest.json; this integration does not register a service worker. It works independently, or in a same-origin iframe. Optional postMessage events are defined in frontend/src/ts/keyconf-embed.ts. The embedding app must check the sending frame and origin.
++
++Guest modifications: no Firebase initialization or backend calls; local server feature configuration; no analytics, ads, cookie prompt, reCAPTCHA or service worker; namespaced device settings; relative assets and internal routing; compact theme and typography; accessible decorative icons; keypress bridge. The original typing, scoring, test modes, restart, words, quotes and results implementation remains upstream.
++
++Monkeytype is GNU GPL version 3. See LICENSE. Original third-party assets retain their licenses and credits.
+diff --git c/frontend/src/404.html w/frontend/src/404.html
+index 51aac59..62b50cb 100644
+--- c/frontend/src/404.html
++++ w/frontend/src/404.html
+@@ -83,7 +83,7 @@
+       .page404 .image {
+         width: 100%;
+         align-self: center;
+-        background-image: url("/images/monkeymeme.jpg");
++        background-image: url("./images/monkeymeme.jpg");
+         aspect-ratio: 300/199;
+         background-size: contain;
+         border-radius: var(--roundness);
+diff --git c/frontend/src/html/head.html w/frontend/src/html/head.html
+index 11e94da..262f446 100644
+--- c/frontend/src/html/head.html
++++ w/frontend/src/html/head.html
+@@ -1,18 +1,15 @@
+ <head>
+-  <link rel="preconnect" href="https://api.monkeytype.com" />
+-  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" />
+-  <link rel="preconnect" href="https://www.google.com" />
+-  <link rel="preconnect" href="https://www.gstatic.com" />
++  <meta http-equiv="Content-Security-Policy" content="connect-src 'self'; object-src 'none'; base-uri 'self'" />
+   <link
+     rel="preload"
+-    href="/webfonts/RobotoMono-Regular.woff2"
++    href="./webfonts/RobotoMono-Regular.woff2"
+     type="font/woff2"
+     as="font"
+     crossorigin
+   />
+   <link
+     rel="preload"
+-    href="/webfonts/LexendDeca-Regular.woff2"
++    href="./webfonts/LexendDeca-Regular.woff2"
+     type="font/woff2"
+     as="font"
+     crossorigin
+@@ -46,22 +43,22 @@
+     rel="icon"
+     type="image/x-icon"
+     sizes="32x32"
+-    href="/images/favicon/favicon.ico"
++    href="./images/favicon/favicon.ico"
+   />
+   <link
+     rel="apple-touch-icon"
+     sizes="180x180"
+-    href="/images/favicon/apple-touch-icon.png"
++    href="./images/favicon/apple-touch-icon.png"
+   />
+   <link
+     rel="mask-icon"
+-    href="/images/favicon/safari-pinned-tab.svg"
++    href="./images/favicon/safari-pinned-tab.svg"
+     color="#eee"
+   />
+   <meta name="msapplication-TileColor" content="#e2b714" />
+   <meta
+     name="msapplication-config"
+-    content="/images/favicon/browserconfig.xml"
++    content="./images/favicon/browserconfig.xml"
+   />
+   <meta
+     name="name"
+diff --git c/frontend/src/html/pages/test-result.html w/frontend/src/html/pages/test-result.html
+index 01f5a9b..a37ad5a 100644
+--- c/frontend/src/html/pages/test-result.html
++++ w/frontend/src/html/pages/test-result.html
+@@ -307,8 +307,7 @@
+       </div>
+     </div>
+     <div class="loginTip">
+-      <a href="/login" router-link>Sign in</a>
+-      to save your result
++      Guest result · stays in this session
+     </div>
+     <div class="ssWatermark hidden">monkeytype.com</div>
+   </div>
+diff --git c/frontend/src/index.html w/frontend/src/index.html
+index 4e2504b..364b85c 100644
+--- c/frontend/src/index.html
++++ w/frontend/src/index.html
+@@ -17,7 +17,7 @@
+     </div>
+     <!-- <div id="div-gpt-ad-mkt-0" style="height: 100vh"></div> -->
+     <div id="app" class="content-grid focus hidden">
+-      <mount data-component="header"></mount>
++  
+       <main class="full-width content-grid" style="height: 100%">
+         <div id="ad-vertical-left-wrapper" class="ad advertisement ad-v focus">
+           <div class="icon"><i class="fas fa-ad"></i></div>
+@@ -69,7 +69,7 @@
+           <mount data-component="leaderboardpage"></mount>
+         </div>
+       </main>
+-      <mount data-component="footer"></mount>
++
+       <div
+         id="ad-footer-wrapper"
+         class="full-width ad advertisement ad-h focus"
+@@ -82,14 +82,11 @@
+         <div id="ad-footer-small"></div>
+       </div>
+     </div>
+-    <script
+-      src="https://www.google.com/recaptcha/api.js?render=explicit"
+-      async
+-      defer
+-    ></script>
++
+ 
+     <link rel="stylesheet" href="" id="globalFunBoxTheme" type="text/css" />
+     <script type="module" src="ts/index.ts"></script>
+-    <mount data-component="devtools"></mount>
++
++  <link rel="stylesheet" href="./keyconf-embed.css" />
+   </body>
+ </html>
+diff --git c/frontend/src/keyconf-embed.css w/frontend/src/keyconf-embed.css
+new file mode 100644
+index 0000000..d202a71
+--- /dev/null
++++ w/frontend/src/keyconf-embed.css
+@@ -0,0 +1,23 @@
++/* Keyconf guest widget. Monkeytype's test controls, input and result UI are retained. */
++html, body { min-height: 0 !important; height: auto !important; }
++body { padding: 20px 24px !important; overflow-x: hidden; }
++#app { min-height: 0 !important; padding: 0 !important; gap: 20px !important; grid-template-rows: [top-start] 0 [content-start] auto [content-end] 0 [top-end] !important; }
++#app > main { min-height: 0 !important; height: auto !important; }
++header, footer, .ad, #keymap, #banner, #banners, .merchBanner { display: none !important; }
++[data-ui-element="testConfig"] { margin: 0 0 20px; opacity: 1 !important; flex-wrap: wrap; }
++[data-ui-element="testConfig"] button { min-height: 32px; }
++#typingTest { padding: 0 !important; }
++#restartTestButton { margin-top: 12px; margin-bottom: 0; min-height: 40px; }
++#result .stats { gap: 12px; }
++.content-grid { --content-max-width: 1100px; --padding-inline: 0px; }
++@media (max-width: 600px) {
++ body { padding: 16px 12px !important; }
++ #words { font-size: 1.2rem !important; }
++ [data-ui-element="testConfig"] button { min-height: 40px; }
++}
++@media (prefers-reduced-motion: reduce) {
++ *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
++}
++
++#app { row-gap: 0 !important; }
++#app, #app > main { display: block !important; height: auto !important; overflow: visible !important; }
+diff --git c/frontend/src/styles/caret.scss w/frontend/src/styles/caret.scss
+index c626792..11e00fe 100644
+--- c/frontend/src/styles/caret.scss
++++ w/frontend/src/styles/caret.scss
+@@ -38,7 +38,7 @@
+ 
+   &.carrot {
+     background-color: transparent;
+-    background-image: url("/images/caret/carrot.png");
++    background-image: url("./images/caret/carrot.png");
+     background-size: contain;
+     background-position: center;
+     background-repeat: no-repeat;
+@@ -47,7 +47,7 @@
+ 
+   &.banana {
+     background-color: transparent;
+-    background-image: url("/images/caret/banana.png");
++    background-image: url("./images/caret/banana.png");
+     background-size: contain;
+     background-position: center;
+     background-repeat: no-repeat;
+@@ -56,7 +56,7 @@
+ 
+   &.monkey {
+     background-color: transparent;
+-    background-image: url("/images/caret/monkey.png");
++    background-image: url("./images/caret/monkey.png");
+     background-size: contain;
+     background-position: center;
+     background-repeat: no-repeat;
+diff --git c/frontend/src/styles/fonts.scss w/frontend/src/styles/fonts.scss
+index 6b822e4..d6348cc 100644
+--- c/frontend/src/styles/fonts.scss
++++ w/frontend/src/styles/fonts.scss
+@@ -5,7 +5,7 @@
+   font-style: normal;
+   font-weight: 400;
+   font-display: block;
+-  src: url("/webfonts/Vazirharf-NL-Regular.woff2") format("woff2");
++  src: url("./webfonts/Vazirharf-NL-Regular.woff2") format("woff2");
+ }
+ 
+ @each $font, $config in $fonts {
+diff --git c/frontend/src/styles/standalone.scss w/frontend/src/styles/standalone.scss
+index a55889b..3ec7c2c 100644
+--- c/frontend/src/styles/standalone.scss
++++ w/frontend/src/styles/standalone.scss
+@@ -6,14 +6,14 @@
+   font-style: normal;
+   font-weight: 400;
+   font-display: block;
+-  src: url("/webfonts/RobotoMono-Regular.woff2") format("woff2");
++  src: url("./webfonts/RobotoMono-Regular.woff2") format("woff2");
+ }
+ @font-face {
+   font-family: "Lexend Deca";
+   font-style: normal;
+   font-weight: 400;
+   font-display: block;
+-  src: url("/webfonts/LexendDeca-Regular.woff2") format("woff2");
++  src: url("./webfonts/LexendDeca-Regular.woff2") format("woff2");
+ }
+ 
+ :root {
+diff --git c/frontend/src/ts/ape/adapters/ts-rest-adapter.ts w/frontend/src/ts/ape/adapters/ts-rest-adapter.ts
+index 6df7a3b..64619de 100644
+--- c/frontend/src/ts/ape/adapters/ts-rest-adapter.ts
++++ w/frontend/src/ts/ape/adapters/ts-rest-adapter.ts
+@@ -22,76 +22,12 @@ function timeoutSignal(ms: number): AbortSignal {
+   return ctrl.signal;
+ }
+ 
+-function buildApi(timeout: number): (args: ApiFetcherArgs) => Promise<{
+-  status: number;
+-  body: unknown;
+-  headers: Headers;
+-}> {
+-  return async (request: ApiFetcherArgs) => {
+-    try {
+-      const token = await getIdToken();
+-      if (token !== null) {
+-        request.headers["Authorization"] = `Bearer ${token}`;
+-      }
+-
+-      const usePolyfill = AbortSignal?.timeout === undefined;
+-
+-      request.fetchOptions = {
+-        ...request.fetchOptions,
+-        signal: usePolyfill
+-          ? timeoutSignal(timeout)
+-          : AbortSignal.timeout(timeout),
+-      };
+-      const response = await tsRestFetchApi(request);
+-      if (response.status >= 400) {
+-        console.error(`${request.method} ${request.path} failed`, {
+-          status: response.status,
+-          ...(response.body as object),
+-        });
+-      }
+-
+-      const compatibilityCheckHeader = response.headers.get(
+-        COMPATIBILITY_CHECK_HEADER,
+-      );
+-
+-      if (compatibilityCheckHeader !== null) {
+-        lastSeenServerCompatibility = parseInt(compatibilityCheckHeader);
+-      }
+-
+-      if (compatibilityCheckHeader !== null && !bannerShownThisSession) {
+-        const backendCheck = parseInt(compatibilityCheckHeader);
+-        if (backendCheck !== COMPATIBILITY_CHECK) {
+-          const message =
+-            backendCheck > COMPATIBILITY_CHECK
+-              ? `Looks like the client and server versions are mismatched (backend is newer). Please refresh the page.`
+-              : `Looks like our monkeys didn't deploy the new server version correctly. If this message persists contact support.`;
+-          addBanner({
+-            level: "error",
+-            text: message,
+-          });
+-          bannerShownThisSession = true;
+-        }
+-      }
+-
+-      return response;
+-    } catch (e: Error | unknown) {
+-      let message = "Unknown error";
+-
+-      if (e instanceof Error) {
+-        if (e.message.includes("timed out")) {
+-          message = "request took too long to complete";
+-        } else {
+-          message = e.message;
+-        }
+-      }
+-
+-      return {
+-        status: 500,
+-        body: { message },
+-        headers: new Headers(),
+-      };
+-    }
+-  };
++function buildApi(_timeout: number) {
++  return async (_request: ApiFetcherArgs) => ({
++    status: 403,
++    body: { message: "Online services are unavailable in this guest test. Visit monkeytype.com to sign in." },
++    headers: new Headers(),
++  });
+ }
+ 
+ // oxlint-disable-next-line explicit-function-return-type
+diff --git c/frontend/src/ts/ape/server-configuration.ts w/frontend/src/ts/ape/server-configuration.ts
+index c631009..38c088f 100644
+--- c/frontend/src/ts/ape/server-configuration.ts
++++ w/frontend/src/ts/ape/server-configuration.ts
+@@ -1,27 +1,4 @@
+-import { Configuration } from "@monkeytype/schemas/configuration";
+-import { promiseWithResolvers } from "../utils/misc";
+-import { queryClient } from "../queries";
+-import { getServerConfigurationQueryOptions } from "../queries/server-configuration";
+-
+-const {
+-  promise: configurationPromise,
+-  resolve,
+-  reject,
+-} = promiseWithResolvers<boolean>();
+-
+-export { configurationPromise };
+-
+-export function get(): Configuration | undefined {
+-  return queryClient.getQueryData(
+-    getServerConfigurationQueryOptions().queryKey,
+-  );
+-}
+-
+-export async function sync(): Promise<void> {
+-  try {
+-    await queryClient.fetchQuery(getServerConfigurationQueryOptions());
+-    resolve(true);
+-  } catch (e) {
+-    reject(e);
+-  }
+-}
++import { BASE_CONFIGURATION } from "../constants/keyconf-server-configuration";
++export const configurationPromise = Promise.resolve(true);
++export function get() { return BASE_CONFIGURATION; }
++export async function sync() {}
+diff --git c/frontend/src/ts/components/common/Fa.tsx w/frontend/src/ts/components/common/Fa.tsx
+index 41b113c..f3c53e4 100644
+--- c/frontend/src/ts/components/common/Fa.tsx
++++ w/frontend/src/ts/components/common/Fa.tsx
+@@ -14,6 +14,7 @@ export function Fa(props: FaProps): JSXElement {
+   const variant = (): string => props.variant ?? "solid";
+   return (
+     <i
++      aria-hidden="true"
+       class={cn(
+         props.icon,
+         {
+diff --git c/frontend/src/ts/components/core/Theme.tsx w/frontend/src/ts/components/core/Theme.tsx
+index f04c85f..2629395 100644
+--- c/frontend/src/ts/components/core/Theme.tsx
++++ w/frontend/src/ts/components/core/Theme.tsx
+@@ -69,7 +69,7 @@ export function Theme(): JSXElement {
+     } else {
+       hideLoaderBar();
+     }
+-    linkEl()?.setAttribute("href", hasCss ? `/themes/${name}.css` : "");
++    linkEl()?.setAttribute("href", hasCss ? `./themes/${name}.css` : "");
+   });
+ 
+   return (
+diff --git c/frontend/src/ts/components/pages/404Page.tsx w/frontend/src/ts/components/pages/404Page.tsx
+index c69e182..284a78d 100644
+--- c/frontend/src/ts/components/pages/404Page.tsx
++++ w/frontend/src/ts/components/pages/404Page.tsx
+@@ -8,7 +8,7 @@ export function NotFoundPage() {
+       <div class="flex h-full items-center justify-center">
+         <div class="flex flex-col gap-16 md:flex-row">
+           <div class="place-self-center">
+-            <img src="/images/monkeymeme.jpg" class="rounded-xl" />
++            <img src="./images/monkeymeme.jpg" class="rounded-xl" />
+           </div>
+           <div class="flex max-w-md flex-col items-center gap-4">
+             <H2 text="404" class="pb-0 text-7xl text-main" />
+diff --git c/frontend/src/ts/components/pages/test/Monkey.tsx w/frontend/src/ts/components/pages/test/Monkey.tsx
+index 4aaeba4..08c6478 100644
+--- c/frontend/src/ts/components/pages/test/Monkey.tsx
++++ w/frontend/src/ts/components/pages/test/Monkey.tsx
+@@ -32,19 +32,19 @@ export function Monkey() {
+     return (
+       <>
+         <img
+-          src={`/images/monkey/m1${suffix ?? ""}.png`}
++          src={`./images/monkey/m1${suffix ?? ""}.png`}
+           class={`absolute inset-0 ${cur === "left" ? "visible" : "hidden"}`}
+         />
+         <img
+-          src={`/images/monkey/m2${suffix ?? ""}.png`}
++          src={`./images/monkey/m2${suffix ?? ""}.png`}
+           class={`absolute inset-0 ${cur === "right" ? "visible" : "hidden"}`}
+         />
+         <img
+-          src={`/images/monkey/m3${suffix ?? ""}.png`}
++          src={`./images/monkey/m3${suffix ?? ""}.png`}
+           class={`absolute inset-0 ${cur === "none" ? "visible" : "hidden"}`}
+         />
+         <img
+-          src={`/images/monkey/m4${suffix ?? ""}.png`}
++          src={`./images/monkey/m4${suffix ?? ""}.png`}
+           class={`absolute inset-0 ${cur === "both" ? "visible" : "hidden"}`}
+         />
+       </>
+diff --git c/frontend/src/ts/components/pages/test/modes-notice/TestModesNotice.tsx w/frontend/src/ts/components/pages/test/modes-notice/TestModesNotice.tsx
+index 70a9230..0798ecd 100644
+--- c/frontend/src/ts/components/pages/test/modes-notice/TestModesNotice.tsx
++++ w/frontend/src/ts/components/pages/test/modes-notice/TestModesNotice.tsx
+@@ -40,7 +40,7 @@ export function TestModesNotice() {
+       )}
+     >
+       <Repeated />
+-      <ResultSaving />
++
+       <QuickRestart />
+       <LongText />
+       <LoadedChallenge />
+diff --git c/frontend/src/ts/constants/default-config.ts w/frontend/src/ts/constants/default-config.ts
+index b2a43d4..db95e80 100644
+--- c/frontend/src/ts/constants/default-config.ts
++++ w/frontend/src/ts/constants/default-config.ts
+@@ -5,18 +5,18 @@ const obj: Config = {
+   themeLight: "serika",
+   themeDark: "serika_dark",
+   autoSwitchTheme: false,
+-  customTheme: false,
++  customTheme: true,
+   customThemeColors: [
+-    "#323437",
+-    "#e2b714",
+-    "#e2b714",
+-    "#646669",
+-    "#2c2e31",
+-    "#d1d0c5",
+-    "#ca4754",
+-    "#7e2a33",
+-    "#ca4754",
+-    "#7e2a33",
++    "#f7f7f0",
++    "#476449",
++    "#476449",
++    "#646d60",
++    "#eeefe6",
++    "#30372d",
++    "#ad382f",
++    "#7d302b",
++    "#ad382f",
++    "#7d302b",
+   ] as CustomThemeColors,
+   favThemes: [],
+   showKeyTips: true,
+@@ -30,7 +30,7 @@ const obj: Config = {
+   mode: "time",
+   quoteLength: [1],
+   language: "english",
+-  fontSize: 2,
++  fontSize: 1.5,
+   freedomMode: false,
+   difficulty: "normal",
+   blindMode: false,
+@@ -44,7 +44,7 @@ const obj: Config = {
+   indicateTypos: "off",
+   compositionDisplay: "replace",
+   timerStyle: "mini",
+-  liveSpeedStyle: "off",
++  liveSpeedStyle: "mini",
+   liveAccStyle: "off",
+   liveBurstStyle: "off",
+   colorfulMode: false,
+@@ -80,14 +80,14 @@ const obj: Config = {
+   highlightMode: "letter",
+   typedEffect: "keep",
+   typingSpeedUnit: "wpm",
+-  ads: "result",
++  ads: "off",
+   hideExtraLetters: false,
+   strictSpace: false,
+   minAcc: "off",
+   minAccCustom: 90,
+   monkey: false,
+   repeatQuotes: "off",
+-  resultSaving: true,
++  resultSaving: false,
+   oppositeShiftMode: "off",
+   customBackground: "",
+   customBackgroundSize: "cover",
+diff --git c/frontend/src/ts/constants/keyconf-server-configuration.ts w/frontend/src/ts/constants/keyconf-server-configuration.ts
+new file mode 100644
+index 0000000..3a9d780
+--- /dev/null
++++ w/frontend/src/ts/constants/keyconf-server-configuration.ts
+@@ -0,0 +1,107 @@
++import { Configuration } from "@monkeytype/schemas/configuration";
++
++/**
++ * This is the base schema for the configuration of the API backend.
++ * To add a new configuration. Simply add it to this object.
++ * When changing this template, please follow the principle of "Secure by default" (https://en.wikipedia.org/wiki/Secure_by_default).
++ */
++export const BASE_CONFIGURATION: Configuration = {
++  maintenance: false,
++  dev: {
++    responseSlowdownMs: 0,
++  },
++  results: {
++    savingEnabled: false,
++    objectHashCheckEnabled: false,
++    filterPresets: {
++      enabled: false,
++      maxPresetsPerUser: 0,
++    },
++    limits: {
++      regularUser: 1000,
++      premiumUser: 10000,
++    },
++    maxBatchSize: 1000,
++  },
++  quotes: {
++    reporting: {
++      enabled: false,
++      maxReports: 0,
++      contentReportLimit: 0,
++    },
++    submissionsEnabled: false,
++    maxFavorites: 0,
++  },
++  admin: {
++    endpointsEnabled: false,
++  },
++  apeKeys: {
++    endpointsEnabled: false,
++    acceptKeys: false,
++    maxKeysPerUser: 0,
++    apeKeyBytes: 24,
++    apeKeySaltRounds: 5,
++  },
++  users: {
++    signUp: false,
++    lastHashesCheck: {
++      enabled: false,
++      maxHashes: 0,
++    },
++    discordIntegration: {
++      enabled: false,
++    },
++    autoBan: {
++      enabled: false,
++      maxCount: 5,
++      maxHours: 1,
++    },
++    profiles: {
++      enabled: false,
++    },
++    xp: {
++      enabled: false,
++      funboxBonus: 0,
++      gainMultiplier: 0,
++      maxDailyBonus: 0,
++      minDailyBonus: 0,
++      streak: {
++        enabled: false,
++        maxStreakDays: 0,
++        maxStreakMultiplier: 0,
++      },
++    },
++    inbox: {
++      enabled: false,
++      maxMail: 0,
++    },
++    premium: {
++      enabled: false,
++    },
++  },
++  rateLimiting: {
++    badAuthentication: {
++      enabled: false,
++      penalty: 0,
++      flaggedStatusCodes: [],
++    },
++  },
++  dailyLeaderboards: {
++    enabled: false,
++    maxResults: 0,
++    leaderboardExpirationTimeInDays: 0,
++    validModeRules: [],
++    scheduleRewardsModeRules: [],
++    topResultsToAnnounce: 1, // This should never be 0. Setting to zero will announce all results.
++    xpRewardBrackets: [],
++  },
++  leaderboards: {
++    minTimeTyping: 2 * 60 * 60,
++    weeklyXp: {
++      enabled: false,
++      expirationTimeInDays: 0, // This should atleast be 15
++      xpRewardBrackets: [],
++    },
++  },
++  connections: { enabled: false, maxPerUser: 100 },
++};
+diff --git c/frontend/src/ts/controllers/challenge-controller.ts w/frontend/src/ts/controllers/challenge-controller.ts
+index ed7ccf0..8166a77 100644
+--- c/frontend/src/ts/controllers/challenge-controller.ts
++++ w/frontend/src/ts/controllers/challenge-controller.ts
+@@ -264,7 +264,7 @@ export async function setup(challengeName: ChallengeName): Promise<boolean> {
+       });
+     } else if (settings.type === "script") {
+       showLoaderBar();
+-      const response = await fetch(`/challenges/${settings.parameters.script}`);
++      const response = await fetch(`./challenges/${settings.parameters.script}`);
+       hideLoaderBar();
+       if (response.status !== 200) {
+         throw new Error(`${response.status} ${response.statusText}`);
+diff --git c/frontend/src/ts/controllers/route-controller.ts w/frontend/src/ts/controllers/route-controller.ts
+index 595c099..a47f701 100644
+--- c/frontend/src/ts/controllers/route-controller.ts
++++ w/frontend/src/ts/controllers/route-controller.ts
+@@ -1,3 +1,4 @@
++let embedRoute = "/";
+ import * as PageController from "./page-controller";
+ import * as PageTransition from "../legacy-states/page-transition";
+ import { isAuthAvailable } from "../firebase";
+@@ -189,16 +190,9 @@ export async function navigate(
+   url = url.replace(/\/$/, "");
+   if (url === "") url = "/";
+ 
+-  // only push to history if we're navigating to a different URL
+-  const currentUrl = new URL(window.location.href);
+-  const targetUrl = new URL(url, window.location.origin);
+-
+-  if (
+-    currentUrl.pathname + currentUrl.search + currentUrl.hash !==
+-    targetUrl.pathname + targetUrl.search + targetUrl.hash
+-  ) {
+-    history.pushState(null, "", url);
+-  }
++  // The guest widget stays on its own document and uses an internal route.
++  const requestedPath = new URL(url, window.location.origin).pathname;
++  embedRoute = requestedPath === "/settings" ? "/settings" : "/";
+ 
+   await router(options);
+ }
+@@ -207,7 +201,7 @@ async function router(options = {} as NavigateOptions): Promise<void> {
+   const matches = routes.map((r) => {
+     return {
+       route: r,
+-      result: location.pathname.match(pathToRegex(r.path)),
++      result: embedRoute.match(pathToRegex(r.path)),
+     };
+   });
+ 
+diff --git c/frontend/src/ts/cookies.ts w/frontend/src/ts/cookies.ts
+index ad877ce..7c85728 100644
+--- c/frontend/src/ts/cookies.ts
++++ w/frontend/src/ts/cookies.ts
+@@ -36,11 +36,5 @@ export function setAcceptedCookies(accepted: AcceptedCookies): void {
+ }
+ 
+ export function activateWhatsAccepted(): void {
+-  const accepted = getAcceptedCookies();
+-  if (accepted?.analytics) {
+-    activateAnalytics();
+-  }
+-  if (accepted?.sentry && !isProfilerMode()) {
+-    void activateSentry();
+-  }
++  // Guest embed has no analytics or Sentry.
+ }
+diff --git c/frontend/src/ts/elements/merch-banner.tsx w/frontend/src/ts/elements/merch-banner.tsx
+index 9b95b30..650d345 100644
+--- c/frontend/src/ts/elements/merch-banner.tsx
++++ w/frontend/src/ts/elements/merch-banner.tsx
+@@ -22,7 +22,7 @@ export function showIfNotClosedBefore(): void {
+           </a>
+         </>
+       ),
+-      imagePath: "/images/merch2.png",
++      imagePath: "./images/merch2.png",
+       onClose: () => {
+         closed.set(true);
+       },
+diff --git c/frontend/src/ts/elements/psa.tsx w/frontend/src/ts/elements/psa.tsx
+index a86b81c..5cd21e2 100644
+--- c/frontend/src/ts/elements/psa.tsx
++++ w/frontend/src/ts/elements/psa.tsx
+@@ -34,115 +34,7 @@ function setMemory(id: string): void {
+ }
+ 
+ async function getLatest(): Promise<PSA[] | null> {
+-  const response = await Ape.psas.get();
+-
+-  if (response.status === 500) {
+-    if (isDevEnvironment()) {
+-      addBanner({
+-        level: "notice",
+-        text: "Dev Info: Backend server not running",
+-        icon: "fas fa-exclamation-triangle",
+-      });
+-    } else {
+-      type InstatusSummary = {
+-        page: {
+-          name: string;
+-          url: string;
+-          status: string;
+-        };
+-        activeIncidents: {
+-          id: string;
+-          name: string;
+-          started: string;
+-          status: string;
+-          impact: string;
+-          url: string;
+-          updatedAt: string;
+-        }[];
+-        activeMaintenances:
+-          | {
+-              id: string;
+-              name: string;
+-              start: string;
+-              status: "NOTSTARTEDYET" | "INPROGRESS" | "COMPLETED";
+-              duration: number;
+-              url: string;
+-              updatedAt: string;
+-            }[]
+-          | undefined;
+-      };
+-
+-      const { data: instatus, error } = await tryCatch(
+-        fetch("https://monkeytype.instatus.com/summary.json"),
+-      );
+-
+-      let maintenanceData: undefined | InstatusSummary["activeMaintenances"];
+-
+-      if (error) {
+-        console.log("Failed to fetch Instatus summary", error);
+-      } else {
+-        const instatusData =
+-          (await instatus.json()) as unknown as InstatusSummary;
+-
+-        maintenanceData = instatusData.activeMaintenances;
+-      }
+-
+-      if (
+-        maintenanceData !== undefined &&
+-        maintenanceData.length > 0 &&
+-        maintenanceData[0]?.status === "INPROGRESS"
+-      ) {
+-        addBanner({
+-          level: "error",
+-          customContent: (
+-            <>
+-              Server is currently offline for scheduled maintenance.{" "}
+-              <a target="_blank" href={maintenanceData[0].url}>
+-                Check the status page
+-              </a>{" "}
+-              for more info.
+-            </>
+-          ),
+-          icon: "fas fa-bullhorn",
+-        });
+-      } else {
+-        addBanner({
+-          level: "error",
+-          icon: "fas fa-exclamation-triangle",
+-          customContent: (
+-            <>
+-              Looks like the server is experiencing unexpected down time.
+-              <br />
+-              Check the{" "}
+-              <a target="_blank" href="https://monkeytype.instatus.com/">
+-                status page
+-              </a>{" "}
+-              for more information.
+-            </>
+-          ),
+-        });
+-      }
+-    }
+-    return null;
+-  } else if (response.status === 503) {
+-    addBanner({
+-      level: "error",
+-      icon: "fas fa-bullhorn",
+-      customContent: (
+-        <>
+-          Server is currently under maintenance.{" "}
+-          <a target="_blank" href="https://monkeytype.instatus.com/">
+-            Check the status page
+-          </a>{" "}
+-          for more info.
+-        </>
+-      ),
+-    });
+-    return null;
+-  } else if (response.status !== 200) {
+-    return null;
+-  }
+-  return response.body.data;
++  return [];
+ }
+ 
+ export async function show(): Promise<void> {
+diff --git c/frontend/src/ts/firebase.ts w/frontend/src/ts/firebase.ts
+index 55462c8..c0395b9 100644
+--- c/frontend/src/ts/firebase.ts
++++ w/frontend/src/ts/firebase.ts
+@@ -50,45 +50,10 @@ const { promise: authPromise, resolve: resolveAuthPromise } =
+   promiseWithResolvers();
+ 
+ export async function init(callback: ReadyCallback): Promise<void> {
+-  try {
+-    let firebaseConfig: FirebaseOptions | null;
+-
+-    firebaseConfig = (
+-      (await import("./constants/firebase-config")) as {
+-        firebaseConfig: FirebaseOptions;
+-      }
+-    ).firebaseConfig;
+-
+-    readyCallback = callback;
+-    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+-    Auth = getAuth(app);
+-
+-    const rememberMe =
+-      window.localStorage.getItem("firebasePersistence") === "LOCAL";
+-    await setPersistence(rememberMe, false);
+-
+-    onAuthStateChanged(Auth, async (user) => {
+-      if (!ignoreAuthCallback) {
+-        setUserState(user);
+-        await callback(true, user);
+-      }
+-    });
+-  } catch (e) {
+-    app = undefined;
+-    Auth = undefined;
+-    console.error("Firebase failed to initialize", e);
+-    await callback(false, null);
+-    setUserState(null);
+-    if (isDevEnvironment()) {
+-      addBanner({
+-        level: "notice",
+-        text: "Dev Info: Firebase failed to initialize",
+-        icon: "fas fa-exclamation-triangle",
+-      });
+-    }
+-  } finally {
+-    resolveAuthPromise();
+-  }
++  readyCallback = callback;
++  await callback(false, null);
++  setUserState(null);
++  resolveAuthPromise();
+ }
+ 
+ /**
+diff --git c/frontend/src/ts/index.ts w/frontend/src/ts/index.ts
+index 01bb523..b490cef 100644
+--- c/frontend/src/ts/index.ts
++++ w/frontend/src/ts/index.ts
+@@ -1,3 +1,4 @@
++import "./keyconf-embed";
+ // register signal tracking hook before any signals are created
+ import "./dev/signal-tracker";
+ 
+@@ -28,7 +29,7 @@ import * as Focus from "./test/focus";
+ import { fetchLatestVersion } from "./utils/version";
+ import * as Sentry from "./sentry";
+ import * as Cookies from "./cookies";
+-import "./elements/psa";
++
+ import "./controllers/url-handler";
+ import { applyEngineSettings } from "./anim";
+ import { qs, qsa, qsr } from "./utils/dom";
+@@ -69,15 +70,7 @@ void fetchLatestVersion().then((data) => {
+ });
+ 
+ Focus.set(true, true);
+-const accepted = Cookies.getAcceptedCookies();
+-if (accepted === null) {
+-  showModal("Cookies");
+-}
+-void init(onAuthStateChanged).then(() => {
+-  if (accepted !== null) {
+-    Cookies.activateWhatsAccepted();
+-  }
+-});
++void init(onAuthStateChanged);
+ 
+ addToGlobal({
+   snapshot: DB.getSnapshot,
+diff --git c/frontend/src/ts/keyconf-embed.ts w/frontend/src/ts/keyconf-embed.ts
+new file mode 100644
+index 0000000..dbd761c
+--- /dev/null
++++ w/frontend/src/ts/keyconf-embed.ts
+@@ -0,0 +1,35 @@
++// Keyconf guest integration. Original typing and result engines remain upstream.
++const parentOrigin = window.location.origin;
++const held = new Set<string>();
++const send = (event: string, detail = {}) => {
++  if (window.parent !== window) window.parent.postMessage({ type: 'keyconf:monkeytype', event, ...detail }, parentOrigin);
++};
++window.addEventListener('keydown', event => {
++  if (!(event.target instanceof HTMLElement) || event.target.id !== 'wordsInput' || event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
++  if (!/^(Key[A-Z]|Digit[0-9]|Space|Backspace|Enter|ShiftLeft|ShiftRight|Comma|Period|Slash|Semicolon|Quote|BracketLeft|BracketRight|Backslash|Minus|Equal|Backquote)$/.test(event.code)) return;
++  held.add(event.code);
++  send('key', { code: event.code, down: true });
++}, true);
++window.addEventListener('keyup', event => {
++  if (held.delete(event.code)) send('key', { code: event.code, down: false });
++}, true);
++window.addEventListener('blur', () => { held.clear(); send('clear'); });
++window.addEventListener('pagehide', () => { held.clear(); send('clear'); });
++let ready = false;
++let lastHeight = 0;
++const report = () => {
++  const app = document.getElementById('app');
++  if (!app || app.classList.contains('hidden')) return;
++  if (!ready && document.querySelector('#words .word')) {
++    ready = true;
++    document.getElementById('wordsInput')?.setAttribute('aria-label', 'Typing test input');
++    send('ready');
++  }
++  const height = Math.ceil(app.getBoundingClientRect().bottom + 24);
++  if (height !== lastHeight) { lastHeight = height; send('height', { height }); }
++};
++window.addEventListener('DOMContentLoaded', () => {
++  new MutationObserver(report).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
++  new ResizeObserver(report).observe(document.getElementById('app') ?? document.body);
++  report();
++});
+diff --git c/frontend/src/ts/queries/server-configuration.ts w/frontend/src/ts/queries/server-configuration.ts
+index 3a84c2f..48cd083 100644
+--- c/frontend/src/ts/queries/server-configuration.ts
++++ w/frontend/src/ts/queries/server-configuration.ts
+@@ -1,3 +1,4 @@
++import { BASE_CONFIGURATION } from "../constants/keyconf-server-configuration";
+ import { queryOptions } from "@tanstack/solid-query";
+ import { baseKey } from "./utils/keys";
+ import Ape from "../ape";
+@@ -13,16 +14,7 @@ const staleTime = Infinity;
+ export const getServerConfigurationQueryOptions = () =>
+   queryOptions({
+     queryKey: queryKeys.root(),
+-    queryFn: async () => {
+-      const response = await Ape.configuration.get();
+-
+-      if (response.status !== 200) {
+-        throw new Error(
+-          `Could not fetch configuration: ${response.body.message}`,
+-        );
+-      }
+-      return response.body.data;
+-    },
++    queryFn: async () => BASE_CONFIGURATION,
+     staleTime,
+     gcTime: Infinity,
+   });
+diff --git c/frontend/src/ts/ready.ts w/frontend/src/ts/ready.ts
+index 3f3c306..742dc27 100644
+--- c/frontend/src/ts/ready.ts
++++ w/frontend/src/ts/ready.ts
+@@ -17,7 +17,7 @@ onDOMReady(async () => {
+   qs("body")?.setStyle({
+     transition: "background .25s, transform .05s",
+   });
+-  MerchBanner.showIfNotClosedBefore();
++
+ 
+   const app = document.querySelector("#app") as HTMLElement;
+   app?.classList.remove("hidden");
+@@ -30,29 +30,4 @@ onDOMReady(async () => {
+ 
+   MonkeyPower.init();
+ 
+-  if (isDevEnvironment()) {
+-    void navigator.serviceWorker
+-      .getRegistrations()
+-      .then(function (registrations) {
+-        for (const registration of registrations) {
+-          void registration.unregister();
+-        }
+-      });
+-  } else {
+-    if ("serviceWorker" in navigator) {
+-      window.addEventListener("load", () => {
+-        navigator.serviceWorker
+-          .register("/sw.js", { scope: "/" })
+-          .then((registration) => {
+-            console.log(
+-              "ServiceWorker registration successful with scope: ",
+-              registration.scope,
+-            );
+-          })
+-          .catch((error: unknown) => {
+-            console.error("ServiceWorker registration failed: ", error);
+-          });
+-      });
+-    }
+-  }
+ });
+diff --git c/frontend/src/ts/utils/json-data.ts w/frontend/src/ts/utils/json-data.ts
+index d1b8b47..60e151d 100644
+--- c/frontend/src/ts/utils/json-data.ts
++++ w/frontend/src/ts/utils/json-data.ts
+@@ -75,7 +75,7 @@ export const cachedFetchJson = memoizeAsync(fetchJson);
+  * @throws {Error} If the layout list or layout doesn't exist.
+  */
+ export async function getLayout(layoutName: string): Promise<LayoutObject> {
+-  return await cachedFetchJson<LayoutObject>(`/layouts/${layoutName}.json`);
++  return await cachedFetchJson<LayoutObject>(`./layouts/${layoutName}.json`);
+ }
+ 
+ // used for polyglot wordset language-specific properties
+@@ -88,7 +88,7 @@ let currentLanguage: LanguageObject;
+ 
+ const cachedFetchLanguage = memoizeAsync(
+   async (lang: Language): Promise<LanguageObject> => {
+-    const loaded = await fetchJson<LanguageObject>(`/languages/${lang}.json`);
++    const loaded = await fetchJson<LanguageObject>(`./languages/${lang}.json`);
+ 
+     if (!isDevEnvironment()) {
+       //check the content to make it less easy to manipulate
+diff --git c/frontend/src/ts/utils/local-storage-with-schema.ts w/frontend/src/ts/utils/local-storage-with-schema.ts
+index 7e6522c..5c151f6 100644
+--- c/frontend/src/ts/utils/local-storage-with-schema.ts
++++ w/frontend/src/ts/utils/local-storage-with-schema.ts
+@@ -23,7 +23,7 @@ export class LocalStorageWithSchema<T> {
+       zodIssues?: ZodIssue[],
+     ) => T;
+   }) {
+-    this.key = options.key;
++    this.key = "keyconf.monkeytype." + options.key;
+     this.schema = options.schema;
+     this.fallback = options.fallback;
+     this.migrate = options.migrate;
+diff --git c/frontend/src/ts/utils/version.ts w/frontend/src/ts/utils/version.ts
+index f41bbdb..40389a2 100644
+--- c/frontend/src/ts/utils/version.ts
++++ w/frontend/src/ts/utils/version.ts
+@@ -1,52 +1 @@
+-import { z } from "zod";
+-import { getLatestReleaseFromGitHub } from "./json-data";
+-import { LocalStorageWithSchema } from "./local-storage-with-schema";
+-import { tryCatch } from "@monkeytype/util/trycatch";
+-import { isDevEnvironment } from "./env";
+-import { createErrorMessage } from "./error";
+-
+-const memoryLS = new LocalStorageWithSchema({
+-  key: "lastSeenVersion",
+-  schema: z.string(),
+-  fallback: "",
+-});
+-
+-function purgeCaches(): void {
+-  if (!("caches" in window)) return;
+-  void caches.keys().then(function (names) {
+-    for (const name of names) void caches.delete(name);
+-  });
+-}
+-
+-export async function fetchLatestVersion(): Promise<{
+-  text: string;
+-  isNew: boolean;
+-} | null> {
+-  if (isDevEnvironment()) return null;
+-
+-  const { data: currentVersion, error } = await tryCatch(
+-    getLatestReleaseFromGitHub(),
+-  );
+-
+-  if (error) {
+-    const msg = createErrorMessage(
+-      error,
+-      "Failed to fetch version number from GitHub",
+-    );
+-    console.error(msg);
+-    return null;
+-  }
+-
+-  const memoryVersion = memoryLS.get();
+-  const isNew = memoryVersion === "" ? false : memoryVersion !== currentVersion;
+-
+-  if (isNew || memoryVersion === "") {
+-    memoryLS.set(currentVersion);
+-    purgeCaches();
+-  }
+-
+-  return {
+-    text: currentVersion,
+-    isNew,
+-  };
+-}
++export async function fetchLatestVersion() { return { text: "26.32.0 · Keyconf guest", isNew: false }; }
+diff --git c/frontend/vite.config.ts w/frontend/vite.config.ts
+index 44ee9a8..3d9412b 100644
+--- c/frontend/vite.config.ts
++++ w/frontend/vite.config.ts
+@@ -208,11 +208,6 @@ function getBuildOptions({
+     rolldownOptions: {
+       input: {
+         monkeytype: path.resolve(__dirname, "src/index.html"),
+-        email: path.resolve(__dirname, "src/email-handler.html"),
+-        privacy: path.resolve(__dirname, "src/privacy-policy.html"),
+-        security: path.resolve(__dirname, "src/security-policy.html"),
+-        terms: path.resolve(__dirname, "src/terms-of-service.html"),
+-        404: path.resolve(__dirname, "src/404.html"),
+       },
+       output: {
+         assetFileNames: (assetInfo) => {
+@@ -341,6 +336,7 @@ export default defineConfig(({ mode }): UserConfig => {
+   }
+ 
+   return {
++    base: "./",
+     plugins: getPlugins({ isDevelopment, useSentry: useSentry, env }),
+     build: getBuildOptions({ enableSourceMaps: useSentry }),
+     css: getCssOptions({ isDevelopment }),

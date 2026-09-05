@@ -14,6 +14,7 @@ import {
   type Assembly,
 } from '../lib/component-data';
 import TechnologyGuide from './technology-guide';
+import StudioSelect from './studio-select';
 
 const labels: Record<Category, string> = {
   case: 'Case',
@@ -74,24 +75,25 @@ export default function ComponentsPanel({
         </p>
       </div>
       <label htmlFor="starting-assembly">Starting assembly</label>
-      <select
+      <StudioSelect
         id="starting-assembly"
         value={assembly?.id ?? ''}
-        onChange={(event) => {
-          const selected = assemblies.find((a) => a.id === event.target.value);
+        onValueChange={(value) => {
+          const selected = assemblies.find((a) => a.id === value);
           if (selected) onAssembly(selected);
         }}
-      >
-        <option value="" disabled>
-          Mixed parts · choose an assembly
-        </option>
-        {assemblies.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.layout}% · {item.brand} {item.name}
-            {item.availability === 'retired' ? ' · retired' : ''}
-          </option>
-        ))}
-      </select>
+        options={[
+          {
+            value: '',
+            label: 'Mixed parts · choose an assembly',
+            disabled: true,
+          },
+          ...assemblies.map((item) => ({
+            value: item.id,
+            label: `${item.layout}% · ${item.brand} ${item.name}${item.availability === 'retired' ? ' · retired' : ''}`,
+          })),
+        ]}
+      />
       {assembly && (
         <div className="assembly-note">
           <span className="pill">
@@ -112,7 +114,7 @@ export default function ComponentsPanel({
           <CircleAlert size={14} />
         </a>
       </div>
-      <div className="component-slots" aria-label="Component categories">
+      <fieldset className="component-slots" aria-label="Component categories">
         {categories.map((item) => (
           <button
             key={item}
@@ -130,7 +132,7 @@ export default function ComponentsPanel({
             </strong>
           </button>
         ))}
-      </div>
+      </fieldset>
       <div className="parts-heading">
         <h4>Browse {labels[category].toLowerCase()}</h4>
         <span>
@@ -148,7 +150,10 @@ export default function ComponentsPanel({
         />
       </label>
       {category === 'switch' && (
-        <div className="catalog-filters" aria-label="Switch technology filter">
+        <fieldset
+          className="catalog-filters"
+          aria-label="Switch technology filter"
+        >
           {[
             ['all', 'All'],
             ['contact', 'Contact'],
@@ -162,7 +167,7 @@ export default function ComponentsPanel({
               {label}
             </button>
           ))}
-        </div>
+        </fieldset>
       )}
       <div className="catalog-results">
         {matches.map((part) => (

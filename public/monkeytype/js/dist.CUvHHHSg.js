@@ -1,0 +1,1 @@
+import{c as e}from"./vendor.C5EbuSEn.js";export default e();

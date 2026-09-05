@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Check, Globe, LoaderCircle } from 'lucide-react';
 import { categories, type Part, type Category } from '../lib/catalog';
+import StudioSelect from './studio-select';
 import {
   parseStructuredProducts,
   publicUrl,
@@ -230,18 +231,15 @@ export default function ImportDialog({
             </a>
           </p>
           <label htmlFor="import-category">Add selected products as</label>
-          <select
+          <StudioSelect
             id="import-category"
             value={category}
-            onChange={(e) => {
-              const c = categories.find((c) => c === e.target.value);
+            onValueChange={(value) => {
+              const c = categories.find((c) => c === value);
               if (c) setCategory(c);
             }}
-          >
-            {categories.map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
+            options={categories.map((c) => ({ value: c, label: c }))}
+          />
           <div className="import-list">
             {result.products.map((p, i) => (
               <label key={p.url + p.sku + i} className="import-product">

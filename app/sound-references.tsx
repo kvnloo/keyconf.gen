@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { ArrowUpRight, Play, X } from 'lucide-react';
 import catalog from '../data/sound-references.json';
+import StudioSelect from './studio-select';
 
 export type SoundReference = (typeof catalog.records)[number];
 export default function SoundReferences({
@@ -36,20 +37,20 @@ export default function SoundReferences({
         onChange={(event) => setQuery(event.target.value)}
       />
       <label htmlFor="sound-family">Switch family</label>
-      <select
+      <StudioSelect
         id="sound-family"
         value={family}
-        onChange={(event) => setFamily(event.target.value)}
-      >
-        <option value="all">All families</option>
-        {Array.from(new Set(catalog.records.map((record) => record.family)))
-          .sort((a, b) => a.localeCompare(b))
-          .map((name) => (
-            <option key={name} value={name}>
-              {name === '---' ? 'Comparisons / unspecified' : name}
-            </option>
-          ))}
-      </select>
+        onValueChange={setFamily}
+        options={[
+          { value: 'all', label: 'All families' },
+          ...Array.from(new Set(catalog.records.map((record) => record.family)))
+            .sort((a, b) => a.localeCompare(b))
+            .map((name) => ({
+              value: name,
+              label: name === '---' ? 'Comparisons / unspecified' : name,
+            })),
+        ]}
+      />
       {selected && (
         <div className="reference-player">
           <div className="reference-heading">

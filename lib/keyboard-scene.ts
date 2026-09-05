@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import type { Build, Palette } from './build';
+import { legendInk } from './appearance';
 
 export type SceneOptions = Pick<
   Build,
@@ -70,8 +71,8 @@ export function createKeyboardScene(
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.95;
+  renderer.toneMapping = THREE.NeutralToneMapping;
+  renderer.toneMappingExposure = 1;
   renderer.domElement.tabIndex = 0;
   renderer.domElement.setAttribute('role', 'application');
   renderer.domElement.setAttribute(
@@ -89,6 +90,7 @@ export function createKeyboardScene(
   const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 150);
   camera.position.set(7, 15, 19);
   const controls = new OrbitControls(camera, renderer.domElement);
+  renderer.domElement.style.touchAction = 'pan-y pinch-zoom';
   controls.enableDamping = !reduced;
   controls.dampingFactor = 0.1;
   controls.minDistance = 12;
@@ -96,7 +98,7 @@ export function createKeyboardScene(
   controls.maxPolarAngle = Math.PI * 0.48;
   controls.target.set(0, 0.4, 0);
   controls.enablePan = false;
-  const light = new THREE.DirectionalLight('#fff5e4', 3.2);
+  const light = new THREE.DirectionalLight('#ffffff', 2.2);
   light.position.set(-5, 14, 7);
   light.castShadow = true;
   light.shadow.mapSize.set(2048, 2048);
@@ -107,9 +109,9 @@ export function createKeyboardScene(
   light.shadow.normalBias = 0.03;
   light.shadow.bias = -0.0001;
   scene.add(light);
-  const fill = new THREE.DirectionalLight('#dbe7ff', 1.4);
+  const fill = new THREE.DirectionalLight('#ffffff', 0.8);
   fill.position.set(8, 5, -5);
-  scene.add(fill, new THREE.AmbientLight('#ffffff', 0.5));
+  scene.add(fill, new THREE.AmbientLight('#ffffff', 0.25));
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(200, 200),
     new THREE.ShadowMaterial({ color: '#524c3c', opacity: 0.22 }),
@@ -139,21 +141,18 @@ export function createKeyboardScene(
     }
   }
   function appearance(snap = false) {
+    const colors = new Map([
+      ['case', options.caseColor],
+      ['alpha', options.alpha],
+      ['mod', options.mod],
+      ['accent', options.accent],
+      ['space', options.space],
+    ]);
     for (const [material, target] of materials) {
       const name = material.name.split('.')[0];
-      const color =
-        name === 'case'
-          ? options.caseColor
-          : name === 'alpha'
-            ? options.alpha
-            : name === 'mod'
-              ? options.mod
-              : name === 'accent'
-                ? options.accent
-                : name === 'space'
-                  ? options.space
-                  : null;
-      if (color) target.set(color);
+      const legend = name.startsWith('legend_');
+      const color = colors.get(legend ? name.slice(7) : name);
+      if (color) target.set(legend ? legendInk(color) : color);
       if (snap) material.color.copy(target);
       if (name === 'case') {
         const transparent = options.finish === 'Polycarbonate';
@@ -170,21 +169,6 @@ export function createKeyboardScene(
         material.roughness = transparent ? 0.2 : 0.33;
         material.opacity = transparent ? 0.62 : 1;
         material.depthWrite = !transparent;
-      }
-      if (name.startsWith('legend')) {
-        const colors = [
-          options.alpha,
-          options.mod,
-          options.accent,
-          options.space,
-        ].map((value) => new THREE.Color(value));
-        const lightness =
-          colors.reduce(
-            (sum, c) => sum + c.r * 0.2126 + c.g * 0.7152 + c.b * 0.0722,
-            0,
-          ) / colors.length;
-        target.set(lightness < 0.2 ? '#e9e8df' : '#33372e');
-        if (snap) material.color.copy(target);
       }
     }
     wake();
@@ -328,7 +312,9 @@ export function createKeyboardScene(
   }
   const editable = (target: EventTarget | null) =>
     target instanceof HTMLElement &&
-    !!target.closest('input,textarea,select,dialog,[contenteditable]');
+    !!target.closest(
+      'input,textarea,select,dialog,[contenteditable],[role="combobox"],[role="listbox"],[role="option"]',
+    );
   function keydown(event: KeyboardEvent) {
     if (
       editable(event.target) ||

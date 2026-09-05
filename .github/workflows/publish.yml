@@ -23,7 +23,7 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npx playwright install --with-deps chromium
-      - name: Verify sharing, import recovery and audio controls
+      - name: Verify browser journeys and accessibility
         shell: bash
         run: |
           npm run dev > /tmp/keyconf-preview.log 2>&1 &
@@ -38,6 +38,8 @@ jobs:
             exit 1
           fi
           npm run verify:browser
+          npm run verify:interface
+          npm run verify:typing
       - run: npm run build:pages
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main'

@@ -24,11 +24,13 @@ import {
 } from 'lucide-react';
 import KeyboardScene, { type SceneOptions } from './keyboard-scene';
 import ImportDialog from './import-dialog';
+import TypingTest from './typing-test';
 import SoundReferences, { type SoundReference } from './sound-references';
 import type { SamplePreview } from '../lib/audio-preview';
 import SampleWaveform from './sample-waveform';
 import ComponentsPanel from './components-panel';
 import ResearchProducts from './research-products';
+import StudioSelect from './studio-select';
 import { useBuild } from './use-build';
 import {
   palettes,
@@ -124,11 +126,14 @@ export default function Home() {
   const setLayout = (layout: typeof build.layout) => edit({ layout });
   const [exploded, setExploded] = useState(false);
   const [view, setView] = useState('perspective');
-  const [focusMode, setFocusMode] = useState(false);
+  const [experience, setExperience] = useState<'builder' | 'focus' | 'typing'>(
+    'builder',
+  );
+  const focusMode = experience === 'focus';
   useEffect(() => {
     if (!focusMode) return;
     const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setFocusMode(false);
+      if (event.key === 'Escape') setExperience('builder');
     };
     window.addEventListener('keydown', escape);
     return () => window.removeEventListener('keydown', escape);
@@ -427,7 +432,9 @@ export default function Home() {
     setNotice('Build exported with sources and compatibility notes.');
   }
   return (
-    <main className={focusMode ? 'focus-mode' : undefined}>
+    <main
+      className={experience === 'builder' ? undefined : experience + '-mode'}
+    >
       <a className="skip-link" href="#build-settings">
         Skip to build settings
       </a>
@@ -531,6 +538,19 @@ export default function Home() {
         </div>
       </div>
       <div className="workspace">
+        {experience === 'typing' && (
+          <TypingTest
+            onPress={press}
+            onRelease={release}
+            onExit={() => {
+              stopDemo();
+              setExperience('builder');
+              requestAnimationFrame(() =>
+                document.getElementById('start-typing-test')?.focus(),
+              );
+            }}
+          />
+        )}
         <section className="stage">
           <div className="stage-heading">
             <div className="eyebrow">
@@ -538,6 +558,19 @@ export default function Home() {
             </div>
             <h1>Make it yours.</h1>
             <p>Choose a color. Press a key. Find your feel.</p>
+            <button
+              id="start-typing-test"
+              className="button secondary compact typing-launch"
+              onClick={() => {
+                stopDemo();
+                setReference(null);
+                setExperience('typing');
+                void enableSound();
+                window.scrollTo({ top: 0 });
+              }}
+            >
+              <Play size={14} /> Start typing test
+            </button>
           </div>
           <div className="study-label">
             <span className="status-dot" /> 3D design study{' '}
@@ -586,13 +619,20 @@ export default function Home() {
               </button>
               <button
                 aria-pressed={focusMode}
-                onClick={() => setFocusMode(!focusMode)}
+                onClick={() => setExperience(focusMode ? 'builder' : 'focus')}
               >
                 {focusMode ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
                 {focusMode ? 'Back to builder' : 'Focus'}
               </button>
             </div>
-            <span>Drag to orbit · Scroll to zoom · Type to try</span>
+            <span>
+              <span className="pointer-instructions">
+                Drag to orbit · Scroll to zoom · Type to try
+              </span>
+              <span className="touch-instructions">
+                Swipe sideways to orbit · Swipe up to scroll
+              </span>
+            </span>
           </div>
           <div className="stage-caption">
             <span>
@@ -688,18 +728,15 @@ export default function Home() {
                     </div>
                   </fieldset>
                   <label htmlFor="finish">Case material</label>
-                  <select
+                  <StudioSelect
                     id="finish"
                     value={finish}
-                    onChange={(e) => {
-                      const finish = finishes.find((x) => x === e.target.value);
+                    onValueChange={(value) => {
+                      const finish = finishes.find((x) => x === value);
                       if (finish) edit({ finish });
                     }}
-                  >
-                    {finishes.map((x) => (
-                      <option key={x}>{x}</option>
-                    ))}
-                  </select>
+                    options={finishes.map((x) => ({ value: x, label: x }))}
+                  />
                   <fieldset className="control-group">
                     <legend>
                       Case finish{' '}
@@ -809,20 +846,15 @@ export default function Home() {
                   <label htmlFor="profile">
                     Keycap silhouette <span>Illustrative</span>
                   </label>
-                  <select
+                  <StudioSelect
                     id="profile"
                     value={profile}
-                    onChange={(e) => {
-                      const profile = profiles.find(
-                        (x) => x === e.target.value,
-                      );
+                    onValueChange={(value) => {
+                      const profile = profiles.find((x) => x === value);
                       if (profile) edit({ profile });
                     }}
-                  >
-                    {profiles.map((p) => (
-                      <option key={p}>{p}</option>
-                    ))}
-                  </select>
+                    options={profiles.map((p) => ({ value: p, label: p }))}
+                  />
                 </section>
               </>
             )}
@@ -867,25 +899,23 @@ export default function Home() {
                   </p>
                 </div>
                 <label htmlFor="sound-pack">Typing sound</label>
-                <select
+                <StudioSelect
                   id="sound-pack"
                   value={pack?.id ?? 'synthesized'}
-                  onChange={(event) => {
+                  onValueChange={(value) => {
                     stopDemo();
                     edit({
-                      audio: { ...build.audio, source: event.target.value },
+                      audio: { ...build.audio, source: value },
                     });
                   }}
-                >
-                  <optgroup label="Recorded switches">
-                    {soundPacks.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <option value="synthesized">Synthesized sound study</option>
-                </select>
+                  options={[
+                    ...soundPacks.map((item) => ({
+                      value: item.id,
+                      label: item.name,
+                    })),
+                    { value: 'synthesized', label: 'Synthesized sound study' },
+                  ]}
+                />
                 {sampleState === 'loading' && (
                   <output className="muted recording-count">
                     Loading recordings…
@@ -953,19 +983,19 @@ export default function Home() {
                 {!pack && (
                   <>
                     <label htmlFor="character">Switch character</label>
-                    <select
+                    <StudioSelect
                       id="character"
                       value={character}
-                      onChange={(e) => {
-                        const v = e.target.value;
+                      onValueChange={(v) => {
                         if (v === 'linear' || v === 'tactile' || v === 'clicky')
                           edit({ audio: { ...build.audio, character: v } });
                       }}
-                    >
-                      <option value="linear">Soft linear</option>
-                      <option value="tactile">Crisp tactile</option>
-                      <option value="clicky">Bright clicky</option>
-                    </select>
+                      options={[
+                        { value: 'linear', label: 'Soft linear' },
+                        { value: 'tactile', label: 'Crisp tactile' },
+                        { value: 'clicky', label: 'Bright clicky' },
+                      ]}
+                    />
                     <label htmlFor="damping">
                       Damping <span>{Math.round(damping * 100)}%</span>
                     </label>

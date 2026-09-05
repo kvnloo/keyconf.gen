@@ -127,7 +127,9 @@ export function useBuild(notify: (message: string) => void) {
         return;
       if (
         event.target instanceof HTMLElement &&
-        event.target.closest('input,textarea,select,[contenteditable]')
+        event.target.closest(
+          'input,textarea,select,[contenteditable],[role="combobox"],[role="listbox"],[role="option"]',
+        )
       )
         return;
       if (event.key.toLowerCase() === 'z') {

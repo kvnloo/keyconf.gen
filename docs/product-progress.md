@@ -95,3 +95,17 @@ Verification:
 Updated React/RSC to 19.2.8, Vinext to beta.9, Vite to 8.2.2 and their compatible Cloudflare/RSC tooling after the release audit identified affected older versions. Installation now reports zero known npm vulnerabilities. Type checking, lint, all 24 tests, the fresh-browser checks, and both Sites and Pages production builds pass on the updated dependencies. Public deployment and CI status are verified after pushing this unit.
 
 Still pending for the full product goal: the remaining viewport/zoom and reduced-motion review, graphics failure/recovery and rapid-change checks, the complete interaction/presentation acceptance matrix, and the final release audit. Catalog growth and measurement-backed acoustic modelling remain explicit ongoing data work.
+
+## Checkpoint before the new visual direction
+
+The user requested a commit and push before starting the supplied desk-scene redesign. This checkpoint preserves the current implementation; it is not a completed visual or release certification.
+
+- Replaced all seven native selects with styled, anchored Base UI menus. The implementation agent verified selection, typeahead, Escape, focus restoration, touch, viewport collision handling, and menus inside the import dialog. Existing browser recovery tests pass with the new controls.
+- Added interface checks for keyboard focus, dialog behavior, five widths from 320 to 1920 pixels, real 200% browser zoom, and automated accessibility checks. The implementation agent ran this suite successfully before the typing integration.
+- Fixed vertical touch scrolling over the 3D preview, focus/contrast issues, and per-key-group legend contrast. Regenerated the three original Blender models and moved to neutral tone mapping with neutral lights. This remains illustrative geometry and material treatment.
+- Added a Monkeytype guest iframe above the existing keyboard, using a pinned build of the actual GPLv3 frontend. Source, static inputs, license, integration patch, and regeneration instructions accompany the assets. The integration preserves the upstream typing/results engine and disables remote account services, analytics, ads, and service workers. Key events connect to the existing scene and sound engine. A complete typing test reached results in the local widget.
+- Added browser verification for typing, audio, keyboard response, restart, mobile layout and retry. The complete new suite is still pending a successful run. A compact-widget layout regression was found and corrected; the latest correction requires re-verification.
+
+The blind verifier wrote and froze its expectations before inspecting the candidate, without access to implementation. Its baseline confirmed native popup styling and missing typing mode. It did not reproduce the reported centered popup. Candidate runs encountered general rendering/interaction stalls in software-rendered Chromium, preventing a reliable independent pass. These stalls remain unresolved; build or unit-test success must not be treated as UX completion. The frozen evidence is retained in the working environment at `/tmp/keyconf-blind-ux/`.
+
+Next: finish renderer/typing verification, add a visible volume dial with gain above unity for quiet recordings, then implement the user-supplied landing/workshop/Sound/Play/Discover design with desk objects and plants while preserving all existing functionality. The redesign and volume dial have not started in this checkpoint. The product goal remains active.

@@ -49,8 +49,10 @@ rows=[
 all_layouts={}
 for layout in ['60','65','75']:
     bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(use_global=False)
-    mats={n:material(n,c,m,r) for n,c,m,r in [('case',(.72,.64,.50),.72,.3),('alpha',(.86,.83,.73),0,.35),('mod',(.73,.69,.56),0,.37),('accent',(.83,.29,.10),0,.30),('space',(.53,.64,.47),0,.32),('plate',(.19,.20,.16),.4,.35),('pcb',(.06,.18,.13),0,.65),('legend',(.13,.14,.12),0,.4),('weight',(.48,.28,.10),.85,.22)]}
+    mats={n:material(n,c,m,r) for n,c,m,r in [('case',(.72,.64,.50),.72,.3),('alpha',(.86,.83,.73),0,.35),('mod',(.73,.69,.56),0,.37),('accent',(.83,.29,.10),0,.30),('space',(.53,.64,.47),0,.32),('plate',(.19,.20,.16),.4,.35),('pcb',(.06,.18,.13),0,.65),('weight',(.48,.28,.10),.85,.22)]}
     row_data=[list(r) for r in rows]
+    for group in ['alpha','mod','accent','space']:
+        mats['legend_'+group]=material('legend_'+group,(.13,.14,.12),0,.4)
     if layout!='60':
         row_data[0].append(('Del','Delete',1));row_data[1].append(('PgUp','PageUp',1));row_data[2].append(('PgDn','PageDown',1))
         row_data[3][-1]=('Shift','ShiftRight',1.75);row_data[3]+=[('↑','ArrowUp',1),('End','End',1)]
@@ -75,7 +77,7 @@ for layout in ['60','65','75']:
             cap(w,mats[group],parent)
             if label:
                 curve=bpy.data.curves.new('Legend','FONT');curve.body=label;curve.align_x='CENTER';curve.align_y='CENTER';curve.size=.14 if len(label)>2 else .20;curve.extrude=.0006
-                text=bpy.data.objects.new('legend_'+code,curve);bpy.context.collection.objects.link(text);text.parent=parent;text.location=(0,.035,.445);text.data.materials.append(mats['legend'])
+                text=bpy.data.objects.new('legend_'+code,curve);bpy.context.collection.objects.link(text);text.parent=parent;text.location=(0,.035,.445);text.data.materials.append(mats['legend_'+group])
                 bpy.context.view_layer.objects.active=text;text.select_set(True);bpy.ops.object.convert(target='MESH');text.select_set(False)
             keys.append({'label':label,'code':code,'width':w,'x':x,'y':y})
     all_layouts[layout]=keys

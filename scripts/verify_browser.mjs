@@ -44,24 +44,23 @@ try {
     .getByRole('textbox', { name: 'Build name', exact: true })
     .fill('Portable violet build');
   await tab(page, 'Components').click();
+  await page.getByRole('combobox', { name: 'Starting assembly' }).click();
   await page
-    .getByRole('combobox', { name: 'Starting assembly' })
-    .selectOption('q1-max');
+    .getByRole('option', { name: '75% · Keychron Q1 Max', exact: true })
+    .click();
   await button(page, 'Import a website').click();
   await page
     .getByRole('textbox', { name: 'Website URL' })
     .fill('https://example.com/violet-case');
   await page.getByText('Have a product data export?', { exact: true }).click();
-  await page
-    .getByRole('textbox', { name: 'Product JSON-LD' })
-    .fill(
-      JSON.stringify({
-        '@type': 'Product',
-        name: 'Violet case fixture',
-        brand: 'Fixture',
-        sku: 'VIOLET-1',
-      }),
-    );
+  await page.getByRole('textbox', { name: 'Product JSON-LD' }).fill(
+    JSON.stringify({
+      '@type': 'Product',
+      name: 'Violet case fixture',
+      brand: 'Fixture',
+      sku: 'VIOLET-1',
+    }),
+  );
   await button(page, 'Preview').click();
   await button(page, 'Add 1 selected products').click();
   await button(page, 'Close dialog').click();
@@ -154,9 +153,10 @@ try {
   await button(audioPage, 'Try a typing sequence').click();
   await button(audioPage, 'Stop playback').waitFor();
   assert.ok((await audioPage.evaluate(() => window.keyconfAudioProbe())) > 0);
+  await audioPage.getByRole('combobox', { name: 'Typing sound' }).click();
   await audioPage
-    .getByRole('combobox', { name: 'Typing sound' })
-    .selectOption('mx-blue');
+    .getByRole('option', { name: 'Cherry MX Blue', exact: true })
+    .click();
   await button(audioPage, 'Try a typing sequence').waitFor();
   assert.equal(await audioPage.evaluate(() => window.keyconfAudioProbe()), 0);
   await button(audioPage, 'space Spacebar').click();

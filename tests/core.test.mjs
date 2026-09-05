@@ -121,6 +121,25 @@ test('Blender exports contain separate key groups and all configurable materials
     );
     for (const name of ['case', 'alpha', 'mod', 'accent', 'space'])
       assert.ok(json.materials.some((m) => m.name.split('.')[0] === name));
+    for (const node of json.nodes.filter((node) =>
+      node.name?.startsWith('key_'),
+    )) {
+      const meshes = node.children
+        .map((index) => json.nodes[index])
+        .filter((child) => child.mesh !== undefined);
+      const names = meshes.flatMap((mesh) =>
+        json.meshes[mesh.mesh].primitives.map(
+          (primitive) => json.materials[primitive.material].name.split('.')[0],
+        ),
+      );
+      const surface = names.find((name) =>
+        ['alpha', 'mod', 'accent', 'space'].includes(name),
+      );
+      const legend = names.find((name) => name.startsWith('legend_'));
+      if (legend) assert.equal(legend, 'legend_' + surface, node.name);
+      if (node.name !== 'key_Space')
+        assert.ok(legend, node.name + ' has an independent legend material');
+    }
   }
 });
 import { parseStudy } from '../lib/webmcp.ts';

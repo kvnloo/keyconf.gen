@@ -31,7 +31,10 @@ export default function ResearchProducts() {
           onChange={(event) => setQuery(event.target.value)}
         />
       </label>
-      <div className="catalog-filters" aria-label="Research product category">
+      <fieldset
+        className="catalog-filters"
+        aria-label="Research product category"
+      >
         {[
           ['all', 'All'],
           ['keyboard', 'Keyboards'],
@@ -46,7 +49,7 @@ export default function ResearchProducts() {
             {name}
           </button>
         ))}
-      </div>
+      </fieldset>
       <p className="catalog-provenance">
         Observed {data.accessed_at}. July switch ranks come from kbd.news
         contributor lists, not global sales. ProSettings observations describe
