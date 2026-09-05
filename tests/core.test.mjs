@@ -123,5 +123,12 @@ test('Blender exports contain separate key groups and all configurable materials
       assert.ok(json.materials.some((m) => m.name.split('.')[0] === name));
   }
 });
-import {parseStudy} from '../lib/webmcp.ts';
-test('Study tool validates layout and palette before mutating state',()=>{assert.deepEqual(parseStudy({layout:'65',palette:'Porcelain'}),{layout:'65',palette:'Porcelain'});assert.throws(()=>parseStudy({layout:'99',palette:'Porcelain'}));assert.throws(()=>parseStudy({layout:'60',palette:'not a palette'}));});
+import { parseStudy } from '../lib/webmcp.ts';
+test('Study tool validates layout and palette before mutating state', () => {
+  assert.deepEqual(parseStudy({ layout: '65', palette: 'Porcelain' }), {
+    layout: '65',
+    palette: 'Porcelain',
+  });
+  assert.throws(() => parseStudy({ layout: '99', palette: 'Porcelain' }));
+  assert.throws(() => parseStudy({ layout: '60', palette: 'not a palette' }));
+});

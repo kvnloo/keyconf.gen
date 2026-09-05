@@ -757,6 +757,34 @@ export default function Home() {
               the catalog, asset pipeline, and sound library, not an exhaustive
               keyboard database.
             </p>
+            <div className="dataset-summary">
+              <div>
+                <strong>7,267</strong>
+                <span>firmware definitions</span>
+              </div>
+              <div>
+                <strong>9,047</strong>
+                <span>QMK layouts</span>
+              </div>
+              <div>
+                <strong>28</strong>
+                <span>research sources</span>
+              </div>
+            </div>
+            <p className="muted">
+              Definitions include overlapping versions and are not unique retail
+              keyboards. The research catalog separates retail products,
+              firmware, measurements, and compatibility evidence.
+            </p>
+            <a
+              className="button secondary"
+              href="https://github.com/kvnloo/keyconf.gen/blob/main/docs/research.md"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Read the full database &amp; switch research{' '}
+              <ArrowUpRight size={15} />
+            </a>
             <div className="research-grid">
               {sources.map((s) => (
                 <a key={s.url} href={s.url} target="_blank" rel="noreferrer">

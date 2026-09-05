@@ -226,6 +226,64 @@ async function boundedText(r: Response) {
 }
 export async function importWebsite(input: string): Promise<ImportResult> {
   const u = publicUrl(input);
+  if (/\/products\/[^/]+\/?$/.test(u.pathname)) {
+    try {
+      const endpoint = new URL(u);
+      endpoint.pathname = endpoint.pathname.replace(/\/$/, '') + '.js';
+      endpoint.search = '';
+      const response = await fetchPublic(endpoint);
+      const data: unknown = JSON.parse(await boundedText(response));
+      if (
+        record(data) &&
+        typeof data.title === 'string' &&
+        Array.isArray(data.variants)
+      ) {
+        const title = data.title;
+        const products = data.variants
+          .filter(record)
+          .slice(0, 80)
+          .map((variant) => {
+            const url = new URL(u);
+            if (
+              typeof variant.id === 'number' ||
+              typeof variant.id === 'string'
+            )
+              url.searchParams.set('variant', String(variant.id));
+            const name =
+              title +
+              (typeof variant.title === 'string' &&
+              variant.title !== 'Default Title'
+                ? ' · ' + variant.title
+                : '');
+            return {
+              name,
+              brand: string(data.vendor),
+              url: url.href,
+              sku: string(variant.sku),
+              price: '',
+              currency: '',
+              availability:
+                variant.available === true
+                  ? 'Available'
+                  : variant.available === false
+                    ? 'Unavailable'
+                    : '',
+            };
+          });
+        if (products.length)
+          return {
+            products,
+            source: u.href,
+            observedAt: new Date().toISOString(),
+            method: 'Shopify product JSON',
+            coverage:
+              'Up to 80 variants of this product. Price omitted because this endpoint does not establish the presentment currency. Shopify product JSON can truncate very large variant sets.',
+          };
+      }
+    } catch {
+      // A non-Shopify product URL may still expose Product JSON-LD below.
+    }
+  }
   const response = await fetchPublic(u);
   const html = await boundedText(response);
   const products = parseStructuredProducts(html, u.href);

@@ -1018,3 +1018,25 @@ button:disabled {
     font-size: 14px;
   }
 }
+.dataset-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 25px 0 16px;
+}
+.dataset-summary > div {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.dataset-summary strong {
+  display: block;
+  font-family: Georgia, serif;
+  font-size: 30px;
+  font-weight: 400;
+}
+.dataset-summary span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 5px;
+}

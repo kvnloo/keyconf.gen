@@ -39,3 +39,8 @@ next-env.d.ts
 
 /pages-dist/
 *.tsbuildinfo
+
+*.blend1
+
+/data/*.sqlite
+/docs/report-source.md

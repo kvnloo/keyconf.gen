@@ -1,0 +1,12 @@
+{
+  "accessed_at": "2026-09-05",
+  "counts": {
+    "source_document": 28,
+    "product": 20,
+    "spec_claim": 24,
+    "popularity_observation": 15,
+    "firmware_target": 7267,
+    "layout": 9047
+  },
+  "scope": "Research seed and firmware targets. Not a complete retail catalog or verified compatibility database."
+}

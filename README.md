@@ -38,4 +38,4 @@ See `docs/research.md` for source coverage and the database design. Imported pro
 
 Sound sources are not downloaded from YouTube. Exact-build audio requires licensed recordings and full recording/build metadata. The current Web Audio engine is explicitly synthesized.
 
-The URL importer reads at most 2 MB per response and follows at most three redirects, rejecting non-public destinations. Shopify previews currently read up to 40 products and one variant per product. This is not a complete catalog crawler. Production ingestion needs queued adapters, retries, rate controls, versioned observations, and an egress policy that prevents DNS rebinding.
+The URL importer reads at most 2 MB per response and follows at most three redirects, rejecting non-public destinations. Shopify catalog previews read up to 40 products and one variant per product. Product-URL previews read up to 80 variants and omit prices when currency is not established. This is not a complete catalog crawler. Production ingestion needs queued adapters, retries, rate controls, versioned observations, and an egress policy that prevents DNS rebinding.
