@@ -109,12 +109,9 @@ export class KeyboardAudio {
       this.cursor.set(group, cursor + 1);
       const source = ctx.createBufferSource();
       source.buffer = buffer;
-      const gain = ctx.createGain();
-      gain.gain.value = 0.22;
-      source.connect(gain).connect(output);
+      source.connect(output);
       this.track(source, () => {
         source.disconnect();
-        gain.disconnect();
       });
       source.start(t);
       return;

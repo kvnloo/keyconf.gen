@@ -57,3 +57,9 @@ Live checks in the existing in-app browser:
 - The runtime check exposed a pre-existing development asset-path failure. `index.html` hardcoded the GitHub Pages base path even for localhost, producing model and sample 404s. It now uses Vite's BASE_URL placeholder. The model loaded and sound became available after the fix.
 
 Remaining acceptance work: catalog and technology presentation, more deliberate sound interaction, complete responsive/accessibility review, remaining lint issues, source-format compatibility for legacy exports, complete published sharing tests, and a final deployment audit. The goal remains active.
+
+## Playback level correction
+
+The user reported quiet keyboard playback. The recorded path applied a fixed 0.22 gain before the volume slider, leaving the default 45% setting at 9.9% of source amplitude. Removed that extra gain node. Recordings now pass directly through the user's master level, raising output by 13.15 dB at every nonzero slider setting. Existing saved volume settings still apply. Sample bytes, pitch, timing and spectral balance are unchanged.
+
+Decoded all 78 MP3 files to inspect their levels, then measured actual browser playback of press/release sequences across all seven presets at 45% volume. Observed peaks ranged from approximately -19.5 to -12.1 dBFS with no clipping in those sequences. The 16 existing tests, type checking, Sites build and Pages build pass. This addresses playback attenuation; headphone listening quality and acoustic fidelity remain part of the wider listening work.
