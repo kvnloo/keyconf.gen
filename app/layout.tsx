@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Keyconf | Your keyboard, every detail',
-  description: 'Build a keyboard in 3D. Explore materials, colors, parts, and sound with source-backed compatibility.',
+  description:
+    'Build a keyboard in 3D. Explore materials, colors, parts, and sound with source-backed compatibility.',
 };
 
 export default function RootLayout({

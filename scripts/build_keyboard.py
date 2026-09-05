@@ -54,8 +54,10 @@ for layout in ['60','65','75']:
     if layout!='60':
         row_data[0].append(('Del','Delete',1));row_data[1].append(('PgUp','PageUp',1));row_data[2].append(('PgDn','PageDown',1))
         row_data[3][-1]=('Shift','ShiftRight',1.75);row_data[3]+=[('↑','ArrowUp',1),('End','End',1)]
-        row_data[4]=row_data[4][:4]+[('Alt','AltRight',1),('Fn','Fn',1),('←','ArrowLeft',1),('↓','ArrowDown',1),('→','ArrowRight',1)]
-    if layout=='75': row_data.insert(0,[('Esc','EscapeFn',1)]+[('F'+str(i),'F'+str(i),1) for i in range(1,13)]+[('Del','DeleteFn',1),('Home','Home',1),('End','EndFn',1)])
+        row_data[4]=row_data[4][:4]+[('', 'Gap', 1),('Alt','AltRight',1),('Fn','Fn',1),('←','ArrowLeft',1),('↓','ArrowDown',1),('→','ArrowRight',1)]
+    if layout=='75':
+        row_data[0][0]=('`','Backquote',1)
+        row_data.insert(0,[('Esc','EscapeFn',1)]+[('F'+str(i),'F'+str(i),1) for i in range(1,13)]+[('Del','DeleteFn',1),('Home','Home',1),('End','EndFn',1)])
     width=15 if layout=='60' else 16; height=len(row_data); cy=(height-1)/2
     body=box('case_bottom',(width+.62,height+.62,.42),(0,0,.05),mats['case'],.20)
     box('weight',(width-1,height-1,.04),(0,0,-.17),mats['weight'],.12)
@@ -67,6 +69,7 @@ for layout in ['60','65','75']:
         cursor=-width/2
         for label,code,w in items:
             x=cursor+w/2; y=cy-row; cursor+=w
+            if code=='Gap':continue
             parent=bpy.data.objects.new('key_'+code,None); bpy.context.collection.objects.link(parent);parent.location=(x,y,.43)
             group='accent' if code in ['Escape','EscapeFn','Enter'] else 'space' if code=='Space' or code.startswith('Arrow') else 'alpha' if len(label)==1 else 'mod'
             cap(w,mats[group],parent)
