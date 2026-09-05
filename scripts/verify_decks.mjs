@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { chromium } from 'playwright';
 
 const baseUrl =
-  process.env.KEYCONF_BASE_URL ?? process.argv[2] ?? 'http://127.0.0.1:3000/';
+  process.env.KEYCONF_BASE_URL ?? process.argv[2] ?? 'http://localhost:3000/';
 const artifacts = await mkdtemp(join(tmpdir(), 'keyconf-decks-'));
 const browser = await chromium.launch({
   args: ['--disable-webgl'],
