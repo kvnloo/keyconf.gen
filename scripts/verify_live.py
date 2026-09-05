@@ -8,7 +8,8 @@ def request(path,body=None,origin=None):
  try:
   with urllib.request.urlopen(r,timeout=45) as response:return response.status,response.read(),dict(response.headers)
  except urllib.error.HTTPError as e:return e.code,e.read(),dict(e.headers)
-assert request('/')[0]==200
+status, body, _ = request('/')
+assert status == 200, 'Root HTTP '+str(status)+': '+body[:300].decode('utf8', errors='replace')
 for layout in ['60','65','75']:
  status,body,_=request('/models/keyboard-'+layout+'.glb');assert status==200 and body[:4]==b'glTF'
 assert request('/api/import',{'url':'https://127.0.0.1'})[0]==422
