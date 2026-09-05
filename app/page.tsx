@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Layers,
   RotateCcw,
@@ -24,7 +24,9 @@ import {
 } from 'lucide-react';
 import KeyboardScene, { type SceneOptions } from './keyboard-scene';
 import ImportDialog from './import-dialog';
-import SoundReferences from './sound-references';
+import SoundReferences, { type SoundReference } from './sound-references';
+import type { SamplePreview } from '../lib/audio-preview';
+import SampleWaveform from './sample-waveform';
 import ComponentsPanel from './components-panel';
 import ResearchProducts from './research-products';
 import { useBuild } from './use-build';
@@ -131,86 +133,145 @@ export default function Home() {
     window.addEventListener('keydown', escape);
     return () => window.removeEventListener('keydown', escape);
   }, [focusMode]);
-  const [tab, setTab] = useState<Tab>('design');
+  const [tab, setActiveTab] = useState<Tab>('design');
+  const [reference, setReference] = useState<SoundReference | null>(null);
+  function setTab(value: Tab) {
+    setReference(null);
+    setActiveTab(value);
+  }
   const [modal, setModal] = useState<Modal>(null);
   const [enabled, setEnabled] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const buildFile = useRef<HTMLInputElement>(null);
-  const [sampleState, setSampleState] = useState<'loading' | 'ready' | 'error'>(
-    'loading',
-  );
+  const [loaded, setLoaded] = useState<{
+    id: string;
+    attempt: number;
+    state: 'ready' | 'error';
+    preview: SamplePreview | null;
+  } | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const currentRecording =
+    pack && loaded?.id === pack.id && loaded.attempt === loadAttempt
+      ? loaded
+      : null;
+  const sampleState = pack ? (currentRecording?.state ?? 'loading') : 'ready';
   const [lastKey, setLastKey] = useState('');
   const [demo, setDemo] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const audio = useRef<KeyboardAudio | null>(null);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const audioAction = useRef(0);
-  const options: SceneOptions = {
-    ...palette,
-    caseColor,
-    layout,
-    exploded,
-    view,
-    finish,
-    profile,
-  };
-  const parts = [...catalog, ...imports];
-  const checks = checkBuild(selection, parts, layout);
+  const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
+  const audioAction = useRef({ revision: 0 });
+  const options = useMemo<SceneOptions>(
+    () => ({
+      ...palette,
+      caseColor,
+      layout,
+      exploded,
+      view,
+      finish,
+      profile,
+    }),
+    [palette, caseColor, layout, exploded, view, finish, profile],
+  );
+  const parts = useMemo(() => [...catalog, ...imports], [imports]);
+  const checks = useMemo(
+    () => checkBuild(selection, parts, layout),
+    [selection, parts, layout],
+  );
   const blocked = checks.filter((c) => c.status === 'incompatible').length;
-  const sound: SoundSettings = {
-    enabled,
-    character,
-    volume,
-    damping,
-    material: finish,
-    source: pack ? { kind: 'recorded', id: pack.id } : { kind: 'synthesized' },
-  };
+  const sound = useMemo<SoundSettings>(
+    () => ({
+      enabled,
+      character,
+      volume,
+      damping,
+      material: finish,
+      source: pack
+        ? { kind: 'recorded', id: pack.id }
+        : { kind: 'synthesized' },
+    }),
+    [enabled, character, volume, damping, finish, pack],
+  );
   const soundRef = useRef(sound);
-  soundRef.current = sound;
+  useEffect(() => {
+    soundRef.current = sound;
+  }, [sound]);
   const buildRef = useRef({ options, selection, checks, sound, sampleState });
-  buildRef.current = { options, selection, checks, sound, sampleState };
+  useEffect(() => {
+    buildRef.current = { options, selection, checks, sound, sampleState };
+  }, [options, selection, checks, sound, sampleState]);
   useEffect(
     () =>
       registerStudioTools(
         () => buildRef.current,
         (input) => {
-          setLayout(input.layout);
-          const p = palettes.find((p) => p.name === input.palette);
-          if (p) setPalette(p);
+          const palette = palettes.find((p) => p.name === input.palette);
+          if (palette) edit({ layout: input.layout, palette });
         },
       ),
-    [],
+    [edit],
   );
   useEffect(() => {
-    audio.current = new KeyboardAudio();
+    const engine = new KeyboardAudio();
+    audio.current = engine;
+    const pendingTimers = timers.current;
+    const actionClock = audioAction.current;
     return () => {
-      audioAction.current++;
-      audio.current?.close();
-      timers.current.forEach(clearTimeout);
+      actionClock.revision++;
+      engine.close();
+      pendingTimers.forEach(clearTimeout);
+      pendingTimers.clear();
     };
   }, []);
   useEffect(() => {
-    if (modal) dialog.current?.showModal();
-    else dialog.current?.close();
+    const element = dialog.current;
+    if (!element) return;
+    const dismissBackdrop = (event: MouseEvent) => {
+      if (event.target === element) setModal(null);
+    };
+    element.addEventListener('click', dismissBackdrop);
+    if (modal) element.showModal();
+    else element.close();
+    return () => element.removeEventListener('click', dismissBackdrop);
   }, [modal]);
   useEffect(() => {
     let cancelled = false;
-    if (!pack) {
-      setSampleState('ready');
-      return;
-    }
-    setSampleState('loading');
-    audio.current
-      ?.prepare(pack)
-      .then(() => {
-        if (!cancelled) setSampleState('ready');
+    const engine = audio.current;
+    const pendingTimers = timers.current;
+    const actionClock = audioAction.current;
+    const loading = pack ? engine?.prepare(pack) : Promise.resolve();
+    void loading
+      ?.then(() => {
+        if (!cancelled) {
+          setDemo(false);
+          setLoaded({
+            id: pack?.id ?? 'synthesized',
+            attempt: loadAttempt,
+            state: 'ready',
+            preview: pack ? (engine?.preview(pack) ?? null) : null,
+          });
+        }
       })
       .catch(() => {
-        if (!cancelled) setSampleState('error');
+        if (!cancelled) {
+          setDemo(false);
+          setLoaded({
+            id: pack?.id ?? 'synthesized',
+            attempt: loadAttempt,
+            state: 'error',
+            preview: null,
+          });
+        }
       });
     return () => {
       cancelled = true;
+      actionClock.revision++;
+      engine?.stop();
+      pendingTimers.forEach(clearTimeout);
+      pendingTimers.clear();
+      window.dispatchEvent(
+        new CustomEvent('keyconf-demo', { detail: { reset: true } }),
+      );
     };
   }, [pack, loadAttempt]);
   useEffect(() => {
@@ -218,19 +279,20 @@ export default function Home() {
   }, [enabled, volume]);
 
   function stopDemo() {
-    audioAction.current++;
+    audioAction.current.revision++;
     timers.current.forEach(clearTimeout);
-    timers.current = [];
+    timers.current.clear();
     audio.current?.stop();
     setDemo(false);
     window.dispatchEvent(
       new CustomEvent('keyconf-demo', { detail: { reset: true } }),
     );
   }
-  async function enableSound(action = audioAction.current) {
+  async function enableSound(action = audioAction.current.revision) {
+    setReference(null);
     try {
       await audio.current?.unlock();
-      if (action !== audioAction.current) return false;
+      if (action !== audioAction.current.revision) return false;
       setEnabled(true);
       audio.current?.setLevel(true, volume);
       return true;
@@ -246,64 +308,47 @@ export default function Home() {
   function release(code: string) {
     audio.current?.play(code, soundRef.current, 'up');
   }
-  async function playDemo() {
+  async function playSequence(phrase: string[]) {
     stopDemo();
     if (!(await enableSound())) return;
     setDemo(true);
-    const phrase = [
-      'KeyM',
-      'KeyA',
-      'KeyK',
-      'KeyE',
-      'Space',
-      'KeyI',
-      'KeyT',
-      'Space',
-      'KeyY',
-      'KeyO',
-      'KeyU',
-      'KeyR',
-      'KeyS',
-    ];
     const start = (audio.current?.now() ?? 0) + 0.04;
     phrase.forEach((code, i) => {
-      audio.current?.play(
-        code,
-        { ...soundRef.current, enabled: true },
-        'down',
-        start + i * 0.13,
+      const settings = { ...soundRef.current, enabled: true };
+      audio.current?.play(code, settings, 'down', start + i * 0.13);
+      audio.current?.play(code, settings, 'up', start + i * 0.13 + 0.08);
+      timers.current.add(
+        setTimeout(
+          () => {
+            setLastKey(code.replace('Key', '').replace('Digit', ''));
+            window.dispatchEvent(
+              new CustomEvent('keyconf-demo', { detail: { code, down: true } }),
+            );
+          },
+          40 + i * 130,
+        ),
       );
-      audio.current?.play(
-        code,
-        { ...soundRef.current, enabled: true },
-        'up',
-        start + i * 0.13 + 0.08,
+      timers.current.add(
+        setTimeout(
+          () => {
+            window.dispatchEvent(
+              new CustomEvent('keyconf-demo', {
+                detail: { code, down: false },
+              }),
+            );
+          },
+          120 + i * 130,
+        ),
       );
     });
-    timers.current = phrase.map((code, i) =>
+    timers.current.add(
       setTimeout(
         () => {
-          setLastKey(code.replace('Key', ''));
-          window.dispatchEvent(
-            new CustomEvent('keyconf-demo', { detail: { code, down: true } }),
-          );
-          timers.current.push(
-            setTimeout(
-              () =>
-                window.dispatchEvent(
-                  new CustomEvent('keyconf-demo', {
-                    detail: { code, down: false },
-                  }),
-                ),
-              80,
-            ),
-          );
+          setDemo(false);
+          timers.current.clear();
         },
-        40 + i * 130,
+        40 + phrase.length * 130,
       ),
-    );
-    timers.current.push(
-      setTimeout(() => setDemo(false), 40 + phrase.length * 130),
     );
   }
   function addParts(incoming: Part[]) {
@@ -387,9 +432,15 @@ export default function Home() {
         Skip to build settings
       </a>
       <header className="header">
-        <a className="brand" href="./">
+        <button
+          className="brand"
+          onClick={() => {
+            setTab('design');
+            window.scrollTo({ top: 0 });
+          }}
+        >
           <Keyboard size={25} /> keyconf<span>studio</span>
-        </a>
+        </button>
         <nav>
           <button
             className={tab === 'design' ? 'nav-active' : ''}
@@ -424,7 +475,7 @@ export default function Home() {
             }}
           />
         </label>
-        <span className="save-state" role="status">
+        <output className="save-state">
           {saveState === 'saved'
             ? 'Saved on this device'
             : saveState === 'saving'
@@ -432,7 +483,7 @@ export default function Home() {
               : saveState === 'unavailable'
                 ? 'Session only. Download to keep.'
                 : 'Opening build…'}
-        </span>
+        </output>
         <div className="build-actions">
           <button
             className="icon-button"
@@ -500,7 +551,7 @@ export default function Home() {
           <button
             className={'sound-toggle ' + (enabled ? 'on' : '')}
             aria-label={enabled ? 'Mute keyboard' : 'Enable keyboard sound'}
-            disabled={sampleState !== 'ready'}
+            disabled={!enabled && sampleState !== 'ready'}
             onClick={() => {
               if (enabled) {
                 stopDemo();
@@ -621,19 +672,21 @@ export default function Home() {
                     <span>01</span>
                     <h3>Form & foundation</h3>
                   </div>
-                  <label>Layout</label>
-                  <div className="segmented">
-                    {layouts.map((x) => (
-                      <button
-                        key={x}
-                        aria-pressed={x === layout}
-                        className={x === layout ? 'selected' : ''}
-                        onClick={() => setLayout(x)}
-                      >
-                        {x}%
-                      </button>
-                    ))}
-                  </div>
+                  <fieldset className="control-group">
+                    <legend>Layout</legend>
+                    <div className="segmented">
+                      {layouts.map((x) => (
+                        <button
+                          key={x}
+                          aria-pressed={x === layout}
+                          className={x === layout ? 'selected' : ''}
+                          onClick={() => setLayout(x)}
+                        >
+                          {x}%
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
                   <label htmlFor="finish">Case material</label>
                   <select
                     id="finish"
@@ -647,26 +700,28 @@ export default function Home() {
                       <option key={x}>{x}</option>
                     ))}
                   </select>
-                  <label>
-                    Case finish{' '}
-                    <span>
-                      {caseColors.find((c) => c.color === caseColor)?.name ||
-                        'Custom'}
-                    </span>
-                  </label>
-                  <div className="swatches">
-                    {caseColors.map((x) => (
-                      <button
-                        key={x.color}
-                        style={{ background: x.color }}
-                        aria-label={x.name + ' case'}
-                        aria-pressed={caseColor === x.color}
-                        onClick={() => edit({ caseColor: x.color })}
-                      >
-                        {caseColor === x.color && <Check size={15} />}
-                      </button>
-                    ))}
-                  </div>
+                  <fieldset className="control-group">
+                    <legend>
+                      Case finish{' '}
+                      <span>
+                        {caseColors.find((c) => c.color === caseColor)?.name ||
+                          'Custom'}
+                      </span>
+                    </legend>
+                    <div className="swatches">
+                      {caseColors.map((x) => (
+                        <button
+                          key={x.color}
+                          style={{ background: x.color }}
+                          aria-label={x.name + ' case'}
+                          aria-pressed={caseColor === x.color}
+                          onClick={() => edit({ caseColor: x.color })}
+                        >
+                          {caseColor === x.color && <Check size={15} />}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
                 </section>
                 <section>
                   <div className="section-label">
@@ -832,9 +887,9 @@ export default function Home() {
                   <option value="synthesized">Synthesized sound study</option>
                 </select>
                 {sampleState === 'loading' && (
-                  <p className="muted" role="status">
+                  <output className="muted recording-count">
                     Loading recordings…
-                  </p>
+                  </output>
                 )}
                 {sampleState === 'error' && (
                   <p role="alert">
@@ -847,31 +902,50 @@ export default function Home() {
                     </button>
                   </p>
                 )}
-                <div className="sound-visual" aria-hidden="true">
-                  {Array.from({ length: 39 }, (_, i) => (
-                    <i
-                      key={i}
-                      style={{
-                        height:
-                          12 +
-                          Math.abs(Math.sin(i * 1.7)) * 28 +
-                          (i > 10 && i < 28 ? 22 : 0),
-                        animationDelay: i * 0.035 + 's',
-                      }}
-                      className={demo ? 'playing' : ''}
-                    />
-                  ))}
+                <SampleWaveform
+                  preview={currentRecording?.preview ?? null}
+                  synthesized={!pack}
+                  playing={demo}
+                />
+                <div className="audition-keys">
+                  <button
+                    disabled={sampleState !== 'ready'}
+                    onClick={() => void playSequence(['KeyA'])}
+                  >
+                    <kbd>A</kbd> Letter key
+                  </button>
+                  <button
+                    disabled={sampleState !== 'ready'}
+                    onClick={() => void playSequence(['Space'])}
+                  >
+                    <kbd>space</kbd> Spacebar
+                  </button>
                 </div>
                 <button
                   className="button full"
                   disabled={sampleState !== 'ready'}
                   onClick={() => {
                     if (demo) stopDemo();
-                    else void playDemo();
+                    else
+                      void playSequence([
+                        'KeyM',
+                        'KeyA',
+                        'KeyK',
+                        'KeyE',
+                        'Space',
+                        'KeyI',
+                        'KeyT',
+                        'Space',
+                        'KeyY',
+                        'KeyO',
+                        'KeyU',
+                        'KeyR',
+                        'KeyS',
+                      ]);
                   }}
                 >
-                  <Play size={15} />
-                  {demo ? 'Stop typing sequence' : 'Try a typing sequence'}
+                  {demo ? <VolumeX size={15} /> : <Play size={15} />}
+                  {demo ? 'Stop playback' : 'Try a typing sequence'}
                 </button>
                 <div className="last-key">
                   Last key <kbd>{lastKey || '—'}</kbd>
@@ -953,8 +1027,12 @@ export default function Home() {
                   {pack && (
                     <>
                       <small>
-                        {pack.creator} · {pack.license} · MP3 source
+                        {pack.creator} · {pack.license} · mono MP3, 44.1 kHz
                       </small>
+                      <p>
+                        {pack.capture} The files retain their original dynamics;
+                        the volume control applies gain only.
+                      </p>
                       <a
                         className="text-button"
                         href={pack.source}
@@ -967,10 +1045,14 @@ export default function Home() {
                   )}
                 </div>
                 <SoundReferences
-                  nativeEnabled={enabled}
-                  onListen={() => {
-                    stopDemo();
-                    setEnabled(false);
+                  selected={reference}
+                  onSelect={(record) => {
+                    if (record) {
+                      stopDemo();
+                      audio.current?.setLevel(false, volume);
+                      setEnabled(false);
+                    }
+                    setReference(record);
                   }}
                 />
               </>
@@ -997,9 +1079,9 @@ export default function Home() {
           </div>
         </aside>
       </div>
-      <div className="sr-only" role="status" aria-live="polite">
+      <output className="sr-only" aria-live="polite">
         {notice}
-      </div>
+      </output>
       {notice && (
         <div className="toast">
           {notice}
@@ -1022,9 +1104,6 @@ export default function Home() {
               : 'Research library'
         }
         onCancel={() => setModal(null)}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) setModal(null);
-        }}
       >
         <button
           className="modal-close"
@@ -1071,9 +1150,7 @@ export default function Home() {
                 <Download size={16} /> Download build
               </button>
             </div>
-            <p className="muted" role="status">
-              {notice}
-            </p>
+            <output className="muted recording-count">{notice}</output>
             <p className="muted">
               Anyone with the link can read the included product details. Sound
               starts muted when they open it.

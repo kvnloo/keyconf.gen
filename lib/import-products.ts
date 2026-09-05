@@ -182,11 +182,13 @@ async function fetchPublic(
   redirects = 0,
 ): Promise<Response> {
   await verifyHost(u);
+  const headers = new Headers(init.headers);
+  headers.set('User-Agent', 'KeyconfCatalogPreview/0.1');
   const r = await fetch(u, {
     ...init,
     redirect: 'manual',
     signal: AbortSignal.timeout(12000),
-    headers: { 'User-Agent': 'KeyconfCatalogPreview/0.1', ...init.headers },
+    headers,
   });
   if (r.status >= 300 && r.status < 400) {
     const location = r.headers.get('location');

@@ -128,7 +128,7 @@ export function parseCustomParts(value: unknown): Part[] {
       !text(part.id, 4000) ||
       !part.id.startsWith('import:') ||
       ids.has(part.id) ||
-      !text(part.name) ||
+      !text(part.name, 300) ||
       !text(part.brand) ||
       typeof part.detail !== 'string' ||
       part.detail.length > 2000 ||
@@ -246,7 +246,65 @@ export function readBuildFile(content: string): Build {
       'This file is not readable JSON. Choose an exported Keyconf build.',
     );
   }
-  return parseBuild(object(data) && 'build' in data ? data.build : data);
+  if (object(data) && 'build' in data) return parseBuild(data.build);
+  if (
+    object(data) &&
+    data.version === 1 &&
+    object(data.visualStudy) &&
+    object(data.sound) &&
+    Array.isArray(data.components)
+  ) {
+    const components = data.components.filter(object);
+    if (
+      components.length !== categories.length ||
+      categories.some(
+        (category) =>
+          components.filter((part) => part.category === category).length !== 1,
+      )
+    ) {
+      throw new Error(
+        'This older export has missing or duplicate components. Choose another build file.',
+      );
+    }
+    const study = data.visualStudy;
+    const sound = data.sound;
+    const source =
+      sound.source === undefined
+        ? 'synthesized'
+        : object(sound.source) && sound.source.kind === 'recorded'
+          ? sound.source.id
+          : object(sound.source) && sound.source.kind === 'synthesized'
+            ? 'synthesized'
+            : undefined;
+    return parseBuild({
+      version: 1,
+      name: 'Imported build',
+      palette: {
+        name: study.name,
+        alpha: study.alpha,
+        mod: study.mod,
+        accent: study.accent,
+        space: study.space,
+      },
+      caseColor: study.caseColor,
+      layout: study.layout,
+      finish: study.finish,
+      profile: study.profile,
+      selection: Object.fromEntries(
+        components.map((part) => [part.category, part.id]),
+      ),
+      customParts: components.filter(
+        (part) => typeof part.id === 'string' && part.id.startsWith('import:'),
+      ),
+      audio: {
+        source,
+        character: sound.character,
+        volume: sound.volume,
+        damping: sound.damping,
+      },
+    });
+  }
+  return parseBuild(data);
 }
 
 export function encodeBuild(build: Build): string {

@@ -20,13 +20,16 @@ Node 22.18+ is required.
 npm ci
 npm run dev
 npm run typecheck
+npm run lint
 npm test
 npm run build
 ```
 
+With the local server running, `npm run verify:browser` checks shared links, imported parts, downloaded-file restore, failed recording recovery, audio cancellation and storage denial in fresh Chromium contexts. Install the browser once with `npx playwright install chromium`. These checks deliberately disable WebGL to exercise the fallback; they do not measure 3D performance or replace visual review.
+
 ## Deployment
 
-GitHub Actions checks types, tests compatibility/import parsing/assets, and deploys the browser app to [GitHub Pages](https://kvnloo.github.io/keyconf.gen/) whenever `main` changes. PRs run checks without deploying. Public assets include the original `.blend` source.
+GitHub Actions checks types, lint, compatibility/import parsing/assets and the browser flows above, then deploys the browser app to [GitHub Pages](https://kvnloo.github.io/keyconf.gen/) whenever `main` changes. PRs run checks without deploying. Public assets include the original `.blend` source.
 
 The Pages version calls the server-backed Sites importer at `https://keyconf-studio.kvnloo.chatgpt.site/api/import`. The server permits only its own origin and `https://kvnloo.github.io`. Pasted JSON-LD imports also work without that service. Server changes must be built and published through Sites separately; the GitHub workflow does not hold Sites credentials or deploy its backend. The workflow is complete for the Pages app, not automatic backend releases.
 

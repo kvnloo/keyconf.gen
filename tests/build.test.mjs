@@ -130,3 +130,67 @@ test('continuous gestures undo as one change and history has a bounded size', ()
   });
   assert.equal(noChange, state);
 });
+
+test('older exports restore their design, components and recording without trusting exported fit claims', () => {
+  const legacy = {
+    version: 1,
+    visualStudy: {
+      ...defaultBuild.palette,
+      layout: '65',
+      caseColor: '#112233',
+      finish: 'Brass',
+      profile: 'Sculpted',
+      exploded: true,
+    },
+    components: Object.entries(defaultBuild.selection).map(
+      ([category, id]) => ({ category, id }),
+    ),
+    sound: {
+      enabled: true,
+      character: 'linear',
+      volume: 0.7,
+      damping: 0.2,
+      source: { kind: 'recorded', id: 'mx-blue' },
+    },
+    compatibility: [
+      { status: 'documented', title: 'Fabricated full compatibility' },
+    ],
+  };
+  const restored = readBuildFile(JSON.stringify(legacy));
+  assert.equal(restored.layout, '65');
+  assert.equal(restored.caseColor, '#112233');
+  assert.equal(restored.finish, 'Brass');
+  assert.equal(restored.audio.source, 'mx-blue');
+  assert.equal(restored.audio.volume, 0.7);
+  assert.equal('compatibility' in restored, false);
+  assert.equal('enabled' in restored.audio, false);
+  assert.deepEqual(restored.selection, defaultBuild.selection);
+  assert.equal(
+    readBuildFile(
+      JSON.stringify({
+        ...legacy,
+        sound: { character: 'linear', volume: 0.5, damping: 0.5 },
+      }),
+    ).audio.source,
+    'synthesized',
+  );
+  assert.throws(() =>
+    readBuildFile(
+      JSON.stringify({
+        ...legacy,
+        components: [legacy.components[0], ...legacy.components.slice(0, -1)],
+      }),
+    ),
+  );
+  assert.throws(() =>
+    readBuildFile(
+      JSON.stringify({
+        ...legacy,
+        sound: {
+          ...legacy.sound,
+          source: { kind: 'recorded', id: 'unknown-pack' },
+        },
+      }),
+    ),
+  );
+});

@@ -38,7 +38,7 @@ function disposeModel(model: THREE.Object3D) {
 }
 
 export function createKeyboardScene(
-  element: HTMLDivElement,
+  element: HTMLElement,
   initial: SceneOptions,
   events: Callbacks,
 ) {
@@ -328,9 +328,7 @@ export function createKeyboardScene(
   }
   const editable = (target: EventTarget | null) =>
     target instanceof HTMLElement &&
-    !!target.closest(
-      'input,textarea,select,button,a,summary,dialog,[contenteditable]',
-    );
+    !!target.closest('input,textarea,select,dialog,[contenteditable]');
   function keydown(event: KeyboardEvent) {
     if (
       editable(event.target) ||
@@ -340,6 +338,12 @@ export function createKeyboardScene(
       event.altKey ||
       event.code === 'Tab' ||
       event.code === 'Escape'
+    )
+      return;
+    if (
+      event.target instanceof HTMLElement &&
+      event.target.closest('button,a,summary') &&
+      !/^(Key[A-Z]|Digit[0-9])$/.test(event.code)
     )
       return;
     if (

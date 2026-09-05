@@ -1,3 +1,4 @@
+import { samplePreview } from './audio-preview';
 import {
   samplesFor,
   soundPacks,
@@ -38,12 +39,19 @@ export class KeyboardAudio {
   }
 
   setLevel(enabled: boolean, volume: number) {
-    if (this.context && this.master)
-      this.master.gain.setTargetAtTime(
-        enabled ? volume : 0,
-        this.context.currentTime,
-        0.008,
-      );
+    if (!this.context || !this.master) return;
+    const time = this.context.currentTime;
+    const gain = this.master.gain;
+    const current = gain.value;
+    gain.cancelScheduledValues(time);
+    gain.setValueAtTime(current, time);
+    gain.linearRampToValueAtTime(enabled ? volume : 0, time + 0.016);
+  }
+
+  preview(pack: SoundPack) {
+    const file = pack.groups.down.default[0];
+    const buffer = this.buffers.get(pack.id)?.get(file);
+    return buffer ? samplePreview(buffer) : null;
   }
 
   prepare(pack: SoundPack) {

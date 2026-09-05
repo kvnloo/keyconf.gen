@@ -27,7 +27,7 @@ All six interface domains were reviewed at source level: accessibility, layout, 
 - [x] Implement reliable state, undo/redo, portable sharing and import recovery.
 - [x] Improve the scene and input lifecycle. Full device verification remains in the completion pass.
 - [x] Expose and expand useful product evidence. Full coverage and exact kit inventory remain data work.
-- [ ] Refine the listening experience.
+- [x] Refine the listening experience. Further recording coverage remains a data task.
 - [ ] Complete interaction and presentation verification.
 - [ ] Publish the finished release and record remaining data limits.
 
@@ -75,3 +75,23 @@ Added an inline switch/feel/gaming guide and exposed the existing 20 product obs
 Verified 21 tests, including all assembly records, mechanical/magnetic conflicts, magnetic-family exclusions, mixed/unknown evidence, stabilizer exceptions, share round trips and whole-assembly undo. Type checking passes. In the live browser, selected Q1 HE, searched for Magnetic Jade, observed the conflict, and used Undo to restore Nebula. Verified empty-search recovery, NK65 selection, HHKB research search and mobile dialog close. Inspected the desktop, 390 px and 320 px layouts; scroll width matched document width at both narrow sizes. Found and fixed notification shrink-to-fit and a dialog close button that scrolled out of reach. Corrected Surprise me's palette identity comparison and replaced the deprecated Three.js shadow-map constant.
 
 The new catalog files have no lint findings. Existing lint issues elsewhere and the broader listening, import and complete-interface acceptance checks remain pending. The full product goal remains active.
+
+## Listening controls and recovery
+
+Added letter-key and spacebar audition buttons, a peak envelope calculated from the actual decoded press recording, duration and format details, and family filters for the original-video library. Waveform height is normalized for visual inspection only; playback is not normalized or processed. Recorded audio still preserves the original MP3 bytes and passes through the user's master level without pitch, EQ or reverb changes. Capture-build and microphone details remain unknown.
+
+The finite 16 ms master ramp reaches exact zero when muted. Changing presets, stopping playback and opening an original-video reference cancel scheduled native sources and visual timers. Enabling native sound closes the original player. Async actions are invalidated when the selected source changes. Typing a letter immediately after enabling audio now works even while that button retains focus; its Space/Enter activation and navigation keys remain native controls.
+
+Fixed the existing lint findings by making loading and save status follow their underlying state, keeping ref updates out of render, and using native control semantics. Older exported builds can now be restored through the validated current build model; exported compatibility claims and audio enablement are not trusted. Import previews retain observation dates and availability. Long imported names now survive the same boundary used for saved builds.
+
+Verification:
+
+- All 24 unit tests, type checking and full-repository lint pass. Added waveform/transient/format tests and legacy-export migration checks. The original sample hashes and licenses still pass.
+- Measured actual browser playback across all seven packs at 45%: observed sequence peaks were approximately -19.5 to -12.1 dBFS; mute reached zero. This is not a claim about arbitrary simultaneous key combinations or subjective headphone fidelity.
+- A fresh Chromium context restored a shared build containing an imported case, consumed its share fragment, retained subsequent edits after refresh and restored the actual downloaded file. Failed recording requests recovered on retry; preset changes and mute cancelled actual scheduled AudioBufferSourceNodes. Storage denial left a usable builder and visible export fallback. `npm run verify:browser` reproduces these checks and is included in CI. It deliberately disables WebGL; 3D appearance and performance are reviewed separately.
+- In the live 3D browser, a letter key responded directly after enabling audio; Space on the focused button muted it. The actual waveform and single-key controls were visible. Opening an Oil King reference loaded its original YouTube player and muted native audio; enabling native sound removed the iframe.
+- A live NovelKeys NK65 product URL returned six variants with availability and observation date; uncertain currency omitted the price. Added variants were searchable in the library, then undone. A rejected localhost URL recovered through pasted Product JSON-LD with SKU, USD price and stock status. The pasted fixture was previewed without adding it.
+
+Updated React/RSC to 19.2.8, Vinext to beta.9, Vite to 8.2.2 and their compatible Cloudflare/RSC tooling after the release audit identified affected older versions. Installation now reports zero known npm vulnerabilities. Type checking, lint, all 24 tests, the fresh-browser checks, and both Sites and Pages production builds pass on the updated dependencies. Public deployment and CI status are verified after pushing this unit.
+
+Still pending for the full product goal: the remaining viewport/zoom and reduced-motion review, graphics failure/recovery and rapid-change checks, the complete interaction/presentation acceptance matrix, and the final release audit. Catalog growth and measurement-backed acoustic modelling remain explicit ongoing data work.

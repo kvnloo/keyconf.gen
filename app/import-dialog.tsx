@@ -125,6 +125,7 @@ export default function ImportDialog({
                   ? p.currency + ' ' + p.price
                   : 'Price not verified',
                 p.availability,
+                'Observed ' + result.observedAt.slice(0, 10),
               ]
                 .filter(Boolean)
                 .join(' · '),
@@ -211,10 +212,23 @@ export default function ImportDialog({
       {result && (
         <div className="import-results">
           <div className="result-heading">
-            <strong>{result.products.length} products found</strong>
+            <strong>
+              {result.products.length}{' '}
+              {result.products.length === 1 ? 'product' : 'products'} found
+            </strong>
             <span>{result.method}</span>
           </div>
           <p className="muted">{result.coverage}</p>
+          <p className="import-note">
+            Observed{' '}
+            <time dateTime={result.observedAt}>
+              {new Date(result.observedAt).toLocaleString()}
+            </time>{' '}
+            ·{' '}
+            <a href={result.source} target="_blank" rel="noreferrer">
+              Source page
+            </a>
+          </p>
           <label htmlFor="import-category">Add selected products as</label>
           <select
             id="import-category"
@@ -237,7 +251,8 @@ export default function ImportDialog({
                   onChange={() =>
                     setSelected((prev) => {
                       const next = new Set(prev);
-                      next.has(i) ? next.delete(i) : next.add(i);
+                      if (next.has(i)) next.delete(i);
+                      else next.add(i);
                       return next;
                     })
                   }
@@ -250,6 +265,7 @@ export default function ImportDialog({
                 </span>
                 <span>
                   {p.currency} {p.price || '—'}
+                  <small>{p.availability || 'Stock unverified'}</small>
                 </span>
               </label>
             ))}

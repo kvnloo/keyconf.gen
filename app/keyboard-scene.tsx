@@ -16,7 +16,7 @@ export default function KeyboardScene({
   onPress: (code: string) => void;
   onRelease: (code: string) => void;
 }) {
-  const host = useRef<HTMLDivElement>(null);
+  const host = useRef<HTMLFieldSetElement>(null);
   const controller = useRef<ReturnType<typeof createKeyboardScene> | null>(
     null,
   );
@@ -60,10 +60,9 @@ export default function KeyboardScene({
     };
   }, [attempt]);
   return (
-    <div
+    <fieldset
       className="scene-host"
       ref={host}
-      role="group"
       aria-label="Interactive keyboard preview"
     >
       {status.kind === 'loading' && (
@@ -83,6 +82,6 @@ export default function KeyboardScene({
           </button>
         </div>
       )}
-    </div>
+    </fieldset>
   );
 }

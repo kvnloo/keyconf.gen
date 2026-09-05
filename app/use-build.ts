@@ -8,18 +8,34 @@ import {
   parseCustomParts,
   readBuildFile,
   type Build,
+  type BuildAction,
+  type BuildHistory,
 } from '../lib/build';
 
 const storageKey = 'keyconf-build-v1';
 export function useBuild(notify: (message: string) => void) {
-  const [history, dispatch] = useReducer(buildReducer, initialHistory);
-  const [ready, setReady] = useState(false);
-  const [saveState, setSaveState] = useState<
-    'loading' | 'saving' | 'saved' | 'unavailable'
-  >('loading');
-  const current = useRef(history.present);
+  const [{ history, ready }, dispatch] = useReducer(
+    (
+      state: { history: BuildHistory; ready: boolean },
+      action: BuildAction,
+    ) => ({
+      history: buildReducer(state.history, action),
+      ready: state.ready || action.kind === 'restore',
+    }),
+    { history: initialHistory, ready: false },
+  );
+  const [persisted, setPersisted] = useState<{
+    build: Build;
+    status: 'saved' | 'unavailable';
+  } | null>(null);
+  const saveState = !ready
+    ? 'loading'
+    : persisted?.status === 'unavailable'
+      ? 'unavailable'
+      : persisted?.build === history.present
+        ? 'saved'
+        : 'saving';
   const canPersist = useRef(true);
-  current.current = history.present;
 
   useEffect(() => {
     let saved = defaultBuild;
@@ -66,24 +82,22 @@ export function useBuild(notify: (message: string) => void) {
       }
     };
     restoreLink();
-    setReady(true);
     window.addEventListener('hashchange', restoreLink);
     return () => window.removeEventListener('hashchange', restoreLink);
   }, [notify]);
 
   useEffect(() => {
     if (!ready) return;
-    setSaveState('saving');
     const save = () => {
       if (!canPersist.current) {
-        setSaveState('unavailable');
+        setPersisted({ build: history.present, status: 'unavailable' });
         return;
       }
       try {
-        localStorage.setItem(storageKey, JSON.stringify(current.current));
-        setSaveState('saved');
+        localStorage.setItem(storageKey, JSON.stringify(history.present));
+        setPersisted({ build: history.present, status: 'saved' });
       } catch {
-        setSaveState('unavailable');
+        setPersisted({ build: history.present, status: 'unavailable' });
       }
     };
     const timer = setTimeout(save, 250);

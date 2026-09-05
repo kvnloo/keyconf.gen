@@ -23,7 +23,10 @@ test('recorded packs retain license notices and the pinned original audio bytes'
         Object.values(groups).flat(),
       ),
     );
-    assert.deepEqual([...files].sort(), Object.keys(pack.sha256).sort());
+    assert.deepEqual(
+      [...files].sort((a, b) => a.localeCompare(b)),
+      Object.keys(pack.sha256).sort((a, b) => a.localeCompare(b)),
+    );
     for (const file of files) {
       assert.match(file, /^[a-z0-9_]+\.mp3$/);
       const bytes = readFileSync(new URL(file, directory));

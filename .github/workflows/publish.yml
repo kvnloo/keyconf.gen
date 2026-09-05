@@ -20,7 +20,24 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
+      - run: npm run lint
       - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - name: Verify sharing, import recovery and audio controls
+        shell: bash
+        run: |
+          npm run dev > /tmp/keyconf-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" || true' EXIT
+          for attempt in {1..60}; do
+            if curl --fail --silent http://localhost:3000/ > /dev/null; then break; fi
+            sleep 1
+          done
+          if ! curl --fail --silent http://localhost:3000/ > /dev/null; then
+            cat /tmp/keyconf-preview.log
+            exit 1
+          fi
+          npm run verify:browser
       - run: npm run build:pages
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main'
