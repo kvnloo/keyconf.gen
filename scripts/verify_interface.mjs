@@ -138,11 +138,17 @@ try {
   );
   await keyboardUntil((item) => item.role === 'tab');
   await page.keyboard.press('ArrowRight');
-  assert.equal(await tab('Components').getAttribute('aria-selected'), 'true');
+  await page
+    .getByRole('tab', { name: 'Components', exact: true, selected: true })
+    .waitFor();
   await page.keyboard.press('End');
-  assert.equal(await tab('Sound').getAttribute('aria-selected'), 'true');
+  await page
+    .getByRole('tab', { name: 'Sound', exact: true, selected: true })
+    .waitFor();
   await page.keyboard.press('Home');
-  assert.equal(await tab('Design').getAttribute('aria-selected'), 'true');
+  await page
+    .getByRole('tab', { name: 'Design', exact: true, selected: true })
+    .waitFor();
   await keyboardUntil((item) => item.name === 'Champagne case');
   console.log(
     'PASS: keyboard navigation, visible focus, tab keys and dialog focus restoration.',

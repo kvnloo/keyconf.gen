@@ -90,6 +90,10 @@ try {
     for (const name of ['Build', 'Sound', 'Play', 'Discover']) {
       const nav = page.getByRole('navigation', { name: 'Studio pages' });
       await nav.getByRole('link', { name, exact: true }).click();
+      await nav
+        .getByRole('link', { name, exact: true })
+        .and(page.locator('[aria-current="page"]'))
+        .waitFor();
       assert.equal(
         await nav
           .getByRole('link', { name, exact: true })
