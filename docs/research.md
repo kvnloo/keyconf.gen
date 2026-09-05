@@ -81,6 +81,8 @@ Existing examples such as [Mechvibes](https://github.com/hainguyents13/mechvibes
 
 Use three explicit levels: licensed recording of this build; recording of a named similar build; synthesized approximation. Capture key-down/up separately with repeated takes and special handling for stabilized keys. Store the owner/license, build revision, microphone/distance, desk/mat, room, and processing. [Kinetic Labs' recording guide](https://kineticlabs.com/blog/tips-for-recording-a-good-keyboard-typing-sound-test) explains why recording conditions matter. [Taeha Types](https://www.taehatypes.com/) is a craft/reference source; no audio reuse permission was obtained.
 
+The [dedicated audio research](audio-research.md) extends this into a current engine/library comparison, a reference capture protocol, headphone playback requirements, and a measured-model validation plan.
+
 ## Data architecture
 
 The SQLite schema separates sources, products, revisions, specs, firmware targets, layouts, compatibility, offers/observations, popularity and assets. Every imported claim points to evidence. Offer history preserves currency, region, pack quantity and observation time instead of overwriting a product's universal "price".

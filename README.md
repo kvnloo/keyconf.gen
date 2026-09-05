@@ -38,4 +38,6 @@ See `docs/research.md` for source coverage and the database design. Imported pro
 
 Sound sources are not downloaded from YouTube. Exact-build audio requires licensed recordings and full recording/build metadata. The current Web Audio engine is explicitly synthesized.
 
+The [keyboard audio research](docs/audio-research.md) compares available sound libraries, physical acoustic simulation, recent impact-sound research, and headphone playback. It includes a capture protocol and validation plan for a recorded reference build. These are research findings and proposed milestones; the app's audio has not yet been replaced with recordings.
+
 The URL importer reads at most 2 MB per response and follows at most three redirects, rejecting non-public destinations. Shopify catalog previews read up to 40 products and one variant per product. Product-URL previews read up to 80 variants and omit prices when currency is not established. This is not a complete catalog crawler. Production ingestion needs queued adapters, retries, rate controls, versioned observations, and an egress policy that prevents DNS rebinding.

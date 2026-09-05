@@ -1,0 +1,408 @@
+{
+  "scope": "Keyboard recording, simulation and playback research. Research metadata only; not a runtime sound library.",
+  "checked_at": "2026-09-05",
+  "sources": [
+    {
+      "id": "av-msf",
+      "title": "Objects as Audio-Visual Modal Sound Fields",
+      "publisher": "Shao, Wei, Jin and Gao",
+      "publication_or_version": "2026-08-05",
+      "url": "https://arxiv.org/html/2608.05145v1",
+      "accessed": "2026-09-05",
+      "evidence": "Sparse recorded impacts and images reconstruct modal sound on two object benchmarks.",
+      "limits": "No keyboard-substitution validation; benchmark-specific SOTA; GPU timing is not audio latency.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "av-msf-code",
+      "title": "AV-MSF repository",
+      "publisher": "ZisenShao",
+      "publication_or_version": null,
+      "url": "https://github.com/ZisenShao/AV-MSF",
+      "accessed": "2026-09-05",
+      "evidence": "Root README says code coming soon.",
+      "limits": "No usable implementation or code license verified.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "diffsound",
+      "title": "DiffSound",
+      "publisher": "Jin et al.",
+      "publication_or_version": "2024",
+      "url": "https://hellojxt.github.io/DiffSound/",
+      "accessed": "2026-09-05",
+      "evidence": "Differentiable modal FEM and inverse parameter inference.",
+      "limits": "Offline research; full keyboard generalization unproven. Code reuse license not found in checked repo.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "diffimpact",
+      "title": "DiffImpact",
+      "publisher": "Clarke et al.",
+      "publication_or_version": "2022",
+      "url": "https://proceedings.mlr.press/v164/clarke22a.html",
+      "accessed": "2026-09-05",
+      "evidence": "Differentiable impact force, vibration and acoustic rendering.",
+      "limits": "MIT implementation is a research starting point; no keyboard fidelity benchmark.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "comsol",
+      "title": "Acoustics Module",
+      "publisher": "COMSOL",
+      "publication_or_version": null,
+      "url": "https://www.comsol.com/acoustics-module",
+      "accessed": "2026-09-05",
+      "evidence": "Coupled structural/pressure acoustics, FEM/BEM and small-space loss formulations.",
+      "limits": "Commercial engineering software; keyboard parameters and validation must be supplied.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "ray-validity",
+      "title": "The Ray Acoustics Interface",
+      "publisher": "COMSOL",
+      "publication_or_version": "6.3",
+      "url": "https://doc.comsol.com/6.3/doc/com.comsol.help.aco/aco_ug_geometrical_aco.11.02.html",
+      "accessed": "2026-09-05",
+      "evidence": "Ray approximation requires wavelengths much smaller than relevant geometry.",
+      "limits": "Applying the condition to keyboard cavities is our engineering inference.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "bempp",
+      "title": "Bempp",
+      "publisher": "Bempp developers",
+      "publication_or_version": null,
+      "url": "https://bempp.com/",
+      "accessed": "2026-09-05",
+      "evidence": "BEM acoustic computation and FEM/BEM coupling.",
+      "limits": "Toolkit component, not a complete keyboard model; bempp-cl MIT.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "steam",
+      "title": "Steam Audio C API",
+      "publisher": "Valve",
+      "publication_or_version": null,
+      "url": "https://valvesoftware.github.io/steam-audio/doc/capi/index.html",
+      "accessed": "2026-09-05",
+      "evidence": "HRTF, propagation, occlusion, reflection and convolution capabilities.",
+      "limits": "Does not document switch-contact or case-vibration source synthesis.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "head-keyboard",
+      "title": "Analyzing keyboard noises",
+      "publisher": "HEAD acoustics",
+      "publication_or_version": "2017-08",
+      "url": "https://cdn.head-acoustics.com/fileadmin/data/global/Application-Notes/SVP/Sound-Quality-Keyboard-Noise_e.pdf",
+      "accessed": "2026-09-05",
+      "evidence": "Keyboard-specific reproducible capture, artificial-head playback, key variation and temporal metrics.",
+      "limits": "Small illustrative measurement study, not a universal benchmark.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "realimpact",
+      "title": "RealImpact",
+      "publisher": "Clarke et al.",
+      "publication_or_version": "2023-06",
+      "url": "https://openaccess.thecvf.com/content/CVPR2023/html/Clarke_RealImpact_A_Dataset_of_Impact_Sound_Fields_for_Real_Objects_CVPR_2023_paper.html",
+      "accessed": "2026-09-05",
+      "evidence": "150000 controlled recordings of 50 objects; force and position data.",
+      "limits": "Not a keyboard dataset; data reuse license not established in this pass.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "bucklespring",
+      "title": "Bucklespring",
+      "publisher": "zevv",
+      "publication_or_version": null,
+      "url": "https://github.com/zevv/bucklespring",
+      "accessed": "2026-09-05",
+      "evidence": "Own Model M individual press/release recordings and spatial playback; 209 WAVs in inspected tree.",
+      "limits": "One checked sample mono16/44.1k; no complete build/capture manifest or blind fidelity test found; GPL root.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "mechvibes",
+      "title": "Config Versions",
+      "publisher": "Mechvibes",
+      "publication_or_version": "2024-09-14",
+      "url": "https://github.com/hainguyents13/mechvibes/wiki/Config-Versions",
+      "accessed": "2026-09-05",
+      "evidence": "Key mapping and pack-license requirements; V3 is draft.",
+      "limits": "Draft format features must not be represented as shipped functionality.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "mechvibes-dx",
+      "title": "MechvibesDX",
+      "publisher": "Mechvibes",
+      "publication_or_version": null,
+      "url": "https://github.com/hainguyents13/mechvibes-dx",
+      "accessed": "2026-09-05",
+      "evidence": "Rust/Dioxus sampler, polyphony, conversion and decode/resample on load; MIT code.",
+      "limits": "Pack rights and capture quality require individual review.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "kbsim",
+      "title": "kbsim",
+      "publisher": "Thomas Lai",
+      "publication_or_version": null,
+      "url": "https://github.com/tplai/kbsim",
+      "accessed": "2026-09-05",
+      "evidence": "151 MP3 files with row/modifier/press-release groupings.",
+      "limits": "MIT code; complete recorder and build provenance for assets not located.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "klack",
+      "title": "FAQs",
+      "publisher": "Klack",
+      "publication_or_version": null,
+      "url": "https://tryklack.com/faqs",
+      "accessed": "2026-09-05",
+      "evidence": "FAQ claims over 100 recorded/mastered files per set.",
+      "limits": "Vendor claim; no redistributable library, capture log or independent fidelity validation found.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "epomaker",
+      "title": "Sound Lab",
+      "publisher": "EPOMAKER",
+      "publication_or_version": null,
+      "url": "https://epomaker.com/pages/sound-lab",
+      "accessed": "2026-09-05",
+      "evidence": "Advertises 96k24 WAV masters, protocol and CC BY-NC; inspected source exposes nine MP3 files.",
+      "limits": "WAV delivery and versioned license unverified. Protocol assertions are not independent measurements.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "cc0-fixture",
+      "title": "Keyboard Soundpack #1",
+      "publisher": "unicaegames",
+      "publication_or_version": "2021-02-12; updated 2026-01-27",
+      "url": "https://opengameart.org/node/122745",
+      "accessed": "2026-09-05",
+      "evidence": "CC0 uploader declaration; Cherry KC1000, SM7B, Neutron2; 32 single strokes plus typing.",
+      "limits": "Processed Foley fixture; no exhaustive down/up per-key capture guarantee.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "mka",
+      "title": "Multi-Keyboard Acoustic datasets v4",
+      "publisher": "MKA dataset authors",
+      "publication_or_version": "2024-10-15",
+      "url": "https://data.mendeley.com/datasets/bpt2hvf8n3/4",
+      "accessed": "2026-09-05",
+      "evidence": "CC BY4 classification dataset across keyboard and transmission paths.",
+      "limits": "Classification accuracy is not reproduction accuracy; not a custom-build library.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "multipressure",
+      "title": "Keyboard Sound Dataset for Keystroke Recognition",
+      "publisher": "Zenodo deposit authors",
+      "publication_or_version": "2026-04-07",
+      "url": "https://zenodo.org/records/19453177",
+      "accessed": "2026-09-05",
+      "evidence": "Inspected archive114 mono16/48k WAVs,38keys x3categories; CC BY4.",
+      "limits": "One scissor keyboard and earbud capture; pressure categories uncalibrated; paper publication July7 2026.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "keebsound",
+      "title": "Terms of Service",
+      "publisher": "KeebSound",
+      "publication_or_version": "2026-08-27",
+      "url": "https://www.keebsound.com/terms",
+      "accessed": "2026-09-05",
+      "evidence": "Reserves audio rights and restricts automated harvesting.",
+      "limits": "Large advertised catalog is not a licensed import API.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "clickthock",
+      "title": "Click and Thock",
+      "publisher": "Click and Thock",
+      "publication_or_version": null,
+      "url": "https://www.clickandthock.com/",
+      "accessed": "2026-09-05",
+      "evidence": "Creator describes controlled comparisons holding other variables constant.",
+      "limits": "Method is creator-reported; no open per-key master library identified.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "sofa",
+      "title": "SOFA conventions",
+      "publisher": "SOFA project",
+      "publication_or_version": null,
+      "url": "https://www.sofaconventions.org/mediawiki/index.php/SOFA_(Spatially_Oriented_Format_for_Acoustics)",
+      "accessed": "2026-09-05",
+      "evidence": "Spatial-acoustic data convention and dataset links.",
+      "limits": "Container standard does not supply personal measurements or rights for every dataset.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "libmysofa",
+      "title": "libmysofa",
+      "publisher": "Christian Hoene / Symonics",
+      "publication_or_version": null,
+      "url": "https://github.com/hoene/libmysofa",
+      "accessed": "2026-09-05",
+      "evidence": "C HRTF reader/interpolation; explicit no-normalization mode; BSD-style code license.",
+      "limits": "Not a source-sound engine; preserve dataset-specific rights.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "hrtf",
+      "title": "HRTF Individualization: A Survey",
+      "publisher": "Guezenoc and Seguier",
+      "publication_or_version": "2020",
+      "url": "https://arxiv.org/abs/2003.06183",
+      "accessed": "2026-09-05",
+      "evidence": "Individualization is an important unresolved practical binaural issue.",
+      "limits": "Does not establish a listener-specific correction for the user.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "impulcifer",
+      "title": "Impulcifer",
+      "publisher": "Jaakko Pasanen",
+      "publication_or_version": null,
+      "url": "https://github.com/jaakkopasanen/Impulcifer",
+      "accessed": "2026-09-05",
+      "evidence": "Measures/processes BRIRs for personalized speaker virtualization.",
+      "limits": "Speaker-space capture is not directly a keyboard-distance source rig; vendor-like perceptual claims not independently validated here.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "hd800s",
+      "title": "HD 800 S",
+      "publisher": "Sennheiser / Sonova",
+      "publication_or_version": null,
+      "url": "https://global.sennheiser-hearing.com/collections/wired-over-ears/products/hd-800-s",
+      "accessed": "2026-09-05",
+      "evidence": "Open-back design; manufacturer individual response information.",
+      "limits": "Physical typing leakage is our inference; no actual headphone output measured.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "scheduling",
+      "title": "A tale of two clocks",
+      "publisher": "Chris Wilson / web.dev",
+      "publication_or_version": null,
+      "url": "https://web.dev/articles/audio-scheduling",
+      "accessed": "2026-09-05",
+      "evidence": "Audio-clock scheduling avoids main-thread timer jitter for preplanned events.",
+      "limits": "Lookahead proposal applies to demos, not live input latency.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "worklet",
+      "title": "Audio Worklet is now available by default",
+      "publisher": "Chrome developers",
+      "publication_or_version": "2017",
+      "url": "https://developer.chrome.com/blog/audio-worklet/",
+      "accessed": "2026-09-05",
+      "evidence": "Custom DSP runs on audio rendering thread.",
+      "limits": "Does not bypass OS/device buffering; custom DSP must still meet deadlines.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "webaudio",
+      "title": "Web Audio API 1.0",
+      "publisher": "W3C",
+      "publication_or_version": "2021",
+      "url": "https://www.w3.org/TR/webaudio-1.0/",
+      "accessed": "2026-09-05",
+      "evidence": "Context rate, buffer decoding/resampling, latency hints/estimates and convolver normalization.",
+      "limits": "No browser estimate establishes measured physical-actuation-to-headphone latency.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "pipewire-resample",
+      "title": "pipewire-props",
+      "publisher": "PipeWire developers",
+      "publication_or_version": null,
+      "url": "https://docs.pipewire.org/devel/page_man_pipewire-props_7.html",
+      "accessed": "2026-09-05",
+      "evidence": "Rate mismatch and clock adaptation can invoke resampling.",
+      "limits": "Local idle snapshot did not establish the user's active audio route.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "pipewire-latency",
+      "title": "Latency support",
+      "publisher": "PipeWire developers",
+      "publication_or_version": null,
+      "url": "https://docs.pipewire.org/devel/page_latency.html",
+      "accessed": "2026-09-05",
+      "evidence": "Graph latency propagates through processing and buffering.",
+      "limits": "Configuration quantum is not measured end-to-end latency.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "keyboard-events",
+      "title": "KeyboardEvent interface",
+      "publisher": "W3C",
+      "publication_or_version": null,
+      "url": "https://www.w3.org/TR/uievents/#interface-keyboardevent",
+      "accessed": "2026-09-05",
+      "evidence": "Standard keyboard event interface has no measured strike-velocity field.",
+      "limits": "Typing cadence or held duration must not be mislabeled measured force.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "itu-small",
+      "title": "BS.1116",
+      "publisher": "ITU-R",
+      "publication_or_version": null,
+      "url": "https://www.itu.int/rec/R-REC-BS.1116",
+      "accessed": "2026-09-05",
+      "evidence": "Subjective assessment of small audio impairments.",
+      "limits": "A proposed listening protocol is not a completed compliance test.",
+      "confidence": "high in source description; applicability bounded by limits"
+    },
+    {
+      "id": "itu-intermediate",
+      "title": "BS.1534",
+      "publisher": "ITU-R",
+      "publication_or_version": null,
+      "url": "https://www.itu.int/rec/R-REC-BS.1534",
+      "accessed": "2026-09-05",
+      "evidence": "Subjective assessment of intermediate audio quality.",
+      "limits": "Preference, recognition and perceptual identity are separate outcomes.",
+      "confidence": "high in source description; applicability bounded by limits"
+    }
+  ],
+  "gaps": [
+    {
+      "claim": "A selected arbitrary build sounds exactly like the physical assembly",
+      "state": "unverified",
+      "needs": "Licensed or owned original captures and held-out physical-build/listener validation"
+    },
+    {
+      "claim": "AV-MSF can be integrated now",
+      "state": "not supported",
+      "needs": "Released code, license and independent reproduction"
+    },
+    {
+      "claim": "EPOMAKER lossless masters are available for our app",
+      "state": "unverified",
+      "needs": "Actual master URLs and applicable recording license"
+    },
+    {
+      "claim": "The user's current headphone path is low latency",
+      "state": "not measured",
+      "needs": "Active browser output route and physical loopback test"
+    },
+    {
+      "claim": "Pilot sample counts are sufficient",
+      "state": "proposal",
+      "needs": "Listening tests across held-out takes, keys and assemblies"
+    }
+  ],
+  "stop_reason": "Recording, simulation and playback answer slots have primary support. Remaining high-impact gaps require measured assemblies, original masters, permission grants or implementation release, rather than additional broad search."
+}
