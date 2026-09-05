@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import KeyboardScene, { type SceneOptions } from './keyboard-scene';
 import ImportDialog from './import-dialog';
+import SoundReferences from './sound-references';
+import { soundPacks, type SoundPack } from '../lib/sound-packs';
 import { registerStudioTools } from '../lib/webmcp';
 import {
   catalog,
@@ -89,7 +91,7 @@ const sources = [
     title: 'Sample-based sound packs',
     by: 'Mechvibes',
     url: 'https://github.com/hainguyents13/mechvibes/wiki/Config-Versions',
-    text: 'Maps keys to recordings. Sound-pack rights are separate from software rights. Our current sound is synthesized and approximate.',
+    text: 'Maps keys to recordings. The studio now includes seven attributed recorded presets and a searchable library of original switch-test videos.',
   },
   {
     title: 'Compatibility is more than layout',
@@ -151,11 +153,17 @@ export default function Home() {
     useState<SoundSettings['character']>('linear');
   const [volume, setVolume] = useState(0.45);
   const [damping, setDamping] = useState(0.55);
+  const [pack, setPack] = useState<SoundPack | null>(soundPacks[1]);
+  const [sampleState, setSampleState] = useState<'loading' | 'ready' | 'error'>(
+    'loading',
+  );
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [lastKey, setLastKey] = useState('');
   const [demo, setDemo] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const audio = useRef<KeyboardAudio | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const audioAction = useRef(0);
   const options: SceneOptions = {
     ...palette,
     caseColor,
@@ -174,11 +182,12 @@ export default function Home() {
     volume,
     damping,
     material: finish,
+    source: pack ? { kind: 'recorded', id: pack.id } : { kind: 'synthesized' },
   };
   const soundRef = useRef(sound);
   soundRef.current = sound;
-  const buildRef = useRef({ options, selection, checks });
-  buildRef.current = { options, selection, checks };
+  const buildRef = useRef({ options, selection, checks, sound, sampleState });
+  buildRef.current = { options, selection, checks, sound, sampleState };
   useEffect(
     () =>
       registerStudioTools(
@@ -202,6 +211,7 @@ export default function Home() {
       setNotice('Saved parts could not be loaded. You can import them again.');
     }
     return () => {
+      audioAction.current++;
       audio.current?.close();
       timers.current.forEach(clearTimeout);
     };
@@ -210,14 +220,62 @@ export default function Home() {
     if (modal) dialog.current?.showModal();
     else dialog.current?.close();
   }, [modal]);
+  useEffect(() => {
+    let cancelled = false;
+    if (!pack) {
+      setSampleState('ready');
+      return;
+    }
+    setSampleState('loading');
+    audio.current
+      ?.prepare(pack)
+      .then(() => {
+        if (!cancelled) setSampleState('ready');
+      })
+      .catch(() => {
+        if (!cancelled) setSampleState('error');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pack, loadAttempt]);
+  useEffect(() => {
+    audio.current?.setLevel(enabled, volume);
+  }, [enabled, volume]);
+
+  function stopDemo() {
+    audioAction.current++;
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    audio.current?.stop();
+    setDemo(false);
+    window.dispatchEvent(
+      new CustomEvent('keyconf-demo', { detail: { reset: true } }),
+    );
+  }
+  async function enableSound(action = audioAction.current) {
+    try {
+      await audio.current?.unlock();
+      if (action !== audioAction.current) return false;
+      setEnabled(true);
+      audio.current?.setLevel(true, volume);
+      return true;
+    } catch {
+      setNotice('Audio could not start. Try enabling sound again.');
+      return false;
+    }
+  }
   function press(code: string) {
     setLastKey(code.replace('Key', '').replace('Digit', ''));
     audio.current?.play(code, soundRef.current);
   }
-  function playDemo() {
-    setEnabled(true);
+  function release(code: string) {
+    audio.current?.play(code, soundRef.current, 'up');
+  }
+  async function playDemo() {
+    stopDemo();
+    if (!(await enableSound())) return;
     setDemo(true);
-    timers.current.forEach(clearTimeout);
     const phrase = [
       'KeyM',
       'KeyA',
@@ -233,27 +291,46 @@ export default function Home() {
       'KeyR',
       'KeyS',
     ];
+    const start = (audio.current?.now() ?? 0) + 0.04;
+    phrase.forEach((code, i) => {
+      audio.current?.play(
+        code,
+        { ...soundRef.current, enabled: true },
+        'down',
+        start + i * 0.13,
+      );
+      audio.current?.play(
+        code,
+        { ...soundRef.current, enabled: true },
+        'up',
+        start + i * 0.13 + 0.08,
+      );
+    });
     timers.current = phrase.map((code, i) =>
-      setTimeout(() => {
-        audio.current?.play(code, { ...soundRef.current, enabled: true });
-        setLastKey(code.replace('Key', ''));
-        window.dispatchEvent(
-          new CustomEvent('keyconf-demo', { detail: { code, down: true } }),
-        );
-        timers.current.push(
-          setTimeout(
-            () =>
-              window.dispatchEvent(
-                new CustomEvent('keyconf-demo', {
-                  detail: { code, down: false },
-                }),
-              ),
-            80,
-          ),
-        );
-      }, i * 130),
+      setTimeout(
+        () => {
+          setLastKey(code.replace('Key', ''));
+          window.dispatchEvent(
+            new CustomEvent('keyconf-demo', { detail: { code, down: true } }),
+          );
+          timers.current.push(
+            setTimeout(
+              () =>
+                window.dispatchEvent(
+                  new CustomEvent('keyconf-demo', {
+                    detail: { code, down: false },
+                  }),
+                ),
+              80,
+            ),
+          );
+        },
+        40 + i * 130,
+      ),
     );
-    timers.current.push(setTimeout(() => setDemo(false), phrase.length * 130));
+    timers.current.push(
+      setTimeout(() => setDemo(false), 40 + phrase.length * 130),
+    );
   }
   function addParts(incoming: Part[]) {
     const merged = Array.from(
@@ -277,7 +354,13 @@ export default function Home() {
         parts.find((p) => p.id === selection[c]),
       ),
       compatibility: checks,
-      sound: { ...sound, accuracy: 'synthesized approximation' },
+      sound: {
+        ...sound,
+        accuracy: pack
+          ? 'recorded switch reference; full build match unverified'
+          : 'synthesized approximation',
+        recording: pack,
+      },
       exportedAt: new Date().toISOString(),
     };
     const url = URL.createObjectURL(
@@ -330,13 +413,21 @@ export default function Home() {
             <span className="status-dot" /> Original Blender study{' '}
             <ArrowUpRight size={13} />
           </div>
-          <KeyboardScene options={options} onPress={press} />
+          <KeyboardScene
+            options={options}
+            onPress={press}
+            onRelease={release}
+          />
           <button
             className={'sound-toggle ' + (enabled ? 'on' : '')}
-            aria-label={
-              enabled ? 'Mute keyboard' : 'Enable approximate keyboard sound'
-            }
-            onClick={() => setEnabled(!enabled)}
+            aria-label={enabled ? 'Mute keyboard' : 'Enable keyboard sound'}
+            disabled={sampleState !== 'ready'}
+            onClick={() => {
+              if (enabled) {
+                stopDemo();
+                setEnabled(false);
+              } else void enableSound();
+            }}
           >
             {enabled ? <Volume2 size={17} /> : <VolumeX size={17} />}
             <span>{enabled ? 'Sound on' : 'Sound off'}</span>
@@ -372,7 +463,9 @@ export default function Home() {
             </span>
             <span>
               {enabled
-                ? 'Synthesized sound · approximate'
+                ? pack
+                  ? `${pack.name} · recorded reference`
+                  : 'Synthesized sound · approximate'
                 : 'Designed in Blender. Made yours here.'}
             </span>
           </div>
@@ -617,13 +710,56 @@ export default function Home() {
             {tab === 'sound' && (
               <>
                 <div className="sound-intro">
-                  <span className="pill">Synthesized · approximate</span>
-                  <h3>Find your kind of quiet.</h3>
+                  <span className="pill">
+                    {pack
+                      ? 'Real recorded samples'
+                      : 'Synthesized · approximate'}
+                  </span>
+                  <h3>Hear the switch.</h3>
                   <p className="muted">
-                    Explore a sound character, then listen to recordings of the
-                    actual build before choosing parts.
+                    Type with a recorded switch, or explore original typing
+                    tests below. Each recording reflects the keyboard it was
+                    captured on.
                   </p>
                 </div>
+                <label htmlFor="sound-pack">Typing sound</label>
+                <select
+                  id="sound-pack"
+                  value={pack?.id ?? 'synthesized'}
+                  onChange={(event) => {
+                    stopDemo();
+                    setPack(
+                      soundPacks.find(
+                        (item) => item.id === event.target.value,
+                      ) ?? null,
+                    );
+                  }}
+                >
+                  <optgroup label="Recorded switches">
+                    {soundPacks.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <option value="synthesized">Synthesized sound study</option>
+                </select>
+                {sampleState === 'loading' && (
+                  <p className="muted" role="status">
+                    Loading recordings…
+                  </p>
+                )}
+                {sampleState === 'error' && (
+                  <p role="alert">
+                    Recordings could not load.{' '}
+                    <button
+                      className="text-button"
+                      onClick={() => setLoadAttempt((n) => n + 1)}
+                    >
+                      Try again
+                    </button>
+                  </p>
+                )}
                 <div className="sound-visual" aria-hidden="true">
                   {Array.from({ length: 39 }, (_, i) => (
                     <i
@@ -641,41 +777,48 @@ export default function Home() {
                 </div>
                 <button
                   className="button full"
-                  disabled={demo}
-                  onClick={playDemo}
+                  disabled={sampleState !== 'ready'}
+                  onClick={() => {
+                    if (demo) stopDemo();
+                    else void playDemo();
+                  }}
                 >
                   <Play size={15} />
-                  {demo ? 'Playing…' : 'Try a typing sequence'}
+                  {demo ? 'Stop typing sequence' : 'Try a typing sequence'}
                 </button>
                 <div className="last-key">
                   Last key <kbd>{lastKey || '—'}</kbd>
                 </div>
-                <label htmlFor="character">Switch character</label>
-                <select
-                  id="character"
-                  value={character}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    if (v === 'linear' || v === 'tactile' || v === 'clicky')
-                      setCharacter(v);
-                  }}
-                >
-                  <option value="linear">Soft linear</option>
-                  <option value="tactile">Crisp tactile</option>
-                  <option value="clicky">Bright clicky</option>
-                </select>
-                <label htmlFor="damping">
-                  Damping <span>{Math.round(damping * 100)}%</span>
-                </label>
-                <input
-                  id="damping"
-                  type="range"
-                  min="0"
-                  max="1"
-                  step=".01"
-                  value={damping}
-                  onChange={(e) => setDamping(Number(e.target.value))}
-                />
+                {!pack && (
+                  <>
+                    <label htmlFor="character">Switch character</label>
+                    <select
+                      id="character"
+                      value={character}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === 'linear' || v === 'tactile' || v === 'clicky')
+                          setCharacter(v);
+                      }}
+                    >
+                      <option value="linear">Soft linear</option>
+                      <option value="tactile">Crisp tactile</option>
+                      <option value="clicky">Bright clicky</option>
+                    </select>
+                    <label htmlFor="damping">
+                      Damping <span>{Math.round(damping * 100)}%</span>
+                    </label>
+                    <input
+                      id="damping"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step=".01"
+                      value={damping}
+                      onChange={(e) => setDamping(Number(e.target.value))}
+                    />
+                  </>
+                )}
                 <label htmlFor="volume">
                   Volume <span>{Math.round(volume * 100)}%</span>
                 </label>
@@ -690,19 +833,35 @@ export default function Home() {
                 />
                 <div className="recording-note">
                   <Volume2 size={18} />
-                  <h3>What an accurate preview needs</h3>
+                  <h3>{pack ? pack.name : 'A sound study'}</h3>
                   <p>
-                    A licensed recording of the same case, plate, switches,
-                    keycaps and modifications, with known recording conditions.
-                    No exact-build recordings are loaded yet.
+                    {pack
+                      ? 'Original press and release samples. Case, keycap and foam changes do not alter this recording.'
+                      : 'An approximate sound character. Choose a recorded switch above to hear real samples.'}
                   </p>
-                  <button
-                    className="text-button"
-                    onClick={() => setModal('research')}
-                  >
-                    Read the sound research <ArrowUpRight size={14} />
-                  </button>
+                  {pack && (
+                    <>
+                      <small>
+                        {pack.creator} · {pack.license} · MP3 source
+                      </small>
+                      <a
+                        className="text-button"
+                        href={pack.source}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Recording source & license <ArrowUpRight size={14} />
+                      </a>
+                    </>
+                  )}
                 </div>
+                <SoundReferences
+                  nativeEnabled={enabled}
+                  onListen={() => {
+                    stopDemo();
+                    setEnabled(false);
+                  }}
+                />
               </>
             )}
           </div>

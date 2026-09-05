@@ -5,7 +5,8 @@ A keyboard configurator built with React, Three.js, and original Blender geometr
 - Rotate a keyboard, change layouts, materials and colors, and animate individual keypresses.
 - Inspect component-family evidence and known stabilizer / sensing conflicts.
 - Preview public product data from JSON-LD and Shopify, then explicitly add reviewed products to a browser-local library.
-- Explore synthesized sound characters. These are **approximations**, not recordings or predictions of selected retail parts.
+- Type with seven recorded switch presets, including separate presses/releases, or explore the optional synthesized sound study.
+- Search 266 attributed switch-test videos and play the original recordings through YouTube.
 - Export a build with its selected components, evidence links, and limitations.
 
 ## Development
@@ -36,8 +37,10 @@ The model uses a 19.05 mm key pitch as a design unit. It is not dimensionally va
 
 See `docs/research.md` for source coverage and the database design. Imported product data is a review draft. Layout percentage, stem family, and "hot-swap" alone cannot prove compatibility. The current checker intentionally keeps incomplete matches unknown.
 
-Sound sources are not downloaded from YouTube. Exact-build audio requires licensed recordings and full recording/build metadata. The current Web Audio engine is explicitly synthesized.
+The bundled switch recordings come from kbsim via the audio-specific MIT-licensed packs in [Keyboard Sounds](https://github.com/nathan-fiscaletti/keyboardsounds). Each pack preserves its license notice and original bytes. These are recordings of switches in other builds; changing the visual case or keycaps does not transform their audio. Full capture details are unknown. YouTube references play in the original player; their audio is not extracted or redistributed.
 
-The [keyboard audio research](docs/audio-research.md) compares available sound libraries, physical acoustic simulation, recent impact-sound research, and headphone playback. It includes a capture protocol and validation plan for a recorded reference build. These are research findings and proposed milestones; the app's audio has not yet been replaced with recordings.
+The [keyboard audio research](docs/audio-research.md) compares sound libraries, acoustic simulation, and headphone playback. Existing recordings are the acquisition strategy; personally recording a collection is not required. A measurement protocol remains available for later validation work.
+
+`python3 scripts/import_sound_references.py` refreshes the creator-attributed video index from Click and Thock's public switch pages. `python3 scripts/import_sound_packs.py` reproducibly fetches seven packs from a pinned upstream revision after checking their audio license notices. The latter records SHA-256 hashes checked by the test suite. These are dedicated adapters, not universal audio extractors.
 
 The URL importer reads at most 2 MB per response and follows at most three redirects, rejecting non-public destinations. Shopify catalog previews read up to 40 products and one variant per product. Product-URL previews read up to 80 variants and omit prices when currency is not established. This is not a complete catalog crawler. Production ingestion needs queued adapters, retries, rate controls, versioned observations, and an egress policy that prevents DNS rebinding.

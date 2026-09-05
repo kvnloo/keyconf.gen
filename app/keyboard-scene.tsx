@@ -20,15 +20,19 @@ export type SceneOptions = {
 export default function KeyboardScene({
   options,
   onPress,
+  onRelease,
 }: {
   options: SceneOptions;
   onPress: (code: string) => void;
+  onRelease: (code: string) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const state = useRef(options);
   state.current = options;
   const press = useRef(onPress);
   press.current = onPress;
+  const release = useRef(onRelease);
+  release.current = onRelease;
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -165,12 +169,18 @@ export default function KeyboardScene({
       }
     };
     const demo = (e: Event) => {
+      if (e instanceof CustomEvent && e.detail?.reset) {
+        down.clear();
+        return;
+      }
       if (e instanceof CustomEvent && typeof e.detail?.code === 'string') {
         e.detail.down ? down.add(e.detail.code) : down.delete(e.detail.code);
       }
     };
     window.addEventListener('keyconf-demo', demo);
-    const keyup = (e: KeyboardEvent) => down.delete(e.code);
+    const keyup = (e: KeyboardEvent) => {
+      if (down.delete(e.code)) release.current(e.code);
+    };
     const blur = () => down.clear();
     window.addEventListener('keydown', keydown);
     window.addEventListener('keyup', keyup);
@@ -198,7 +208,7 @@ export default function KeyboardScene({
       }
     };
     const end = () => {
-      down.delete(clicked);
+      if (clicked && down.delete(clicked)) release.current(clicked);
       clicked = '';
     };
     renderer.domElement.addEventListener('pointerdown', start);

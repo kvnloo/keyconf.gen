@@ -152,9 +152,10 @@
       "publication_or_version": null,
       "url": "https://github.com/tplai/kbsim",
       "accessed": "2026-09-05",
-      "evidence": "151 MP3 files with row/modifier/press-release groupings.",
-      "limits": "MIT code; complete recorder and build provenance for assets not located.",
-      "confidence": "high in source description; applicability bounded by limits"
+      "evidence": "151 MP3 source assets. Seven downstream packs explicitly identify their audio samples as kbsim and carry MIT notices; these seven are now bundled with attribution.",
+      "limits": "Full build and microphone provenance remains unknown; recordings do not predict selected assembly modifications.",
+      "confidence": "high in source description; applicability bounded by limits",
+      "audio_license_evidence": "https://github.com/nathan-fiscaletti/keyboardsounds/blob/6785c7ac17b9f4db1f3d7f3d1d87a23067944517/keyboardsounds/profiles/alpaca/LICENSE"
     },
     {
       "id": "klack",

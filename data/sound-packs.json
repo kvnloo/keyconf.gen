@@ -1,0 +1,387 @@
+{
+  "revision": "6785c7ac17b9f4db1f3d7f3d1d87a23067944517",
+  "packs": [
+    {
+      "id": "alpaca",
+      "name": "Durock Alpaca",
+      "character": "linear",
+      "creator": "Thomas Lai / kbsim",
+      "license": "MIT",
+      "source": "https://github.com/nathan-fiscaletti/keyboardsounds/tree/6785c7ac17b9f4db1f3d7f3d1d87a23067944517/keyboardsounds/profiles/alpaca",
+      "upstream": "https://github.com/tplai/kbsim",
+      "capture": "Full build and microphone details were not supplied with these samples.",
+      "groups": {
+        "down": {
+          "default": [
+            "press_key1.mp3",
+            "press_key2.mp3",
+            "press_key3.mp3",
+            "press_key4.mp3",
+            "press_key5.mp3"
+          ],
+          "Space": [
+            "press_space.mp3"
+          ],
+          "Enter": [
+            "press_enter.mp3"
+          ],
+          "Backspace": [
+            "press_back.mp3"
+          ]
+        },
+        "up": {
+          "default": [
+            "release_key.mp3"
+          ],
+          "Space": [
+            "release_space.mp3"
+          ],
+          "Enter": [
+            "release_enter.mp3"
+          ],
+          "Backspace": [
+            "release_back.mp3"
+          ]
+        }
+      },
+      "sha256": {
+        "press_back.mp3": "bcbe69320a16639ebbf487615af4844d98c1431f4ed48e3115aae91931244a94",
+        "press_enter.mp3": "c0dea75600a9fe288bada040ccfcfd60c9ae0e1563c73e59163f073eef68cf75",
+        "press_key1.mp3": "a9c99a85e884c567c5480ec1fbb74ec4b3874766f36a994ef327a7f046066e17",
+        "press_key2.mp3": "4d6ea7c764cd652e2841795630027a6e862fd6a23749f0a48192e8f61c02afe9",
+        "press_key3.mp3": "ee2d4f2c47c256f11aabbf3284e1ba7f1d70e12ec211b1c7a7c48d58584fbacc",
+        "press_key4.mp3": "57e29520a382bb45a37f76ba38adb7cfd006b760c98c8d7dba2380efa75777d7",
+        "press_key5.mp3": "21f13df227df7360dceb168d8b571e3af6cfa310c56a388c068a1b9c0e959775",
+        "press_space.mp3": "48e48452cad30f7aeaecebe19a7314e77d7cb28fd471b6c30cf81a899542ea7f",
+        "release_back.mp3": "d06aa6a2dd02a2621a74e14cd23235c142fa31c2ed81ecaac3f09d7084447d44",
+        "release_enter.mp3": "f18e83f468aaba6daa88ae418e4ad60bf3b0b4be2f56d30901278acf417a3851",
+        "release_key.mp3": "2585ceae9f0aac668bc67c6c3c5ec11e64cf3f8cd6dc6486d8de31bde6751eb6",
+        "release_space.mp3": "79a95ffc290b935b00e441bebd81d4a05a863a244bca643254144d919b97aedd"
+      }
+    },
+    {
+      "id": "gateron-black-ink",
+      "name": "Gateron Ink Black",
+      "character": "linear",
+      "creator": "Thomas Lai / kbsim",
+      "license": "MIT",
+      "source": "https://github.com/nathan-fiscaletti/keyboardsounds/tree/6785c7ac17b9f4db1f3d7f3d1d87a23067944517/keyboardsounds/profiles/gateron-black-ink",
+      "upstream": "https://github.com/tplai/kbsim",
+      "capture": "Full build and microphone details were not supplied with these samples.",
+      "groups": {
+        "down": {
+          "default": [
+            "press_key1.mp3",
+            "press_key2.mp3",
+            "press_key3.mp3",
+            "press_key4.mp3",
+            "press_key5.mp3"
+          ],
+          "Space": [
+            "press_space.mp3"
+          ],
+          "Enter": [
+            "press_enter.mp3"
+          ],
+          "Backspace": [
+            "press_back.mp3"
+          ]
+        },
+        "up": {
+          "default": [
+            "release_key.mp3"
+          ],
+          "Space": [
+            "release_space.mp3"
+          ],
+          "Enter": [
+            "release_enter.mp3"
+          ],
+          "Backspace": [
+            "release_back.mp3"
+          ]
+        }
+      },
+      "sha256": {
+        "press_back.mp3": "9e956add9665d10364505517cdfa664af0eac19b748648067092e83e1fbecf6f",
+        "press_enter.mp3": "deabdc71c306a94e684f166f0a90c20dc61483c3d8b5a87a681890195b076d37",
+        "press_key1.mp3": "4a50e78bb7502423f1ef8ba7c6fa235f9bf51f59bb3d5581b666074d7d9cc211",
+        "press_key2.mp3": "66a3876ba178f41c8cf41333df8c616ac530138830df5349e8945c462a102ead",
+        "press_key3.mp3": "e00b6d20cb56995025632a197124f37f1ef191acd2a562e967712e19505a79be",
+        "press_key4.mp3": "e00b6d20cb56995025632a197124f37f1ef191acd2a562e967712e19505a79be",
+        "press_key5.mp3": "26aebf55daa50e98c254e73b3ea4a824aaa232c33e9187d09aa1441cc1435363",
+        "press_space.mp3": "9d8dbd1e65503e67d7dfa384bb3f696624ac641ad589b1f92d6a1ebc1450d3cd",
+        "release_back.mp3": "74d8fd0811ac70043a81ee7c6f4a3956450c096556ccc86de29b57e5ef723c59",
+        "release_enter.mp3": "d4b3ebbe0fe7d10849ddaab71893328fda345d3d5b4332c53df4e16f92cc8dd4",
+        "release_key.mp3": "cc45a0954eb9f3925f66dc874b38954416b96128d3eacd7e76ee0ee211b8c66a",
+        "release_space.mp3": "6a2070501972ae9baaee79bf44d7ede6689c648d3649deefde656ca3df16b996"
+      }
+    },
+    {
+      "id": "gateron-red-ink",
+      "name": "Gateron Ink Red",
+      "character": "linear",
+      "creator": "Thomas Lai / kbsim",
+      "license": "MIT",
+      "source": "https://github.com/nathan-fiscaletti/keyboardsounds/tree/6785c7ac17b9f4db1f3d7f3d1d87a23067944517/keyboardsounds/profiles/gateron-red-ink",
+      "upstream": "https://github.com/tplai/kbsim",
+      "capture": "Full build and microphone details were not supplied with these samples.",
+      "groups": {
+        "down": {
+          "default": [
+            "press_key1.mp3",
+            "press_key2.mp3",
+            "press_key3.mp3",
+            "press_key4.mp3",
+            "press_key5.mp3"
+          ],
+          "Space": [
+            "press_space.mp3"
+          ],
+          "Enter": [
+            "press_enter.mp3"
+          ],
+          "Backspace": [
+            "press_back.mp3"
+          ]
+        },
+        "up": {
+          "default": [
+            "release_key.mp3"
+          ],
+          "Space": [
+            "release_space.mp3"
+          ],
+          "Enter": [
+            "release_enter.mp3"
+          ],
+          "Backspace": [
+            "release_back.mp3"
+          ]
+        }
+      },
+      "sha256": {
+        "press_back.mp3": "282c675e8d86efce6adc018cf57980d0dc63c580c5b219e8a98e89fb320d768b",
+        "press_enter.mp3": "1d696fee93c33e96892cd6f5f3a68e0858c33053830286196d4284173a76d19e",
+        "press_key1.mp3": "18b28ca6cb7325fa1aa657ae6dcc385dbec1da6cd43049b5010320fed8e98850",
+        "press_key2.mp3": "1628e42cd7d2058b4b8f6f673c775703367f994441c6d9848be8770432bc3c2a",
+        "press_key3.mp3": "058b2dca1f44764b490ca3616f24c2494d95f6a0268224616c5fd913bcc773bf",
+        "press_key4.mp3": "b717b3a1357ca60ada345bd9d5f3db4805fca8b909c5ae93c27c3c4a56350cd8",
+        "press_key5.mp3": "80884fb1aa62d0c4176a41a0d85575b94dffb2bfc24448d84fdf222b26089179",
+        "press_space.mp3": "b9aa24d955e1f6ffc111879aa16dcd0d68d2e3afb5624a9d2541e145cb1220f6",
+        "release_back.mp3": "6ceeb3c576297439fe9c989ee153787921b3b32102e6353ff76416377970d12d",
+        "release_enter.mp3": "5bd81905d20614e2ec1772db01b8bd3b3c0c705a583fb1a2a8d1e98b1a83605e",
+        "release_key.mp3": "4d6b61a1530bb220c298c7257855ab9892146e515cfce8cf7e03cb3bb1fcc4e5",
+        "release_space.mp3": "d2f0e6f959854fd8328e984ed950d0c0ca5b23738cdece35e617e0cde2c505e9"
+      }
+    },
+    {
+      "id": "holy-panda",
+      "name": "Holy Panda",
+      "character": "tactile",
+      "creator": "Thomas Lai / kbsim",
+      "license": "MIT",
+      "source": "https://github.com/nathan-fiscaletti/keyboardsounds/tree/6785c7ac17b9f4db1f3d7f3d1d87a23067944517/keyboardsounds/profiles/holy-panda",
+      "upstream": "https://github.com/tplai/kbsim",
+      "capture": "Full build and microphone details were not supplied with these samples.",
+      "groups": {
+        "down": {
+          "default": [
+            "press_key1.mp3",
+            "press_key2.mp3",
+            "press_key3.mp3",
+            "press_key4.mp3",
+            "press_key5.mp3"
+          ],
+          "Space": [
+            "press_space.mp3"
+          ],
+          "Enter": [
+            "press_enter.mp3"
+          ],
+          "Backspace": [
+            "press_back.mp3"
+          ]
+        },
+        "up": {
+          "default": [
+            "release_key.mp3"
+          ],
+          "Space": [
+            "release_space.mp3"
+          ],
+          "Enter": [
+            "release_enter.mp3"
+          ],
+          "Backspace": [
+            "release_back.mp3"
+          ]
+        }
+      },
+      "sha256": {
+        "press_back.mp3": "293a4fb1ab19605348018c2e8fea805ef9454963aa69e2d26a06ed7217636889",
+        "press_enter.mp3": "56d78f9b2b662ddd07255e2e130410536a0e877bdc639fef7e205edfd73558a1",
+        "press_key1.mp3": "79b2811f3061c406ac9dcf802ae83d68f5fac78f8ed588a515e2550d2fcd05df",
+        "press_key2.mp3": "cb9aefe55a81c48d6680d2ab8960220c20439e31ba1e32fd570106ed15c7fd40",
+        "press_key3.mp3": "d346d76ef4c32f09be58556ccce843d7a88199214f9ebfdbf8b95226faf7ba3e",
+        "press_key4.mp3": "4141524713fc19942166866c093777351f6f122acb9d79c7503981a5b906c7dc",
+        "press_key5.mp3": "60ac51060cc0f1880016be2dffa05d3e3cf928290df37be998fb081bdf1ea66f",
+        "press_space.mp3": "bcba046d707877095ff2fc6d031091348515f9a6f724ee73c029831d105b71a6",
+        "release_back.mp3": "dd092c78c99322f3bf9c45c2095a91e6a91450889f2a0976fb9858397b360c06",
+        "release_enter.mp3": "be0f86e85d17dce47a607960c37eb54240ff1648b8eb54b6293cb8beb38c17ed",
+        "release_key.mp3": "9b0859c4ccb2adabdd9e9447aa0684f3ba12f59551aaf1a4d867d458d4ca56b1",
+        "release_space.mp3": "980bfca97b89f2dc114f23cdb440c956a62137430d5e22682e011d16d43f2153"
+      }
+    },
+    {
+      "id": "mx-black",
+      "name": "Cherry MX Black",
+      "character": "linear",
+      "creator": "Thomas Lai / kbsim",
+      "license": "MIT",
+      "source": "https://github.com/nathan-fiscaletti/keyboardsounds/tree/6785c7ac17b9f4db1f3d7f3d1d87a23067944517/keyboardsounds/profiles/mx-black",
+      "upstream": "https://github.com/tplai/kbsim",
+      "capture": "Full build and microphone details were not supplied with these samples.",
+      "groups": {
+        "down": {
+          "default": [
+            "press_key1.mp3",
+            "press_key2.mp3",
+            "press_key3.mp3",
+            "press_key4.mp3",
+            "press_key5.mp3"
+          ],
+          "Space": [
+            "press_space.mp3"
+          ],
+          "Enter": [
+            "press_enter.mp3"
+          ],
+          "Backspace": [
+            "press_back.mp3"
+          ]
+        },
+        "up": {
+          "default": [
+            "release_key.mp3"
+          ],
+          "Space": [
+            "release_space.mp3"
+          ],
+          "Enter": [
+            "release_enter.mp3"
+          ],
+          "Backspace": [
+            "release_back.mp3"
+          ]
+        }
+      },
+      "sha256": {
+        "press_back.mp3": "c12a43f97c8fcd4ff1c5020ed0d3afb2a1f518c1d8e346f097ad3f0ea6f80c1b",
+        "press_enter.mp3": "166096b6cd8522dc72c3664a6ac54067b70ad561f8f52a2644623b4283ecdc8b",
+        "press_key1.mp3": "710bfacdfb8012c1a6012e6872e8d0688c7413dbc697724b1b77976bcf964948",
+        "press_key2.mp3": "51195ef4d181184b3a6dd36d4b74f1f6f678d233af95467ae3ecd5f6927b5b32",
+        "press_key3.mp3": "a908202ed34f3f6bf5ee5bd4cd66a8b52dc75af0eb6108698f7bbb69c07dc4a0",
+        "press_key4.mp3": "e1af27d6895073a4ff6fda58ea952770a57ec7eaf59ab1b9aef417d90502c73f",
+        "press_key5.mp3": "ad4ed6ae1a655d5b21e591f8b99a8d58eaf09e0864040e2892568fce1eb18fe0",
+        "press_space.mp3": "f3207500a27cb457105ec259d9dc495b24f88f233191e806c3074303f288d27f",
+        "release_back.mp3": "51789d22ed2091cc9b85c6fea37b56b49f8c9f6663948cdd6a92f822e6bd931e",
+        "release_enter.mp3": "d3143442530392eeb391714ce892656472d797c0528beb4d6d8e5609fe904428",
+        "release_key.mp3": "a8e869c652f5410669d3e52070d36941177cac84e8289121d5cc91fe20857fd3",
+        "release_space.mp3": "f785078c5bad8080a4649ae1dc632b97e48b180fa32eb040788a4aec702fbe5b"
+      }
+    },
+    {
+      "id": "mx-blue",
+      "name": "Cherry MX Blue",
+      "character": "clicky",
+      "creator": "Thomas Lai / kbsim",
+      "license": "MIT",
+      "source": "https://github.com/nathan-fiscaletti/keyboardsounds/tree/6785c7ac17b9f4db1f3d7f3d1d87a23067944517/keyboardsounds/profiles/mx-blue",
+      "upstream": "https://github.com/tplai/kbsim",
+      "capture": "Full build and microphone details were not supplied with these samples.",
+      "groups": {
+        "down": {
+          "default": [
+            "press_key1.mp3",
+            "press_key2.mp3",
+            "press_key3.mp3",
+            "press_key4.mp3",
+            "press_key5.mp3"
+          ]
+        },
+        "up": {
+          "default": [
+            "release.mp3"
+          ]
+        }
+      },
+      "sha256": {
+        "press_key1.mp3": "329a2cb041186579180cfd6c367b4680e82677689788210a96461ee43dc47115",
+        "press_key2.mp3": "01baccca3a0b9a913063241c0eaade18d8fd6263d507fbfc4fdfa3a5a526389a",
+        "press_key3.mp3": "9460f5ccd67aa5c01a125c26533fdbbcf1ce064bb049534bd7e306695fa845b4",
+        "press_key4.mp3": "4193733efad92e044c6234811219c63075a7c547b6219fdc1f9c915965ba8269",
+        "press_key5.mp3": "7a98c842c9f2eb650e4d8878cb9ba08428450b190c257d61d5a7dcfaa052d1b3",
+        "release.mp3": "243e8300cbe131678b8b4d1fd44e8aaa884636c6799af67b379408a96a9e5697"
+      }
+    },
+    {
+      "id": "mx-brown",
+      "name": "Cherry MX Brown",
+      "character": "tactile",
+      "creator": "Thomas Lai / kbsim",
+      "license": "MIT",
+      "source": "https://github.com/nathan-fiscaletti/keyboardsounds/tree/6785c7ac17b9f4db1f3d7f3d1d87a23067944517/keyboardsounds/profiles/mx-brown",
+      "upstream": "https://github.com/tplai/kbsim",
+      "capture": "Full build and microphone details were not supplied with these samples.",
+      "groups": {
+        "down": {
+          "default": [
+            "press_key1.mp3",
+            "press_key2.mp3",
+            "press_key3.mp3",
+            "press_key4.mp3",
+            "press_key5.mp3"
+          ],
+          "Space": [
+            "press_space.mp3"
+          ],
+          "Enter": [
+            "press_enter.mp3"
+          ],
+          "Backspace": [
+            "press_back.mp3"
+          ]
+        },
+        "up": {
+          "default": [
+            "release_key.mp3"
+          ],
+          "Space": [
+            "release_space.mp3"
+          ],
+          "Enter": [
+            "release_enter.mp3"
+          ],
+          "Backspace": [
+            "release_back.mp3"
+          ]
+        }
+      },
+      "sha256": {
+        "press_back.mp3": "8607e53ec586692caee08e61d6fa241fce7c7ef9dac219de92b632b90678a972",
+        "press_enter.mp3": "870ac91262bf77ae898dad217bf033941634b8b162a2fa4a190416abd7aabfb7",
+        "press_key1.mp3": "3ac7a03472bb63ae34f077b7f50d85adf5f1d4f93565c6c6608b23be7eca10ca",
+        "press_key2.mp3": "9fb249de0ef96cb08602f47b53161338bc90a9d094a9c9b2ca33c513d5ca10a8",
+        "press_key3.mp3": "227363367cf62d93b73994cde9124956aecd8bf44c63167909c1079ceae37688",
+        "press_key4.mp3": "4eebb28d97138a226223532321f0351f993f1d21d804bd0f26af1d7e7f8309ec",
+        "press_key5.mp3": "e4f7f0413ceff5892b130808efee2d50734a72f3babdcb2e238761a749fa99c6",
+        "press_space.mp3": "c29e11248a5cbfb845628174803ea240701a63d17770ea006defad2d48263017",
+        "release_back.mp3": "6a1cda06206811bd4ec3e17d49dfbb4f5128068d0994e7e6c001e2e13c90a4ae",
+        "release_enter.mp3": "c3e4a000ef5540f485d760a5c4c06adf8d38d9814989302b8d5b42eab472dc4b",
+        "release_key.mp3": "5aaedc220e66eeda90adf64e519aa11d4ba0e3df9d8579ffb05af47dc0adbaf8",
+        "release_space.mp3": "eaf160ffea29918f08cc267033accdcfa6fe99992149dcf3de6f599ba66c63f7"
+      }
+    }
+  ]
+}

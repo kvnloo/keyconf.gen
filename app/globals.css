@@ -1040,3 +1040,105 @@ button:disabled {
   color: var(--muted);
   margin-top: 5px;
 }
+/* Switch recordings */
+.sound-library {
+  border-top: 1px solid var(--line, #d9d6ca);
+  margin-top: 24px;
+  padding-top: 24px;
+}
+.sound-library h3 {
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+.sound-library > small {
+  display: block;
+  margin: 10px 0;
+  color: #696b61;
+  line-height: 1.5;
+}
+.sound-library input[type='search'] {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #c8c7bb;
+  background: #fffef8;
+  border-radius: 9px;
+  padding: 11px 12px;
+  font: inherit;
+}
+.sound-results {
+  max-height: 310px;
+  overflow-y: auto;
+  margin: 8px 0 12px;
+}
+.sound-results button {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  padding: 12px 8px;
+  border: 0;
+  border-bottom: 1px solid #e1dfd3;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sound-results button:hover,
+.sound-results button[aria-pressed='true'] {
+  background: #e9eddf;
+}
+.sound-results strong,
+.sound-results small {
+  display: block;
+}
+.sound-results strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.sound-results small {
+  margin-top: 4px;
+  color: #686c60;
+  font-size: 11px;
+}
+.reference-player {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid #cbcdbd;
+  background: #f6f7ed;
+  border-radius: 12px;
+}
+.reference-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+.reference-player iframe {
+  display: block;
+  width: 100%;
+  height: 220px;
+  border: 0;
+  border-radius: 6px;
+}
+.reference-player small {
+  display: block;
+  line-height: 1.5;
+  color: #666b5d;
+  margin-top: 8px;
+}
+.reference-player a {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #476047;
+}
+.recording-note > small {
+  display: block;
+  color: #656a5b;
+  line-height: 1.5;
+}

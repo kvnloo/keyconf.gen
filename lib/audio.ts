@@ -1,17 +1,125 @@
+import {
+  samplesFor,
+  soundPacks,
+  type KeyPhase,
+  type SoundPack,
+} from './sound-packs';
+
 export type SoundSettings = {
   enabled: boolean;
   character: 'linear' | 'tactile' | 'clicky';
   volume: number;
   damping: number;
   material: string;
+  source: { kind: 'recorded'; id: string } | { kind: 'synthesized' };
 };
 export class KeyboardAudio {
   private context: AudioContext | null = null;
-  play(code: string, s: SoundSettings) {
+  private master: GainNode | null = null;
+  private buffers = new Map<string, Map<string, AudioBuffer>>();
+  private pending = new Map<string, Promise<void>>();
+  private cursor = new Map<string, number>();
+  private voices = new Set<AudioScheduledSourceNode>();
+  private abort = new AbortController();
+
+  private getContext() {
+    if (!this.context) {
+      this.context = new AudioContext({ latencyHint: 'interactive' });
+      this.master = this.context.createGain();
+      this.master.gain.value = 0;
+      this.master.connect(this.context.destination);
+    }
+    return this.context;
+  }
+
+  async unlock() {
+    const ctx = this.getContext();
+    if (ctx.state === 'suspended') await ctx.resume();
+  }
+
+  setLevel(enabled: boolean, volume: number) {
+    if (this.context && this.master)
+      this.master.gain.setTargetAtTime(
+        enabled ? volume : 0,
+        this.context.currentTime,
+        0.008,
+      );
+  }
+
+  prepare(pack: SoundPack) {
+    if (this.buffers.has(pack.id)) return Promise.resolve();
+    const pending = this.pending.get(pack.id);
+    if (pending) return pending;
+    const ctx = this.getContext();
+    const files = new Set(
+      [
+        ...Object.values(pack.groups.down),
+        ...Object.values(pack.groups.up),
+      ].flatMap((group) => group ?? []),
+    );
+    const loading = Promise.all(
+      Array.from(files, async (file) => {
+        const url = new URL(`sounds/${pack.id}/${file}`, document.baseURI);
+        const response = await fetch(url, { signal: this.abort.signal });
+        if (!response.ok)
+          throw new Error('Recording could not load. Try again.');
+        const buffer = await ctx.decodeAudioData(await response.arrayBuffer());
+        const entry: [string, AudioBuffer] = [file, buffer];
+        return entry;
+      }),
+    )
+      .then((entries) => {
+        if (this.context === ctx && ctx.state !== 'closed')
+          this.buffers.set(pack.id, new Map(entries));
+      })
+      .finally(() => this.pending.delete(pack.id));
+    this.pending.set(pack.id, loading);
+    return loading;
+  }
+
+  private track(source: AudioScheduledSourceNode, dispose: () => void) {
+    this.voices.add(source);
+    source.onended = () => {
+      this.voices.delete(source);
+      dispose();
+    };
+  }
+
+  stop() {
+    for (const voice of this.voices) voice.stop();
+    this.voices.clear();
+  }
+
+  play(code: string, s: SoundSettings, phase: KeyPhase = 'down', at?: number) {
     if (!s.enabled) return;
-    const ctx = (this.context ??= new AudioContext());
-    if (ctx.state === 'suspended') void ctx.resume();
-    const t = ctx.currentTime;
+    const ctx = this.getContext();
+    if (ctx.state !== 'running') return;
+    const t = Math.max(ctx.currentTime, at ?? ctx.currentTime);
+    const output = this.master ?? ctx.destination;
+    if (s.source.kind === 'recorded') {
+      const id = s.source.id;
+      const pack = soundPacks.find((pack) => pack.id === id);
+      if (!pack) return;
+      const files = samplesFor(pack, code, phase);
+      const group = `${pack.id}/${phase}/${files.join(',')}`;
+      const cursor = this.cursor.get(group) ?? 0;
+      const file = files[cursor % files.length];
+      const buffer = this.buffers.get(pack.id)?.get(file);
+      if (!buffer) return;
+      this.cursor.set(group, cursor + 1);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      const gain = ctx.createGain();
+      gain.gain.value = 0.22;
+      source.connect(gain).connect(output);
+      this.track(source, () => {
+        source.disconnect();
+        gain.disconnect();
+      });
+      source.start(t);
+      return;
+    }
+    if (phase === 'up') return;
     const space = code === 'Space';
     const duration = space ? 0.19 : 0.1;
     const buffer = ctx.createBuffer(
@@ -37,9 +145,9 @@ export class KeyboardAudio {
           : 750;
     filter.Q.value = 0.6;
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(s.volume * 0.38, t);
+    gain.gain.setValueAtTime(0.38, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-    noise.connect(filter).connect(gain).connect(ctx.destination);
+    noise.connect(filter).connect(gain).connect(output);
     noise.start(t);
     noise.stop(t + duration);
     const body = ctx.createOscillator();
@@ -50,23 +158,32 @@ export class KeyboardAudio {
     );
     body.frequency.exponentialRampToValueAtTime(space ? 65 : 115, t + 0.04);
     const bg = ctx.createGain();
-    bg.gain.setValueAtTime(s.volume * 0.12, t);
+    bg.gain.setValueAtTime(0.12, t);
     bg.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-    body.connect(bg).connect(ctx.destination);
+    body.connect(bg).connect(output);
     body.start(t);
     body.stop(t + 0.09);
-    noise.onended = () => {
+    this.track(noise, () => {
       noise.disconnect();
       filter.disconnect();
       gain.disconnect();
-    };
-    body.onended = () => {
+    });
+    this.track(body, () => {
       body.disconnect();
       bg.disconnect();
-    };
+    });
   }
+
+  now() {
+    return this.getContext().currentTime;
+  }
+
   close() {
+    this.abort.abort();
+    this.stop();
     void this.context?.close();
     this.context = null;
+    this.master = null;
+    this.buffers.clear();
   }
 }
