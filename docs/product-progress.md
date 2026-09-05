@@ -26,7 +26,7 @@ All six interface domains were reviewed at source level: accessibility, layout, 
 - [x] Inspect the existing primary flow and identify source-level gaps.
 - [x] Implement reliable state, undo/redo, portable sharing and import recovery.
 - [x] Improve the scene and input lifecycle. Full device verification remains in the completion pass.
-- [ ] Expose and expand useful product evidence.
+- [x] Expose and expand useful product evidence. Full coverage and exact kit inventory remain data work.
 - [ ] Refine the listening experience.
 - [ ] Complete interaction and presentation verification.
 - [ ] Publish the finished release and record remaining data limits.
@@ -63,3 +63,15 @@ Remaining acceptance work: catalog and technology presentation, more deliberate 
 The user reported quiet keyboard playback. The recorded path applied a fixed 0.22 gain before the volume slider, leaving the default 45% setting at 9.9% of source amplitude. Removed that extra gain node. Recordings now pass directly through the user's master level, raising output by 13.15 dB at every nonzero slider setting. Existing saved volume settings still apply. Sample bytes, pitch, timing and spectral balance are unchanged.
 
 Decoded all 78 MP3 files to inspect their levels, then measured actual browser playback of press/release sequences across all seven presets at 45% volume. Observed peaks ranged from approximately -19.5 to -12.1 dBFS with no clipping in those sequences. The 16 existing tests, type checking, Sites build and Pages build pass. This addresses playback attenuation; headphone listening quality and acoustic fidelity remain part of the wider listening work.
+
+## Component discovery and evidence
+
+Expanded the builder from 11 to 39 part references, with five named starting assemblies across 60%, 65% and 75%. Added a searchable component picker, technology filters, selected-part tiles, manufacturer links, recovery from empty searches, and a visible conflict shortcut. Choosing an assembly updates its layout, material and component selection in one undoable edit. Retired NK65 Entry records are labeled; bundled board components are not presented as independently purchasable offers.
+
+Compatibility now uses explicit assembly triples and documented electrical relationships, including Keychron's specific Double-Rail support and Jade/KS-20 exclusions. The Redux Durock exclusion no longer accidentally applies to every screw-in stabilizer. Mixed or unverified core parts and unverified magnetic combinations remain unknown. Keycap width/row coverage remains an explicit separate check.
+
+Added an inline switch/feel/gaming guide and exposed the existing 20 product observations through a searchable research browser. Manufacturer provenance and the scope of popularity rankings are visible. See [Catalog evidence](catalog.md) for sources and limitations.
+
+Verified 21 tests, including all assembly records, mechanical/magnetic conflicts, magnetic-family exclusions, mixed/unknown evidence, stabilizer exceptions, share round trips and whole-assembly undo. Type checking passes. In the live browser, selected Q1 HE, searched for Magnetic Jade, observed the conflict, and used Undo to restore Nebula. Verified empty-search recovery, NK65 selection, HHKB research search and mobile dialog close. Inspected the desktop, 390 px and 320 px layouts; scroll width matched document width at both narrow sizes. Found and fixed notification shrink-to-fit and a dialog close button that scrolled out of reach. Corrected Surprise me's palette identity comparison and replaced the deprecated Three.js shadow-map constant.
+
+The new catalog files have no lint findings. Existing lint issues elsewhere and the broader listening, import and complete-interface acceptance checks remain pending. The full product goal remains active.

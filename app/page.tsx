@@ -12,7 +12,6 @@ import {
   Download,
   X,
   SlidersHorizontal,
-  CircleAlert,
   ChevronRight,
   Play,
   Undo2,
@@ -26,6 +25,8 @@ import {
 import KeyboardScene, { type SceneOptions } from './keyboard-scene';
 import ImportDialog from './import-dialog';
 import SoundReferences from './sound-references';
+import ComponentsPanel from './components-panel';
+import ResearchProducts from './research-products';
 import { useBuild } from './use-build';
 import {
   palettes,
@@ -734,13 +735,11 @@ export default function Home() {
                   <button
                     className="text-button"
                     onClick={() => {
+                      const choices = palettes.filter(
+                        (p) => p.name !== palette.name,
+                      );
                       const next =
-                        palettes[
-                          (palettes.indexOf(palette) +
-                            1 +
-                            Math.floor(Math.random() * (palettes.length - 1))) %
-                            palettes.length
-                        ];
+                        choices[Math.floor(Math.random() * choices.length)];
                       edit({
                         palette: next,
                         caseColor:
@@ -773,93 +772,29 @@ export default function Home() {
               </>
             )}
             {tab === 'parts' && (
-              <>
-                <div className="part-intro">
-                  <h3>Build around real parts.</h3>
-                  <p className="muted">
-                    Seed references cover two 60% ecosystems. Part selection
-                    checks fit; the 3D model remains an illustrative study.
-                  </p>
-                </div>
-                {categories.map((c) => (
-                  <div className="part-field" key={c}>
-                    <label htmlFor={'part-' + c}>
-                      {c === 'pcb' ? 'PCB' : c[0].toUpperCase() + c.slice(1)}
-                    </label>
-                    <select
-                      id={'part-' + c}
-                      value={selection[c]}
-                      onChange={(e) =>
-                        edit({
-                          selection: { ...selection, [c]: e.target.value },
-                        })
-                      }
-                    >
-                      {parts
-                        .filter((p) => p.category === c)
-                        .map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
-                    </select>
-                    <div className="part-detail">
-                      <span>
-                        {parts.find((p) => p.id === selection[c])?.detail}
-                      </span>
-                      <a
-                        href={parts.find((p) => p.id === selection[c])?.source}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={'Source for selected ' + c}
-                      >
-                        <ArrowUpRight size={15} />
-                      </a>
-                    </div>
-                  </div>
-                ))}
-                <div className="fit-panel">
-                  <h3>
-                    {blocked
-                      ? blocked +
-                        ' fit ' +
-                        (blocked === 1 ? 'conflict' : 'conflicts')
-                      : 'Compatibility review'}
-                  </h3>
-                  {checks.map((c) => (
-                    <a
-                      key={c.title}
-                      className={'fit-check ' + c.status}
-                      href={c.source || undefined}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {c.status === 'documented' ? (
-                        <Check size={16} />
-                      ) : (
-                        <CircleAlert size={16} />
-                      )}
-                      <span>
-                        <strong>{c.title}</strong>
-                        <small>{c.detail}</small>
-                        <em>
-                          {c.status === 'documented'
-                            ? 'Family documented'
-                            : c.status === 'unknown'
-                              ? 'Needs review'
-                              : 'Incompatible'}
-                        </em>
-                      </span>
-                    </a>
-                  ))}
-                </div>
-                <button
-                  className="text-button"
-                  onClick={() => setModal('import')}
-                >
-                  <Plus size={15} /> Add products from a website
-                </button>
-              </>
+              <ComponentsPanel
+                parts={parts}
+                selection={selection}
+                checks={checks}
+                onSelect={(part) =>
+                  edit({
+                    selection: { ...selection, [part.category]: part.id },
+                  })
+                }
+                onAssembly={(assembly) => {
+                  edit({
+                    layout: assembly.layout,
+                    finish: assembly.finish,
+                    selection: assembly.selection,
+                  });
+                  setNotice(
+                    assembly.name +
+                      ' parts selected. Appearance and recording remain your choices.',
+                  );
+                }}
+                onImport={() => setModal('import')}
+                onResearch={() => setModal('research')}
+              />
             )}
             {tab === 'sound' && (
               <>
@@ -1155,6 +1090,7 @@ export default function Home() {
               the catalog, asset pipeline, and sound library, not an exhaustive
               keyboard database.
             </p>
+            <ResearchProducts />
             <div className="dataset-summary">
               <div>
                 <strong>7,267</strong>

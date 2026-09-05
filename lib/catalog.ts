@@ -1,3 +1,9 @@
+import {
+  assemblies,
+  extraParts,
+  pcbInterfaces,
+  switchInterface,
+} from './component-data.ts';
 export type Category =
   | 'case'
   | 'pcb'
@@ -16,6 +22,7 @@ export type Part = {
   evidence: 'documented' | 'unknown';
 };
 export const catalog: Part[] = [
+  ...extraParts,
   {
     id: 'tofu-case',
     name: 'Tofu60 Redux',
@@ -164,81 +171,118 @@ export function checkBuild(
     pcb = find('pcb'),
     plate = find('plate'),
     sw = find('switch'),
-    stabs = find('stabilizers');
-  const result: FitCheck[] = [];
-  if (layout !== '60')
-    result.push({
-      status: 'unknown',
-      title: 'Layout is a visual study',
-      detail:
-        'This seed catalog covers 60% parts. Select 60% to check those assemblies.',
-      source: 'https://docs.qmk.fm/reference_info_json',
-    });
-  if (
-    c &&
-    pcb &&
-    plate &&
-    c.evidence === 'documented' &&
-    pcb.evidence === 'documented' &&
-    plate.evidence === 'documented'
-  ) {
-    const same = c.family === pcb.family && c.family === plate.family;
-    result.push({
-      status: same && layout === '60' ? 'documented' : 'unknown',
-      title: same ? 'Case, PCB & plate family' : 'Mixed component families',
-      detail: same
-        ? 'Manufacturer documentation names these parts in the same ecosystem. Variant and revision still need checking.'
-        : 'A shared percentage does not establish mounting, outline, or connector fit.',
-      source: plate.source,
-    });
-  } else
-    result.push({
-      status: 'unknown',
-      title: 'Assembly fit needs review',
-      detail:
-        'Imported parts have not been checked against manufacturer mechanical specifications.',
-      source: c?.source ?? '',
-    });
-  if (
-    sw?.family === 'he' &&
-    pcb &&
-    ['tofu60', 'bakeneko60'].includes(pcb.family)
-  )
-    result.push({
-      status: 'incompatible',
-      title: 'Magnetic switch / mechanical PCB',
-      detail:
-        'Hall-effect switches need a compatible sensor PCB. These mechanical PCBs do not provide it.',
-      source: sw.source,
-    });
-  else
-    result.push({
-      status: 'unknown',
-      title: 'Switch & keycap coverage',
-      detail:
-        'Verify the exact switch, pin count, stem, keycap kit widths, and sculpted rows before buying.',
-      source: sw?.source ?? '',
-    });
-  if (
-    stabs?.family === 'screw' &&
-    (plate?.id === 'redux-plate' || c?.family === 'bakeneko60')
-  )
-    result.push({
-      status: 'incompatible',
-      title: 'Stabilizer interference',
-      detail:
-        plate?.id === 'redux-plate'
-          ? 'KBDfans explicitly excludes Durock screw-in stabilizers from this plate.'
-          : 'Screw-in stabilizers interfere with the Bakeneko O-ring mount.',
-      source: plate?.id === 'redux-plate' ? plate.source : (c?.source ?? ''),
-    });
-  else
-    result.push({
-      status: 'unknown',
-      title: 'Stabilizer fit & quantity',
-      detail:
-        'Confirm the exact stabilizer model and spacebar. Mount type alone is not proof of clearance.',
-      source: stabs?.source ?? '',
-    });
+    stabs = find('stabilizers'),
+    caps = find('keycaps');
+  const assembly = assemblies.find(
+    (item) =>
+      item.selection.case === c?.id &&
+      item.selection.pcb === pcb?.id &&
+      item.selection.plate === plate?.id &&
+      [c, pcb, plate].every((part) => part?.evidence === 'documented'),
+  );
+  const result: FitCheck[] = [
+    {
+      status: assembly && assembly.layout === layout ? 'documented' : 'unknown',
+      title: assembly
+        ? assembly.layout === layout
+          ? 'Case, PCB & plate assembly'
+          : 'Visual layout differs from the parts'
+        : 'Assembly fit needs review',
+      detail: assembly
+        ? assembly.layout === layout
+          ? `Manufacturer documentation identifies this ${assembly.name} assembly. Check its exact revision and variant before ordering.`
+          : `The selected parts belong to a ${assembly.layout}% assembly; the scene is set to ${layout}%.`
+        : 'A shared percentage does not establish mounting, outline or connector fit. Mixed and imported assemblies need mechanical specifications.',
+      source: assembly?.source ?? c?.source ?? '',
+    },
+  ];
+  const pcbInterface =
+    pcb?.evidence === 'documented' ? pcbInterfaces[pcb.id] : undefined;
+  const swInterface = sw ? switchInterface(sw) : undefined;
+  const excluded =
+    pcb?.id === 'q1-he-pcb' &&
+    ['magnetic-jade', 'magnetic-ks-20'].includes(sw?.id ?? '');
+  const electricalConflict =
+    pcbInterface &&
+    swInterface &&
+    (pcbInterface === 'mx-contact') !== (swInterface === 'mx-contact');
+  const documentedSwitch =
+    pcbInterface &&
+    pcbInterface === swInterface &&
+    (pcb?.id === 'q1-max-pcb' ||
+      pcb?.id === 'nk65-pcb' ||
+      pcb?.id === 'q1-he-pcb');
+  result.push({
+    status:
+      excluded || electricalConflict
+        ? 'incompatible'
+        : documentedSwitch
+          ? 'documented'
+          : 'unknown',
+    title: excluded
+      ? 'This magnetic switch is excluded'
+      : 'Switch & PCB interface',
+    detail: excluded
+      ? 'Keychron explicitly excludes Gateron Magnetic Jade and KS-20 from the original Q1 HE. Magnetic switches are not universally interchangeable.'
+      : electricalConflict
+        ? 'These parts use different electrical interfaces. A contact switch cannot use this magnetic sensor PCB, and a magnetic switch cannot use this contact PCB.'
+        : documentedSwitch
+          ? pcbInterface === 'keychron-double-rail'
+            ? 'Keychron lists this Gateron Double-Rail family for the original Q1 HE. This does not extend to the Q1 HE 8K.'
+            : 'The manufacturer lists 3/5-pin MX contact switches for this PCB. Check the exact pin variant and housing clearance.'
+          : 'Confirm the exact switch family, pin count, sensor support and calibration. A matching stem or magnet is not proof of PCB compatibility.',
+    source:
+      excluded || documentedSwitch
+        ? (pcb?.source ?? '')
+        : (sw?.source ?? pcb?.source ?? ''),
+  });
+  const reduxConflict =
+    plate?.id === 'redux-plate' && stabs?.id === 'durock-stabs';
+  const oRingConflict = c?.id === 'bakeneko-case' && stabs?.family === 'screw';
+  const plateMountConflict =
+    assembly?.id === 'nk65-entry' &&
+    (stabs?.family === 'screw' || stabs?.family === 'clip');
+  const factoryStabs =
+    stabs?.evidence === 'documented' &&
+    assembly &&
+    assembly.selection.stabilizers === stabs?.id &&
+    ['nk65-entry', 'q1-max', 'q1-he', 'bakeneko60'].includes(assembly.id);
+  result.push({
+    status:
+      reduxConflict || oRingConflict || plateMountConflict
+        ? 'incompatible'
+        : factoryStabs
+          ? 'documented'
+          : 'unknown',
+    title:
+      reduxConflict || oRingConflict || plateMountConflict
+        ? 'Stabilizer interference'
+        : 'Stabilizer fit & quantity',
+    detail: reduxConflict
+      ? 'KBDfans explicitly excludes Durock screw-in stabilizers from this plate.'
+      : oRingConflict
+        ? 'Screw-in stabilizers interfere with the Bakeneko O-ring mount.'
+        : plateMountConflict
+          ? 'NK65 Entry uses plate-mounted stabilizers; these selected stabilizers mount to the PCB.'
+          : factoryStabs
+            ? 'This is the stabilizer reference supplied with the assembly or specified by its build guide. Check the spacebar and replacement-kit revision.'
+            : 'Confirm the exact model, mount, wire lengths and clearances. Mount type alone does not establish fit.',
+    source: reduxConflict
+      ? (plate?.source ?? '')
+      : oRingConflict
+        ? (c?.source ?? '')
+        : factoryStabs
+          ? assembly.source
+          : (stabs?.source ?? ''),
+  });
+  result.push({
+    status: 'unknown',
+    title: 'Keycap kit & row coverage',
+    detail:
+      caps?.evidence === 'documented'
+        ? 'Compare the kit diagram with every key width and sculpted row. MX stems alone do not establish full coverage; Cherry profiles can also interfere with some north-facing switch setups.'
+        : 'The exact keycap inventory is unverified. Check stems, modifier widths, spacebar length and sculpted rows.',
+    source: caps?.source ?? '',
+  });
   return result;
 }
