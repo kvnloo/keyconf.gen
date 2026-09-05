@@ -1,9 +1,9 @@
 diff --git c/KEYCONF_BUILD.md w/KEYCONF_BUILD.md
 new file mode 100644
-index 0000000..b9f2f80
+index 0000000..3420c4c
 --- /dev/null
 +++ w/KEYCONF_BUILD.md
-@@ -0,0 +1,20 @@
+@@ -0,0 +1,22 @@
 +# Keyconf guest build of Monkeytype
 +
 +Upstream: https://github.com/monkeytypegame/monkeytype
@@ -22,6 +22,8 @@ index 0000000..b9f2f80
 +Serve frontend/dist/ at a directory URL with index.html. Remove sw.js, workbox-*.js and manifest.json; this integration does not register a service worker. It works independently, or in a same-origin iframe. Optional postMessage events are defined in frontend/src/ts/keyconf-embed.ts. The embedding app must check the sending frame and origin.
 +
 +Guest modifications: no Firebase initialization or backend calls; local server feature configuration; no analytics, ads, cookie prompt, reCAPTCHA or service worker; namespaced device settings; relative assets and internal routing; compact theme and typography; accessible decorative icons; keypress bridge. The original typing, scoring, test modes, restart, words, quotes and results implementation remains upstream.
++
++Test completion cancels queued test UI animation frames before the result view removes the words. This prevents a delayed active-word update from accessing a completed test's removed DOM; live-test invariant checks remain enabled.
 +
 +Monkeytype is GNU GPL version 3. See LICENSE. Original third-party assets retain their licenses and credits.
 diff --git c/frontend/src/404.html w/frontend/src/404.html
@@ -1024,6 +1026,18 @@ index 3f3c306..742dc27 100644
 -    }
 -  }
  });
+diff --git c/frontend/src/ts/test/test-ui.ts w/frontend/src/ts/test/test-ui.ts
+index d55ceba..809ed01 100644
+--- c/frontend/src/ts/test/test-ui.ts
++++ w/frontend/src/ts/test/test-ui.ts
+@@ -1881,6 +1881,7 @@ export function onTestRestart(source: "testPage" | "resultPage"): void {
+ }
+ 
+ export function onTestFinish(): void {
++  cancelPendingAnimationFramesStartingWith("test-ui");
+   Caret.hide();
+   setTestFocusState("focused");
+   if (Config.playSoundOnClick === "16") {
 diff --git c/frontend/src/ts/utils/json-data.ts w/frontend/src/ts/utils/json-data.ts
 index d1b8b47..60e151d 100644
 --- c/frontend/src/ts/utils/json-data.ts

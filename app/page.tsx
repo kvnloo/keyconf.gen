@@ -1,5 +1,19 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+import ControlDeckStudio from './control-deck-studio';
+import {
+  decodeDeck,
+  newDeck,
+  type DeckBuild,
+  type DeckId,
+} from '../lib/control-deck';
 import {
   Layers,
   RotateCcw,
@@ -46,7 +60,99 @@ import { soundPacks } from '../lib/sound-packs';
 import { registerStudioTools } from '../lib/webmcp';
 import { catalog, categories, checkBuild, type Part } from '../lib/catalog';
 import { KeyboardAudio, type SoundSettings } from '../lib/audio';
+
+function subscribeLocation(onChange: () => void) {
+  window.addEventListener('hashchange', onChange);
+  return () => window.removeEventListener('hashchange', onChange);
+}
+const currentHash = () => window.location.hash;
+const serverHash = () => '';
+
+export default function Home() {
+  const [notice, setNotice] = useState('');
+  const hash = useSyncExternalStore(subscribeLocation, currentHash, serverHash);
+  const manager = useBuild(setNotice, {
+    shortcutsEnabled: !hash.startsWith('#deck'),
+  });
+  const [deckSessions, setDeckSessions] = useState(
+    new Map<DeckId, DeckBuild>(),
+  );
+  const rememberDeck = useCallback((build: DeckBuild) => {
+    setDeckSessions((previous) =>
+      previous.get(build.device) === build
+        ? previous
+        : new Map(previous).set(build.device, build),
+    );
+  }, []);
+  const deck = useMemo(() => {
+    if (hash === '#deck/grok-bot')
+      return {
+        kind: 'deck',
+        build: deckSessions.get('grok-bot') ?? newDeck('grok-bot'),
+        restoreLocal: !deckSessions.has('grok-bot'),
+      } as const;
+    if (hash === '#deck/codex-micro')
+      return {
+        kind: 'deck',
+        build: deckSessions.get('codex-micro') ?? newDeck('codex-micro'),
+        restoreLocal: !deckSessions.has('codex-micro'),
+      } as const;
+    if (hash.startsWith('#deck=')) {
+      try {
+        return {
+          kind: 'deck',
+          build: decodeDeck(hash.slice(6)),
+          restoreLocal: false,
+        } as const;
+      } catch (error) {
+        return {
+          kind: 'error',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'The control deck could not be read.',
+        } as const;
+      }
+    }
+    return { kind: 'keyboard' } as const;
+  }, [hash, deckSessions]);
+  if (deck.kind === 'error')
+    return (
+      <main className="deck-studio">
+        <div className="deck-inspector">
+          <h1>Deck link unavailable</h1>
+          <p role="alert">{deck.message}</p>
+          <a href="#studio">Return to your keyboard</a>
+        </div>
+      </main>
+    );
+  if (deck.kind === 'deck')
+    return (
+      <ControlDeckStudio
+        key={hash}
+        initial={deck.build}
+        restoreLocal={deck.restoreLocal}
+        onChange={rememberDeck}
+      />
+    );
+  return (
+    <KeyboardStudio manager={manager} notice={notice} setNotice={setNotice} />
+  );
+}
+
 const sources = [
+  {
+    title: 'Grok Bot control deck concept',
+    by: 'Elvis · X · concept reference',
+    url: 'https://x.com/omarsar0/status/2096321091148947887',
+    text: 'A speculative control deck with illuminated role keys, a screen, a rotary dial and an exploded assembly. The video is a visual reference and has no audio track.',
+  },
+  {
+    title: 'Codex Micro',
+    by: 'OpenAI × Work Louder · product reference',
+    url: 'https://openai.com/supply/co-lab/work-louder/',
+    text: 'Official reference for the compact control deck, its translucent caps, mechanical switches, rotary encoder, touch sensor and joystick.',
+  },
   {
     title: 'The original reference',
     by: 'bluedev · X',
@@ -98,8 +204,15 @@ const sources = [
 ];
 type Tab = 'design' | 'parts' | 'sound';
 type Modal = 'import' | 'research' | 'share' | null;
-export default function Home() {
-  const [notice, setNotice] = useState('');
+function KeyboardStudio({
+  manager,
+  notice,
+  setNotice,
+}: {
+  manager: ReturnType<typeof useBuild>;
+  notice: string;
+  setNotice: (notice: string) => void;
+}) {
   const {
     build,
     ready,
@@ -110,7 +223,7 @@ export default function Home() {
     redo,
     canUndo,
     canRedo,
-  } = useBuild(setNotice);
+  } = manager;
   const {
     palette,
     caseColor,
@@ -170,7 +283,7 @@ export default function Home() {
     () => ({
       ...palette,
       caseColor,
-      layout,
+      device: { kind: 'keyboard', layout },
       exploded,
       view,
       finish,
@@ -1198,6 +1311,14 @@ export default function Home() {
               keyboard database.
             </p>
             <ResearchProducts />
+            <div className="deck-entry-links">
+              <a className="button secondary" href="#deck/grok-bot">
+                Explore Grok Bot <ArrowUpRight size={15} />
+              </a>
+              <a className="button secondary" href="#deck/codex-micro">
+                Explore Codex Micro <ArrowUpRight size={15} />
+              </a>
+            </div>
             <div className="dataset-summary">
               <div>
                 <strong>7,267</strong>

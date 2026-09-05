@@ -31,7 +31,7 @@ try {
   page.setDefaultTimeout(20000);
   const errors = [];
   const external = [];
-  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('pageerror', (error) => errors.push(error.stack ?? error.message));
   page.on('request', (request) => {
     if (
       request.frame().url().includes('/monkeytype/') &&
@@ -112,6 +112,20 @@ try {
   assert.match(result, /wpm/i);
   assert.match(result, /100%/);
   assert.match(result, /words 10/);
+  await frame.locator('#words .word').first().waitFor({ state: 'detached' });
+  await frame
+    .locator('body')
+    .evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
+    );
+  assert.deepEqual(
+    errors,
+    [],
+    'Completed test must dispose queued word updates',
+  );
   await page.screenshot({ path: 'outputs/typing-results.png', fullPage: true });
   await frame.locator('#nextTestButton').click();
   await frame.locator('#wordsInput').waitFor({ state: 'visible' });

@@ -10,7 +10,7 @@ The keyboard is the main event. It should be satisfying to rotate, take apart, r
 
 ## Design direction
 
-Keep the current tactile studio direction: a softly lit object, restrained green controls, warm metal, readable typography, and plenty of space around the keyboard. Develop the experience into a finished instrument. Avoid promotional sections before the builder, endless settings, surprise audio, and decorative animation that delays input.
+Use the user's September 5 desk/workshop references: a coherent dark desk scene with plants and a few small objects, featured build previews, and a transition into a focused workshop. Returning users can resume their saved build directly. Build, Sound, Play and Discover organize the existing functions. Keep readable typography, restrained controls, useful material lighting and space around the object. Avoid endless settings, surprise audio, and animation that delays input. The component-by-component decisions are in [UI reference audit](ui-reference-audit.md).
 
 Changes respond immediately. Camera and assembly transitions are interruptible and respect reduced motion. Selection stays visible after motion ends. On a small screen the keyboard and primary controls remain useful; the page scrolls normally instead of trapping every touch in the canvas.
 
@@ -22,7 +22,7 @@ The original ambition includes every keyboard and exact acoustics. Coverage is a
 
 | ID | Release requirement | Acceptance evidence | Baseline / remaining work |
 | --- | --- | --- | --- |
-| FLOW-1 | Start building immediately | First viewport contains keyboard and useful configuration controls, no entry gate | Existing builder; needs layout audit |
+| FLOW-1 | Choose or resume a build | Landing contains an interactive featured preview, explicit Customize action and direct Resume path; previewing does not overwrite saved work | Revised by the user's desk-scene request; pending implementation |
 | FLOW-2 | Experiment without losing work | Refresh restores the current build; undo and redo preserve edits; invalid saved state recovers visibly | Missing |
 | FLOW-3 | Share and revisit | A self-contained link reconstructs appearance, selected parts, and audio preference on a clean device; downloads retain evidence | JSON export exists; link and restore missing |
 | FLOW-4 | Intuitive interaction | Tabs, dialogs, controls, loading, empty, error, success, and disabled states have clear meaning and recovery | Partial; tab keyboard handling and import recovery need work |
@@ -30,6 +30,8 @@ The original ambition includes every keyboard and exact acoustics. Coverage is a
 | VIS-2 | Deliberate materials and lighting | Metal, polymer and keycaps have coherent roughness, highlights, shadows and color management | Illustrative materials; no claim of calibrated product scans |
 | VIS-3 | Responsive motion | Key down/up, assembly separation, view changes and controls react without blocking input; reduced-motion path exists | Camera jumps; 3D ignores reduced motion |
 | VIS-4 | Immersive exploration | Easy view reset, useful keyboard-accessible view controls, assembly inspection and distraction-free exploration | Basic orbit, top and explode exist |
+| VIS-5 | Coherent desk and workshop | Plants and small desk objects share the object's light/perspective; decorations do not block input or impede rendering; narrow layouts remain useful | Reference audited; implementation pending |
+| DEVICE-1 | Grok and Codex Micro presets | Dedicated control-deck geometry, sourced identity, local control feedback and device-appropriate save/share/restore; no false keyboard-parts compatibility or agent connection claims | [Video and product references gathered](control-deck-references.md); implementation pending |
 | DATA-1 | Useful catalog | Searchable product references across representative board layouts and switch technologies, with source and observation provenance | 11 builder references; broader research data not exposed |
 | DATA-2 | Evidence-based compatibility | Explicit mechanical/electrical conflicts; unknown means unknown; case/PCB/plate, stem, stabilizers, layout and kit coverage considered | Two 60% ecosystems and explicit exclusions tested |
 | DATA-3 | Understand the options | Explain linear/tactile/clicky behavior separately from mechanical, Hall-effect, optical, capacitive/Topre and low-profile technologies | Research exists; decision support needs UI |

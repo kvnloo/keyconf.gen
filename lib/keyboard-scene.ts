@@ -5,11 +5,16 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import type { Build, Palette } from './build';
 import { legendInk } from './appearance';
 
-export type SceneOptions = Pick<
-  Build,
-  'layout' | 'caseColor' | 'finish' | 'profile'
-> &
+export type SceneOptions = Pick<Build, 'caseColor' | 'finish' | 'profile'> &
   Omit<Palette, 'name'> & {
+    device:
+      | { kind: 'keyboard'; layout: Build['layout'] }
+      | {
+          kind: 'control-deck';
+          model: 'grok-bot' | 'codex-micro';
+          dial: number;
+          lighting: 'Studio' | 'Daylight' | 'After hours';
+        };
     exploded: boolean;
     view: string;
   };
@@ -53,13 +58,15 @@ export function createKeyboardScene(
   let generation = 0;
   let model: THREE.Group | null = null;
   let cameraTarget: THREE.Vector3 | null = null;
+  let focusHeight = 0.4;
+  let assembledDistance = 11;
   const models = new Map<string, Promise<THREE.Group>>();
   const loaded = new Set<THREE.Group>();
   const keys = new Map<string, THREE.Object3D>();
+  const restingHeight = new WeakMap<THREE.Object3D, number>();
+  const layers = new Map<THREE.Object3D, number>();
   const materials = new Map<THREE.MeshStandardMaterial, THREE.Color>();
   const down = new Set<string>();
-  let plate: THREE.Object3D | undefined;
-  let pcb: THREE.Object3D | undefined;
   let clicked = '';
   const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
   let reduced = preference.matches;
@@ -141,6 +148,14 @@ export function createKeyboardScene(
     }
   }
   function appearance(snap = false) {
+    const lighting =
+      options.device.kind === 'control-deck'
+        ? options.device.lighting
+        : 'Studio';
+    light.color.set(lighting === 'Daylight' ? '#fff1db' : '#ffffff');
+    light.intensity = lighting === 'After hours' ? 0.7 : 2.2;
+    fill.intensity = lighting === 'After hours' ? 0.3 : 0.8;
+    scene.environmentIntensity = lighting === 'After hours' ? 0.35 : 0.7;
     const colors = new Map([
       ['case', options.caseColor],
       ['alpha', options.alpha],
@@ -174,23 +189,34 @@ export function createKeyboardScene(
     wake();
   }
   function setView() {
+    const deck = options.device.kind === 'control-deck';
+    const distance = deck ? (options.exploded ? 0.55 : 0.46) : 1;
+    focusHeight = deck && options.exploded ? 1.35 : 0.4;
+    controls.minDistance = options.device.kind === 'control-deck' ? 7 : 12;
     cameraTarget =
       options.view === 'top'
         ? new THREE.Vector3(0, 26, 0.01)
         : options.view === 'front'
           ? new THREE.Vector3(0, 6, 25)
-          : new THREE.Vector3(7, 15, 19);
+          : deck
+            ? new THREE.Vector3(-7, 27, 14)
+            : new THREE.Vector3(7, 15, 19);
+    cameraTarget.multiplyScalar(distance);
     wake();
   }
-  async function loadLayout(layout: SceneOptions['layout']) {
+  function modelIdFor(device: SceneOptions['device']) {
+    return device.kind === 'keyboard'
+      ? `keyboard-${device.layout}`
+      : device.model;
+  }
+  async function loadModel(device: SceneOptions['device']) {
+    const modelId = modelIdFor(device);
     const request = ++generation;
     callbacks.status({ kind: 'loading' });
-    let promise = models.get(layout);
+    let promise = models.get(modelId);
     if (!promise) {
       promise = new GLTFLoader()
-        .loadAsync(
-          new URL(`models/keyboard-${layout}.glb`, document.baseURI).href,
-        )
+        .loadAsync(new URL(`models/${modelId}.glb`, document.baseURI).href)
         .then((gltf) => {
           if (stopped) {
             disposeModel(gltf.scene);
@@ -199,7 +225,7 @@ export function createKeyboardScene(
           loaded.add(gltf.scene);
           return gltf.scene;
         });
-      models.set(layout, promise);
+      models.set(modelId, promise);
     }
     try {
       const next = await promise;
@@ -210,11 +236,28 @@ export function createKeyboardScene(
       materials.clear();
       down.clear();
       clicked = '';
-      plate = model.getObjectByName('plate');
-      pcb = model.getObjectByName('pcb');
+      layers.clear();
+      for (const [name, offset] of Object.entries({
+        plate: 1.01,
+        pcb: 0.51,
+        switches: 1.75,
+        screen: 1.01,
+        control_dial: 1.01,
+        control_joystick: 1.01,
+      })) {
+        const layer = model.getObjectByName(name);
+        if (layer) {
+          if (!restingHeight.has(layer))
+            restingHeight.set(layer, layer.position.y);
+          layers.set(layer, offset);
+        }
+      }
       model.traverse((object) => {
-        if (object.name.startsWith('key_'))
+        if (object.name.startsWith('key_')) {
           keys.set(object.name.slice(4), object);
+          if (!restingHeight.has(object))
+            restingHeight.set(object, object.position.y);
+        }
         if (object instanceof THREE.Mesh) {
           object.castShadow = true;
           object.receiveShadow = true;
@@ -236,7 +279,7 @@ export function createKeyboardScene(
       callbacks.status({ kind: 'ready' });
       wake();
     } catch {
-      models.delete(layout);
+      models.delete(modelId);
       if (!stopped && request === generation)
         callbacks.status({
           kind: 'error',
@@ -259,30 +302,36 @@ export function createKeyboardScene(
     for (const [code, key] of keys) {
       key.position.y = approach(
         key.position.y,
-        0.43 + (options.exploded ? 2.6 : 0) - (down.has(code) ? 0.14 : 0),
+        (restingHeight.get(key) ?? key.position.y) +
+          (options.exploded ? 2.6 : 0) -
+          (down.has(code) ? 0.14 : 0),
         19,
       );
       key.scale.y = approach(
         key.scale.y,
-        options.profile === 'Tall sculpted'
-          ? 1.5
-          : options.profile === 'Low uniform'
-            ? 0.7
-            : 1,
+        options.device.kind === 'control-deck'
+          ? 1
+          : options.profile === 'Tall sculpted'
+            ? 1.5
+            : options.profile === 'Low uniform'
+              ? 0.7
+              : 1,
         14,
       );
     }
-    if (plate)
-      plate.position.y = approach(
-        plate.position.y,
-        options.exploded ? 1.4 : 0.39,
+    for (const [layer, offset] of layers)
+      layer.position.y = approach(
+        layer.position.y,
+        (restingHeight.get(layer) ?? layer.position.y) +
+          (options.exploded ? offset : 0),
         12,
       );
-    if (pcb)
-      pcb.position.y = approach(
-        pcb.position.y,
-        options.exploded ? 0.8 : 0.29,
-        12,
+    const dial = model?.getObjectByName('control_dial');
+    if (dial && options.device.kind === 'control-deck')
+      dial.rotation.y = approach(
+        dial.rotation.y,
+        (options.device.dial - 0.5) * Math.PI * 1.5,
+        16,
       );
     for (const [material, target] of materials) {
       material.color.r = approach(material.color.r, target.r, 14);
@@ -298,6 +347,7 @@ export function createKeyboardScene(
         cameraTarget = null;
       }
     }
+    controls.target.y = approach(controls.target.y, focusHeight, 10);
     const orbiting = controls.update(delta);
     renderer.render(scene, camera);
     if (moving || orbiting) wake();
@@ -494,16 +544,27 @@ export function createKeyboardScene(
   renderer.domElement.addEventListener('webglcontextlost', contextLost);
   resize();
   setView();
-  void loadLayout(initial.layout);
+  void loadModel(initial.device);
   return {
     update(next: SceneOptions, handlers: Callbacks) {
       callbacks = handlers;
-      const layoutChanged = next.layout !== options.layout;
-      const viewChanged = next.view !== options.view;
+      const modelChanged =
+        modelIdFor(next.device) !== modelIdFor(options.device);
+      const viewChanged = next.view !== options.view || modelChanged;
+      const assemblyChanged = next.exploded !== options.exploded;
       const changed = JSON.stringify(options) !== JSON.stringify(next);
       options = next;
-      if (layoutChanged) void loadLayout(next.layout);
+      if (modelChanged) void loadModel(next.device);
       if (viewChanged) setView();
+      else if (assemblyChanged && next.device.kind === 'control-deck') {
+        const offset = camera.position.clone().sub(controls.target);
+        if (next.exploded) assembledDistance = offset.length();
+        focusHeight = next.exploded ? 1.35 : 0.4;
+        offset.setLength(
+          next.exploded ? Math.max(14, offset.length()) : assembledDistance,
+        );
+        cameraTarget = offset.add(new THREE.Vector3(0, focusHeight, 0));
+      }
       if (changed) appearance();
     },
     dispose() {

@@ -1,7 +1,7 @@
 {
   "upstream": "https://github.com/monkeytypegame/monkeytype",
   "revision": "91bd24bb8513785c7364cbea29296ff7adafac41",
-  "patch_sha256": "843e542aa7fd12be75e0b99b8576df446d56faeeefb39c3bb38bcd7971aada2e",
+  "patch_sha256": "9f45b484d36b37e645d655a9bfb9e09838c605e7a4684ebee8d916e5e69f1d11",
   "license": "GPL-3.0",
   "modifications": "Keyconf guest widget; see corresponding source and KEYCONF_BUILD.md"
 }

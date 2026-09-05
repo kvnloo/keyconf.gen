@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { useHistoryShortcuts } from './use-history-shortcuts';
 import {
   buildReducer,
   decodeBuild,
@@ -13,7 +14,10 @@ import {
 } from '../lib/build';
 
 const storageKey = 'keyconf-build-v1';
-export function useBuild(notify: (message: string) => void) {
+export function useBuild(
+  notify: (message: string) => void,
+  { shortcutsEnabled = true }: { shortcutsEnabled?: boolean } = {},
+) {
   const [{ history, ready }, dispatch] = useReducer(
     (
       state: { history: BuildHistory; ready: boolean },
@@ -36,6 +40,19 @@ export function useBuild(notify: (message: string) => void) {
         ? 'saved'
         : 'saving';
   const canPersist = useRef(true);
+  const latestBuild = useRef<Build | null>(null);
+  useEffect(
+    () => () => {
+      if (canPersist.current && latestBuild.current) {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(latestBuild.current));
+        } catch {
+          /* Storage recovery stays available through exported builds. */
+        }
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     let saved = defaultBuild;
@@ -88,6 +105,7 @@ export function useBuild(notify: (message: string) => void) {
 
   useEffect(() => {
     if (!ready) return;
+    latestBuild.current = history.present;
     const save = () => {
       if (!canPersist.current) {
         setPersisted({ build: history.present, status: 'unavailable' });
@@ -117,32 +135,7 @@ export function useBuild(notify: (message: string) => void) {
   const undo = useCallback(() => dispatch({ kind: 'undo' }), []);
   const redo = useCallback(() => dispatch({ kind: 'redo' }), []);
 
-  useEffect(() => {
-    const shortcut = (event: KeyboardEvent) => {
-      if (
-        !(event.ctrlKey || event.metaKey) ||
-        event.altKey ||
-        document.querySelector('dialog[open]')
-      )
-        return;
-      if (
-        event.target instanceof HTMLElement &&
-        event.target.closest(
-          'input,textarea,select,[contenteditable],[role="combobox"],[role="listbox"],[role="option"]',
-        )
-      )
-        return;
-      if (event.key.toLowerCase() === 'z') {
-        event.preventDefault();
-        dispatch({ kind: event.shiftKey ? 'redo' : 'undo' });
-      } else if (event.key.toLowerCase() === 'y') {
-        event.preventDefault();
-        dispatch({ kind: 'redo' });
-      }
-    };
-    window.addEventListener('keydown', shortcut);
-    return () => window.removeEventListener('keydown', shortcut);
-  }, []);
+  useHistoryShortcuts(shortcutsEnabled, dispatch);
 
   return {
     build: history.present,
