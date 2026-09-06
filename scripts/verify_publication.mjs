@@ -108,6 +108,64 @@ try {
       .locator('li')
       .count(),
   );
+  const draftBeforeFeedback = await page.evaluate(() =>
+    Object.fromEntries(
+      Object.keys(localStorage)
+        .sort()
+        .map((key) => [key, localStorage.getItem(key)]),
+    ),
+  );
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async () => {
+          throw new Error('Clipboard denied');
+        },
+      },
+    });
+  });
+  await page.getByText('Feedback for the builder', { exact: true }).click();
+  await page
+    .getByLabel('Your notes', { exact: true })
+    .fill('Which current switch would you recommend instead?');
+  await page.getByRole('button', { name: 'Copy notes & build link' }).click();
+  const feedback = await page
+    .getByLabel('Message to copy', { exact: true })
+    .inputValue();
+  assert.ok(
+    feedback.includes('Which current switch would you recommend instead?'),
+  );
+  assert.equal(
+    feedback.split('Build preview: ')[1],
+    new URL(`builds/${ids.retired}`, base).href,
+  );
+  assert.deepEqual(
+    await page.evaluate(() =>
+      Object.fromEntries(
+        Object.keys(localStorage)
+          .sort()
+          .map((key) => [key, localStorage.getItem(key)]),
+      ),
+    ),
+    draftBeforeFeedback,
+  );
+  assert.equal(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > innerWidth,
+    ),
+    false,
+  );
+  const archiveAxe = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze();
+  assert.deepEqual(
+    archiveAxe.violations.map((v) => ({
+      id: v.id,
+      targets: v.nodes.map((n) => n.target),
+    })),
+    [],
+  );
   for (const id of [ids.withdrawn, 'missing-publication-id']) {
     const res = await page.goto(new URL(`builds/${id}`, base).href);
     assert.equal(res.status(), 404);

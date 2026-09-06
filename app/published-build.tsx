@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import AccessoryFitNotes from './accessory-fit-notes';
+import BuildFeedback from './build-feedback';
 import { useState } from 'react';
 import type { PublicPublication } from '../db/publications';
 import { encodeBuild } from '../lib/build';
@@ -88,6 +89,7 @@ export default function PublishedBuild({
             Some parts or recordings are no longer supported in the studio. The
             original parts and sources are preserved below.
           </p>
+          <BuildFeedback build={publication.build} published />
           <h2>Original parts</h2>
           <ul className="preview-parts">
             {[...evidence.components, ...evidence.accessoryReferences].map(

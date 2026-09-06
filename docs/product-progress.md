@@ -608,3 +608,12 @@ required. Google setup stays deferred. The installed Sites authentication
 guidance requires confirmation of the external-provider integration before
 implementation; no available Sites tool establishes a Google session flow.
 This limits authentication work, not the remaining account-independent work.
+
+## Feedback on retired releases
+
+Archived public builds now retain the same copyable feedback panel as supported
+builds. A client can ask the creator about replacements using the original
+publication link without trying to import retired parts. Feedback remains an
+explicit copy action, not a submitted account comment. The publication browser
+check covers denied-clipboard recovery, exact archived link retention, unchanged
+local storage, phone overflow and accessibility with the feedback panel open.
