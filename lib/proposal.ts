@@ -52,3 +52,33 @@ function forbiddenControl(value: string, multiline: boolean) {
   }
   return false;
 }
+
+export function parseProposalRotation(value: unknown) {
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    Array.isArray(value) ||
+    !('proposalId' in value) ||
+    typeof value.proposalId !== 'string' ||
+    !/^[a-zA-Z0-9_-]{16,100}$/.test(value.proposalId) ||
+    !('operationId' in value) ||
+    typeof value.operationId !== 'string' ||
+    !/^[a-zA-Z0-9_-]{16,100}$/.test(value.operationId) ||
+    !('expectedVersion' in value) ||
+    typeof value.expectedVersion !== 'number' ||
+    !Number.isSafeInteger(value.expectedVersion) ||
+    value.expectedVersion < 0 ||
+    value.expectedVersion >= Number.MAX_SAFE_INTEGER
+  )
+    throw new CommunityError(
+      'invalid_request',
+      'Refresh the proposal before replacing its link.',
+      400,
+    );
+  return {
+    proposalId: value.proposalId,
+    operationId: value.operationId,
+    expectedVersion: value.expectedVersion,
+  };
+}
+export type ProposalRotation = ReturnType<typeof parseProposalRotation>;

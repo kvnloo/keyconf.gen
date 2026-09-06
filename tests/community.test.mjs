@@ -1,10 +1,14 @@
 import {
   createProposal,
   listOwnedProposals,
+  rotateProposalLink,
   readProposalPreview,
   closeProposal,
 } from '../db/proposals.ts';
-import { parseProposalRequest } from '../lib/proposal.ts';
+import {
+  parseProposalRequest,
+  parseProposalRotation,
+} from '../lib/proposal.ts';
 import {
   listOwnedPublications,
   publishBuild,
@@ -35,12 +39,13 @@ import {
   saveBuild,
 } from '../db/community.ts';
 
-function database(t) {
+function database(t, migrationCount = Infinity) {
   const sqlite = new DatabaseSync(':memory:');
   sqlite.exec('PRAGMA foreign_keys=ON');
   for (const migration of readdirSync(new URL('../drizzle/', import.meta.url))
     .filter((file) => file.endsWith('.sql'))
-    .sort()) {
+    .sort()
+    .slice(0, migrationCount)) {
     sqlite.exec(
       readFileSync(new URL(`../drizzle/${migration}`, import.meta.url), 'utf8'),
     );
@@ -49,13 +54,24 @@ function database(t) {
   return {
     sqlite,
     queries: [],
+    batch(statements) {
+      sqlite.exec('BEGIN');
+      try {
+        const results = statements.map((statement) => statement.run());
+        sqlite.exec('COMMIT');
+        return results;
+      } catch (error) {
+        sqlite.exec('ROLLBACK');
+        throw error;
+      }
+    },
     prepare(sql) {
       this.queries.push(sql);
       const statement = sqlite.prepare(sql);
       return {
         bind(...parameters) {
           return {
-            async run() {
+            run() {
               return statement.run(...parameters);
             },
             async first(column) {
@@ -1351,6 +1367,7 @@ test('owner proposal pages retain closed items and traverse timestamp ties witho
     'createdAt',
     'id',
     'title',
+    'tokenVersion',
   ]);
   for (const cursor of [
     { id: 'invalid', createdAt: first.next.createdAt },
@@ -1373,4 +1390,241 @@ test('owner proposal pages retain closed items and traverse timestamp ties witho
     ),
   );
   assert.doesNotMatch(query, /token_digest|payload|evidence|brief/);
+});
+
+test('proposal rotation invalidates old links, preserves the snapshot and replays without reissuing tokens', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const created = await createProposal(db, alice, {
+    operationId: 'proposal-to-rotate-0001',
+    buildId: saved.id,
+    title: 'Client study',
+    brief: '',
+  });
+  const original = await readProposalPreview(db, created.token);
+  const request = {
+    proposalId: created.id,
+    operationId: 'rotate-operation-0001',
+    expectedVersion: 0,
+  };
+  const rotated = await rotateProposalLink(db, alice, request);
+  assert.equal(rotated.tokenVersion, 1);
+  assert.match(rotated.token, /^[a-f0-9]{64}$/);
+  await assert.rejects(readProposalPreview(db, created.token), {
+    code: 'proposal_not_found',
+  });
+  assert.deepEqual(await readProposalPreview(db, rotated.token), original);
+  assert.deepEqual(await rotateProposalLink(db, alice, request), {
+    ...rotated,
+    token: null,
+  });
+  const latest = await rotateProposalLink(db, alice, {
+    ...request,
+    operationId: 'rotate-operation-0002',
+    expectedVersion: 1,
+  });
+  assert.equal(latest.tokenVersion, 2);
+  assert.deepEqual(await rotateProposalLink(db, alice, request), {
+    ...latest,
+    token: null,
+  });
+  await assert.rejects(readProposalPreview(db, rotated.token), {
+    code: 'proposal_not_found',
+  });
+  await assert.rejects(
+    rotateProposalLink(db, alice, { ...request, expectedVersion: 2 }),
+    { code: 'operation_conflict' },
+  );
+  await assert.rejects(rotateProposalLink(db, bob, request), {
+    code: 'proposal_not_found',
+  });
+  assert.equal((await listOwnedProposals(db, alice)).items[0].tokenVersion, 2);
+  const storage = JSON.stringify(
+    db.sqlite.prepare('SELECT * FROM community_proposal_rotation').all(),
+  );
+  assert.equal(storage.includes(rotated.token), false);
+  assert.equal(storage.includes(latest.token), false);
+  const closed = await closeProposal(db, alice, created.id);
+  assert.deepEqual(await rotateProposalLink(db, alice, request), {
+    id: created.id,
+    tokenVersion: 2,
+    closedAt: closed.closedAt,
+    token: null,
+  });
+  await assert.rejects(
+    rotateProposalLink(db, alice, {
+      ...request,
+      operationId: 'rotate-after-close-0001',
+      expectedVersion: 2,
+    }),
+    { code: 'proposal_not_found' },
+  );
+  await assert.rejects(readProposalPreview(db, latest.token), {
+    code: 'proposal_not_found',
+  });
+});
+
+test('concurrent rotations issue one winning token and reject competing operations at a stale version', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const created = await createProposal(db, alice, {
+    operationId: 'proposal-rotate-race-0001',
+    buildId: saved.id,
+    title: 'Client study',
+    brief: '',
+  });
+  const request = {
+    proposalId: created.id,
+    operationId: 'rotate-race-operation-0001',
+    expectedVersion: 0,
+  };
+  const identical = await Promise.all([
+    rotateProposalLink(db, alice, request),
+    rotateProposalLink(db, alice, request),
+  ]);
+  assert.equal(identical.filter((row) => row.token !== null).length, 1);
+  const winner = identical.find((row) => row.token !== null);
+  assert.equal((await readProposalPreview(db, winner.token)).id, created.id);
+  const competing = await Promise.allSettled([
+    rotateProposalLink(db, alice, {
+      ...request,
+      operationId: 'rotate-competitor-one',
+      expectedVersion: 1,
+    }),
+    rotateProposalLink(db, alice, {
+      ...request,
+      operationId: 'rotate-competitor-two',
+      expectedVersion: 1,
+    }),
+  ]);
+  assert.equal(competing.filter((row) => row.status === 'fulfilled').length, 1);
+  assert.equal(
+    competing.find((row) => row.status === 'rejected').reason.code,
+    'operation_conflict',
+  );
+  assert.equal(
+    db.sqlite
+      .prepare('SELECT COUNT(*) AS count FROM community_proposal_rotation')
+      .get().count,
+    2,
+  );
+  const mixed = await Promise.allSettled([
+    rotateProposalLink(db, alice, {
+      ...request,
+      operationId: 'rotate-same-id-conflict',
+      expectedVersion: 2,
+    }),
+    rotateProposalLink(db, alice, {
+      ...request,
+      operationId: 'rotate-same-id-conflict',
+      expectedVersion: 3,
+    }),
+  ]);
+  assert.equal(mixed.filter((row) => row.status === 'fulfilled').length, 1);
+  assert.equal(
+    mixed.find((row) => row.status === 'rejected').reason.code,
+    'operation_conflict',
+  );
+  assert.equal(
+    db.sqlite.prepare('SELECT token_version FROM community_proposal').get()
+      .token_version,
+    3,
+  );
+});
+
+test('failed rotation update rolls back issuance and closure wins a pending rotation', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const created = await createProposal(db, alice, {
+    operationId: 'proposal-rotate-abort-0001',
+    buildId: saved.id,
+    title: 'Client study',
+    brief: '',
+  });
+  const request = {
+    proposalId: created.id,
+    operationId: 'rotate-abort-operation-0001',
+    expectedVersion: 0,
+  };
+  db.sqlite.exec(
+    "CREATE TRIGGER fail_rotation BEFORE UPDATE OF token_digest ON community_proposal BEGIN SELECT RAISE(ABORT, 'rotation failed'); END",
+  );
+  await assert.rejects(
+    rotateProposalLink(db, alice, request),
+    /rotation failed/,
+  );
+  assert.equal(
+    db.sqlite
+      .prepare('SELECT COUNT(*) AS count FROM community_proposal_rotation')
+      .get().count,
+    0,
+  );
+  assert.equal((await readProposalPreview(db, created.token)).id, created.id);
+  db.sqlite.exec('DROP TRIGGER fail_rotation');
+  const batch = db.batch.bind(db);
+  db.batch = (statements) => {
+    db.sqlite
+      .prepare('UPDATE community_proposal SET closed_at=? WHERE id=?')
+      .run('2026-09-01T00:00:00.000Z', created.id);
+    return batch(statements);
+  };
+  await assert.rejects(rotateProposalLink(db, alice, request), {
+    code: 'proposal_not_found',
+  });
+  assert.equal(
+    db.sqlite
+      .prepare('SELECT COUNT(*) AS count FROM community_proposal_rotation')
+      .get().count,
+    0,
+  );
+  await assert.rejects(readProposalPreview(db, created.token), {
+    code: 'proposal_not_found',
+  });
+  for (const expectedVersion of [
+    -1,
+    0.5,
+    Infinity,
+    Number.MAX_SAFE_INTEGER,
+    '0',
+  ])
+    assert.throws(
+      () => parseProposalRotation({ ...request, expectedVersion }),
+      { code: 'invalid_request' },
+    );
+});
+
+test('rotation migration preserves existing proposals and their original links', async (t) => {
+  const db = database(t, 7);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const created = await createProposal(db, alice, {
+    operationId: 'proposal-before-rotation-migration',
+    buildId: saved.id,
+    title: 'Existing preview',
+    brief: '',
+  });
+  const before = {
+    ...db.sqlite.prepare('SELECT * FROM community_proposal').get(),
+  };
+  const preview = await readProposalPreview(db, created.token);
+  db.sqlite.exec(
+    readFileSync(
+      new URL('../drizzle/0007_proposal_link_rotation.sql', import.meta.url),
+      'utf8',
+    ),
+  );
+  assert.deepEqual(
+    { ...db.sqlite.prepare('SELECT * FROM community_proposal').get() },
+    { ...before, token_version: 0 },
+  );
+  assert.deepEqual(await readProposalPreview(db, created.token), preview);
+  const rotated = await rotateProposalLink(db, alice, {
+    proposalId: created.id,
+    operationId: 'rotate-migrated-proposal',
+    expectedVersion: 0,
+  });
+  assert.deepEqual(await readProposalPreview(db, rotated.token), preview);
 });

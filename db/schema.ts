@@ -1,4 +1,10 @@
-import { index, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import {
+  index,
+  integer,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from 'drizzle-orm/sqlite-core';
 
 export const catalogSnapshots = sqliteTable('catalog_snapshot', {
   id: text('id').primaryKey(),
@@ -127,6 +133,7 @@ export const communityProposals = sqliteTable(
     brief: text('brief').notNull(),
     author: text('author').notNull(),
     tokenDigest: text('token_digest').notNull().unique(),
+    tokenVersion: integer('token_version').notNull().default(0),
     createdAt: text('created_at').notNull(),
     closedAt: text('closed_at'),
   },
@@ -139,6 +146,25 @@ export const communityProposals = sqliteTable(
       table.accountId,
       table.createdAt,
       table.id,
+    ),
+  ],
+);
+
+export const communityProposalRotations = sqliteTable(
+  'community_proposal_rotation',
+  {
+    proposalId: text('proposal_id')
+      .notNull()
+      .references(() => communityProposals.id),
+    operationId: text('operation_id').notNull(),
+    version: integer('version').notNull(),
+    tokenDigest: text('token_digest').notNull().unique(),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    uniqueIndex('community_proposal_rotation_operation').on(
+      table.proposalId,
+      table.operationId,
     ),
   ],
 );

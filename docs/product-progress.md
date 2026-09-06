@@ -687,3 +687,20 @@ across tied timestamps, verifies ownership and closed-item retention, rejects
 invalid cursors, and confirms index use after deliberately damaging the base
 snapshot. This is internal storage; the creator's account interface is still
 unimplemented.
+
+
+## Replaceable proposal links
+
+Proposal-link rotation now stores an issuance record and replaces the active
+digest in a single conditional transaction. The immutable keyboard proposal
+stays unchanged. Old links stop resolving; old operation retries never restore
+them. A competing or stale operation cannot overwrite the winning digest, and
+a closed proposal cannot be reopened. Only the winning invocation receives
+the new raw token. Owner lists expose the current version for explicit retries.
+
+SQLite tests cover sequential replacement, identical/conflicting concurrent
+requests, replay after later rotations and closure, owner isolation, rollback
+when the parent update fails, closing before a pending batch, and preservation
+of existing links through migration. A separate read-only review found no
+concrete blocker. Account routes, rotation controls and client responses remain
+unimplemented; this is storage preparation, not a shipped account workflow.

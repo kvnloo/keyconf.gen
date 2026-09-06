@@ -71,7 +71,7 @@ Keep private save/create operations idempotent with a per-account operation key 
 
 ## Records and invariants
 
-Define the schema in `db/schema.ts`; add generated, inspected, schema-only Drizzle migrations. Runtime queries belong in `db/community.ts`, `db/publications.ts` and `db/favorites.ts`, using prepared statements and bounded D1 batches. Do not change deployed catalog migrations or create tables during requests.
+Define the schema in `db/schema.ts`; add generated, inspected, schema-only Drizzle migrations. Runtime queries belong in `db/community.ts`, `db/publications.ts`, `db/favorites.ts` and `db/proposals.ts`, using prepared statements and bounded D1 batches. Do not change deployed catalog migrations or create tables during requests.
 
 | Record | Required fields and constraints |
 | --- | --- |
@@ -298,12 +298,31 @@ chosen proposal title and validates frozen source evidence.
 Only SHA-256 token digests are stored. A successful winning create returns its
 256-bit random token once; an identical retry returns the existing receipt with
 `token: null`. Concurrent losing creates never return their unusable candidate
-tokens. Clients must not interpret a null token as a shareable link. Recovery by
-explicit token rotation is still unimplemented; retries do not rotate or reopen
-proposals. Closing remains possible even after snapshot damage.
+tokens. Clients must not interpret a null token as a shareable link. Explicit token rotation is now implemented in storage; retries do not rotate
+or reopen proposals. Closing remains possible even after snapshot damage.
 
 The UI, route-level noindex/no-referrer/no-store handling, isolated client draft,
-rotation, attributed responses and change review remain required.
+rotation controls, attributed responses and change review remain required.
 Historical preview data is preserved, but its future UI must check current
 customization support before enabling the editor. No public test proposal is
 seeded by these storage tests.
+
+
+## Proposal link replacement
+
+Rotation uses a version from the private proposal list and a fresh operation ID.
+One transactional D1 batch records the issued digest and conditionally replaces
+the active token only for an owned, open proposal at that version. The update
+reads the persisted operation record, never a losing request's candidate token.
+This relies on [D1 batch transaction semantics](https://developers.cloudflare.com/d1/worker-api/d1-database/#batch).
+
+Operation records contain digests only. Identical retries return the current
+receipt with no token; conflicting reuse and stale versions return 409 without
+changing the link. Old operation retries cannot restore an earlier link. The
+caller must refresh and explicitly request a new rotation to recover a lost
+response. Closed proposals cannot be reopened through rotation. Existing
+proposals migrate to version zero with their original links intact.
+
+These functions still have no exposed account API or controls. Future UI must
+show the effect of replacing a link, use the current version, copy only a
+non-null newly issued token, and preserve the original keyboard snapshot.
