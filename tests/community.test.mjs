@@ -269,6 +269,22 @@ test('account saves strip unselected imports and retain selected sources and acc
     note: '',
     kind: 'build',
   });
+  const damagedEvidence = structuredClone(evidence);
+  Object.assign(damagedEvidence.accessoryReferences[0], {
+    kind: 'artisan',
+    placement: 'key',
+    sizeU: 1,
+    stem: 'mx',
+  });
+  db.sqlite
+    .prepare('UPDATE community_build SET evidence=? WHERE id=?')
+    .run(JSON.stringify(damagedEvidence), result.id);
+  await assert.rejects(readPublicPublication(db, publication.id), {
+    code: 'saved_build_unavailable',
+  });
+  db.sqlite
+    .prepare('UPDATE community_build SET evidence=? WHERE id=?')
+    .run(JSON.stringify(evidence), result.id);
   const publicRead = await readPublicPublication(db, publication.id);
   assert.deepEqual(publicRead.build.customParts, [selected]);
   assert.equal(JSON.stringify(publicRead).includes(unused.source), false);
@@ -281,7 +297,9 @@ test('account saves strip unselected imports and retain selected sources and acc
     publicRead.evidence.accessoryReferences[0].source,
     accessory.source,
   );
-  assert.deepEqual(publicRead.evidence, evidence);
+  assert.deepEqual(publicRead.evidence.components, evidence.components);
+  assert.deepEqual(publicRead.evidence.compatibility, evidence.compatibility);
+  assert.equal(publicRead.evidence.sound.recording.groups, undefined);
   assert.equal(
     db.sqlite
       .prepare('SELECT payload FROM community_build WHERE id=?')
@@ -859,4 +877,77 @@ test('favorites are private, repeatable, paginated and redact withdrawn releases
       .all(bob)
       .some((row) => row.detail.includes('community_favorite_account_created')),
   );
+});
+
+test('publication evidence rejects malformed JSON values before writing and strips internal fields', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const evidence = JSON.parse(
+    db.sqlite
+      .prepare('SELECT evidence FROM community_build WHERE id=?')
+      .get(saved.id).evidence,
+  );
+  const request = {
+    operationId: 'validated-evidence-release',
+    buildId: saved.id,
+    title: 'Frozen evidence',
+    note: '',
+    kind: 'build',
+  };
+  const invalid = [
+    null,
+    {},
+    { ...evidence, version: 2 },
+    { ...evidence, components: [] },
+    {
+      ...evidence,
+      accessoryCompatibility: {
+        extra: { status: 'confirmed', reasons: [], sources: [] },
+      },
+    },
+    { ...evidence, sound: { ...evidence.sound, volume: 99 } },
+  ];
+  const unsafe = structuredClone(evidence);
+  unsafe.sound.recording.source = 'javascript:alert(1)';
+  invalid.push(unsafe);
+  const mismatch = structuredClone(evidence);
+  mismatch.components[0].id = 'wrong-component';
+  invalid.push(mismatch);
+  for (const value of invalid) {
+    db.sqlite
+      .prepare('UPDATE community_build SET evidence=? WHERE id=?')
+      .run(JSON.stringify(value), saved.id);
+    await assert.rejects(publishBuild(db, alice, request), {
+      code: 'saved_build_unavailable',
+    });
+    assert.equal(
+      db.sqlite.prepare('SELECT COUNT(*) AS n FROM community_publication').get()
+        .n,
+      0,
+    );
+  }
+  evidence.privateNote = 'private-sentinel';
+  evidence.components[0].internal = 'private-sentinel';
+  evidence.compatibility[0].internal = 'private-sentinel';
+  evidence.sound.internal = 'private-sentinel';
+  evidence.sound.recording.internal = 'private-sentinel';
+  db.sqlite
+    .prepare('UPDATE community_build SET evidence=? WHERE id=?')
+    .run(JSON.stringify(evidence), saved.id);
+  const published = await publishBuild(db, alice, request);
+  assert.equal(JSON.stringify(published).includes('private-sentinel'), false);
+  assert.equal(published.evidence.sound.recording.groups, undefined);
+  assert.equal(published.evidence.sound.kind, 'recorded');
+  assert.equal(
+    published.evidence.compatibility[0].detail,
+    evidence.compatibility[0].detail,
+  );
+  db.sqlite
+    .prepare('UPDATE community_build SET evidence=? WHERE id=?')
+    .run('null', saved.id);
+  await assert.rejects(readPublicPublication(db, published.id), {
+    code: 'saved_build_unavailable',
+  });
+  assert.ok((await withdrawPublication(db, alice, published.id)).withdrawnAt);
 });

@@ -206,3 +206,20 @@ exposing publication endpoints, implement a versioned public evidence parser
 that reconstructs allowed nested fields and validates URLs, plus an explicit
 unavailable-geometry path for retired IDs that preserves frozen source evidence.
 Do not present the current internal projection as a validated public API.
+
+The version-1 public evidence parser is now implemented in
+`lib/build-evidence.ts`. It reconstructs allowed fields, checks selected
+component/accessory IDs and audio settings, rejects unsafe source URLs and
+malformed structures, and retains frozen compatibility results. Recording
+provenance excludes sample groups and internal recording fields. The stored
+archive remains unchanged. Publication creation validates evidence before
+writing, public reads validate it again, and withdrawal does not depend on it.
+All 140 tests, type checking and lint pass. Historical display for retired
+catalog IDs and account/public UI integration remain unfinished.
+
+Independent parser review found one inconsistent accessory placement case. The
+parser now compares frozen reference placement with each saved accessory's
+location kind. A SQLite regression rejects a macropad rewritten as a key-mounted
+artisan while preserving normal publication reads. The reviewer found no other
+concrete blockers in the scoped parser. Nineteen community tests pass after the
+fix; final production checks are running.

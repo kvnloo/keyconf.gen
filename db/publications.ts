@@ -1,3 +1,4 @@
+import { parsePublicBuildEvidence } from '../lib/build-evidence.ts';
 import { CommunityError, parseCommunityProfile } from '../lib/community.ts';
 import { parseBuild, type Build } from '../lib/build.ts';
 import {
@@ -53,7 +54,7 @@ function publication(row: Row) {
 function restoreSnapshot(row: Pick<Row, 'payload' | 'evidence'>) {
   try {
     const build: Build = parseBuild(JSON.parse(row.payload));
-    const evidence: unknown = JSON.parse(row.evidence);
+    const evidence = parsePublicBuildEvidence(JSON.parse(row.evidence), build);
     return { build, evidence };
   } catch {
     throw new CommunityError(
