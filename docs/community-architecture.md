@@ -246,3 +246,33 @@ parser now requires that record, preventing missing import details from being
 misrepresented as documented historical catalog evidence. Retirement tests also
 remove case, accessory and recording independently, so strict editor rejection
 is proven for each path.
+
+### Public release page
+
+`/builds/[id]` is a dynamic, read-only page backed by the publication reader.
+It displays the release's chosen author profile, outbound creator links and
+frozen component/accessory sources and compatibility notes. Supported builds
+use the existing interactive preview and explicitly customize a copy. Feedback
+copies retain the attributed release URL. A build-file download handles releases
+too large for a portable customization link. Retired releases show the preserved
+parts and recording provenance without a working customization action.
+
+Missing and withdrawn IDs return 404. Storage failures render a recovery message.
+No account write, publishing or favorite endpoint is enabled. Google sign-in and
+the creator publishing workflow remain unfinished. Local test creators are held
+only in a separate local D1 state directory, never seeded into the hosted site.
+
+`verify:publication` runs against a built Worker and local SQLite-backed D1.
+Coverage includes creator/source links, private-field exclusion, scene loading,
+320/390 pixel overflow, automated WCAG checks, customization navigation, retired
+parts and withdrawn/missing responses. CI creates these fixtures with
+`scripts/seed_publication_fixture.mjs` and runs the production Worker test.
+
+Public-page review confirmed no-store responses and withdrawn/missing 404s. It
+found omitted accessory reasons in both views; the shared accessory-notes
+component now renders saved reasons and source links in the interactive and
+historical compatibility sections. The browser fixture includes an encoder and
+checks that these explanations are visible. Screenshot review also caught a
+nested-route asset error despite a canvas existing. The Worker document now
+sets a root asset base, while the separate static Pages entry remains unchanged;
+the verifier requires a ready scene and loaded key audio before proceeding.

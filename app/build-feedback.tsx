@@ -4,13 +4,19 @@ import { Copy } from 'lucide-react';
 import type { Build } from '../lib/build';
 import { previewLink } from '../lib/shared-preview';
 
-export default function BuildFeedback({ build }: { build: Build }) {
+export default function BuildFeedback({
+  build,
+  published = false,
+}: {
+  build: Build;
+  published?: boolean;
+}) {
   const [note, setNote] = useState('');
   const [receipt, setReceipt] = useState('');
   const [manualCopy, setManualCopy] = useState('');
   const fallback = useRef<HTMLTextAreaElement | null>(null);
   async function copy() {
-    const message = `Feedback on ${build.name}\n\n${note.trim()}\n\nBuild preview: ${previewLink(build, window.location.href)}`;
+    const message = `Feedback on ${build.name}\n\n${note.trim()}\n\nBuild preview: ${published ? window.location.href : previewLink(build, window.location.href)}`;
     setManualCopy('');
     try {
       await navigator.clipboard.writeText(message);

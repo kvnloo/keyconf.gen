@@ -58,6 +58,8 @@ function publication(row: Row) {
   };
 }
 
+export type PublicPublication = ReturnType<typeof publication>;
+
 function restoreSnapshot(
   row: Pick<Row, 'payload' | 'evidence'>,
   historical = false,

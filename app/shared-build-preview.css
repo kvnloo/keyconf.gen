@@ -291,3 +291,75 @@
 .preview-feedback output {
   margin-top: 12px;
 }
+.publication-author {
+  background: #17211b;
+  color: #e9ede6;
+  padding: 28px 4vw;
+  border-bottom: 1px solid #ffffff22;
+  overflow-wrap: anywhere;
+}
+.publication-author h2 {
+  margin: 8px 0;
+  font-size: 1.2rem;
+}
+.publication-author small {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #b7c6b9;
+}
+.publication-author p {
+  white-space: pre-wrap;
+  max-width: 70ch;
+}
+.publication-author a,
+.publication-archive a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.publication-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+.publication-archive {
+  padding: 32px 4vw;
+}
+.publication-archive > * {
+  max-width: 800px;
+}
+.publication-archive h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  overflow-wrap: anywhere;
+}
+.publication-archive h2 {
+  margin: 28px 0 14px;
+}
+.publication-author {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px 28px;
+  align-items: start;
+}
+.publication-author button {
+  justify-self: start;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #ffffff44;
+  border-radius: 10px;
+  font-size: 0.875rem;
+}
+.publication-author output:empty {
+  display: none;
+}
+.publication-author output {
+  grid-column: 1 / -1;
+}
+@media (max-width: 700px) {
+  .publication-author {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}

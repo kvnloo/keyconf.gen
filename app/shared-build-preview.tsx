@@ -1,4 +1,5 @@
 'use client';
+import AccessoryFitNotes from './accessory-fit-notes';
 import { accessoryHost } from '../lib/accessory-hosts.ts';
 import { isQ1MaxAssembly } from '../lib/keyboard-variant';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -10,6 +11,7 @@ import {
   Play,
   RotateCcw,
 } from 'lucide-react';
+import type { PublicPublication } from '../db/publications';
 import type { Build } from '../lib/build';
 import { catalog, categories, checkBuild } from '../lib/catalog';
 import { accessoryCatalog, assessAccessories } from '../lib/build-accessories';
@@ -23,9 +25,11 @@ import './shared-build-preview.css';
 export default function SharedBuildPreview({
   build,
   onCustomize,
+  publication,
 }: {
   build: Build;
   onCustomize: () => void;
+  publication?: PublicPublication;
 }) {
   const [exploded, setExploded] = useState(false);
   const [view, setView] = useState('perspective');
@@ -43,17 +47,19 @@ export default function SharedBuildPreview({
   const currentVolume = useRef(volume);
   const pack = soundPacks.find((item) => item.id === build.audio.source);
   const parts = useMemo(
-    () => [...catalog, ...build.customParts],
-    [build.customParts],
+    () =>
+      publication?.evidence.components ?? [...catalog, ...build.customParts],
+    [build.customParts, publication],
   );
   const checks = useMemo(
-    () => checkBuild(build.selection, parts, build.layout),
-    [build, parts],
+    () =>
+      publication?.evidence.compatibility ??
+      checkBuild(build.selection, parts, build.layout),
+    [build, parts, publication],
   );
-  const accessoryChecks = assessAccessories(
-    build.accessories,
-    accessoryHost(build),
-  );
+  const accessoryChecks =
+    publication?.evidence.accessoryCompatibility ??
+    assessAccessories(build.accessories, accessoryHost(build));
   const sound: SoundSettings = {
     ...build.audio,
     enabled,
@@ -136,10 +142,10 @@ export default function SharedBuildPreview({
   return (
     <main className="shared-preview">
       <header>
-        <a className="brand" href="#home">
+        <a className="brand" href={publication ? '/#home' : '#home'}>
           keyconf
         </a>
-        <a className="preview-back" href="#studio">
+        <a className="preview-back" href={publication ? '/#studio' : '#studio'}>
           <ArrowLeft size={16} /> My studio
         </a>
       </header>
@@ -190,10 +196,14 @@ export default function SharedBuildPreview({
           </span>
         </section>
         <aside className="preview-details" aria-label="Shared build details">
-          <BuildFeedback build={build} />
+          <BuildFeedback build={build} published={!!publication} />
           <section className="preview-sound">
             <span className="preview-eyebrow">LISTEN</span>
-            <h2>{pack?.name ?? 'Synthesized study'}</h2>
+            <h2>
+              {publication?.evidence.sound.recording?.name ??
+                pack?.name ??
+                'Synthesized study'}
+            </h2>
             <p>
               {pack
                 ? 'Recorded switch reference. Not a recording of this complete build.'
@@ -248,7 +258,13 @@ export default function SharedBuildPreview({
               in this preview.
             </p>
             {pack && (
-              <a href={pack.source} target="_blank" rel="noreferrer">
+              <a
+                href={
+                  publication?.evidence.sound.recording?.source ?? pack.source
+                }
+                target="_blank"
+                rel="noreferrer"
+              >
                 Recording source & license <ArrowUpRight size={14} />
               </a>
             )}
@@ -276,9 +292,9 @@ export default function SharedBuildPreview({
                 );
               })}
               {build.accessories.map((selection) => {
-                const part = accessoryCatalog.find(
-                  (item) => item.id === selection.productId,
-                );
+                const part = (
+                  publication?.evidence.accessoryReferences ?? accessoryCatalog
+                ).find((item) => item.id === selection.productId);
                 return (
                   part && (
                     <li key={selection.id}>
@@ -319,6 +335,13 @@ export default function SharedBuildPreview({
                 </li>
               ))}
             </ul>
+            <AccessoryFitNotes
+              selections={build.accessories}
+              products={
+                publication?.evidence.accessoryReferences ?? accessoryCatalog
+              }
+              checks={accessoryChecks}
+            />
             <p>
               Accessory fit and illustrated dimensions still need verification
               with the maker.
