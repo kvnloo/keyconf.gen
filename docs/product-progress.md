@@ -339,3 +339,9 @@ Added D1 schema/migrations, credential-restricted snapshot publication, public r
 Actual local D1 publication/readback succeeds, but the rapid rejected-upload verification crashes Wrangler's proxy with `Network connection lost`. Isolated unauthorized and oversized requests return their expected statuses; the sequence remains unresolved. [Hosted catalog status](hosted-catalog.md) records the reproducer, experiments and remaining deployment/UI work. This backend is deliberately not deployed or claimed finished.
 
 Both preceding GitHub releases passed. Public nightly metadata confirms `7bc90ecd636c93414e5e0d803593a6ae2f43ab46`, run 45, published September 6 at 16:39:47 UTC. Stable main/dev source versions remain unchanged.
+
+## Hosted catalog deployed and verified
+
+Isolated the failing local rejection sequence to Wrangler's front proxy: entry tracing showed the second request never reached the app handler, while the identical sequence passed against the same internal Worker/D1 endpoint. A controlled worker restart preserved the original 128 observations. The earlier claimed Node 22 comparison was invalid because the command selected Node 26; a verified Node 24 run also reproduced the proxy failure. No application workaround or assertion weakening was retained.
+
+Sites version 2 deployed `3ea24f52b1b3b0c38c7055e6b50316a54d7c7622` at 16:56:14 UTC. The actual nightly gateway passes the complete rejection/publication/readback/replay verifier, and the publication CLI independently confirms the original snapshot bytes. [Hosted catalog documentation](hosted-catalog.md) records the exact deployment, source and data hash. Discover still uses its bundled snapshot pending hosted-reader integration. Main/dev and the stable Sites project remain unchanged.

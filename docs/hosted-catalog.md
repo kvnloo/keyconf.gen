@@ -1,6 +1,6 @@
-# Hosted catalog publication, in progress
+# Hosted catalog publication
 
-The nightly source includes a D1-backed catalog publication endpoint. It is not yet deployed or connected to the Discover UI. The existing public snapshot remains the source used by Discover.
+The nightly source includes a D1-backed catalog publication endpoint. It is deployed on the separate nightly Sites backend and has passed hosted read/write verification. It is not yet connected to the Discover UI; the existing bundled snapshot remains the source used by Discover.
 
 `PUT /api/catalog` requires a server-side `CATALOG_PUBLISH_TOKEN`. No credential means publication is denied. This is an administrative machine credential, not visitor sign-in. Never put it in browser code or Git. The route accepts a deliberately selected collector export up to 500,000 bytes. It validates page ordering, source, page hashes and counts before atomically storing an immutable snapshot and updating the published pointer for that source. Publishing an earlier snapshot is an explicit rollback; publication order controls the pointer. No observed option becomes an approved builder part.
 
@@ -29,3 +29,11 @@ Platform references: [Vinext Workers bindings](https://vinext.io/) and [Drizzle 
 ## Runtime isolation
 
 The identical full rejection/publication/readback sequence passes against the same local Worker and D1 database through its internal authenticated development endpoint. Temporary entry tracing showed the failing second request through Wrangler never reached the catalog handler. No application workaround or weakened assertion was retained. A controlled Worker stop/restart followed by a read-only request preserved all 128 observations byte for byte. This isolates the failure to the local front-proxy path; it does not establish behavior of the hosted gateway. The next release must run the same sequence against the actual nightly URL.
+
+## Hosted verification
+
+Nightly Sites version 2 deployed source `3ea24f52b1b3b0c38c7055e6b50316a54d7c7622` successfully at 16:56:14 UTC on September 6, 2026. Deployment `appgdep_6a9d9b1d12f48191861f598c9c396f5b` applied the schema and environment revision 1. The publisher credential is a platform secret. The archive contains no local credential files. Main and dev remain unchanged.
+
+The full `verify:catalog` sequence passes against `https://keyconf-nightly.kvnloo.chatgpt.site/api/catalog`: unauthorized 403, oversized 413, modified evidence 422, valid publication 200, identical public readback, CORS and idempotent replay. This verifies the real hosted gateway, which does not exhibit the local Wrangler proxy failure. The publication CLI independently publishes and verifies the same original bytes. The retained snapshot has twelve pages and 128 observations with content hash `2c0a07635df7b6f9090d85d5ed12d91ae040b64f37a6ce4d8f40c9b83468e191`.
+
+The remaining integration is to have Discover read hosted publications with explicit loading, retry/fallback and provenance behavior. Visitor imports must not become published catalog data automatically. This workflow publishes reviewed observation snapshots; it does not approve compatibility or supply a multi-reviewer catalog administration UI.
