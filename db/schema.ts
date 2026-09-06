@@ -168,3 +168,36 @@ export const communityProposalRotations = sqliteTable(
     ),
   ],
 );
+
+export const communityProposalResponses = sqliteTable(
+  'community_proposal_response',
+  {
+    id: text('id').primaryKey(),
+    proposalId: text('proposal_id')
+      .notNull()
+      .references(() => communityProposals.id),
+    accountId: text('account_id')
+      .notNull()
+      .references(() => communityAccounts.id),
+    operationId: text('operation_id').notNull(),
+    requestDigest: text('request_digest').notNull(),
+    payload: text('payload').notNull(),
+    evidence: text('evidence').notNull(),
+    note: text('note').notNull(),
+    author: text('author').notNull(),
+    linkVersion: integer('link_version').notNull(),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    uniqueIndex('community_proposal_response_operation').on(
+      table.proposalId,
+      table.accountId,
+      table.operationId,
+    ),
+    index('community_proposal_response_created').on(
+      table.proposalId,
+      table.createdAt,
+      table.id,
+    ),
+  ],
+);

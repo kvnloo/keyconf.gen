@@ -1,11 +1,6 @@
 import { parseBuild } from '../lib/build.ts';
-import { accessoryHost } from '../lib/accessory-hosts.ts';
-import { catalog, categories, checkBuild } from '../lib/catalog.ts';
-import {
-  accessoryCatalog,
-  assessAccessories,
-} from '../lib/build-accessories.ts';
-import { soundPacks } from '../lib/sound-packs.ts';
+import { snapshotEvidence } from './build-snapshot.ts';
+import { digestText as digest } from '../lib/content-digest.ts';
 import {
   CommunityError,
   parseCommunityProfile,
@@ -159,16 +154,6 @@ export async function readBuild(
   return savedBuild(row);
 }
 
-async function digest(text: string): Promise<string> {
-  const bytes = await crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(text),
-  );
-  return Array.from(new Uint8Array(bytes), (byte) =>
-    byte.toString(16).padStart(2, '0'),
-  ).join('');
-}
-
 export async function saveBuild(
   db: Database,
   subject: string,
@@ -178,31 +163,7 @@ export async function saveBuild(
   const { build, operationId } = request;
   const payload = JSON.stringify(build);
   const requestDigest = await digest(payload);
-  const parts = [...catalog, ...build.customParts];
-  const recording =
-    soundPacks.find((pack) => pack.id === build.audio.source) ?? null;
-  const evidence = JSON.stringify({
-    version: 1,
-    catalogDigest: await digest(JSON.stringify(catalog)),
-    components: categories.map((category) =>
-      parts.find((part) => part.id === build.selection[category]),
-    ),
-    compatibility: checkBuild(build.selection, parts, build.layout),
-    accessoryReferences: accessoryCatalog.filter((product) =>
-      build.accessories.some((accessory) => accessory.productId === product.id),
-    ),
-    accessoryCompatibility: assessAccessories(
-      build.accessories,
-      accessoryHost(build),
-    ),
-    sound: {
-      ...build.audio,
-      accuracy: recording
-        ? 'recorded switch reference; full build match unverified'
-        : 'synthesized approximation',
-      recording,
-    },
-  });
+  const evidence = await snapshotEvidence(build);
   await db
     .prepare(
       'INSERT INTO community_build(id, account_id, operation_id, request_digest, name, payload, evidence, created_at) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(account_id, operation_id) DO NOTHING',

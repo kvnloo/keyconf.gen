@@ -1,4 +1,9 @@
 import {
+  submitProposalResponse,
+  readProposalResponse,
+  listProposalResponses,
+} from '../db/proposal-responses.ts';
+import {
   createProposal,
   listOwnedProposals,
   rotateProposalLink,
@@ -8,6 +13,7 @@ import {
 import {
   parseProposalRequest,
   parseProposalRotation,
+  parseProposalResponse,
 } from '../lib/proposal.ts';
 import {
   listOwnedPublications,
@@ -1627,4 +1633,431 @@ test('rotation migration preserves existing proposals and their original links',
     expectedVersion: 0,
   });
   assert.deepEqual(await readProposalPreview(db, rotated.token), preview);
+});
+
+test('client responses freeze normalized builds and chosen authors without changing the proposal', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  await saveProfile(db, bob, {
+    ...profile,
+    handle: 'bob_keys',
+    displayName: 'Bob',
+  });
+  const saved = await saveBuild(db, alice, save());
+  const proposal = await createProposal(db, alice, {
+    operationId: 'proposal-client-reply-0001',
+    buildId: saved.id,
+    title: 'Client preview',
+    brief: 'Try the colors.',
+  });
+  const original = await readProposalPreview(db, proposal.token);
+  const request = {
+    operationId: 'client-response-0001',
+    note: '  Cream accents please.  ',
+    build: {
+      ...defaultBuild,
+      layout: '75',
+      customParts: [
+        {
+          id: 'import:unused-secret',
+          category: 'case',
+          name: 'Unused private listing',
+          brand: 'Maker',
+          detail: 'Private library item',
+          source: 'https://example.com/private-listing',
+          family: 'unknown',
+          evidence: 'unknown',
+        },
+      ],
+    },
+  };
+  const accepted = await submitProposalResponse(
+    db,
+    bob,
+    proposal.token,
+    request,
+  );
+  const response = await readProposalResponse(db, alice, accepted.id);
+  assert.equal(response.build.layout, '75');
+  assert.equal(response.note, 'Cream accents please.');
+  assert.equal(response.author.displayName, 'Bob');
+  assert.equal(response.linkVersion, 0);
+  assert.deepEqual(response.build.customParts, []);
+  assert.equal(JSON.stringify(response).includes('private-listing'), false);
+  assert.equal(JSON.stringify(response).includes(bob), false);
+  assert.equal(JSON.stringify(response).includes(proposal.token), false);
+  assert.deepEqual(await readProposalPreview(db, proposal.token), original);
+  assert.equal(
+    db.sqlite.prepare('SELECT COUNT(*) AS count FROM community_build').get()
+      .count,
+    1,
+  );
+  await saveProfile(db, bob, {
+    ...profile,
+    handle: 'bob_keys',
+    displayName: 'Later Bob',
+  });
+  assert.deepEqual(await readProposalResponse(db, bob, accepted.id), response);
+  assert.deepEqual(
+    await submitProposalResponse(db, bob, proposal.token, request),
+    accepted,
+  );
+  await assert.rejects(
+    submitProposalResponse(db, bob, proposal.token, {
+      ...request,
+      note: 'Other content',
+    }),
+    { code: 'operation_conflict' },
+  );
+  const charlie = 'trusted-google-charlie';
+  await saveProfile(db, charlie, {
+    ...profile,
+    handle: 'charlie_keys',
+    displayName: 'Charlie',
+  });
+  await readProposalPreview(db, proposal.token);
+  await assert.rejects(readProposalResponse(db, charlie, accepted.id), {
+    code: 'response_not_found',
+  });
+  assert.deepEqual(await listProposalResponses(db, charlie, proposal.id), {
+    items: [],
+    next: null,
+  });
+  await closeProposal(db, alice, proposal.id);
+  assert.deepEqual(
+    await readProposalResponse(db, alice, accepted.id),
+    response,
+  );
+  assert.deepEqual(await readProposalResponse(db, bob, accepted.id), response);
+  assert.equal(
+    (await listProposalResponses(db, bob, proposal.id)).items[0].id,
+    accepted.id,
+  );
+  await assert.rejects(
+    submitProposalResponse(db, bob, proposal.token, request),
+    { code: 'proposal_not_found' },
+  );
+});
+
+test('concurrent response retries converge, conflicting content cannot replace them, and retired builds remain reviewable', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  await saveProfile(db, bob, { ...profile, handle: 'bob_keys' });
+  const saved = await saveBuild(db, alice, save());
+  const proposal = await createProposal(db, alice, {
+    operationId: 'proposal-reply-race-0001',
+    buildId: saved.id,
+    title: 'Client preview',
+    brief: '',
+  });
+  const request = {
+    operationId: 'reply-race-operation-0001',
+    build: defaultBuild,
+    note: 'Keep these parts.',
+  };
+  const results = await Promise.all([
+    submitProposalResponse(db, bob, proposal.token, request),
+    submitProposalResponse(db, bob, proposal.token, request),
+  ]);
+  assert.deepEqual(results[0], results[1]);
+  assert.equal(
+    db.sqlite
+      .prepare('SELECT COUNT(*) AS count FROM community_proposal_response')
+      .get().count,
+    1,
+  );
+  const conflicts = await Promise.allSettled([
+    submitProposalResponse(db, bob, proposal.token, {
+      ...request,
+      operationId: 'reply-conflicting-operation',
+      note: 'One',
+    }),
+    submitProposalResponse(db, bob, proposal.token, {
+      ...request,
+      operationId: 'reply-conflicting-operation',
+      note: 'Two',
+    }),
+  ]);
+  assert.equal(conflicts.filter((row) => row.status === 'fulfilled').length, 1);
+  assert.equal(
+    conflicts.find((row) => row.status === 'rejected').reason.code,
+    'operation_conflict',
+  );
+  const response = await readProposalResponse(db, bob, results[0].id);
+  const { catalog } = await import('../lib/catalog.ts');
+  const index = catalog.findIndex(
+    (part) => part.id === defaultBuild.selection.case,
+  );
+  const [removed] = catalog.splice(index, 1);
+  try {
+    assert.deepEqual(
+      await readProposalResponse(db, alice, response.id),
+      response,
+    );
+    assert.deepEqual(
+      await submitProposalResponse(db, bob, proposal.token, request),
+      results[0],
+    );
+    await assert.rejects(
+      submitProposalResponse(db, bob, proposal.token, {
+        ...request,
+        operationId: 'new-unsupported-response',
+      }),
+      { code: 'invalid_request' },
+    );
+  } finally {
+    catalog.splice(index, 0, removed);
+  }
+  assert.equal(
+    db.sqlite
+      .prepare('SELECT COUNT(*) AS count FROM community_proposal_response')
+      .get().count,
+    2,
+  );
+});
+
+test('closing or rotating during submission blocks the guarded response insert', async (t) => {
+  for (const action of ['close', 'rotate']) {
+    const db = database(t);
+    await saveProfile(db, alice, profile);
+    await saveProfile(db, bob, { ...profile, handle: 'bob_keys' });
+    const saved = await saveBuild(db, alice, save());
+    const proposal = await createProposal(db, alice, {
+      operationId: `proposal-reply-${action}-0001`,
+      buildId: saved.id,
+      title: 'Client preview',
+      brief: '',
+    });
+    const prepare = db.prepare.bind(db);
+    db.prepare = (sql) => {
+      const statement = prepare(sql);
+      if (!sql.includes('INSERT INTO community_proposal_response'))
+        return statement;
+      return {
+        bind(...args) {
+          const bound = statement.bind(...args);
+          return {
+            ...bound,
+            async run() {
+              if (action === 'close')
+                await closeProposal(db, alice, proposal.id);
+              else
+                await rotateProposalLink(db, alice, {
+                  proposalId: proposal.id,
+                  operationId: 'rotate-during-response-0001',
+                  expectedVersion: 0,
+                });
+              return bound.run();
+            },
+          };
+        },
+      };
+    };
+    await assert.rejects(
+      submitProposalResponse(db, bob, proposal.token, {
+        operationId: 'response-after-invalidated-link',
+        build: defaultBuild,
+        note: '',
+      }),
+      { code: 'proposal_not_found' },
+    );
+    assert.equal(
+      db.sqlite
+        .prepare('SELECT COUNT(*) AS count FROM community_proposal_response')
+        .get().count,
+      0,
+    );
+    assert.equal(
+      db.sqlite.prepare('SELECT COUNT(*) AS count FROM community_build').get()
+        .count,
+      1,
+    );
+  }
+});
+
+test('response validation rejects invalid builds, notes, tokens and missing identities without creating records', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const proposal = await createProposal(db, alice, {
+    operationId: 'proposal-response-validation',
+    buildId: saved.id,
+    title: 'Client preview',
+    brief: '',
+  });
+  const request = {
+    operationId: 'response-validation-0001',
+    build: defaultBuild,
+    note: '',
+  };
+  await assert.rejects(
+    submitProposalResponse(db, bob, proposal.token, request),
+    { code: 'profile_required' },
+  );
+  await assert.rejects(
+    submitProposalResponse(db, alice, '0'.repeat(64), request),
+    { code: 'proposal_not_found' },
+  );
+  for (const value of [
+    null,
+    { ...request, build: {} },
+    { ...request, note: 'x'.repeat(2001) },
+    { ...request, note: 'bad\u0000note' },
+    { ...request, operationId: 'bad' },
+  ])
+    assert.throws(() => parseProposalResponse(value), {
+      code: 'invalid_request',
+    });
+  await assert.rejects(
+    submitProposalResponse(db, alice, proposal.token, {
+      ...request,
+      build: {
+        ...defaultBuild,
+        selection: { ...defaultBuild.selection, case: 'unsupported-case' },
+      },
+    }),
+    { code: 'invalid_request' },
+  );
+  assert.equal(
+    db.sqlite.prepare('SELECT COUNT(*) AS count FROM community_account').get()
+      .count,
+    1,
+  );
+  assert.equal(
+    db.sqlite.prepare('SELECT COUNT(*) AS count FROM community_build').get()
+      .count,
+    1,
+  );
+  assert.equal(
+    db.sqlite
+      .prepare('SELECT COUNT(*) AS count FROM community_proposal_response')
+      .get().count,
+    0,
+  );
+});
+
+test('response lists paginate by owner or author and record the server-selected link version', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  await saveProfile(db, bob, {
+    ...profile,
+    handle: 'bob_keys',
+    displayName: 'Bob',
+  });
+  const charlie = 'trusted-google-charlie';
+  await saveProfile(db, charlie, {
+    ...profile,
+    handle: 'charlie_keys',
+    displayName: 'Charlie',
+  });
+  const saved = await saveBuild(db, alice, save());
+  const proposal = await createProposal(db, alice, {
+    operationId: 'proposal-paged-responses',
+    buildId: saved.id,
+    title: 'Client preview',
+    brief: '',
+  });
+  const rotated = await rotateProposalLink(db, alice, {
+    proposalId: proposal.id,
+    operationId: 'rotate-before-paged-responses',
+    expectedVersion: 0,
+  });
+  const own = [];
+  for (let i = 0; i < 28; i++)
+    own.push(
+      await submitProposalResponse(db, bob, rotated.token, {
+        operationId: `paged-client-response-${i}`,
+        build: defaultBuild,
+        note: 'Private response note.',
+        linkVersion: 99,
+        author: { displayName: 'Forged' },
+        evidence: { approved: true },
+      }),
+    );
+  const other = await submitProposalResponse(db, charlie, rotated.token, {
+    operationId: 'paged-client-response-0',
+    build: defaultBuild,
+    note: 'Another client.',
+  });
+  assert.equal((await readProposalResponse(db, bob, own[0].id)).linkVersion, 1);
+  assert.equal(
+    (await readProposalResponse(db, bob, own[0].id)).author.displayName,
+    'Bob',
+  );
+  await assert.rejects(
+    submitProposalResponse(db, bob, proposal.token, {
+      operationId: 'paged-client-response-0',
+      build: defaultBuild,
+      note: 'Private response note.',
+    }),
+    { code: 'proposal_not_found' },
+  );
+  db.sqlite
+    .prepare('UPDATE community_proposal_response SET created_at=?')
+    .run('2026-09-01T00:00:00.000Z');
+  const first = await listProposalResponses(db, alice, proposal.id);
+  const second = await listProposalResponses(
+    db,
+    alice,
+    proposal.id,
+    first.next,
+  );
+  assert.equal(first.items.length, 25);
+  assert.equal(second.items.length, 4);
+  assert.equal(second.next, null);
+  assert.deepEqual(
+    [...first.items, ...second.items].map((item) => item.id),
+    [...own, other]
+      .map((item) => item.id)
+      .sort()
+      .reverse(),
+  );
+  const clientFirst = await listProposalResponses(db, bob, proposal.id);
+  const clientLast = await listProposalResponses(
+    db,
+    bob,
+    proposal.id,
+    clientFirst.next,
+  );
+  assert.equal(clientFirst.items.length + clientLast.items.length, 28);
+  assert.equal(
+    (await listProposalResponses(db, charlie, proposal.id)).items[0].id,
+    other.id,
+  );
+  assert.deepEqual(
+    await listProposalResponses(db, 'unrelated-subject', proposal.id),
+    { items: [], next: null },
+  );
+  assert.deepEqual(Object.keys(first.items[0]).sort(), [
+    'author',
+    'createdAt',
+    'id',
+    'linkVersion',
+  ]);
+  for (const cursor of [
+    { id: 'bad', createdAt: first.next.createdAt },
+    { id: first.next.id, createdAt: '2026-09-01' },
+  ])
+    await assert.rejects(
+      listProposalResponses(db, alice, proposal.id, cursor),
+      { code: 'invalid_request' },
+    );
+  const query = db.queries.find(
+    (sql) =>
+      sql.includes('SELECT r.id,r.author,r.link_version') &&
+      sql.includes('LIMIT 26'),
+  );
+  const plan = db.sqlite
+    .prepare(`EXPLAIN QUERY PLAN ${query}`)
+    .all(alice, proposal.id);
+  assert.ok(
+    plan.some((row) =>
+      row.detail.includes('community_proposal_response_created'),
+    ),
+  );
+  assert.equal(
+    db.sqlite.prepare('SELECT COUNT(*) AS count FROM community_build').get()
+      .count,
+    1,
+  );
 });

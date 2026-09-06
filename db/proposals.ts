@@ -1,3 +1,4 @@
+import { digestText as digest } from '../lib/content-digest.ts';
 import { CommunityError, parseCommunityProfile } from '../lib/community.ts';
 import {
   parseProposalRequest,
@@ -14,15 +15,7 @@ type ReceiptRow = {
   tokenDigest: string;
   closedAt: string | null;
 };
-async function digest(value: string) {
-  const bytes = await crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(value),
-  );
-  return Array.from(new Uint8Array(bytes), (byte) =>
-    byte.toString(16).padStart(2, '0'),
-  ).join('');
-}
+
 function unavailable() {
   return new CommunityError(
     'proposal_not_found',

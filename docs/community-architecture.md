@@ -71,7 +71,7 @@ Keep private save/create operations idempotent with a per-account operation key 
 
 ## Records and invariants
 
-Define the schema in `db/schema.ts`; add generated, inspected, schema-only Drizzle migrations. Runtime queries belong in `db/community.ts`, `db/publications.ts`, `db/favorites.ts` and `db/proposals.ts`, using prepared statements and bounded D1 batches. Do not change deployed catalog migrations or create tables during requests.
+Define the schema in `db/schema.ts`; add generated, inspected, schema-only Drizzle migrations. Runtime queries belong in `db/community.ts`, `db/publications.ts`, `db/favorites.ts`, `db/proposals.ts` and `db/proposal-responses.ts`, using prepared statements and bounded D1 batches. Do not change deployed catalog migrations or create tables during requests.
 
 | Record | Required fields and constraints |
 | --- | --- |
@@ -81,7 +81,7 @@ Define the schema in `db/schema.ts`; add generated, inspected, schema-only Drizz
 | `community_publication` | Deployed: ID, owner, owned snapshot ID, operation ID/digest, frozen release metadata and author, publication time and optional withdrawal time. Unique owner/operation and owner/date/ID indexes. |
 | `community_favorite` | Deployed: account and publication foreign keys with a unique pair index, creation time and owner/date/publication index. Repeatable add/remove; withdrawn entries return an unavailable marker. |
 | `community_proposal` | Implemented storage: ID, owner, immutable base snapshot, operation ID/digest, chosen title/brief/author, unique token digest, creation time and optional closure time. Owner listing uses 25-item cursor pages and the owner/date/ID index. |
-| `community_proposal_response` | Planned: ID, proposal ID, verified author, immutable submitted snapshot, note, creation time and operation ID unique within author/proposal. Index proposal/time. |
+| `community_proposal_response` | Implemented storage: ID, proposal ID, verified author account, chosen profile snapshot, normalized immutable keyboard payload and server evidence, note, accepted link version, operation ID/digest and creation time. Unique author/proposal/operation and proposal/date/ID indexes. |
 
 There is no `community_build_revision` table. Keep the deployed immutable snapshot model for the first account UI: saving edits creates another snapshot, and publication references that exact owned snapshot. Do not invent revision numbers or stale-update behavior for a mutable record that does not exist. If a grouped version history is introduced later, specify its migration and concurrency contract before exposing it.
 
@@ -302,7 +302,7 @@ tokens. Clients must not interpret a null token as a shareable link. Explicit to
 or reopen proposals. Closing remains possible even after snapshot damage.
 
 The UI, route-level noindex/no-referrer/no-store handling, isolated client draft,
-rotation controls, attributed responses and change review remain required.
+rotation controls, response submission/review interfaces and change review remain required.
 Historical preview data is preserved, but its future UI must check current
 customization support before enabling the editor. No public test proposal is
 seeded by these storage tests.
@@ -326,3 +326,33 @@ proposals migrate to version zero with their original links intact.
 These functions still have no exposed account API or controls. Future UI must
 show the effect of replacing a link, use the current version, copy only a
 non-null newly issued token, and preserve the original keyboard snapshot.
+
+
+## Client response storage
+
+`db/proposal-responses.ts` implements submission, private detail reads and
+paginated response summaries. The proposal owner sees every response; another
+signed-in user sees only their own responses. Holding a valid preview token
+does not grant access to someone else's response. These are internal functions,
+not exposed HTTP endpoints.
+
+Submission normalizes the keyboard and note, strips unused imports, and hashes
+exactly the stored content. Existing matching operations return a receipt before
+current-catalog checks, so a catalog retirement does not invalidate an accepted
+retry. New responses require currently supported builds and use the shared
+server evidence writer. The insert rechecks the active token and open state,
+and copies the accepted link version from the proposal row. It creates no
+separate account build and cannot mutate the original proposal.
+
+A submit retry using an already closed or replaced token returns unavailable,
+even if an earlier submission succeeded. The author can recover that accepted
+response through their token-independent private response list/detail. Both
+the creator and response author retain that access after closure. Future UI
+must distinguish an unavailable invitation from a failed-to-save response,
+check the account's responses after an uncertain result, and never silently
+resubmit with a new operation ID.
+
+Chosen author details and evidence stay frozen. Receipts omit account IDs,
+subjects, request digests and tokens. List pages omit payloads and notes. The
+account interface, hosted identity checks, isolated proposal draft, submission
+review and creator change-review interface remain unfinished.

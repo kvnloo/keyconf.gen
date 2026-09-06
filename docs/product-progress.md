@@ -704,3 +704,25 @@ when the parent update fails, closing before a pending batch, and preservation
 of existing links through migration. A separate read-only review found no
 concrete blocker. Account routes, rotation controls and client responses remain
 unimplemented; this is storage preparation, not a shipped account workflow.
+
+
+## Client response storage
+
+Client responses now have immutable keyboard snapshots, server-derived evidence,
+chosen author identity, notes and the accepted proposal-link version. Submission
+checks the current token and open state inside the insert. Concurrent identical
+requests return one receipt; conflicting reuse cannot replace accepted content.
+The original proposal and the client's account build library remain untouched.
+
+Creator and response author can privately read accepted responses after closure.
+Other link holders cannot. Their paginated lists load only response identifiers,
+author identity, time and link version. An uncertain submission can be recovered
+through that private list even after its invitation token is invalidated.
+
+SQLite checks cover frozen identity/evidence, unused-import stripping, one-row
+retries, conflicting concurrent requests, closing/rotation during submission,
+retired catalog parts, rejected inputs without orphan builds, private reads,
+29-response pagination across timestamp ties, index use and rejection of
+client-supplied author/evidence/version claims. A separate read-only review found
+no concrete blocker. This remains storage work; no Google account API or
+response interface is exposed yet.

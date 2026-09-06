@@ -1,3 +1,4 @@
+import { parseBuildSnapshot } from './build.ts';
 import { CommunityError } from './community.ts';
 
 export function parseProposalRequest(value: unknown) {
@@ -82,3 +83,48 @@ export function parseProposalRotation(value: unknown) {
   };
 }
 export type ProposalRotation = ReturnType<typeof parseProposalRotation>;
+
+export function parseProposalResponse(value: unknown) {
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    Array.isArray(value) ||
+    !('operationId' in value) ||
+    typeof value.operationId !== 'string' ||
+    !/^[a-zA-Z0-9_-]{16,100}$/.test(value.operationId) ||
+    !('note' in value) ||
+    typeof value.note !== 'string' ||
+    !('build' in value)
+  )
+    throw new CommunityError(
+      'invalid_request',
+      'A response needs a keyboard build, note and operation ID.',
+      400,
+    );
+  const note = value.note.replaceAll('\r\n', '\n').trim();
+  if (note.length > 2000 || forbiddenControl(note, true))
+    throw new CommunityError(
+      'invalid_request',
+      'Use a plain-text note up to 2,000 characters.',
+      400,
+    );
+  try {
+    const build = parseBuildSnapshot(value.build);
+    const selected = new Set(Object.values(build.selection));
+    return {
+      operationId: value.operationId,
+      note,
+      build: {
+        ...build,
+        customParts: build.customParts.filter((part) => selected.has(part.id)),
+      },
+    };
+  } catch {
+    throw new CommunityError(
+      'invalid_request',
+      'This response does not contain a readable keyboard build.',
+      400,
+    );
+  }
+}
+export type ProposalResponseRequest = ReturnType<typeof parseProposalResponse>;

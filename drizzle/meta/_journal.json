@@ -57,6 +57,13 @@
       "when": 1788737585832,
       "tag": "0007_proposal_link_rotation",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1788738284075,
+      "tag": "0008_proposal_responses",
+      "breakpoints": true
     }
   ]
 }
