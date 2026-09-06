@@ -34,11 +34,11 @@ The September 6 reference reconciliation and accessory request are part of the c
 
 | ID | Requirement | Acceptance evidence | Status |
 | --- | --- | --- | --- |
-| PART-1 | Visible switch assembly | Separate switch housings and stems appear beneath keys in the exploded view; no invisible placeholder layer; inspect desktop and mobile renders | In progress |
-| PART-2 | Focused switch page | Interactive switch view, sourced specifications, recording scope, return navigation and explicit add-to-build; generic geometry labeled honestly | In progress |
+| PART-1 | Visible switch assembly | Separate switch housings and stems appear beneath keys in the exploded view; no invisible placeholder layer; inspect desktop and mobile renders | Implemented; rendered and GLB tests pass |
+| PART-2 | Focused switch page | Interactive switch view, sourced specifications, recording scope, return navigation and explicit add-to-build; generic geometry labeled honestly | Implemented; navigation, source links, accessibility and recovery pass |
 | PART-3 | Dials and encoders | Distinguish a replacement knob from an encoder; placement, shaft/mount, PCB and firmware requirements affect compatibility; selected parts survive save/share/undo | Pending |
 | PART-4 | Screens and extra controls | Distinguish integrated modules from external displays, buttons and macropads; mounting, connectors, power and firmware support are sourced or unknown; no arbitrary snap-on fit | Pending |
-| PART-5 | Artisan keycaps | Support individual key placement, quantity, key width, stem, profile/clearance and sourced maker/variant identity, including Jelly Key; preserve normal keyset selection | Pending |
+| PART-5 | Artisan keycaps | Support individual key placement, quantity, key width, stem, profile/clearance and sourced maker/variant identity, including Jelly Key; preserve normal keyset selection | In progress; picker and illustrative preview implemented; exact variants and physical fit remain |
 | PART-6 | Extensible product coverage | New categories retain source, variants, fit evidence and media provenance; unsupported geometry and fit remain explicit; imports require review before application | Pending |
 
 Expose these choices contextually in the build's parts/mods flow. A separate control-deck preset does not satisfy configurable keyboard accessories. A catalog entry does not satisfy an implemented visual part. Do not claim all keyboard products are supported until their selection, persistence and experience paths work.

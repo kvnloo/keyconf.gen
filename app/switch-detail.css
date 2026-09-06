@@ -301,6 +301,12 @@
   .exploded-layer-guide {
     left: 12px;
     max-width: calc(100% - 24px);
-    bottom: 150px;
+    bottom: 204px;
+  }
+}
+
+@media (min-width: 421px) and (max-width: 850px) {
+  .exploded-layer-guide {
+    bottom: 204px;
   }
 }

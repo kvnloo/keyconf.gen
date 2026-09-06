@@ -58,8 +58,22 @@ try {
     await accessories.getByRole('textbox').first().inputValue(),
     'upper-right',
   );
+  await page.getByRole('button', { name: 'Explode', exact: true }).click();
   for (const width of [320, 390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
+    const layers = await page
+      .getByRole('navigation', { name: 'Exploded keyboard layers' })
+      .boundingBox();
+    const dial = await page.locator('.stage > .volume-dial').boundingBox();
+    assert.ok(
+      layers &&
+        dial &&
+        (layers.y + layers.height <= dial.y ||
+          layers.x + layers.width <= dial.x ||
+          dial.x + dial.width <= layers.x ||
+          dial.y + dial.height <= layers.y),
+      'Layer links and volume controls must not overlap',
+    );
     assert.equal(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth + 1,
@@ -74,8 +88,36 @@ try {
   });
   await accessories.getByRole('button', { name: /^Remove / }).click();
   assert.equal(await page.locator('.accessory-selections article').count(), 0);
+  await accessories.getByText('Add an accessory', { exact: true }).click();
+  await accessories
+    .getByRole('button', { name: 'Add Zen Pond V · 1u', exact: true })
+    .click();
+  const target = accessories.getByRole('combobox', {
+    name: 'Target key for Zen Pond V · 1u',
+    exact: true,
+  });
+  await target.click();
+  assert.equal(
+    await page
+      .getByRole('option', { name: /Space · Space · 6.25u/ })
+      .getAttribute('aria-disabled'),
+    'true',
+  );
+  await page
+    .getByRole('option', { name: 'Esc · Escape · 1u', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Share build', exact: true }).click();
+  const artisanLink = await page
+    .getByRole('textbox', { name: 'Build link' })
+    .inputValue();
+  assert.equal(
+    decodeBuild(new URL(artisanLink).hash.slice(7)).accessories[0].location
+      .keyId,
+    'Escape',
+  );
+  await page.getByRole('button', { name: 'Close dialog' }).click();
   console.log(
-    'Accessory add, placement validation, share, reload, remove and three-width checks passed.',
+    'Accessory add, placement validation, share, reload, remove, artisan key selection and three-width checks passed.',
   );
 } finally {
   await browser.close();

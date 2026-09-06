@@ -2,7 +2,7 @@
 
 The accessory planner stores product references, quantities and placements alongside the keyboard build. It covers replacement knobs, encoders, display modules, button modules, external macropads and individual artisan keycaps. These selections do not imply that the current case or PCB supports them.
 
-`lib/build-accessories.ts` owns the catalog, JSON boundary validation and compatibility assessment. It does not generate geometry, modify keyboard firmware or connect to hardware.
+`lib/build-accessories.ts` owns the catalog, JSON boundary validation and compatibility assessment. It does not modify keyboard firmware or connect to hardware. `lib/accessory-model.ts` supplies separate original illustrative previews for assigned artisan caps and external macropads. These previews do not establish physical fit.
 
 ## Product references
 
@@ -46,11 +46,11 @@ The host records and claims are trusted application data, not an import format. 
 ## Next integration work
 
 1. Add exact board-variant host records with sourced encoder footprints, existing encoder shafts, screen openings and connector/firmware support. Reassess after a case, PCB, plate or switch change. Do not infer accessory support from a 60%, 65% or 75% layout label.
-2. Replace freeform key and slot IDs with renderer-backed pickers. Use actual key widths, switch stems, stabilizer positions and neighboring geometry. Keep one selection per artisan key.
+2. The artisan picker now uses GLB-exported key codes and widths, with unavailable and occupied positions disabled. Board slots still need documented inventories. Add switch stems, stabilizer positions and neighboring geometry before establishing physical fit. Keep one selection per artisan key.
 3. Add explicit artisan profile, row, color and vendor variant identifiers before claiming exact variant compatibility. Source clearance or measure the selected geometry. A width label does not encode stabilizer spacing or shell height.
 4. Add documented external screen and external button-controller products. The type model distinguishes external products from embedded modules, but the starter screen and button entries are embedded only.
 5. Add assembly requirements, cable/power budgets and bus/address conflicts for multiple electronic modules. The current assessor checks capacity, not aggregate electrical constraints.
-6. Build accessible preview placement and licensed geometry. Current accessory selections do not alter the 3D board. No exact Jelly Key likeness, texture or model is supplied by this change.
+6. Assigned artisan caps now replace the corresponding visual-study key, and external macropads have original desk previews. Missing keys, wrong widths and duplicate assignments omit the cap preview. Embedded modules remain a plan. Up to six external selections are drawn, one module per selection. No exact Jelly Key likeness, texture or manufacturer model is supplied. Acquire licensed product geometry and verify actual clearances before claiming exact visualization.
 
 Control-deck studies remain in `lib/control-deck.ts`. Their concept geometry and dial preview are separate from this product compatibility model. Integrating these records into control-deck persistence requires an explicit schema update.
 

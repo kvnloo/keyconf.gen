@@ -9,13 +9,17 @@ import {
   type AccessorySelection,
 } from '../lib/build-accessories';
 import StudioSelect from './studio-select';
+import layouts from '../public/models/layouts.json';
+import type { Build } from '../lib/build';
 import './build-accessories.css';
 
 export default function BuildAccessories({
   selections,
+  layout,
   onChange,
 }: {
   selections: AccessorySelection[];
+  layout: Build['layout'];
   onChange: (selections: AccessorySelection[]) => void;
 }) {
   const [notice, setNotice] = useState('');
@@ -29,12 +33,15 @@ export default function BuildAccessories({
         Accessories & artisan caps <span>{selections.length || 'Explore'}</span>
       </summary>
       <p>
-        Plan the finishing touches. These selections save with your build;
-        accessory geometry is not yet shown in the studio.
+        Assign artisan caps to keys or place a macropad beside your keyboard.
+        Previews use original illustrative geometry, not the maker&apos;s sculpt
+        or exact product dimensions.
       </p>
       <p>
-        Fit needs checking against your exact board. A replacement knob does not
-        add an encoder or firmware support.
+        Up to six external module previews are shown, one per selection.
+        Embedded electronics remain a build plan until board support is
+        documented. Fit needs checking against your exact board. A replacement
+        knob does not add an encoder or firmware support.
       </p>
       <div className="accessory-selections">
         {selections.map((item) => {
@@ -84,34 +91,63 @@ export default function BuildAccessories({
                       });
                   }}
                 />
+              ) : location.kind === 'key' ? (
+                <>
+                  <StudioSelect
+                    aria-label={`Target key for ${product.name}`}
+                    value={location.keyId}
+                    options={[
+                      { value: 'unassigned', label: 'Choose a key' },
+                      ...(!layouts[layout].some(
+                        (key) => key.code === location.keyId,
+                      ) && location.keyId !== 'unassigned'
+                        ? [
+                            {
+                              value: location.keyId,
+                              label: `${location.keyId} · absent from this layout`,
+                              disabled: true,
+                            },
+                          ]
+                        : []),
+                      ...layouts[layout].map((key) => ({
+                        value: key.code,
+                        label: `${key.label || key.code} · ${key.code} · ${key.width}u${key.width !== product.sizeU ? ' · different width' : ''}`,
+                        disabled:
+                          key.width !== product.sizeU ||
+                          selections.some(
+                            (other) =>
+                              other.id !== item.id &&
+                              other.location.kind === 'key' &&
+                              other.location.keyId === key.code,
+                          ),
+                      })),
+                    ]}
+                    onValueChange={(keyId) =>
+                      update({ ...item, location: { kind: 'key', keyId } })
+                    }
+                  />
+                  <p>
+                    Key choices follow the {layout}% visual study. Matching
+                    width does not verify stem, profile or clearance.
+                  </p>
+                </>
               ) : (
                 <label className="accessory-placement">
-                  {location.kind === 'key' ? 'Target key' : 'Board slot'}
+                  Board slot
                   <input
-                    aria-label={`${location.kind === 'key' ? 'Target key' : 'Board slot'} for ${product.name}`}
-                    key={
-                      location.kind === 'key' ? location.keyId : location.slotId
-                    }
-                    defaultValue={
-                      location.kind === 'key' ? location.keyId : location.slotId
-                    }
+                    aria-label={`Board slot for ${product.name}`}
+                    key={location.slotId}
+                    defaultValue={location.slotId}
                     maxLength={80}
                     onBlur={(event) => {
                       const value = event.target.value;
-                      if (!value.trim())
-                        event.target.value =
-                          location.kind === 'key'
-                            ? location.keyId
-                            : location.slotId;
+                      if (!value.trim()) event.target.value = location.slotId;
                       else {
                         try {
                           const next = parseAccessories([
                             {
                               ...item,
-                              location:
-                                location.kind === 'key'
-                                  ? { kind: 'key', keyId: value }
-                                  : { kind: 'embedded', slotId: value },
+                              location: { kind: 'embedded', slotId: value },
                             },
                           ])[0];
                           update(next);
@@ -119,10 +155,7 @@ export default function BuildAccessories({
                             'Placement saved. Physical fit still needs checking.',
                           );
                         } catch {
-                          event.target.value =
-                            location.kind === 'key'
-                              ? location.keyId
-                              : location.slotId;
+                          event.target.value = location.slotId;
                           setNotice(
                             'Use letters, numbers, dots, dashes, underscores or colons for a key or slot identifier.',
                           );

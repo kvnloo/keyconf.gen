@@ -71,6 +71,7 @@ jobs:
           export KEYCONF_SOFTWARE=1
           xvfb-run -a npm run verify:typing
           xvfb-run -a npm run verify:room
+          npm run verify:accessory-rendering
       - uses: actions/upload-artifact@v4
         if: github.event_name != 'pull_request' && contains(fromJSON('["main","dev","nightly"]'), github.ref_name)
         with:

@@ -398,6 +398,7 @@ function KeyboardStudio({
       caseColor: visibleBuild.caseColor,
       device: { kind: 'keyboard', layout: visibleBuild.layout },
       switchId: visibleBuild.selection.switch,
+      accessories: visibleBuild.accessories,
       exploded: experience === 'typing' ? false : exploded,
       view,
       finish: visibleBuild.finish,
@@ -1354,6 +1355,7 @@ function KeyboardStudio({
                     onResearch={() => setModal('research')}
                   />
                   <BuildAccessories
+                    layout={build.layout}
                     selections={build.accessories}
                     onChange={(accessories) => edit({ accessories })}
                   />

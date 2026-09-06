@@ -11,6 +11,8 @@ import { legendInk } from './appearance';
 import { createDeskScene } from './desk-scene';
 import { createSwitchAssembly, switchColors } from './switch-model';
 import { monitorTransform, type ScreenPoint } from './monitor-projection';
+import { createAccessoryPreview } from './accessory-model';
+import type { AccessorySelection } from './build-accessories';
 
 // Steam contributes to the color pass, but must not cast rectangular occlusion.
 class RoomOcclusion extends GTAOPass {
@@ -39,6 +41,7 @@ export type SceneOptions = Pick<Build, 'caseColor' | 'finish' | 'profile'> &
     view: string;
     environment: 'desk' | 'studio' | 'typing';
     roomMotion?: boolean;
+    accessories?: readonly AccessorySelection[];
   };
 export type SceneStatus =
   | { kind: 'loading' | 'ready' }
@@ -80,6 +83,7 @@ export function createKeyboardScene(
   let lastFrame = 0;
   let generation = 0;
   let model: THREE.Group | null = null;
+  let accessories: ReturnType<typeof createAccessoryPreview> | null = null;
   let cameraTarget: THREE.Vector3 | null = null;
   let focusHeight = 0.4;
   let focusX = 0;
@@ -335,12 +339,72 @@ export function createKeyboardScene(
               ? new THREE.Vector3(-7, 25, 18)
               : new THREE.Vector3(-7, 18, 21);
     cameraTarget.multiplyScalar(distance);
+    fitAccessories();
     wake();
+  }
+  function accessoryCorners() {
+    if (!accessories?.counts.external) return [];
+    const bounds = new THREE.Box3().setFromObject(accessories.group);
+    if (model) bounds.union(new THREE.Box3().setFromObject(model));
+    return [bounds.min.x, bounds.max.x].flatMap((x) =>
+      [bounds.min.y, bounds.max.y].flatMap((y) =>
+        [bounds.min.z, bounds.max.z].map((z) => new THREE.Vector3(x, y, z)),
+      ),
+    );
+  }
+  function fitAccessories() {
+    const corners = accessoryCorners();
+    if (!cameraTarget || !corners.length) return;
+    const framing = camera.clone();
+    framing.position.copy(cameraTarget);
+    const target = new THREE.Vector3(focusX, focusHeight, focusDepth);
+    framing.lookAt(target);
+    framing.updateMatrixWorld();
+    const vertical = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 0.86;
+    const horizontal = vertical * camera.aspect;
+    let extra = 0;
+    for (const corner of corners) {
+      corner.applyMatrix4(framing.matrixWorldInverse);
+      extra = Math.max(
+        extra,
+        Math.abs(corner.x) / horizontal + corner.z,
+        Math.abs(corner.y) / vertical + corner.z,
+      );
+    }
+    cameraTarget.add(
+      cameraTarget.clone().sub(target).normalize().multiplyScalar(extra),
+    );
+    controls.maxDistance = Math.max(46, cameraTarget.distanceTo(target) * 1.15);
   }
   function modelIdFor(device: SceneOptions['device']) {
     return device.kind === 'keyboard'
       ? `keyboard-${device.layout}`
       : device.model;
+  }
+  function updateAccessories() {
+    const hadExternal = !!accessories?.counts.external;
+    accessories?.dispose();
+    accessories = null;
+    if (model && options.device.kind === 'keyboard') {
+      accessories = createAccessoryPreview({
+        selections: options.accessories ?? [],
+        keys,
+        bounds: new THREE.Box3().setFromObject(model),
+      });
+      scene.add(accessories.group);
+    }
+    element.dataset.accessoryArtisanCount = String(
+      accessories?.counts.artisan ?? 0,
+    );
+    element.dataset.accessoryExternalCount = String(
+      accessories?.counts.external ?? 0,
+    );
+    element.dataset.accessoryOmittedCount = String(
+      accessories?.counts.omitted ?? 0,
+    );
+    deskCacheDirty = true;
+    if (hadExternal || accessories?.counts.external) setView();
+    wake();
   }
   async function loadModel(device: SceneOptions['device']) {
     const modelId = modelIdFor(device);
@@ -375,6 +439,8 @@ export function createKeyboardScene(
     try {
       const next = await promise;
       if (stopped || request !== generation) return;
+      accessories?.dispose();
+      accessories = null;
       if (model) scene.remove(model);
       model = next;
       keys.clear();
@@ -425,6 +491,7 @@ export function createKeyboardScene(
           : 0,
       );
       scene.add(model);
+      updateAccessories();
       appearance(true);
       callbacks.status({ kind: 'ready' });
       wake();
@@ -516,10 +583,12 @@ export function createKeyboardScene(
     if (deskCache && options.environment === 'typing') {
       if (deskCacheDirty) {
         if (model) model.visible = false;
+        if (accessories) accessories.group.visible = false;
         renderer.setRenderTarget(deskCache);
         renderer.render(scene, camera);
         renderer.setRenderTarget(null);
         if (model) model.visible = true;
+        if (accessories) accessories.group.visible = true;
         deskCacheDirty = false;
       }
       desk.group.visible = false;
@@ -669,6 +738,7 @@ export function createKeyboardScene(
       ...[-8.5, 8.5].flatMap((x) =>
         [-3.5, 3.5].map((z) => new THREE.Vector3(x, 0, z)),
       ),
+      ...accessoryCorners(),
     ];
     for (const bound of bounds) {
       const point = bound.applyMatrix4(framing.matrixWorldInverse);
@@ -753,7 +823,13 @@ export function createKeyboardScene(
       controls.target.set(0, focusHeight, focusDepth);
       controls.update();
       cameraTarget = null;
-    } else camera.updateProjectionMatrix();
+    } else {
+      camera.updateProjectionMatrix();
+      if (accessories?.counts.external) {
+        cameraTarget ??= camera.position.clone();
+        fitAccessories();
+      }
+    }
     wake();
   }
   function visibility() {
@@ -834,9 +910,13 @@ export function createKeyboardScene(
         modelChanged ||
         next.environment !== options.environment;
       const assemblyChanged = next.exploded !== options.exploded;
+      const accessoriesChanged =
+        JSON.stringify(next.accessories) !==
+        JSON.stringify(options.accessories);
       const changed = JSON.stringify(options) !== JSON.stringify(next);
       options = next;
       if (modelChanged) void loadModel(next.device);
+      else if (accessoriesChanged) updateAccessories();
       if (viewChanged) setView();
       else if (assemblyChanged) {
         const offset = camera.position.clone().sub(controls.target);
@@ -868,6 +948,7 @@ export function createKeyboardScene(
       preference.removeEventListener('change', motion);
       renderer.domElement.removeEventListener('pointerdown', pointerdown);
       renderer.domElement.removeEventListener('webglcontextlost', contextLost);
+      accessories?.dispose();
       loaded.forEach(disposeModel);
       desk.dispose();
       effects?.occlusion.dispose();
