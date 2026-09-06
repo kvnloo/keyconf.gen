@@ -320,3 +320,64 @@ test('changed stored payloads fail integrity verification instead of exporting a
   assert.throws(() => db.checkpoint('integrity'), /integrity check/);
   assert.throws(() => db.export('integrity'), /integrity check/);
 });
+
+test('extractor archives survive reopen without relabeling historical pages', async (t) => {
+  const { archiveExtractor } = await import('../scripts/catalog/extractor.ts');
+  const { createHash } = await import('node:crypto');
+  const files = fixture(t);
+  const db = files.open();
+  db.start('provenance', source);
+  const first = page([product('old')], next('second'));
+  db.append('provenance', 0, first);
+  const extractor = archiveExtractor();
+  const second = page([product('new')], null);
+  db.append('provenance', 1, second, extractor);
+  assert.equal(db.append('provenance', 0, first, extractor), false);
+  const saved = files.open().export('provenance');
+  assert.equal(saved.evidence[0].extractorSha256, null);
+  assert.equal(saved.evidence[1].extractorSha256, extractor.sha256);
+  assert.equal(saved.extractors.length, 1);
+  assert.equal(
+    createHash('sha256').update(saved.extractors[0].archive).digest('hex'),
+    extractor.sha256,
+  );
+  const archive = JSON.parse(saved.extractors[0].archive);
+  assert.ok(archive.files['lib/import-products.ts'].includes('importWebsite'));
+  assert.ok(archive.files['lib/product-pricing.ts'].includes('offerPricing'));
+  assert.equal(archive.runtime, process.version);
+  files.raw().prepare('UPDATE catalog_extractor SET archive_json=?').run('{}');
+  assert.throws(() => db.export('provenance'), /extractor archive failed/);
+});
+
+test('invalid extractor evidence rolls back without retaining a page or archive', async (t) => {
+  const files = fixture(t);
+  const db = files.open();
+  db.start('invalid-extractor', source);
+  assert.throws(
+    () =>
+      db.append('invalid-extractor', 0, page([product('a')], null), {
+        sha256: '0'.repeat(64),
+        payload: '{}',
+      }),
+    /integrity/,
+  );
+  assert.equal(db.checkpoint('invalid-extractor').pages, 0);
+  assert.equal(db.export('invalid-extractor').extractors.length, 0);
+});
+
+test('the extractor archive includes every relative source dependency', async () => {
+  const { archiveExtractor } = await import('../scripts/catalog/extractor.ts');
+  const { posix } = await import('node:path');
+  const { files } = JSON.parse(archiveExtractor().payload);
+  for (const [path, source] of Object.entries(files)) {
+    for (const match of source.matchAll(/from\s+['"](\.[^'"]+)['"]/g)) {
+      const dependency = posix.normalize(
+        posix.join(posix.dirname(path), match[1]),
+      );
+      assert.ok(
+        Object.hasOwn(files, dependency),
+        `Missing extractor dependency: ${dependency}`,
+      );
+    }
+  }
+});

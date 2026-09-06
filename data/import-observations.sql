@@ -32,3 +32,16 @@ CREATE TABLE IF NOT EXISTS catalog_product_observation (
 
 CREATE INDEX IF NOT EXISTS catalog_product_history
   ON catalog_product_observation(product_url, sku);
+
+CREATE TABLE IF NOT EXISTS catalog_extractor (
+  sha256 TEXT PRIMARY KEY CHECK(length(sha256) = 64),
+  archive_json TEXT NOT NULL CHECK(json_valid(archive_json))
+) STRICT;
+
+CREATE TABLE IF NOT EXISTS catalog_page_extractor (
+  run_id TEXT NOT NULL,
+  page_number INTEGER NOT NULL,
+  extractor_sha256 TEXT NOT NULL REFERENCES catalog_extractor(sha256),
+  PRIMARY KEY(run_id, page_number),
+  FOREIGN KEY(run_id, page_number) REFERENCES catalog_page(run_id, page_number)
+) STRICT;

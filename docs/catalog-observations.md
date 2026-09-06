@@ -77,3 +77,13 @@ Search matches brand, product name and SKU. The browser initially shows twelve o
 Refresh the snapshot from a deliberately chosen collector run using `--export`. Write to a temporary file first and replace the committed JSON only after the collector succeeds. Review the source, coverage, timestamps, counts and test results before publishing. Keep the full page evidence in the committed snapshot; do not copy just names and prices. This static publication makes observations available to readers but does not replace the pending hosted ingestion and review workflow.
 
 The nightly importer now has its own deployed Sites backend, as documented in [Nightly backend](nightly-backend.md). Main and dev continue using the stable importer.
+
+## Extractor source archive
+
+New pages collected through the built-in importer retain the importer and pricing-parser source text plus the Node version used by the collector. The archive is hashed with SHA-256 and stored once in `catalog_extractor`; `catalog_page_extractor` associates it with individual pages in the same transaction as their observations. A resumed run may therefore contain pages from different extractor versions. An automated dependency check fails if a relative source dependency is missing from the archive list.
+
+Exports include an `extractors` array containing the hash and exact archive JSON string. Each evidence page has `extractorSha256`, or `null` when no archive was captured. These fields extend the existing version-1 export; the observation payload and its hash are unchanged. Old pages are never relabeled on replay. Custom injected loaders have unknown provenance unless their caller explicitly supplies an archive when appending.
+
+This captures extraction source and runtime identity, not original retailer HTML/GraphQL response bytes, external DNS results or a reproducible retail inventory. Export verifies archive hashes and fails on tampering. The archive is a local administrative artifact and is not automatically added to the public snapshot.
+
+A fresh live run `divinikey-provenance-20260906` retained twelve options on one page with extractor hash `e72f2c4216b37050c3940b8dbef86e54c03aba9ed4788202bdcd17bf3d1d9d8a`. Offline replay made no network request and retained identical evidence. The previous twelve-page, 128-option run retained its original observations and has no retroactively assigned extractor. The complete suite now passes 78 tests, including archive persistence, tamper detection, invalid archive rejection and dependency completeness.

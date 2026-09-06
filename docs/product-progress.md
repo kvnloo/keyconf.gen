@@ -325,3 +325,9 @@ Both builds and the production phone journey pass. The preceding supplied-keycap
 ## Audit release follow-up
 
 The selected-switch release was blocked by CI run `34045112167`: production typing measured a phone monitor below 300px. The phone verifier waited for iframe readiness but not renderer projection. It now waits for both renderer-ready and projected states, keeps the same minimum width, and reports the measured value on failure. A delayed-renderer experiment confirmed independent readiness but did not reproduce the original narrow measurement, so the original failure remains inconclusive. The full rendered production typing journey passes locally after the correction. All 75 tests, strict types, lint, formatting, actionlint, server build and full dependency audit pass. Public nightly remains `c5e35e3` pending a successful subsequent deployment. The audit's feature table now reflects the separately deployed nightly import backend and current catalog counts.
+
+## Extractor provenance
+
+The local catalog now stores a content-addressed archive of extraction source and Node version for each newly collected page. The importer and pricing parser are archived once per hash; page links commit atomically with observations. Exports verify archive integrity, and historical pages remain explicitly unknown instead of inheriting current source on replay. This addresses extractor-version evidence, not raw-response archiving or hosted ingestion.
+
+All 78 tests, strict types, lint and formatting pass. A real twelve-option Divinikey observation retained its archive, and a no-network replay returned identical evidence. The earlier 128 observations remained intact with unknown extractor provenance. Public snapshot contents and application behavior are unchanged. The previous phone-readiness release remains under GitHub verification and has not yet been claimed deployed.

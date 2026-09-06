@@ -10,6 +10,7 @@ import {
   type ImportResult,
 } from '../../lib/import-products.ts';
 import type { ProductPrice } from '../../lib/product-pricing.ts';
+import { archiveExtractor } from './extractor.ts';
 
 type Progress =
   | { kind: 'pending' }
@@ -207,12 +208,23 @@ export class ObservationCatalog {
       return run;
     });
   }
-  append(runId: string, previousPages: number, value: unknown): boolean {
+  append(
+    runId: string,
+    previousPages: number,
+    value: unknown,
+    extractor?: ReturnType<typeof archiveExtractor>,
+  ): boolean {
     if (!Number.isSafeInteger(previousPages) || previousPages < 0)
       throw new Error('Invalid previous page count.');
     const page = observation(value);
     const payload = JSON.stringify(page);
     const hash = createHash('sha256').update(payload).digest('hex');
+    if (
+      extractor &&
+      createHash('sha256').update(extractor.payload).digest('hex') !==
+        extractor.sha256
+    )
+      throw new Error('Extractor archive failed its integrity check.');
     return this.#transaction('IMMEDIATE', () => {
       const run = this.#read(runId);
       if (page.source !== run.source)
@@ -268,6 +280,16 @@ export class ObservationCatalog {
       const insert = this.#db.prepare(
         'INSERT INTO catalog_product_observation VALUES(?,?,?,?,?,?,?,?,?)',
       );
+      if (extractor) {
+        this.#db
+          .prepare(
+            'INSERT INTO catalog_extractor VALUES(?,?) ON CONFLICT(sha256) DO NOTHING',
+          )
+          .run(extractor.sha256, extractor.payload);
+        this.#db
+          .prepare('INSERT INTO catalog_page_extractor VALUES(?,?,?)')
+          .run(runId, number, extractor.sha256);
+      }
       for (const [index, product] of page.products.entries())
         insert.run(
           runId,
@@ -287,14 +309,31 @@ export class ObservationCatalog {
     return this.#transaction('DEFERRED', () => ({
       schemaVersion: 1,
       ...this.#read(runId),
+      extractors: this.#db
+        .prepare(
+          'SELECT DISTINCT e.sha256, e.archive_json FROM catalog_extractor e JOIN catalog_page_extractor p ON p.extractor_sha256=e.sha256 WHERE p.run_id=? ORDER BY e.sha256',
+        )
+        .all(runId)
+        .map((row) => {
+          const archive = storedText(row.archive_json);
+          if (createHash('sha256').update(archive).digest('hex') !== row.sha256)
+            throw new Error(
+              'Stored extractor archive failed its integrity check.',
+            );
+          return { sha256: storedText(row.sha256), archive };
+        }),
       evidence: this.#db
         .prepare(
-          'SELECT page_number, payload_sha256, payload_json FROM catalog_page WHERE run_id=? ORDER BY page_number',
+          'SELECT p.page_number, p.payload_sha256, p.payload_json, e.extractor_sha256 FROM catalog_page p LEFT JOIN catalog_page_extractor e USING(run_id, page_number) WHERE p.run_id=? ORDER BY p.page_number',
         )
         .all(runId)
         .map((row) => ({
           page: storedCount(row.page_number),
           sha256: storedText(row.payload_sha256),
+          extractorSha256:
+            row.extractor_sha256 === null
+              ? null
+              : storedText(row.extractor_sha256),
           result: storedPage(row),
         })),
     }));
@@ -321,6 +360,7 @@ export async function collectCatalog(
   if (!Number.isFinite(delayMs) || delayMs < 0 || delayMs > 60000)
     throw new Error('Invalid delay between pages.');
   let run = catalog.start(options.runId, options.source);
+  const extractor = loadPage === importWebsite ? archiveExtractor() : undefined;
   let requested = false;
   while (
     run.pages < options.targetPages &&
@@ -331,7 +371,7 @@ export async function collectCatalog(
       run.source,
       run.progress.kind === 'more' ? run.progress.next : undefined,
     );
-    catalog.append(run.runId, run.pages, page);
+    catalog.append(run.runId, run.pages, page, extractor);
     run = catalog.checkpoint(run.runId);
     requested = true;
   }
