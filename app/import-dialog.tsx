@@ -10,7 +10,12 @@ import {
   isImportResult,
   type ImportResult,
   type ImportedProduct,
+  type ImportContinuation,
 } from '../lib/import-products';
+type PreviewResult = Omit<ImportResult, 'products'> & {
+  products: (ImportedProduct & { observedAt: string })[];
+};
+type ImportError = { kind: 'preview' | 'more' | 'add'; message: string };
 export default function ImportDialog({
   onAdd,
 }: {
@@ -18,8 +23,8 @@ export default function ImportDialog({
 }) {
   const [url, setUrl] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [result, setResult] = useState<ImportResult | null>(null);
+  const [error, setError] = useState<ImportError | null>(null);
+  const [result, setResult] = useState<PreviewResult | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [category, setCategory] = useState<Category>('case');
   const [raw, setRaw] = useState('');
@@ -27,29 +32,30 @@ export default function ImportDialog({
   const request = useRef<AbortController | null>(null);
   const urlInput = useRef<HTMLInputElement>(null);
   useEffect(() => () => request.current?.abort(), []);
-  async function preview() {
+  async function preview(next?: ImportContinuation) {
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
     setBusy(true);
-    setError('');
-    setResult(null);
+    setError(null);
+    if (!next) setResult(null);
     setAdded(false);
     try {
-      const source = publicUrl(url).href;
-      if (raw.trim()) {
+      const source = next ? next.source : publicUrl(url).href;
+      if (!next && raw.trim()) {
         const products = parseStructuredProducts(
           '<script type="application/ld+json">' + raw + '</script>',
           source,
         );
         if (!products.length)
           throw new Error('This JSON-LD does not contain a Product.');
+        const observedAt = new Date().toISOString();
         setResult({
-          products,
+          products: products.map((product) => ({ ...product, observedAt })),
           source,
           method: 'Pasted JSON-LD',
           coverage: 'Pasted data only. No live price or stock verification.',
-          observedAt: new Date().toISOString(),
+          observedAt,
         });
         setSelected(new Set(products.map((_, i) => i)));
       } else {
@@ -60,11 +66,12 @@ export default function ImportDialog({
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: source }),
+            body: JSON.stringify({ url: source, next }),
             signal: controller.signal,
           },
         );
         const data: unknown = await response.json();
+        if (controller.signal.aborted) return;
         if (!response.ok) {
           throw new Error(
             typeof data === 'object' &&
@@ -75,22 +82,43 @@ export default function ImportDialog({
               : 'The store could not be read.',
           );
         }
-        if (!isImportResult(data))
+        if (!isImportResult(data) || data.source !== source)
           throw new Error('Unexpected importer response.');
-        setResult(data);
-        setSelected(new Set(data.products.map((_, i) => i)));
+        const captured = data.products.map((product) => ({
+          ...product,
+          observedAt: data.observedAt,
+        }));
+        if (next && result) {
+          const key = (product: ImportedProduct) =>
+            JSON.stringify([product.url, product.sku, product.name]);
+          const known = new Set(result.products.map(key));
+          const additional = captured.filter((product) => {
+            const identity = key(product);
+            if (known.has(identity)) return false;
+            known.add(identity);
+            return true;
+          });
+          setResult({ ...data, products: [...result.products, ...additional] });
+        } else {
+          setResult({ ...data, products: captured });
+          setSelected(new Set(data.products.map((_, i) => i)));
+        }
       }
     } catch (e) {
       if (controller.signal.aborted) return;
-      setError(e instanceof Error ? e.message : 'Import failed.');
-      urlInput.current?.focus();
+      setError({
+        kind: next ? 'more' : 'preview',
+        message: e instanceof Error ? e.message : 'Import failed.',
+      });
+      if (!next) urlInput.current?.focus();
     } finally {
       if (!controller.signal.aborted) setBusy(false);
     }
   }
   function add() {
     if (!result) return;
-    const parts: Part[] = result.products.flatMap((p: ImportedProduct, i) =>
+    setError(null);
+    const parts: Part[] = result.products.flatMap((p, i) =>
       selected.has(i)
         ? [
             {
@@ -102,7 +130,7 @@ export default function ImportDialog({
                 p.sku,
                 formatProductPrice(p.pricing),
                 p.availability,
-                'Observed ' + result.observedAt.slice(0, 10),
+                'Observed ' + p.observedAt.slice(0, 10),
               ]
                 .filter(Boolean)
                 .join(' · '),
@@ -117,11 +145,13 @@ export default function ImportDialog({
       onAdd(parts);
       setAdded(true);
     } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : 'These products could not be added. Try a smaller selection.',
-      );
+      setError({
+        kind: 'add',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'These products could not be added. Try a smaller selection.',
+      });
     }
   }
   return (
@@ -148,8 +178,10 @@ export default function ImportDialog({
             name="store-url"
             type="url"
             required
-            aria-invalid={Boolean(error)}
-            aria-describedby={error ? 'import-error' : 'import-support'}
+            aria-invalid={error?.kind === 'preview'}
+            aria-describedby={
+              error?.kind === 'preview' ? 'import-error' : 'import-support'
+            }
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://your-favorite-store.com"
@@ -183,21 +215,30 @@ export default function ImportDialog({
       </p>
       {error && (
         <p className="error-box" role="alert" id="import-error">
-          {error} Check the URL and try again, or paste product data above.
+          {error.message}{' '}
+          {error.kind === 'preview'
+            ? 'Check the URL and try again, or paste product data above.'
+            : error.kind === 'more'
+              ? 'Try loading this page again. Your earlier choices are still here.'
+              : ''}
         </p>
       )}
       {result && (
         <div className="import-results">
-          <div className="result-heading">
+          <output
+            className="result-heading"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             <strong>
               {result.products.length}{' '}
               {result.products.length === 1 ? 'product' : 'products'} found
             </strong>
             <span>{result.method}</span>
-          </div>
+          </output>
           <p className="muted">{result.coverage}</p>
           <p className="import-note">
-            Observed{' '}
+            Last page observed{' '}
             <time dateTime={result.observedAt}>
               {new Date(result.observedAt).toLocaleString()}
             </time>{' '}
@@ -222,14 +263,15 @@ export default function ImportDialog({
                 <input
                   type="checkbox"
                   checked={selected.has(i)}
-                  onChange={() =>
+                  onChange={() => {
+                    setAdded(false);
                     setSelected((prev) => {
                       const next = new Set(prev);
                       if (next.has(i)) next.delete(i);
                       else next.add(i);
                       return next;
-                    })
-                  }
+                    });
+                  }}
                 />
                 <span>
                   <strong>{p.name}</strong>
@@ -244,6 +286,20 @@ export default function ImportDialog({
               </label>
             ))}
           </div>
+          {result.next && (
+            <button
+              className="button secondary full"
+              disabled={busy}
+              aria-describedby={
+                error?.kind === 'more' ? 'import-error' : undefined
+              }
+              onClick={() => {
+                if (result.next) void preview(result.next);
+              }}
+            >
+              {busy ? 'Loading more…' : 'Load more options'}
+            </button>
+          )}
           <button
             className="button full"
             disabled={!selected.size || added}

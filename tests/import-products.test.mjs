@@ -155,7 +155,7 @@ test('Shopify catalog previews keep both switch variants and their variant-speci
                 },
               },
             ],
-            pageInfo: { hasNextPage: true },
+            pageInfo: { hasNextPage: true, endCursor: 'next-products' },
           },
         },
       });
@@ -163,7 +163,7 @@ test('Shopify catalog previews keep both switch variants and their variant-speci
       '<html><script>Shopify.shop="switch-shop.example"</script></html>',
     );
   });
-  const result = await importWebsite(source);
+  const result = await importWebsite(new URL('/', source).href);
   assert.equal(result.products.length, 2);
   assert.deepEqual(
     result.products.map((p) => p.name),

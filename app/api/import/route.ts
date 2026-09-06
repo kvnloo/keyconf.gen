@@ -1,4 +1,4 @@
-import { importWebsite } from '../../../lib/import-products';
+import { importWebsite } from '../../../lib/import-products.ts';
 function cors(request: Request) {
   const origin = request.headers.get('origin');
   const local = new URL(request.url).origin;
@@ -26,14 +26,14 @@ export async function POST(request: Request) {
       { error: 'Use the importer from this site.' },
       { status: 403 },
     );
-  if (Number(request.headers.get('content-length')) > 4096)
+  if (Number(request.headers.get('content-length')) > 12288)
     return Response.json(
       { error: 'Request is too large.' },
       { status: 413, headers },
     );
   try {
     const text = await request.text();
-    if (text.length > 4096) throw new Error('Request is too large.');
+    if (text.length > 12288) throw new Error('Request is too large.');
     const data: unknown = JSON.parse(text);
     if (
       typeof data !== 'object' ||
@@ -43,7 +43,10 @@ export async function POST(request: Request) {
       data.url.length > 2048
     )
       throw new Error('Enter a product or store URL.');
-    const result = await importWebsite(data.url);
+    const result = await importWebsite(
+      data.url,
+      'next' in data ? data.next : undefined,
+    );
     return Response.json(
       {
         ...result,

@@ -19,9 +19,45 @@ export type ImportResult = {
   source: string;
   observedAt: string;
   coverage: string;
+  next?: ImportContinuation | null;
+};
+type CatalogCursor = { kind: 'done' } | { kind: 'more'; after: string };
+export type ImportContinuation = {
+  kind: 'shopify';
+  source: string;
+  catalog: CatalogCursor;
+  variants: { id: string; after: string }[];
 };
 function record(x: unknown): x is Record<string, unknown> {
   return typeof x === 'object' && x !== null && !Array.isArray(x);
+}
+function cursor(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && value.length <= 512;
+}
+export function isImportContinuation(
+  value: unknown,
+): value is ImportContinuation {
+  return (
+    record(value) &&
+    value.kind === 'shopify' &&
+    typeof value.source === 'string' &&
+    value.source.length <= 2048 &&
+    record(value.catalog) &&
+    (value.catalog.kind === 'done' ||
+      (value.catalog.kind === 'more' && cursor(value.catalog.after))) &&
+    Array.isArray(value.variants) &&
+    value.variants.length <= 8 &&
+    value.variants.every(
+      (item) =>
+        record(item) &&
+        typeof item.id === 'string' &&
+        /^gid:\/\/shopify\/Product\/\d{1,30}$/.test(item.id) &&
+        cursor(item.after),
+    ) &&
+    new Set(value.variants.map((item) => item.id)).size ===
+      value.variants.length &&
+    (value.catalog.kind === 'more' || value.variants.length > 0)
+  );
 }
 function string(x: unknown) {
   return typeof x === 'string' ? x : typeof x === 'number' ? String(x) : '';
@@ -63,7 +99,10 @@ export function isImportResult(x: unknown): x is ImportResult {
     ) &&
     ['method', 'source', 'observedAt', 'coverage'].every(
       (k) => typeof x[k] === 'string',
-    )
+    ) &&
+    (x.next === undefined ||
+      x.next === null ||
+      (isImportContinuation(x.next) && x.next.source === x.source))
   );
 }
 export function parseStructuredProducts(
@@ -307,8 +346,16 @@ async function boundedText(r: Response) {
     await reader.cancel();
   }
 }
-export async function importWebsite(input: string): Promise<ImportResult> {
+export async function importWebsite(
+  input: string,
+  continuation?: unknown,
+): Promise<ImportResult> {
   const u = publicUrl(input);
+  if (continuation !== undefined && continuation !== null) {
+    if (!isImportContinuation(continuation) || continuation.source !== u.href)
+      throw new Error('Invalid continuation. Preview this source again.');
+    return shopifyPage(u, continuation);
+  }
   if (/\/products\/[^/]+\/?$/.test(u.pathname)) {
     try {
       const endpoint = new URL(u);
@@ -358,6 +405,7 @@ export async function importWebsite(input: string): Promise<ImportResult> {
             source: u.href,
             observedAt: new Date().toISOString(),
             method: 'Shopify product JSON',
+            next: null,
             coverage:
               'Up to 80 variants of this product. Price omitted because this endpoint does not establish the presentment currency. Shopify product JSON can truncate very large variant sets.',
           };
@@ -368,6 +416,8 @@ export async function importWebsite(input: string): Promise<ImportResult> {
   }
   const response = await fetchPublic(u);
   const html = await boundedText(response);
+  const shopify = /cdn\.shopify\.com|Shopify\.shop/i.test(html);
+  if (shopify && collectionHandle(u)) return shopifyPage(u);
   const products = parseStructuredProducts(html, u.href);
   if (products.length)
     return {
@@ -377,87 +427,193 @@ export async function importWebsite(input: string): Promise<ImportResult> {
       method: 'Product structured data',
       coverage:
         'Up to 80 product options found on this page. Prices and availability are snapshots; compatibility needs review.',
+      next: null,
     };
-  if (/cdn\.shopify\.com|Shopify\.shop/i.test(html)) {
-    const query =
-      '{ products(first: 40) { nodes { title vendor onlineStoreUrl variants(first: 20) { nodes { id title sku price { amount currencyCode } availableForSale } pageInfo { hasNextPage } } } pageInfo { hasNextPage } } }';
-    const r = await fetchPublic(new URL('/api/2026-07/graphql.json', u), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
-    });
-    const json: unknown = JSON.parse(await boundedText(r));
-    if (
-      record(json) &&
-      record(json.data) &&
-      record(json.data.products) &&
-      Array.isArray(json.data.products.nodes)
-    ) {
-      const found: ImportedProduct[] = [];
-      let moreVariants = false;
-      for (const item of json.data.products.nodes) {
-        if (!record(item) || typeof item.title !== 'string') continue;
-        const connection = record(item.variants) ? item.variants : {};
-        const variants = Array.isArray(connection.nodes)
-          ? connection.nodes
-          : [];
-        moreVariants ||=
-          record(connection.pageInfo) &&
-          connection.pageInfo.hasNextPage === true;
-        for (const variant of variants) {
-          if (!record(variant)) continue;
-          if (found.length >= 80) {
-            moreVariants = true;
-            break;
-          }
-          const title = string(variant.title);
-          const url = new URL(safeLink(item.onlineStoreUrl, u.href));
-          const variantId = string(variant.id).match(/(?:^|\/)(\d+)$/)?.[1];
-          if (
-            variantId &&
-            item.onlineStoreUrl &&
-            /\/products\/[^/]+\/?$/.test(url.pathname)
-          )
-            url.searchParams.set('variant', variantId);
-          const price = record(variant.price) ? variant.price : {};
-          found.push({
-            name:
-              item.title +
-              (title && title !== 'Default Title' ? ' · ' + title : ''),
-            brand: string(item.vendor),
-            url: url.href,
-            sku: string(variant.sku),
-            pricing: exactPrice(price.amount, price.currencyCode),
-            availability:
-              variant.availableForSale === true
-                ? 'Available'
-                : variant.availableForSale === false
-                  ? 'Unavailable'
-                  : '',
-          });
-        }
-      }
-      const moreProducts =
-        record(json.data.products.pageInfo) &&
-        json.data.products.pageInfo.hasNextPage === true;
-      if (found.length)
-        return {
-          products: found,
-          source: u.href,
-          observedAt: new Date().toISOString(),
-          method: 'Shopify Storefront API',
-          coverage:
-            'Storewide preview of up to 80 options across the first 40 products, with up to 20 variants per product. ' +
-            (moreProducts ? 'The store has more products. ' : '') +
-            (moreVariants
-              ? 'More variants are available beyond this preview. '
-              : '') +
-            'Prices and stock are snapshots; compatibility needs review.',
-        };
-    }
-  }
+  if (shopify) return shopifyPage(u);
 
   throw new Error(
     'No readable product data found. This site may need a dedicated importer. Try a specific product URL, or paste its JSON-LD below.',
   );
+}
+
+function collectionHandle(url: URL): string | undefined {
+  if (url.pathname.includes('/products/')) return undefined;
+  const value = url.pathname.match(/\/collections\/([^/]+)(?:\/|$)/)?.[1];
+  return value && value !== 'all' ? decodeURIComponent(value) : undefined;
+}
+const variantFields =
+  'nodes { id title sku price { amount currencyCode } availableForSale } pageInfo { hasNextPage endCursor }';
+const productFields = 'id title vendor onlineStoreUrl';
+function nextCursor(value: unknown): CatalogCursor {
+  if (!record(value) || typeof value.hasNextPage !== 'boolean')
+    throw new Error('The store did not return valid pagination details.');
+  if (!value.hasNextPage) return { kind: 'done' };
+  if (!cursor(value.endCursor))
+    throw new Error(
+      'The store has more products but did not return a usable continuation.',
+    );
+  return { kind: 'more', after: value.endCursor };
+}
+async function shopifyPage(
+  url: URL,
+  continuation?: ImportContinuation,
+): Promise<ImportResult> {
+  const handle = collectionHandle(url);
+  const pending = continuation?.variants ?? [];
+  const variables: Record<string, string | null> = {};
+  let query: string;
+  if (pending.length) {
+    const argumentsList = pending
+      .map((_, index) => `$id${index}: ID!, $after${index}: String!`)
+      .join(', ');
+    const fields = pending
+      .map((item, index) => {
+        variables['id' + index] = item.id;
+        variables['after' + index] = item.after;
+        return `product${index}: product(id: $id${index}) { ${productFields} variants(first: 10, after: $after${index}) { ${variantFields} } }`;
+      })
+      .join(' ');
+    query = `query MoreVariants(${argumentsList}) { ${fields} }`;
+  } else {
+    variables.after =
+      continuation?.catalog.kind === 'more' ? continuation.catalog.after : null;
+    const products = `products(first: 8, after: $after, sortKey: ID) { nodes { ${productFields} variants(first: 10) { ${variantFields} } } pageInfo { hasNextPage endCursor } }`;
+    if (handle) {
+      variables.handle = handle;
+      query = `query CollectionProducts($handle: String!, $after: String) { collection(handle: $handle) { title ${products} } }`;
+    } else query = `query StoreProducts($after: String) { ${products} }`;
+  }
+  const response = await fetchPublic(
+    new URL('/api/2026-07/graphql.json', url),
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, variables }),
+    },
+  );
+  const json: unknown = JSON.parse(await boundedText(response));
+  if (
+    !record(json) ||
+    !record(json.data) ||
+    (Array.isArray(json.errors) && json.errors.length)
+  )
+    throw new Error(
+      'The store could not provide this catalog page. Try a product URL or a JSON-LD export.',
+    );
+  const data = json.data;
+  let catalog: CatalogCursor = continuation?.catalog ?? { kind: 'done' };
+  let nodes: unknown[];
+  let title = handle ?? '';
+  if (pending.length) {
+    nodes = pending.map((_, index) => data['product' + index]);
+    if (nodes.some((item) => item === null))
+      throw new Error(
+        'A product changed or disappeared while loading its variants. Preview the source again.',
+      );
+  } else {
+    const collection = data.collection;
+    if (handle && !record(collection))
+      throw new Error(
+        'This collection was not found in the store. Check its URL.',
+      );
+    const connection =
+      handle && record(collection) ? collection.products : data.products;
+    if (
+      !record(connection) ||
+      !Array.isArray(connection.nodes) ||
+      connection.nodes.length > 8
+    )
+      throw new Error('The store returned an unreadable catalog page.');
+    nodes = connection.nodes;
+    catalog = nextCursor(connection.pageInfo);
+    if (
+      catalog.kind === 'more' &&
+      continuation?.catalog.kind === 'more' &&
+      catalog.after === continuation.catalog.after
+    )
+      throw new Error(
+        'The store repeated a catalog page. Preview the source again.',
+      );
+    if (record(collection) && typeof collection.title === 'string')
+      title = collection.title.slice(0, 255);
+  }
+  const products: ImportedProduct[] = [];
+  const variants: ImportContinuation['variants'] = [];
+  const seen = new Set<string>();
+  for (const [index, item] of nodes.entries()) {
+    if (
+      !record(item) ||
+      typeof item.title !== 'string' ||
+      !record(item.variants) ||
+      !Array.isArray(item.variants.nodes) ||
+      item.variants.nodes.length > 10
+    )
+      throw new Error('The store returned unreadable product options.');
+    if (pending[index] && item.id !== pending[index].id)
+      throw new Error('The store returned options for an unexpected product.');
+    const after = nextCursor(item.variants.pageInfo);
+    if (after.kind === 'more') {
+      if (
+        typeof item.id !== 'string' ||
+        !/^gid:\/\/shopify\/Product\/\d{1,30}$/.test(item.id) ||
+        after.after === pending[index]?.after
+      )
+        throw new Error(
+          'The store did not return a usable variant continuation.',
+        );
+      variants.push({ id: item.id, after: after.after });
+    }
+    for (const variant of item.variants.nodes) {
+      if (!record(variant))
+        throw new Error('The store returned an unreadable variant.');
+      const id = string(variant.id).match(
+        /^gid:\/\/shopify\/ProductVariant\/(\d+)$/,
+      )?.[1];
+      if (!id)
+        throw new Error('A product option has no valid variant identity.');
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const link = new URL(safeLink(item.onlineStoreUrl, url.href));
+      if (item.onlineStoreUrl && /\/products\/[^/]+\/?$/.test(link.pathname))
+        link.searchParams.set('variant', id);
+      const variantTitle = string(variant.title);
+      const price = record(variant.price) ? variant.price : {};
+      products.push({
+        name: (
+          item.title +
+          (variantTitle && variantTitle !== 'Default Title'
+            ? ' · ' + variantTitle
+            : '')
+        ).slice(0, 300),
+        brand: string(item.vendor).slice(0, 150),
+        url: link.href,
+        sku: string(variant.sku),
+        pricing: exactPrice(price.amount, price.currencyCode),
+        availability:
+          variant.availableForSale === true
+            ? 'Available'
+            : variant.availableForSale === false
+              ? 'Unavailable'
+              : '',
+      });
+    }
+  }
+  const next: ImportContinuation | null =
+    catalog.kind === 'more' || variants.length
+      ? { kind: 'shopify', source: url.href, catalog, variants }
+      : null;
+  return {
+    products,
+    source: url.href,
+    observedAt: new Date().toISOString(),
+    method: 'Shopify Storefront API',
+    next,
+    coverage:
+      (handle ? `Collection “${title}”. ` : 'Storewide catalog. ') +
+      'Up to 80 options per page. ' +
+      (next
+        ? 'More products or variants are available. '
+        : 'Last catalog page. ') +
+      'Website filters and sorting are not applied. Prices and stock are snapshots; compatibility needs review.',
+  };
 }

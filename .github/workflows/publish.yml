@@ -42,6 +42,7 @@ jobs:
           fi
           npm run verify:browser
           npm run verify:imports
+          npm run verify:import-pages
           npm run verify:interface
           npm run verify:featured
           npm run verify:decks
