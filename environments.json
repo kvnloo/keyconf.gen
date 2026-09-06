@@ -15,9 +15,9 @@
   },
   "nightly": {
     "channel": "nightly",
-    "sha": "35cdafda667699fd87f9aea2328ff8c419dd764e",
-    "runNumber": 83,
+    "sha": "e92ec10800dfa6dc5163e96c95ccec053e3187a5",
+    "runNumber": 84,
     "base": "/keyconf.gen/nightly/",
-    "publishedAt": "2026-09-06T23:34:14.631Z"
+    "publishedAt": "2026-09-06T23:45:16.065Z"
   }
 }
