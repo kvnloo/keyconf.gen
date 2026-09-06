@@ -472,3 +472,34 @@ layout differs from the existing generic 75% model, so adding a cylinder on an
 arbitrary key would be incorrect. `docs/accessory-host-evidence.md` records the
 source links, immutable firmware revision, CAD hash, measured results and required
 layout/compatibility integration. Installed knob rendering is still pending.
+
+## Q1 Max layout and first documented knob host
+
+Nightly Sites version 8 is deployed from
+`c0ab9d29c72d3b9512b93d12b8b4866a23ed16d4` at
+https://keyconf-nightly.kvnloo.chatgpt.site/ (September 6, 2026, 20:56:45 UTC).
+The matching Q1 Max case, PCB and plate now select the reviewed ANSI layout:
+81 normal keycaps, correct function-row gaps and right Ctrl, with a separate
+stock knob. The knob follows keycaps in exploded mode. Geometry remains an
+original visual study, with manufacturer-derived knob envelope dimensions;
+this is not a complete manufacturer enclosure or encoder CAD assembly.
+
+The accessory picker uses the documented keys and offers a stock-knob slot.
+Keychron's replacement-cap compatibility applies only to that slot on the
+matching assembly. Mixed assemblies stay unverified; duplicate caps conflict;
+an added encoder does not inherit the cap claim. Shared previews and private
+account snapshot evidence use the same resolver. Source links remain visible.
+
+All 127 tests, type checking, lint, formatting and production builds pass.
+The headed production-browser verifier passes assembled/exploded captures and
+shared-preview model/fit checks. Visual inspection caught and corrected the
+knob being obscured beneath raised caps. GitHub run 34059013222 passed for the
+initial implementation. Follow-up run 34059354855 and the deployed-site browser
+check remain in progress at this checkpoint. Main and dev were not promoted.
+
+Remaining priorities include account-backed creator publishing, favorites,
+proposals and attributed feedback once the deferred Google setup is available;
+further specific accessory hosts and geometry; and broader licensed native
+sound coverage. Shared portable previews are available now, but do not supply
+verified creator identity or a feedback inbox. No complete-community claim is
+made by this release.
