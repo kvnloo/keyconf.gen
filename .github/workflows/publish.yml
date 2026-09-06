@@ -46,6 +46,8 @@ jobs:
           npm run verify:import-pages
           npm run verify:interface
           npm run verify:featured
+          npm run verify:accessories
+          npm run verify:switches
           npm run verify:observations
           npm run verify:decks
       - name: Build this branch's preview

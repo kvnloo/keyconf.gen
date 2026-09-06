@@ -136,6 +136,15 @@ export default function ComponentsPanel({
           </button>
         ))}
       </fieldset>
+      {category === 'switch' &&
+        parts.some((part) => part.id === selection.switch) && (
+          <a
+            className="button secondary"
+            href={`#switch=${encodeURIComponent(selection.switch)}`}
+          >
+            Inspect selected switch <ArrowUpRight size={15} />
+          </a>
+        )}
       <div className="parts-heading">
         <h4>Browse {labels[category].toLowerCase()}</h4>
         <span>
@@ -204,6 +213,15 @@ export default function ComponentsPanel({
                 )}
               </span>
             </button>
+            {part.category === 'switch' && (
+              <a
+                className="switch-detail-link"
+                href={`#switch=${encodeURIComponent(part.id)}`}
+              >
+                Inspect {part.name}
+                <ArrowUpRight size={14} />
+              </a>
+            )}
             <a href={part.source} target="_blank" rel="noreferrer">
               {part.evidence === 'documented'
                 ? 'Product documentation'

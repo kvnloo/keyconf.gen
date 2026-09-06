@@ -9,6 +9,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import type { Build, Palette } from './build';
 import { legendInk } from './appearance';
 import { createDeskScene } from './desk-scene';
+import { createSwitchAssembly, switchColors } from './switch-model';
 import { monitorTransform, type ScreenPoint } from './monitor-projection';
 
 // Steam contributes to the color pass, but must not cast rectangular occlusion.
@@ -33,6 +34,7 @@ export type SceneOptions = Pick<Build, 'caseColor' | 'finish' | 'profile'> &
           dial: number;
           lighting: 'Studio' | 'Daylight' | 'After hours';
         };
+    switchId?: string;
     exploded: boolean;
     view: string;
     environment: 'desk' | 'studio' | 'typing';
@@ -248,6 +250,8 @@ export function createKeyboardScene(
       ['mod', options.mod],
       ['accent', options.accent],
       ['space', options.space],
+      ['switch_housing', switchColors(options.switchId ?? '').housing],
+      ['switch_stem', switchColors(options.switchId ?? '').stem],
     ]);
     for (const [material, target] of materials) {
       const name = material.name.split('.')[0];
@@ -271,6 +275,10 @@ export function createKeyboardScene(
         material.opacity = transparent ? 0.62 : 1;
         material.depthWrite = !transparent;
       }
+    }
+    if (options.device.kind === 'keyboard') {
+      const switches = model?.getObjectByName('switches');
+      if (switches) switches.visible = options.exploded;
     }
     wake();
   }
@@ -347,6 +355,18 @@ export function createKeyboardScene(
             disposeModel(gltf.scene);
             return gltf.scene;
           }
+          if (device.kind === 'keyboard') {
+            const positions: THREE.Vector3[] = [];
+            gltf.scene.traverse((object) => {
+              if (object.name.startsWith('key_'))
+                positions.push(
+                  new THREE.Vector3(object.position.x, 0.3, object.position.z),
+                );
+            });
+            gltf.scene.add(
+              createSwitchAssembly(positions, options.switchId ?? '').group,
+            );
+          }
           loaded.add(gltf.scene);
           return gltf.scene;
         });
@@ -365,7 +385,7 @@ export function createKeyboardScene(
       for (const [name, offset] of Object.entries({
         plate: 1.01,
         pcb: 0.51,
-        switches: 1.75,
+        switches: device.kind === 'keyboard' ? 2.3 : 1.75,
         screen: 1.01,
         control_dial: 1.01,
         control_joystick: 1.01,
@@ -399,6 +419,11 @@ export function createKeyboardScene(
           }
         }
       });
+      element.dataset.switchCount = String(
+        model.getObjectByName('switch_bases') instanceof THREE.InstancedMesh
+          ? keys.size
+          : 0,
+      );
       scene.add(model);
       appearance(true);
       callbacks.status({ kind: 'ready' });
@@ -429,7 +454,11 @@ export function createKeyboardScene(
       key.position.y = approach(
         key.position.y,
         (restingHeight.get(key) ?? key.position.y) +
-          (options.exploded ? 2.6 : 0) -
+          (options.exploded
+            ? options.device.kind === 'keyboard'
+              ? 4.8
+              : 2.6
+            : 0) -
           (down.has(code) ? 0.14 : 0),
         19,
       );
@@ -809,7 +838,7 @@ export function createKeyboardScene(
       options = next;
       if (modelChanged) void loadModel(next.device);
       if (viewChanged) setView();
-      else if (assemblyChanged && next.device.kind === 'control-deck') {
+      else if (assemblyChanged) {
         const offset = camera.position.clone().sub(controls.target);
         if (next.exploded) assembledDistance = offset.length();
         focusHeight = next.exploded ? 1.35 : 0.4;

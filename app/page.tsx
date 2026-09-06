@@ -52,6 +52,9 @@ import SoundReferences, { type SoundReference } from './sound-references';
 import type { SamplePreview } from '../lib/audio-preview';
 import SampleWaveform from './sample-waveform';
 import ComponentsPanel from './components-panel';
+import SwitchDetail from './switch-detail';
+import BuildAccessories from './build-accessories';
+import { accessoryCatalog } from '../lib/build-accessories';
 import ResearchProducts from './research-products';
 import StudioSelect from './studio-select';
 import { useBuild } from './use-build';
@@ -86,13 +89,10 @@ export default function Home() {
   }, [notice]);
   const hash = useSyncExternalStore(subscribeLocation, currentHash, serverHash);
   const manager = useBuild(setNotice, {
-    shortcutsEnabled: [
-      '#studio',
-      '#sound',
-      '#play',
-      '#build-settings',
-      '#fit-checks',
-    ].includes(hash),
+    shortcutsEnabled:
+      ['#studio', '#sound', '#play', '#build-settings', '#fit-checks'].includes(
+        hash,
+      ) || hash.startsWith('#switch='),
   });
   const [deckSessions, setDeckSessions] = useState(
     new Map<DeckId, DeckBuild>(),
@@ -245,16 +245,27 @@ function KeyboardStudio({
   notice: string;
   setNotice: (notice: string) => void;
 }) {
+  const switchId = hash.startsWith('#switch=')
+    ? (() => {
+        try {
+          return decodeURIComponent(hash.slice(8));
+        } catch {
+          return '';
+        }
+      })()
+    : null;
   const screen =
-    hash === '' || hash === '#home'
-      ? 'home'
-      : hash === '#sound'
-        ? 'sound'
-        : hash === '#play'
-          ? 'play'
-          : hash === '#discover' || hash === '#research'
-            ? 'discover'
-            : 'build';
+    switchId !== null
+      ? 'switch'
+      : hash === '' || hash === '#home'
+        ? 'home'
+        : hash === '#sound'
+          ? 'sound'
+          : hash === '#play'
+            ? 'play'
+            : hash === '#discover' || hash === '#research'
+              ? 'discover'
+              : 'build';
   const landing = screen === 'home';
   useEffect(() => {
     if (
@@ -386,6 +397,7 @@ function KeyboardStudio({
       ...visibleBuild.palette,
       caseColor: visibleBuild.caseColor,
       device: { kind: 'keyboard', layout: visibleBuild.layout },
+      switchId: visibleBuild.selection.switch,
       exploded: experience === 'typing' ? false : exploded,
       view,
       finish: visibleBuild.finish,
@@ -658,6 +670,11 @@ function KeyboardStudio({
         parts.find((p) => p.id === selection[c]),
       ),
       compatibility: checks,
+      accessoryReferences: accessoryCatalog.filter((product) =>
+        build.accessories.some(
+          (accessory) => accessory.productId === product.id,
+        ),
+      ),
       sound: {
         ...sound,
         accuracy: pack
@@ -685,8 +702,23 @@ function KeyboardStudio({
         (experience === 'builder' ? '' : ' ' + experience + '-mode')
       }
     >
-      <a className="skip-link" href="#build-settings">
-        Skip to build settings
+      <a
+        className="skip-link"
+        href={screen === 'switch' ? '#switch-information' : '#build-settings'}
+        onClick={
+          screen === 'switch'
+            ? (event) => {
+                event.preventDefault();
+                const target = document.getElementById('switch-information');
+                target?.scrollIntoView();
+                target?.focus();
+              }
+            : undefined
+        }
+      >
+        {screen === 'switch'
+          ? 'Skip to switch information'
+          : 'Skip to build settings'}
       </a>
       <header className="header studio-header">
         <a className="brand" href="#home">
@@ -695,7 +727,11 @@ function KeyboardStudio({
         <nav aria-label="Studio pages">
           <a
             href="#studio"
-            aria-current={screen === 'build' || landing ? 'page' : undefined}
+            aria-current={
+              screen === 'build' || screen === 'switch' || landing
+                ? 'page'
+                : undefined
+            }
           >
             Build
           </a>
@@ -795,663 +831,725 @@ function KeyboardStudio({
           />
         </div>
       </div>
-      <div className="workspace">
-        <section className="stage">
-          <div className="stage-heading">
-            <div className="eyebrow">
-              {landing
-                ? 'KEYBOARDS FOR GREATER IDEAS'
-                : screen === 'sound'
-                  ? 'THE SOUND LAB'
-                  : 'YOUR WORKBENCH'}{' '}
-              {!landing && <span>{layout}%</span>}
-            </div>
-            <h1>
-              {landing ? (
-                <>
-                  Make it
-                  <br />
-                  yours.
-                </>
-              ) : screen === 'sound' ? (
-                'Hear the difference.'
-              ) : (
-                'Make it yours.'
-              )}
-            </h1>
-            <p>
-              {landing ? (
-                <>
-                  Design. Experiment. Hear. Build.
-                  <br />A better keyboard starts here.
-                </>
-              ) : screen === 'sound' ? (
-                'Listen closely. Find your feel.'
-              ) : (
-                'Every part. Every detail. Your call.'
-              )}
-            </p>
-            {landing ? (
-              <div className="landing-actions">
-                <button className="button" onClick={customizePreview}>
-                  Customize {featured.name} <ArrowRight size={18} />
-                </button>
-                <a href="#studio">
-                  Resume {build.name} <ArrowUpRight size={13} />
-                </a>
+      {screen === 'switch' ? (
+        <SwitchDetail
+          part={parts.find(
+            (part) => part.category === 'switch' && part.id === switchId,
+          )}
+          parts={parts}
+          selected={selection.switch}
+          checks={checkBuild(
+            { ...selection, switch: switchId ?? selection.switch },
+            parts,
+            layout,
+          )}
+          onSelect={(part) => {
+            edit({ selection: { ...selection, switch: part.id } });
+            setNotice(
+              `${part.brand} ${part.name} added to your build. Undo returns to the previous switch.`,
+            );
+          }}
+        />
+      ) : (
+        <div className="workspace">
+          <section className="stage">
+            <div className="stage-heading">
+              <div className="eyebrow">
+                {landing
+                  ? 'KEYBOARDS FOR GREATER IDEAS'
+                  : screen === 'sound'
+                    ? 'THE SOUND LAB'
+                    : 'YOUR WORKBENCH'}{' '}
+                {!landing && <span>{layout}%</span>}
               </div>
-            ) : (
-              <button
-                id="start-typing-test"
-                className="button secondary compact typing-launch"
-                onClick={async () => {
-                  stopDemo();
-                  const action = audioAction.current.revision;
-                  await enableSound(action);
-                  if (action !== audioAction.current.revision) return;
-                  setExperience('typing');
-                }}
-              >
-                <Play size={14} /> Start typing test
-              </button>
-            )}
-          </div>
-          <div className="study-label">
-            <span className="status-dot" /> 3D design study{' '}
-            <ArrowUpRight size={13} />
-          </div>
-          <KeyboardScene options={options} onPress={press} onRelease={release}>
-            {experience === 'typing' && (
-              <TypingTest
-                onPress={press}
-                onRelease={release}
-                onExit={() => {
-                  stopDemo();
-                  returnToTypingLauncher.current = true;
-                  setExperience('builder');
+              <h1>
+                {landing ? (
+                  <>
+                    Make it
+                    <br />
+                    yours.
+                  </>
+                ) : screen === 'sound' ? (
+                  'Hear the difference.'
+                ) : (
+                  'Make it yours.'
+                )}
+              </h1>
+              <p>
+                {landing ? (
+                  <>
+                    Design. Experiment. Hear. Build.
+                    <br />A better keyboard starts here.
+                  </>
+                ) : screen === 'sound' ? (
+                  'Listen closely. Find your feel.'
+                ) : (
+                  'Every part. Every detail. Your call.'
+                )}
+              </p>
+              {landing ? (
+                <div className="landing-actions">
+                  <button className="button" onClick={customizePreview}>
+                    Customize {featured.name} <ArrowRight size={18} />
+                  </button>
+                  <a href="#studio">
+                    Resume {build.name} <ArrowUpRight size={13} />
+                  </a>
+                </div>
+              ) : (
+                <button
+                  id="start-typing-test"
+                  className="button secondary compact typing-launch"
+                  onClick={async () => {
+                    stopDemo();
+                    const action = audioAction.current.revision;
+                    await enableSound(action);
+                    if (action !== audioAction.current.revision) return;
+                    setExperience('typing');
+                  }}
+                >
+                  <Play size={14} /> Start typing test
+                </button>
+              )}
+            </div>
+            <div className="study-label">
+              <span className="status-dot" /> 3D design study{' '}
+              <ArrowUpRight size={13} />
+            </div>
+            <KeyboardScene
+              options={options}
+              onPress={press}
+              onRelease={release}
+            >
+              {experience === 'typing' && (
+                <TypingTest
+                  onPress={press}
+                  onRelease={release}
+                  onExit={() => {
+                    stopDemo();
+                    returnToTypingLauncher.current = true;
+                    setExperience('builder');
+                  }}
+                />
+              )}
+            </KeyboardScene>
+            {exploded &&
+              options.device.kind === 'keyboard' &&
+              experience !== 'typing' && (
+                <nav
+                  className="exploded-layer-guide"
+                  aria-label="Exploded keyboard layers"
+                >
+                  <span>Keycaps</span>
+                  <a
+                    href={`#switch=${encodeURIComponent(visibleBuild.selection.switch)}`}
+                  >
+                    Switches <ArrowUpRight size={13} />
+                  </a>
+                  <span>Plate</span>
+                  <span>PCB</span>
+                  <span>Case</span>
+                </nav>
+              )}
+            {!landing && (
+              <VolumeDial
+                value={volume}
+                enabled={enabled}
+                canEnable={sampleState === 'ready'}
+                onChange={(volume) =>
+                  edit({ audio: { ...build.audio, volume } }, 'volume')
+                }
+                onCommit={commit}
+                onToggle={() => {
+                  if (enabled) {
+                    stopDemo();
+                    setEnabled(false);
+                  } else void enableSound();
                 }}
               />
             )}
-          </KeyboardScene>
-          {!landing && (
-            <VolumeDial
-              value={volume}
-              enabled={enabled}
-              canEnable={sampleState === 'ready'}
-              onChange={(volume) =>
-                edit({ audio: { ...build.audio, volume } }, 'volume')
-              }
-              onCommit={commit}
-              onToggle={() => {
-                if (enabled) {
-                  stopDemo();
-                  setEnabled(false);
-                } else void enableSound();
+            <div className="stage-bottom">
+              {(landing || experience === 'typing') && (
+                <button
+                  className="room-motion"
+                  aria-pressed={!roomMotion}
+                  aria-label={
+                    roomMotion ? 'Pause room motion' : 'Resume room motion'
+                  }
+                  onClick={() => setRoomMotion(!roomMotion)}
+                >
+                  {roomMotion ? <Wind size={15} /> : <Pause size={15} />}
+                  <span>{roomMotion ? 'Breeze on' : 'Room paused'}</span>
+                </button>
+              )}
+              <div className="view-controls">
+                <button
+                  onClick={() =>
+                    setView(view === 'top' ? 'perspective' : 'top')
+                  }
+                >
+                  {view === 'top' ? 'Perspective' : 'Top view'}
+                </button>
+                <button
+                  aria-pressed={exploded}
+                  onClick={() => setExploded(!exploded)}
+                >
+                  <Layers size={16} /> Explode
+                </button>
+                <button
+                  aria-label="Reset view"
+                  onClick={() => {
+                    setView(view === 'reset' ? 'perspective' : 'reset');
+                    setExploded(false);
+                  }}
+                >
+                  <RotateCcw size={16} />
+                </button>
+                <button
+                  aria-pressed={focusMode}
+                  onClick={() => setExperience(focusMode ? 'builder' : 'focus')}
+                >
+                  {focusMode ? (
+                    <Minimize2 size={16} />
+                  ) : (
+                    <Maximize2 size={16} />
+                  )}
+                  {focusMode
+                    ? landing
+                      ? 'Back to preview'
+                      : 'Back to builder'
+                    : 'Focus'}
+                </button>
+              </div>
+              <span>
+                <span className="pointer-instructions">
+                  Drag to orbit · Scroll to zoom · Type to try
+                </span>
+                <span className="touch-instructions">
+                  Swipe sideways to orbit · Swipe up to scroll
+                </span>
+              </span>
+            </div>
+            {screen === 'sound' && !focusMode && (
+              <section
+                className="sound-audition"
+                aria-label="Audition your typing sound"
+              >
+                <div className="audition-title">
+                  <span>{pack?.name ?? 'Synthesized study'}</span>
+                  <small>
+                    {pack ? 'Recorded reference' : 'Approximate sound'}
+                  </small>
+                </div>
+                <SampleWaveform
+                  preview={currentRecording?.preview ?? null}
+                  synthesized={!pack}
+                  playing={demo}
+                />
+                <div className="audition-keys">
+                  <button
+                    disabled={sampleState !== 'ready'}
+                    onClick={() => void playSequence(['KeyA'])}
+                  >
+                    <kbd>A</kbd> Letter key
+                  </button>
+                  <button
+                    disabled={sampleState !== 'ready'}
+                    onClick={() => void playSequence(['Space'])}
+                  >
+                    <kbd>space</kbd> Spacebar
+                  </button>
+                </div>
+                <button
+                  className="button full"
+                  disabled={sampleState !== 'ready'}
+                  onClick={() => {
+                    if (demo) stopDemo();
+                    else
+                      void playSequence([
+                        'KeyM',
+                        'KeyA',
+                        'KeyK',
+                        'KeyE',
+                        'Space',
+                        'KeyI',
+                        'KeyT',
+                        'Space',
+                        'KeyY',
+                        'KeyO',
+                        'KeyU',
+                        'KeyR',
+                        'KeyS',
+                      ]);
+                  }}
+                >
+                  {demo ? <VolumeX size={15} /> : <Play size={15} />}
+                  {demo ? 'Stop playback' : 'Try a typing sequence'}
+                </button>
+              </section>
+            )}
+            <div className="stage-caption">
+              <span>
+                STUDY / {layout} <i>·</i> {palette.name.toUpperCase()}
+              </span>
+              <span>
+                {enabled
+                  ? pack
+                    ? `${pack.name} · recorded reference`
+                    : 'Synthesized sound · approximate'
+                  : 'A space to try things.'}
+              </span>
+            </div>
+          </section>
+          {landing && (
+            <FeaturedGallery
+              selected={featured.id}
+              onSelect={(preset) => {
+                setFeatured(preset);
+                setExploded(false);
+                setView('perspective');
               }}
             />
           )}
-          <div className="stage-bottom">
-            {(landing || experience === 'typing') && (
-              <button
-                className="room-motion"
-                aria-pressed={!roomMotion}
-                aria-label={
-                  roomMotion ? 'Pause room motion' : 'Resume room motion'
-                }
-                onClick={() => setRoomMotion(!roomMotion)}
-              >
-                {roomMotion ? <Wind size={15} /> : <Pause size={15} />}
-                <span>{roomMotion ? 'Breeze on' : 'Room paused'}</span>
-              </button>
-            )}
-            <div className="view-controls">
-              <button
-                onClick={() => setView(view === 'top' ? 'perspective' : 'top')}
-              >
-                {view === 'top' ? 'Perspective' : 'Top view'}
-              </button>
-              <button
-                aria-pressed={exploded}
-                onClick={() => setExploded(!exploded)}
-              >
-                <Layers size={16} /> Explode
-              </button>
-              <button
-                aria-label="Reset view"
-                onClick={() => {
-                  setView(view === 'reset' ? 'perspective' : 'reset');
-                  setExploded(false);
-                }}
-              >
-                <RotateCcw size={16} />
-              </button>
-              <button
-                aria-pressed={focusMode}
-                onClick={() => setExperience(focusMode ? 'builder' : 'focus')}
-              >
-                {focusMode ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-                {focusMode
-                  ? landing
-                    ? 'Back to preview'
-                    : 'Back to builder'
-                  : 'Focus'}
-              </button>
-            </div>
-            <span>
-              <span className="pointer-instructions">
-                Drag to orbit · Scroll to zoom · Type to try
-              </span>
-              <span className="touch-instructions">
-                Swipe sideways to orbit · Swipe up to scroll
-              </span>
-            </span>
-          </div>
-          {screen === 'sound' && !focusMode && (
-            <section
-              className="sound-audition"
-              aria-label="Audition your typing sound"
-            >
-              <div className="audition-title">
-                <span>{pack?.name ?? 'Synthesized study'}</span>
-                <small>
-                  {pack ? 'Recorded reference' : 'Approximate sound'}
-                </small>
-              </div>
-              <SampleWaveform
-                preview={currentRecording?.preview ?? null}
-                synthesized={!pack}
-                playing={demo}
-              />
-              <div className="audition-keys">
-                <button
-                  disabled={sampleState !== 'ready'}
-                  onClick={() => void playSequence(['KeyA'])}
-                >
-                  <kbd>A</kbd> Letter key
-                </button>
-                <button
-                  disabled={sampleState !== 'ready'}
-                  onClick={() => void playSequence(['Space'])}
-                >
-                  <kbd>space</kbd> Spacebar
-                </button>
-              </div>
-              <button
-                className="button full"
-                disabled={sampleState !== 'ready'}
-                onClick={() => {
-                  if (demo) stopDemo();
-                  else
-                    void playSequence([
-                      'KeyM',
-                      'KeyA',
-                      'KeyK',
-                      'KeyE',
-                      'Space',
-                      'KeyI',
-                      'KeyT',
-                      'Space',
-                      'KeyY',
-                      'KeyO',
-                      'KeyU',
-                      'KeyR',
-                      'KeyS',
-                    ]);
-                }}
-              >
-                {demo ? <VolumeX size={15} /> : <Play size={15} />}
-                {demo ? 'Stop playback' : 'Try a typing sequence'}
-              </button>
-            </section>
+          {landing && (
+            <FeaturedInspector
+              featured={featured}
+              onCustomize={customizePreview}
+            />
           )}
-          <div className="stage-caption">
-            <span>
-              STUDY / {layout} <i>·</i> {palette.name.toUpperCase()}
-            </span>
-            <span>
-              {enabled
-                ? pack
-                  ? `${pack.name} · recorded reference`
-                  : 'Synthesized sound · approximate'
-                : 'A space to try things.'}
-            </span>
-          </div>
-        </section>
-        {landing && (
-          <FeaturedGallery
-            selected={featured.id}
-            onSelect={(preset) => {
-              setFeatured(preset);
-              setExploded(false);
-              setView('perspective');
-            }}
-          />
-        )}
-        {landing && (
-          <FeaturedInspector
-            featured={featured}
-            onCustomize={customizePreview}
-          />
-        )}
-        <aside
-          className="config"
-          id="build-settings"
-          aria-label="Keyboard configuration"
-        >
-          <div className="config-title">
-            <h2>Your build</h2>
-            <span className="pill">Live preview</span>
-          </div>
-          <div
-            className="config-tabs"
-            role="tablist"
-            aria-label="Build settings"
+          <aside
+            className="config"
+            id="build-settings"
+            aria-label="Keyboard configuration"
           >
-            {(['design', 'parts', 'sound'] satisfies Tab[]).map((t) => (
-              <button
-                key={t}
-                role="tab"
-                id={'tab-' + t}
-                aria-controls={'panel-' + t}
-                tabIndex={tab === t ? 0 : -1}
-                onKeyDown={(event) => {
-                  const tabs: Tab[] = ['design', 'parts', 'sound'];
-                  const index = tabs.indexOf(t);
-                  const next =
-                    event.key === 'ArrowRight'
-                      ? tabs[(index + 1) % tabs.length]
-                      : event.key === 'ArrowLeft'
-                        ? tabs[(index + tabs.length - 1) % tabs.length]
-                        : event.key === 'Home'
-                          ? tabs[0]
-                          : event.key === 'End'
-                            ? tabs[tabs.length - 1]
-                            : undefined;
-                  if (next) {
-                    event.preventDefault();
-                    setTab(next);
-                    document.getElementById('tab-' + next)?.focus();
-                  }
-                }}
-                aria-selected={tab === t}
-                onClick={() => setTab(t)}
-              >
-                {t === 'design'
-                  ? 'Design'
-                  : t === 'parts'
-                    ? 'Components'
-                    : 'Sound'}
-              </button>
-            ))}
-          </div>
-          <div
-            className="config-scroll"
-            role="tabpanel"
-            id={'panel-' + tab}
-            aria-labelledby={'tab-' + tab}
-            tabIndex={0}
-          >
-            {tab === 'design' && (
-              <>
-                <section>
-                  <div className="section-label">
-                    <span>01</span>
-                    <h3>Form & foundation</h3>
-                  </div>
-                  <fieldset className="control-group">
-                    <legend>Layout</legend>
-                    <div className="segmented">
-                      {layouts.map((x) => (
-                        <button
-                          key={x}
-                          aria-pressed={x === layout}
-                          className={x === layout ? 'selected' : ''}
-                          onClick={() => setLayout(x)}
-                        >
-                          {x}%
-                        </button>
-                      ))}
-                    </div>
-                  </fieldset>
-                  <label htmlFor="finish">Case material</label>
-                  <StudioSelect
-                    id="finish"
-                    value={finish}
-                    onValueChange={(value) => {
-                      const finish = finishes.find((x) => x === value);
-                      if (finish) edit({ finish });
-                    }}
-                    options={finishes.map((x) => ({ value: x, label: x }))}
-                  />
-                  <fieldset className="control-group">
-                    <legend>
-                      Case finish{' '}
-                      <span>
-                        {caseColors.find((c) => c.color === caseColor)?.name ||
-                          'Custom'}
-                      </span>
-                    </legend>
-                    <div className="swatches">
-                      {caseColors.map((x) => (
-                        <button
-                          key={x.color}
-                          style={{ background: x.color }}
-                          aria-label={x.name + ' case'}
-                          aria-pressed={caseColor === x.color}
-                          onClick={() => edit({ caseColor: x.color })}
-                        >
-                          {caseColor === x.color && <Check size={15} />}
-                        </button>
-                      ))}
-                    </div>
-                  </fieldset>
-                </section>
-                <section>
-                  <div className="section-label">
-                    <span>02</span>
-                    <h3>Color & character</h3>
-                  </div>
-                  <div className="palette-list">
-                    {palettes.map((p) => (
-                      <button
-                        key={p.name}
-                        aria-pressed={palette.name === p.name}
-                        className={
-                          palette.name === p.name
-                            ? 'palette selected'
-                            : 'palette'
-                        }
-                        onClick={() => setPalette(p)}
-                      >
-                        <span className="palette-colors">
-                          {[p.alpha, p.mod, p.accent, p.space].map((c, i) => (
-                            <i key={i} style={{ background: c }} />
-                          ))}
-                        </span>
-                        {p.name}
-                        {palette.name === p.name && <Check size={16} />}
-                      </button>
-                    ))}
-                  </div>
-                  <details className="custom-colors">
-                    <summary>
-                      <SlidersHorizontal size={14} /> Make it your own
-                    </summary>
-                    <div className="color-inputs">
-                      {(
-                        [
-                          'alpha',
-                          'mod',
-                          'accent',
-                          'space',
-                        ] satisfies (keyof typeof palette)[]
-                      ).map((zone) => (
-                        <label key={zone}>
-                          {zone}
-                          <input
-                            type="color"
-                            aria-label={zone + ' color'}
-                            value={palette[zone]}
-                            onChange={(e) =>
-                              edit(
-                                {
-                                  palette: {
-                                    ...palette,
-                                    name: 'Custom',
-                                    [zone]: e.target.value,
-                                  },
-                                },
-                                'color-' + zone,
-                              )
-                            }
-                            onBlur={commit}
-                          />
-                        </label>
-                      ))}
-                    </div>
-                  </details>
-                  <button
-                    className="text-button"
-                    onClick={() => {
-                      const choices = palettes.filter(
-                        (p) => p.name !== palette.name,
-                      );
-                      const next =
-                        choices[Math.floor(Math.random() * choices.length)];
-                      edit({
-                        palette: next,
-                        caseColor:
-                          caseColors[
-                            Math.floor(Math.random() * caseColors.length)
-                          ].color,
-                      });
-                    }}
-                  >
-                    <Shuffle size={15} /> Surprise me
-                  </button>
-                  <label htmlFor="profile">
-                    Keycap silhouette <span>Illustrative</span>
-                  </label>
-                  <StudioSelect
-                    id="profile"
-                    value={profile}
-                    onValueChange={(value) => {
-                      const profile = profiles.find((x) => x === value);
-                      if (profile) edit({ profile });
-                    }}
-                    options={profiles.map((p) => ({ value: p, label: p }))}
-                  />
-                </section>
-              </>
-            )}
-            {tab === 'parts' && (
-              <ComponentsPanel
-                parts={parts}
-                selection={selection}
-                checks={checks}
-                onSelect={(part) =>
-                  edit({
-                    selection: { ...selection, [part.category]: part.id },
-                  })
-                }
-                onAssembly={(assembly) => {
-                  edit({
-                    layout: assembly.layout,
-                    finish: assembly.finish,
-                    selection: assembly.selection,
-                  });
-                  setNotice(
-                    assembly.name +
-                      ' parts selected. Appearance and recording remain your choices.',
-                  );
-                }}
-                onImport={() => setModal('import')}
-                onResearch={() => setModal('research')}
-              />
-            )}
-            {tab === 'sound' && (
-              <>
-                <div className="sound-intro">
-                  <span className="pill">
-                    {pack
-                      ? 'Real recorded samples'
-                      : 'Synthesized · approximate'}
-                  </span>
-                  <h3>Hear the switch.</h3>
-                  <p className="muted">
-                    Your build uses{' '}
-                    {selectedSwitch?.name ?? 'an unverified switch'}. Typing
-                    audio uses the recording you choose here. Changing parts
-                    does not change that recording.
-                  </p>
-                </div>
-                <label htmlFor="sound-pack">Typing sound</label>
-                <StudioSelect
-                  id="sound-pack"
-                  value={pack?.id ?? 'synthesized'}
-                  onValueChange={(value) => {
-                    stopDemo();
-                    edit({
-                      audio: { ...build.audio, source: value },
-                    });
+            <div className="config-title">
+              <h2>Your build</h2>
+              <span className="pill">Live preview</span>
+            </div>
+            <div
+              className="config-tabs"
+              role="tablist"
+              aria-label="Build settings"
+            >
+              {(['design', 'parts', 'sound'] satisfies Tab[]).map((t) => (
+                <button
+                  key={t}
+                  role="tab"
+                  id={'tab-' + t}
+                  aria-controls={'panel-' + t}
+                  tabIndex={tab === t ? 0 : -1}
+                  onKeyDown={(event) => {
+                    const tabs: Tab[] = ['design', 'parts', 'sound'];
+                    const index = tabs.indexOf(t);
+                    const next =
+                      event.key === 'ArrowRight'
+                        ? tabs[(index + 1) % tabs.length]
+                        : event.key === 'ArrowLeft'
+                          ? tabs[(index + tabs.length - 1) % tabs.length]
+                          : event.key === 'Home'
+                            ? tabs[0]
+                            : event.key === 'End'
+                              ? tabs[tabs.length - 1]
+                              : undefined;
+                    if (next) {
+                      event.preventDefault();
+                      setTab(next);
+                      document.getElementById('tab-' + next)?.focus();
+                    }
                   }}
-                  options={[
-                    ...soundPacks.map((item) => ({
-                      value: item.id,
-                      label: item.name,
-                    })),
-                    { value: 'synthesized', label: 'Synthesized sound study' },
-                  ]}
-                />
-                {sampleState === 'loading' && (
-                  <output className="muted recording-count">
-                    Loading recordings…
-                  </output>
-                )}
-                {sampleState === 'error' && (
-                  <p role="alert">
-                    Recordings could not load.{' '}
+                  aria-selected={tab === t}
+                  onClick={() => setTab(t)}
+                >
+                  {t === 'design'
+                    ? 'Design'
+                    : t === 'parts'
+                      ? 'Components'
+                      : 'Sound'}
+                </button>
+              ))}
+            </div>
+            <div
+              className="config-scroll"
+              role="tabpanel"
+              id={'panel-' + tab}
+              aria-labelledby={'tab-' + tab}
+              tabIndex={0}
+            >
+              {tab === 'design' && (
+                <>
+                  <section>
+                    <div className="section-label">
+                      <span>01</span>
+                      <h3>Form & foundation</h3>
+                    </div>
+                    <fieldset className="control-group">
+                      <legend>Layout</legend>
+                      <div className="segmented">
+                        {layouts.map((x) => (
+                          <button
+                            key={x}
+                            aria-pressed={x === layout}
+                            className={x === layout ? 'selected' : ''}
+                            onClick={() => setLayout(x)}
+                          >
+                            {x}%
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
+                    <label htmlFor="finish">Case material</label>
+                    <StudioSelect
+                      id="finish"
+                      value={finish}
+                      onValueChange={(value) => {
+                        const finish = finishes.find((x) => x === value);
+                        if (finish) edit({ finish });
+                      }}
+                      options={finishes.map((x) => ({ value: x, label: x }))}
+                    />
+                    <fieldset className="control-group">
+                      <legend>
+                        Case finish{' '}
+                        <span>
+                          {caseColors.find((c) => c.color === caseColor)
+                            ?.name || 'Custom'}
+                        </span>
+                      </legend>
+                      <div className="swatches">
+                        {caseColors.map((x) => (
+                          <button
+                            key={x.color}
+                            style={{ background: x.color }}
+                            aria-label={x.name + ' case'}
+                            aria-pressed={caseColor === x.color}
+                            onClick={() => edit({ caseColor: x.color })}
+                          >
+                            {caseColor === x.color && <Check size={15} />}
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
+                  </section>
+                  <section>
+                    <div className="section-label">
+                      <span>02</span>
+                      <h3>Color & character</h3>
+                    </div>
+                    <div className="palette-list">
+                      {palettes.map((p) => (
+                        <button
+                          key={p.name}
+                          aria-pressed={palette.name === p.name}
+                          className={
+                            palette.name === p.name
+                              ? 'palette selected'
+                              : 'palette'
+                          }
+                          onClick={() => setPalette(p)}
+                        >
+                          <span className="palette-colors">
+                            {[p.alpha, p.mod, p.accent, p.space].map((c, i) => (
+                              <i key={i} style={{ background: c }} />
+                            ))}
+                          </span>
+                          {p.name}
+                          {palette.name === p.name && <Check size={16} />}
+                        </button>
+                      ))}
+                    </div>
+                    <details className="custom-colors">
+                      <summary>
+                        <SlidersHorizontal size={14} /> Make it your own
+                      </summary>
+                      <div className="color-inputs">
+                        {(
+                          [
+                            'alpha',
+                            'mod',
+                            'accent',
+                            'space',
+                          ] satisfies (keyof typeof palette)[]
+                        ).map((zone) => (
+                          <label key={zone}>
+                            {zone}
+                            <input
+                              type="color"
+                              aria-label={zone + ' color'}
+                              value={palette[zone]}
+                              onChange={(e) =>
+                                edit(
+                                  {
+                                    palette: {
+                                      ...palette,
+                                      name: 'Custom',
+                                      [zone]: e.target.value,
+                                    },
+                                  },
+                                  'color-' + zone,
+                                )
+                              }
+                              onBlur={commit}
+                            />
+                          </label>
+                        ))}
+                      </div>
+                    </details>
                     <button
                       className="text-button"
-                      onClick={() => setLoadAttempt((n) => n + 1)}
-                    >
-                      Try again
-                    </button>
-                  </p>
-                )}
-                <div className="last-key">
-                  Last key <kbd>{lastKey || '—'}</kbd>
-                </div>
-                {!pack && (
-                  <>
-                    <label htmlFor="character">Switch character</label>
-                    <StudioSelect
-                      id="character"
-                      value={character}
-                      onValueChange={(v) => {
-                        if (v === 'linear' || v === 'tactile' || v === 'clicky')
-                          edit({ audio: { ...build.audio, character: v } });
+                      onClick={() => {
+                        const choices = palettes.filter(
+                          (p) => p.name !== palette.name,
+                        );
+                        const next =
+                          choices[Math.floor(Math.random() * choices.length)];
+                        edit({
+                          palette: next,
+                          caseColor:
+                            caseColors[
+                              Math.floor(Math.random() * caseColors.length)
+                            ].color,
+                        });
                       }}
-                      options={[
-                        { value: 'linear', label: 'Soft linear' },
-                        { value: 'tactile', label: 'Crisp tactile' },
-                        { value: 'clicky', label: 'Bright clicky' },
-                      ]}
-                    />
-                    <label htmlFor="damping">
-                      Damping <span>{Math.round(damping * 100)}%</span>
+                    >
+                      <Shuffle size={15} /> Surprise me
+                    </button>
+                    <label htmlFor="profile">
+                      Keycap silhouette <span>Illustrative</span>
                     </label>
-                    <input
-                      id="damping"
-                      type="range"
-                      min="0"
-                      max="1"
-                      step=".01"
-                      value={damping}
-                      onChange={(e) =>
-                        edit(
-                          {
-                            audio: {
-                              ...build.audio,
-                              damping: Number(e.target.value),
-                            },
-                          },
-                          'damping',
-                        )
-                      }
-                      onPointerUp={commit}
-                      onBlur={commit}
+                    <StudioSelect
+                      id="profile"
+                      value={profile}
+                      onValueChange={(value) => {
+                        const profile = profiles.find((x) => x === value);
+                        if (profile) edit({ profile });
+                      }}
+                      options={profiles.map((p) => ({ value: p, label: p }))}
                     />
-                  </>
-                )}
-                <label htmlFor="volume">
-                  Volume <span>{Math.round(volume * 100)}%</span>
-                </label>
-                <input
-                  id="volume"
-                  type="range"
-                  min="0"
-                  max="2"
-                  step=".01"
-                  value={volume}
-                  onChange={(e) =>
-                    edit(
+                  </section>
+                </>
+              )}
+              {tab === 'parts' && (
+                <>
+                  <ComponentsPanel
+                    parts={parts}
+                    selection={selection}
+                    checks={checks}
+                    onSelect={(part) =>
+                      edit({
+                        selection: { ...selection, [part.category]: part.id },
+                      })
+                    }
+                    onAssembly={(assembly) => {
+                      edit({
+                        layout: assembly.layout,
+                        finish: assembly.finish,
+                        selection: assembly.selection,
+                      });
+                      setNotice(
+                        assembly.name +
+                          ' parts selected. Appearance and recording remain your choices.',
+                      );
+                    }}
+                    onImport={() => setModal('import')}
+                    onResearch={() => setModal('research')}
+                  />
+                  <BuildAccessories
+                    selections={build.accessories}
+                    onChange={(accessories) => edit({ accessories })}
+                  />
+                </>
+              )}
+              {tab === 'sound' && (
+                <>
+                  <div className="sound-intro">
+                    <span className="pill">
+                      {pack
+                        ? 'Real recorded samples'
+                        : 'Synthesized · approximate'}
+                    </span>
+                    <h3>Hear the switch.</h3>
+                    <p className="muted">
+                      Your build uses{' '}
+                      {selectedSwitch?.name ?? 'an unverified switch'}. Typing
+                      audio uses the recording you choose here. Changing parts
+                      does not change that recording.
+                    </p>
+                  </div>
+                  <label htmlFor="sound-pack">Typing sound</label>
+                  <StudioSelect
+                    id="sound-pack"
+                    value={pack?.id ?? 'synthesized'}
+                    onValueChange={(value) => {
+                      stopDemo();
+                      edit({
+                        audio: { ...build.audio, source: value },
+                      });
+                    }}
+                    options={[
+                      ...soundPacks.map((item) => ({
+                        value: item.id,
+                        label: item.name,
+                      })),
                       {
-                        audio: {
-                          ...build.audio,
-                          volume: Number(e.target.value),
-                        },
+                        value: 'synthesized',
+                        label: 'Synthesized sound study',
                       },
-                      'volume',
-                    )
-                  }
-                  onPointerUp={commit}
-                  onBlur={commit}
-                />
-                <div className="recording-note">
-                  <Volume2 size={18} />
-                  <h3>{pack ? pack.name : 'A sound study'}</h3>
-                  <p>
-                    {pack
-                      ? 'Original press and release samples. Case, keycap and foam changes do not alter this recording.'
-                      : 'An approximate sound character. Choose a recorded switch above to hear real samples.'}
-                  </p>
-                  {pack && (
-                    <>
-                      <small>
-                        {pack.creator} · {pack.license} · mono MP3, 44.1 kHz
-                      </small>
-                      <p>
-                        {pack.capture} The files retain their original dynamics;
-                        the volume control applies gain only.
-                      </p>
-                      <a
+                    ]}
+                  />
+                  {sampleState === 'loading' && (
+                    <output className="muted recording-count">
+                      Loading recordings…
+                    </output>
+                  )}
+                  {sampleState === 'error' && (
+                    <p role="alert">
+                      Recordings could not load.{' '}
+                      <button
                         className="text-button"
-                        href={pack.source}
-                        target="_blank"
-                        rel="noreferrer"
+                        onClick={() => setLoadAttempt((n) => n + 1)}
                       >
-                        Recording source & license <ArrowUpRight size={14} />
-                      </a>
+                        Try again
+                      </button>
+                    </p>
+                  )}
+                  <div className="last-key">
+                    Last key <kbd>{lastKey || '—'}</kbd>
+                  </div>
+                  {!pack && (
+                    <>
+                      <label htmlFor="character">Switch character</label>
+                      <StudioSelect
+                        id="character"
+                        value={character}
+                        onValueChange={(v) => {
+                          if (
+                            v === 'linear' ||
+                            v === 'tactile' ||
+                            v === 'clicky'
+                          )
+                            edit({ audio: { ...build.audio, character: v } });
+                        }}
+                        options={[
+                          { value: 'linear', label: 'Soft linear' },
+                          { value: 'tactile', label: 'Crisp tactile' },
+                          { value: 'clicky', label: 'Bright clicky' },
+                        ]}
+                      />
+                      <label htmlFor="damping">
+                        Damping <span>{Math.round(damping * 100)}%</span>
+                      </label>
+                      <input
+                        id="damping"
+                        type="range"
+                        min="0"
+                        max="1"
+                        step=".01"
+                        value={damping}
+                        onChange={(e) =>
+                          edit(
+                            {
+                              audio: {
+                                ...build.audio,
+                                damping: Number(e.target.value),
+                              },
+                            },
+                            'damping',
+                          )
+                        }
+                        onPointerUp={commit}
+                        onBlur={commit}
+                      />
                     </>
                   )}
-                </div>
-                <SoundReferences
-                  switchName={selectedSwitch?.name}
-                  selected={reference}
-                  onSelect={(record) => {
-                    if (record) {
-                      stopDemo();
-                      audio.current?.setLevel(false, volume);
-                      setEnabled(false);
+                  <label htmlFor="volume">
+                    Volume <span>{Math.round(volume * 100)}%</span>
+                  </label>
+                  <input
+                    id="volume"
+                    type="range"
+                    min="0"
+                    max="2"
+                    step=".01"
+                    value={volume}
+                    onChange={(e) =>
+                      edit(
+                        {
+                          audio: {
+                            ...build.audio,
+                            volume: Number(e.target.value),
+                          },
+                        },
+                        'volume',
+                      )
                     }
-                    setReference(record);
-                  }}
-                />
-              </>
-            )}
-          </div>
-          <div className="config-footer">
-            <button className="build-status" onClick={() => setTab('parts')}>
-              <span className={blocked ? 'warn-dot' : 'neutral-dot'} />
-              {blocked
-                ? blocked + ' compatibility conflicts'
-                : 'Review component compatibility'}
-              <ChevronRight size={15} />
-            </button>
-            <button className="button full" onClick={exportBuild}>
-              <Download size={16} /> Export your build
-            </button>
-            <small>Visual study · Product dimensions not verified</small>
-            <button
-              className="text-button research-entry"
-              onClick={() => setModal('research')}
-            >
-              Research & sources <ArrowUpRight size={14} />
-            </button>
-          </div>
-        </aside>
-      </div>
+                    onPointerUp={commit}
+                    onBlur={commit}
+                  />
+                  <div className="recording-note">
+                    <Volume2 size={18} />
+                    <h3>{pack ? pack.name : 'A sound study'}</h3>
+                    <p>
+                      {pack
+                        ? 'Original press and release samples. Case, keycap and foam changes do not alter this recording.'
+                        : 'An approximate sound character. Choose a recorded switch above to hear real samples.'}
+                    </p>
+                    {pack && (
+                      <>
+                        <small>
+                          {pack.creator} · {pack.license} · mono MP3, 44.1 kHz
+                        </small>
+                        <p>
+                          {pack.capture} The files retain their original
+                          dynamics; the volume control applies gain only.
+                        </p>
+                        <a
+                          className="text-button"
+                          href={pack.source}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Recording source & license <ArrowUpRight size={14} />
+                        </a>
+                      </>
+                    )}
+                  </div>
+                  <SoundReferences
+                    switchName={selectedSwitch?.name}
+                    selected={reference}
+                    onSelect={(record) => {
+                      if (record) {
+                        stopDemo();
+                        audio.current?.setLevel(false, volume);
+                        setEnabled(false);
+                      }
+                      setReference(record);
+                    }}
+                  />
+                </>
+              )}
+            </div>
+            <div className="config-footer">
+              <button className="build-status" onClick={() => setTab('parts')}>
+                <span className={blocked ? 'warn-dot' : 'neutral-dot'} />
+                {blocked
+                  ? blocked + ' compatibility conflicts'
+                  : 'Review component compatibility'}
+                <ChevronRight size={15} />
+              </button>
+              <button className="button full" onClick={exportBuild}>
+                <Download size={16} /> Export your build
+              </button>
+              <small>Visual study · Product dimensions not verified</small>
+              <button
+                className="text-button research-entry"
+                onClick={() => setModal('research')}
+              >
+                Research & sources <ArrowUpRight size={14} />
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
       <output className="sr-only" aria-live="polite">
         {notice}
       </output>

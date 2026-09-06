@@ -7,6 +7,10 @@ import {
 } from './catalog.ts';
 import { soundPacks } from './sound-packs.ts';
 import { publicUrl } from './import-products.ts';
+import {
+  parseAccessories,
+  type AccessorySelection,
+} from './build-accessories.ts';
 
 export const palettes = [
   {
@@ -61,6 +65,7 @@ export type Build = {
   profile: (typeof profiles)[number];
   selection: Selection;
   customParts: Part[];
+  accessories: AccessorySelection[];
   audio: {
     source: string;
     character: 'linear' | 'tactile' | 'clicky';
@@ -78,6 +83,7 @@ export const defaultBuild: Build = {
   profile: 'Sculpted',
   selection: initialSelection,
   customParts: [],
+  accessories: [],
   audio: {
     source: 'gateron-black-ink',
     character: 'linear',
@@ -228,6 +234,7 @@ export function parseBuild(value: unknown): Build {
     profile,
     selection,
     customParts,
+    accessories: parseAccessories(value.accessories),
     audio: {
       source: audio.source,
       character: audio.character,

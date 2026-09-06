@@ -2,11 +2,55 @@
 
 Status: active. Created September 5, 2026. This document is the completion contract for the project, not a list of features already shipped.
 
+## Community and creator direction
+
+Updated September 6, 2026 at the user's request. This direction supersedes the previous build-first work sequence. Preserve the existing keyboard studio, evidence, sound and accessibility work as the foundation; prioritize the community and creator workflows below. Do not continue unrelated catalog/search expansion ahead of this pivot.
+
 ## Product promise
 
-Make choosing a keyboard feel like having a beautiful workbench full of parts. A newcomer can start with a coherent build, change its look, understand what fits, hear useful recordings, and send a friend the result. An enthusiast can inspect the evidence behind each component, import products, and make deliberate choices about mounting, switch technology, sound, and gaming behavior.
+Keyconf is a place to discover people through their keyboards, save inspiring builds and collaborate on a keyboard before it is made. A creator can prepare a build, send a client an immersive preview, gather feedback on a specific revision and share an audience-facing drop. A visitor can experience that build, favorite it or customize a personal copy without overwriting the creator's original or their own saved work.
 
-The keyboard is the main event. It should be satisfying to rotate, take apart, recolor, and type on. Controls stay nearby, use familiar names, and explain specialist terms where a decision needs them. Fun comes from immediate feedback and easy experimentation.
+The studio remains the core experience. Community features should make it easier to find, understand and share builds. They should not turn the site into a crowded feed or administrative dashboard. Treat creator workflow research as evidence for priorities; distinguish public facts from inferred pain points and validate assumptions through later user feedback. Do not imply that researched creators endorse or use Keyconf.
+
+Keyconf is a discovery and configuration portal, not a seller of keyboard products. Every catalog part, accessory, artisan variant, imported listing and part shown in a shared build must retain a direct link to its original maker or source listing. Make those links easy to find in product details and build summaries. Creator drops link to the creator's original purchase or enquiry page. Do not introduce platform checkout, cart, inventory reservations or payment collection for these products. Merchandise is a separate possible future direction, not current scope.
+
+## Community release requirements
+
+| ID | Requirement | Acceptance evidence | Status |
+| --- | --- | --- | --- |
+| COMMUNITY-1 | Accounts and profiles | Platform-backed sign-in; persistent profile with chosen handle, display name and creator links; private account data excluded from public responses; server-side ownership checks | Pending |
+| COMMUNITY-2 | Saved and favorite builds | Account-backed private drafts and favorites survive devices; favorites reference real published builds; no publication caused by saving | Pending |
+| COMMUNITY-3 | Creator build pages | Creator attribution, immutable published revision, source-backed parts and honest sound/geometry scope; recipient can experience it without changing existing local work | Pending |
+| COMMUNITY-4 | Client proposals | Creator sends an unlisted preconfigured preview; client can leave feedback tied to the viewed revision and create a separate customization; distinguish a proposal from an accepted commission | Pending |
+| COMMUNITY-5 | Drops and collections | Creator can deliberately publish a curated build/drop with availability language and an external purchase/enquiry link; drafts remain private; no invented stock, checkout or affiliation | Pending |
+| COMMUNITY-6 | Minimal discovery | One prominent search/command entry and a few primary destinations; contextual actions expose favorite, share and customize; no fake AI answers or empty dashboard modules | Pending |
+| COMMUNITY-7 | Voice companion, later | Separate optional assistant can accept typed/voice input, explain suggested changes and execute only supported actions; microphone permission and listening state explicit; Synergy code and current provider capabilities verified before reuse | Research first |
+| COMMUNITY-8 | Optional music | Off by default; independent music volume/mute; keyboard recordings and sound-reference videos take priority and mute music, with gentle restoration only if the user still wants music; visibility, loading/error and autoplay rules tested | Pending |
+| COMMUNITY-9 | Durable collaboration and privacy | D1-backed ownership and publication boundaries; private client notes/drafts absent from public search; revoked/invalid links recover clearly; untrusted links/content validated | Pending |
+
+## Configurator completeness, in parallel
+
+The September 6 reference reconciliation and accessory request are part of the community direction. Creator proposals must represent the actual parts a client is choosing. Keep this work moving alongside account and collaboration foundations.
+
+| ID | Requirement | Acceptance evidence | Status |
+| --- | --- | --- | --- |
+| PART-1 | Visible switch assembly | Separate switch housings and stems appear beneath keys in the exploded view; no invisible placeholder layer; inspect desktop and mobile renders | In progress |
+| PART-2 | Focused switch page | Interactive switch view, sourced specifications, recording scope, return navigation and explicit add-to-build; generic geometry labeled honestly | In progress |
+| PART-3 | Dials and encoders | Distinguish a replacement knob from an encoder; placement, shaft/mount, PCB and firmware requirements affect compatibility; selected parts survive save/share/undo | Pending |
+| PART-4 | Screens and extra controls | Distinguish integrated modules from external displays, buttons and macropads; mounting, connectors, power and firmware support are sourced or unknown; no arbitrary snap-on fit | Pending |
+| PART-5 | Artisan keycaps | Support individual key placement, quantity, key width, stem, profile/clearance and sourced maker/variant identity, including Jelly Key; preserve normal keyset selection | Pending |
+| PART-6 | Extensible product coverage | New categories retain source, variants, fit evidence and media provenance; unsupported geometry and fit remain explicit; imports require review before application | Pending |
+
+Expose these choices contextually in the build's parts/mods flow. A separate control-deck preset does not satisfy configurable keyboard accessories. A catalog entry does not satisfy an implemented visual part. Do not claim all keyboard products are supported until their selection, persistence and experience paths work.
+
+## First delivery sequence
+
+1. Research representative creators' actual public commission, content and drop workflows. Record sources, uncertainties and inferred opportunities.
+2. Build the account/profile and private saved-build foundation using Sites authentication and D1. Keep static Pages account actions pointed at the same-origin Sites flow.
+3. Deliver one complete creator-to-client journey: save a revision, share an unlisted preview, experience it, customize a separate copy and submit revision-specific feedback.
+4. Add favorites and opt-in public creator profiles/build collections. Add drops through existing purchase/enquiry destinations before considering commerce infrastructure.
+5. Add optional background music with verified keyboard-audio priority. Research music generation/licensing; do not publish unlicensed tracks or silently start playback.
+6. Introduce the separate conversational/voice companion only after its actions and provider connection are real and tested.
 
 ## Design direction
 
@@ -48,7 +92,7 @@ The original ambition includes every keyboard and exact acoustics. Coverage is a
 | QUALITY-4 | Evidence for polish               | Inspect complete design/parts/sound/import/share flow, narrow widths, reduced motion, failed loading and rapid changes; record actual observations                                         | Independent frozen review plus browser regression gates; no claim of flawless UX or user-study results                   |
 | SHIP-1    | Reproducible public release       | Passing types/tests/builds, committed source, successful GitHub CI and public deployment from that source                                                                                  | Import accuracy published at b40e245 to Sites version 9 and Pages; full CI and public import journey pass                |
 
-## Work sequence
+## Foundation work sequence, retained for reference
 
 1. **Reliable workbench.** One validated build model; local autosave; undo/redo; portable sharing; safe import/export boundaries; clear status. Finish with round-trip and malformed-state checks.
 2. **Tactile interaction.** Improve camera and assembly transitions, rendering lifecycle, input behavior, material treatment and exploration controls. Honor reduced motion and device constraints.

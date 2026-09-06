@@ -1,0 +1,133 @@
+# Community architecture
+
+Status: proposed, September 6, 2026. This document defines a buildable extension. It does not claim accounts, community publishing or client proposals are shipped.
+
+## Product decision
+
+Keep the keyboard studio as the main activity. Add a public collection of people's builds, private favorites, and client proposals that open directly into a preconfigured design. A creator drop is a named, published configuration with an author and a release date. It may carry creator-written availability text and a validated external purchase or enquiry link. Keyconf does not infer stock, operate checkout, accept payment or claim endorsements.
+
+Visitors can browse and customize without signing in. Sign in with ChatGPT is required to save account builds, favorite a published build, publish, or submit attributed feedback. Existing device saves, portable links, exports, imported parts, sound, typing, compatibility checks and independent control-deck studies stay available.
+
+## Current implementation and consequences
+
+| Existing behavior | Consequence for this extension |
+| --- | --- |
+| `app/page.tsx` is a client component with hash navigation. `app/pages-entry.tsx` also renders it in static GitHub Pages. | Preserve the studio. Add server-rendered community routes on Sites instead of converting the whole application or importing server authentication into the shared client entry. |
+| `app/use-build.ts` saves one keyboard draft in channel-scoped local storage and supports undo/redo. | Treat this as the device draft. Account saving is an explicit action with its own state and destination. Signing in must not silently replace either draft. |
+| `lib/build.ts` validates version-1 keyboard builds, imported parts and audio settings. Links retain selected imported parts and have a 24,000-character limit. | Reuse its validator. Store validated JSON in D1 for account records. Keep current file/link import contracts. A database share link references an immutable revision and is independent of the portable-link size limit. |
+| `lib/control-deck.ts` has a separate version-1 validator and format. | Use a discriminated document envelope for keyboard and control-deck records. Do not coerce control decks into keyboard parts or imply device connectivity. |
+| Featured builds are bundled presets without community accounts. | Label them Keyconf presets. Do not manufacture creator profiles, followers, activity or endorsements for them. |
+| The nightly Sites app already declares D1 `DB`; catalog tables and publication APIs are separate administrative functions. | Add community tables to the same logical binding. Keep catalog publication credentials and permissions out of visitor account flows. No R2 is needed for the initial release. |
+| Stable, nightly and Pages have separate deployment behavior. Sites user IDs are stable within a Site, not across Sites. | Nightly accounts and content are test-channel data. Do not promise automatic account migration to stable or shared sign-in on Pages. |
+
+The product contract remains [product-goal.md](product-goal.md). Current backend evidence is in [hosted-catalog.md](hosted-catalog.md) and [nightly-backend.md](nightly-backend.md).
+
+## Smallest useful interface
+
+Preserve Build, Sound, Play and Discover. Use one Community destination and an account control in the compact primary navigation, with the existing studio destinations available in context. Keep Resume visible. Public discovery gets one search entry over published build titles and chosen creator handles, with bounded results and a clear empty state. On small screens use the existing compact navigation pattern and allow normal scrolling.
+
+| View | Content and primary action |
+| --- | --- |
+| `/community` | Recent published builds and drops in a compact grid. Each card has a build preview, name, actual author and build kind. Open a build. Empty state says no builds have been published and links to the studio. No fake popularity counts. |
+| `/u/[handle]` | User-chosen display name, handle, optional short bio and creator links, and that person's published builds/drops. Private builds and favorites are excluded. An unpublished profile returns not found to other visitors. |
+| `/b/[publicationId]` | Immutable published build, author, parts and recording provenance, and Customize / Favorite actions. A drop adds its title, short note and publication date. Previewing never writes the device draft. |
+| `/account` | Protected page with My builds, Favorites and Proposals. Show whether each build is private or published. Save, reopen, publish and create a proposal from a saved revision. |
+| `/p/[token]` | A preconfigured proposal with the creator's brief, version, and visible notice that anyone with the link can view it. Customize opens a separate proposal draft. Submit changes sends that draft and an optional note after sign-in. |
+| `/account/proposals/[id]` | Creator sees the original and submitted revisions, a concise field/part comparison, feedback author and time. Open a submitted version or create a revised proposal. No silent merge into the creator's build. |
+
+Use existing keyboard rendering for preview, with at most one active 3D preview at a time. Cards can use a lightweight deterministic representation of the configuration. Generated photos, profile uploads and a thumbnail service are not prerequisites.
+
+Publishing has a small review dialog showing exactly what becomes public: chosen profile identity, title, selected parts and their source links, recording attribution, and description. Offer Publish and Keep private. Imported source URLs may contain user-specific query data; review those URLs before publishing. Neither the platform email nor the full device import library belongs in the public document.
+
+A saved account build shows “Saved to your account” only after the server acknowledges its revision. During local editing show “Changes on this device” until the next explicit account save. Network failure leaves the draft usable and offers Retry and Export. Expired sign-in preserves the draft before top-level navigation. An account save with a stale revision shows a conflict and offers Save as copy or reopen the current account revision.
+
+Proposal editing uses its own local draft key, separate from `keyconf-build-v1`, with the proposal identity and base revision. Viewing, editing and submitting a proposal cannot overwrite the visitor's personal studio draft. Returning from sign-in restores that proposal draft. Sign-in return targets may include the bearer token, so redact it from retained request diagnostics and verify the platform return flow does not expose it in public metadata. Submission is explicit. The original proposal and every received response remain unchanged.
+
+## Identity and authorization boundary
+
+Use the supported dispatch-owned Sites SIWC flow. The official pinned archive is available at `work/sites-auth-template/openai-create-sites-0.3.0.tgz`. Its inspected member `package/templates/addons/auth/app/chatgpt-auth.ts` exports `getChatGPTUser`, `requireChatGPTUser`, `chatGPTSignInPath` and `chatGPTSignOutPath`. Copy only that member to `app/chatgpt-auth.ts` for implementation; do not run the initializer over this checkout. The helper uses `next/headers` and `next/navigation`, requires both forwarded ID and email, decodes the optional full-name claim and validates relative return paths. Keep its imports server-only. Its `displayName` fallback is email, so never copy it into public profile data automatically.
+
+Protected browser pages use `requireChatGPTUser` and `dynamic = 'force-dynamic'`. APIs check `getChatGPTUser` and return 401 JSON for missing identity. Start sign-in with an ordinary anchor and `target="_top"`, using a same-origin relative return path. Do not fetch or prefetch the sign-in route. The dispatcher owns `/signin-with-chatgpt`, `/signout-with-chatgpt` and `/callback`.
+
+Map the verified `oai-authenticated-user-id` to a private account row. Never accept an owner ID from request JSON. The public profile uses an app-generated ID and user-selected handle. Platform name is optional; email/name claims must not become a public profile by default. A creator is simply a user who publishes a build. SIWC identifies that user; it does not prove company affiliation or workspace membership.
+
+Every private read and write includes the verified owner predicate in the database operation. Publication reads join an active publication to exactly its pinned revision. A guessed build ID never grants access to a private revision. Favorites belong to the signed-in account and remain private. API responses must be explicit projections, not serialization of entire joined rows.
+
+Keep account and proposal write APIs same-origin on Sites. Require the expected Origin for browser mutations, reject missing or mismatched origins, and do not enable credentialed cross-origin writes for Pages. Public reads may remain separate. On Pages, Community/account controls navigate to the matching Sites channel. Existing public catalog/import CORS policies do not become authentication policies.
+
+Authenticated pages, private APIs and proposal responses use `Cache-Control: private, no-store`. Do not cache identity-bearing responses in a public edge cache. Verify on the hosted dispatcher that anonymous client-supplied identity headers cannot impersonate a user; local header injection is only a test fixture.
+
+The first API contract stays small:
+
+| Endpoint | Boundary |
+| --- | --- |
+| `GET/PATCH /api/community/profile` | Signed-in user's profile only; reject invalid/reserved handles with an actionable response. |
+| `GET/POST /api/community/builds` | List/create private account builds. A client operation ID makes a retried create idempotent. |
+| `GET/PUT /api/community/builds/[id]` | Owner-only read/save; PUT includes expected revision and a unique operation ID. |
+| `POST /api/community/proposals` | Owner creates a proposal from an owned immutable revision; return the bearer link once. |
+| `GET /api/community/proposal-preview/[token]` | Link-holder read, excluding private account fields and all responses. |
+| `POST /api/community/proposal-preview/[token]/responses` | Signed-in link holder submits a validated snapshot and revision-specific note. |
+| `GET/PATCH /api/community/proposals/[id]` | Owner sees responses and closes or rotates the link; anonymous/other-account requests are denied. |
+
+Keep private save/create operations idempotent with a per-account operation key and request digest in a small operation record or equivalent unique row constraint. Reusing a key for different content returns a conflict. This prevents a lost response from creating duplicate proposals or revisions.
+
+## Records and invariants
+
+Define the schema in `db/schema.ts`; add generated, inspected, schema-only Drizzle migrations. Runtime queries belong in `db/community.ts`, using prepared statements and bounded D1 batches. Do not change deployed catalog migrations or create tables during requests.
+
+| Record | Required fields and constraints |
+| --- | --- |
+| `community_account` | App ID primary key, unique private Sites subject, creation time. No public email field. |
+| `community_profile` | Account ID primary/foreign key, unique lowercase handle, display name, short bio, validated creator links, optional public-since time. Only the owner edits it. |
+| `community_build` | ID, owner account, document kind, latest revision number, created/updated times. Index owner and update time for My builds. |
+| `community_build_revision` | Composite primary key of build ID and revision number, validated document JSON, selected-part evidence JSON, schema version, created time. Immutable. |
+| `community_publication` | ID, owner, build ID and revision number, kind `build` or `drop`, title, note, optional creator-written availability and external enquiry/purchase URL, published time, optional withdrawn time. Index active publication time and owner. Each points to an owned immutable revision. |
+| `community_favorite` | Account ID and publication ID as composite primary key, creation time. Add account/time index only for the private favorite-list query. PUT/DELETE are idempotent. |
+| `community_proposal` | ID, owner, base build/revision, brief, unique token digest, created time, optional closed time. A proposal references the owner's revision. Index owner/time. |
+| `community_proposal_response` | ID, proposal ID, verified author account, validated submitted document JSON, note, created time, client operation ID unique within author/proposal. Append-only; no visitor mutation of the base build. Index proposal/time. |
+
+Use foreign keys for account/build/revision relationships. Composite revision references keep the revision attached to its build. Enforce same-owner publication/proposal references with composite ownership keys or a guarded `INSERT ... SELECT`, not a prior unguarded existence check. Saving a new revision and advancing the latest pointer must be one atomic operation with an expected-revision condition. Reject stale versions with 409 and no orphan revision.
+
+The document envelope is either `{ kind: 'keyboard', build: Build }` or `{ kind: 'control-deck', build: DeckBuild }`. Parse unknown input once at the API boundary through the existing matching validator. Strip unselected imported parts when publishing/sharing and validate a second time after normalization. Limit request bytes before JSON parsing; an initial 128 KiB document cap, 80-character build title, 160-character profile bio and 2,000-character proposal note are concrete starting limits. Oversized drafts retain file export and a clear error.
+
+For keyboard revisions, derive the selected-part evidence and compatibility/recording disclosure on the server. Client text cannot promote an imported part's `unknown` evidence to approved compatibility. The existing export includes selected components, compatibility checks and recording context; extract that logic for reuse instead of creating competing claims. Preserve the source catalog version or digest with the revision. If a later catalog removes an ID, show the stored evidence and an unavailable-part warning; do not silently substitute parts. Restoring editable older records requires an explicit supported migration or repair step.
+
+A drop is an immutable publication, so changing the working build cannot change a released drop. A later edit produces another revision/publication. Unpublishing hides its public detail and removes it from feeds. A favorite of a withdrawn item displays “Build unavailable”; it does not reveal the retained private revision.
+
+Proposals use cryptographically random tokens with at least 256 bits of entropy; store only a digest. Only a link holder can read or submit, and submission additionally requires SIWC. This is a bearer-link invitation, not proof that the holder is the intended client. The UI must say that plainly. The owner can close a proposal or rotate its token. Because only a digest is retained, a lost create response can recover the proposal by operation ID and issue a fresh link through rotation; the server cannot recover the original token. Check openness and token validity in the response insert itself to prevent a close/submit race. Responses are visible only to their author and the proposal owner.
+
+Exclude proposals from public search, sitemap and metadata previews; send `noindex` and `Referrer-Policy: no-referrer`, and avoid third-party assets on proposal pages. Redact raw tokens from application logs. A copied link can still be forwarded, and closing it cannot retract a previously downloaded configuration.
+
+## First vertical slice
+
+Ship one complete proposal loop on nightly before building a public feed:
+
+1. Add SIWC and account/profile records. A visitor signs in and explicitly chooses a public display name only when sharing with another person.
+2. Save one keyboard build as a private immutable account revision, with visible save and failure states. Preserve current device save and export behavior.
+3. Create a proposal from that revision and copy its link. Open the link in a separate anonymous browser context and preview it without changing that browser's saved studio build.
+4. Customize the proposal in its isolated draft. Sign in as another user and submit the configuration plus a note once. A retry returns the existing response through its operation ID.
+5. The creator opens Proposals and reads the attributed response and changed parts/colors. Opening a response creates a local draft; it does not mutate the original. Closing the proposal prevents new reads/submissions through its token.
+
+This slice uses accounts, profiles, builds/revisions, proposals and responses. Do not add publication/favorite tables until the next working unit. Initially restrict account proposal creation to keyboards with an explicit UI explanation; existing control decks continue working locally. Add control-deck account serialization before exposing their account save action.
+
+The next unit adds public profile publication, public build/drop detail and private favorites together. The public feed follows only when publishing, withdrawal and real empty states work. Public launch also needs an operator hide path and per-account write limits, with durable atomic counters or supported platform controls. The current backend has no global rate limiter; do not describe browser disabling or process memory as one.
+
+Optional music belongs after the community loop. Keep it off by default with its own volume/mute state. A shared playback coordinator must mute music before keyboard recordings or reference videos start, and restore it gently only when those sources stop and the user still wants music. Page visibility and stale playback callbacks must not restart it. Reuse no track until its source and reuse terms are recorded. The later typed/voice companion must use explicit supported studio actions and permission/state for microphone use; neither feature is part of the first slice.
+
+## Acceptance checks and risks
+
+| Check | Required evidence |
+| --- | --- |
+| Real identity | Hosted SIWC completes and returns to the exact proposal/account route; sign-out works. Anonymous API writes return 401. Forged identity headers cannot impersonate an account on the hosted URL. |
+| Two-account isolation | Account B cannot read, save, publish, withdraw or list account A's private builds through changed IDs. A sees only responses to A's proposals; another client cannot see those responses. |
+| Anonymous continuity | Browse and existing studio/portable-link flows work before sign-in. Save, preview, sign-in return and proposal editing preserve the preexisting keyboard/control-deck drafts and undo behavior. |
+| Persistence | Account saves and submitted responses survive fresh browser sessions and Worker restarts. A stale save returns 409 without losing either revision. Identical response retries produce one row. |
+| Proposal revocation | Invalid, closed and rotated tokens fail without leaking private titles. A close/submit race never inserts a response after the close takes effect. |
+| Data integrity | Real SQLite tests prove foreign keys, unique handles/favorites, owner guards and atomic revision saves. Malformed, oversized, mismatched-kind and unknown-part payloads recover visibly. Source evidence stays unknown for imported parts. |
+| Public privacy | Public routes exclude subject/email, private revisions, favorites and proposal data. Withdrawn publications disappear from reads and favorites without exposing their retained payload. |
+| Client usability | At 320/390px and desktop, keyboard navigation, focus, loading, server errors, expired sign-in and conflict recovery permit completion. Observe the full creator/client loop in separate sessions. |
+| Release | Existing regression suite, types, lint and both Sites/Pages builds pass. Inspect new migrations; deploy nightly backend before dependent clients; run hosted checks. Retain stable's deployment identity. |
+
+The first slice is complete only after the hosted two-user loop and isolation checks pass. Local fake headers and a successful build cannot prove dispatch behavior. Catalog changes remain a restore risk until revision migration/repair is implemented. Link proposals provide convenient sharing but are not suitable for claims of named-recipient confidentiality. Public profile and drop content needs withdrawal and operator removal before opening unrestricted publishing.
+
+Authentication and storage decisions follow the installed Sites [authentication guidance](/home/kvn/.codex/plugins/cache/openai-bundled/sites/0.1.57/skills/sites-building/references/authentication.md), [storage guidance](/home/kvn/.codex/plugins/cache/openai-bundled/sites/0.1.57/skills/sites-building/references/persistence-and-storage.md) and [SQLite guidance](/home/kvn/.codex/plugins/cache/openai-bundled/sites/0.1.57/skills/sites-building/references/sqlite.md). Recheck their current helper contract at implementation time.

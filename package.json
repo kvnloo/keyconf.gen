@@ -27,7 +27,9 @@
     "catalog:observe": "node --experimental-strip-types scripts/observe_catalog.mjs",
     "db:generate": "drizzle-kit generate",
     "catalog:publish": "node --experimental-strip-types scripts/publish_catalog.mjs",
-    "verify:catalog": "node scripts/verify_catalog.mjs"
+    "verify:catalog": "node scripts/verify_catalog.mjs",
+    "verify:accessories": "node --experimental-strip-types scripts/verify_accessories.mjs",
+    "verify:switches": "node scripts/verify_switches.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
