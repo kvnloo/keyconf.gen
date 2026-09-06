@@ -2,7 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { parseCatalogSnapshot } from '../lib/catalog-snapshot.ts';
+import {
+  parseCatalogSnapshot,
+  snapshotDigest,
+} from '../lib/catalog-snapshot.ts';
 const payload = readFileSync(
   new URL('../data/store-observations.json', import.meta.url),
   'utf8',
@@ -80,4 +83,19 @@ test('generated hosted schema enforces publication identity and uses its source 
   } finally {
     db.close();
   }
+});
+
+test('hosted listings retain timestamps and reject unsafe links even with matching page hashes', async () => {
+  const snapshot = JSON.parse(payload);
+  const parsed = await parseCatalogSnapshot(payload);
+  assert.equal(parsed.listings.length, 128);
+  assert.equal(
+    parsed.listings[0].observedAt,
+    snapshot.evidence[0].result.observedAt,
+  );
+  snapshot.evidence[0].result.products[0].url = 'javascript:alert(1)';
+  snapshot.evidence[0].sha256 = await snapshotDigest(
+    JSON.stringify(snapshot.evidence[0].result),
+  );
+  await assert.rejects(parseCatalogSnapshot(JSON.stringify(snapshot)));
 });

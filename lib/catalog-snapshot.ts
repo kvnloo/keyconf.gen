@@ -1,4 +1,8 @@
-import { isImportResult, publicUrl } from './import-products.ts';
+import {
+  isImportResult,
+  publicUrl,
+  type ImportedProduct,
+} from './import-products.ts';
 
 export async function snapshotDigest(payload: string) {
   const digest = await crypto.subtle.digest(
@@ -31,6 +35,7 @@ export async function parseCatalogSnapshot(payload: string) {
     !('observations' in value)
   )
     throw new Error('Invalid catalog snapshot.');
+  const listings: (ImportedProduct & { observedAt: string })[] = [];
   let observations = 0;
   const evidence: unknown[] = value.evidence;
   for (const [index, page] of evidence.entries()) {
@@ -47,6 +52,10 @@ export async function parseCatalogSnapshot(payload: string) {
       page.sha256 !== (await snapshotDigest(JSON.stringify(page.result)))
     )
       throw new Error('Catalog page evidence failed verification.');
+    for (const product of page.result.products) {
+      publicUrl(product.url);
+      listings.push({ ...product, observedAt: page.result.observedAt });
+    }
     observations += page.result.products.length;
   }
   if (observations !== value.observations)
@@ -57,5 +66,6 @@ export async function parseCatalogSnapshot(payload: string) {
     payload,
     observations,
     pages: value.pages,
+    listings,
   };
 }

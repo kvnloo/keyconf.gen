@@ -1,11 +1,13 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Search } from 'lucide-react';
 import { formatProductPrice } from '../lib/product-pricing';
-type StoreData = typeof import('../lib/store-observations');
+type StoreData = Awaited<
+  ReturnType<typeof import('../lib/store-observations').loadStoreObservations>
+>;
 type LoadState =
   | { kind: 'idle' | 'loading' | 'error' }
-  | { kind: 'ready'; data: StoreData };
+  | { kind: 'ready'; data: StoreData; refreshing: boolean };
 
 export default function StoreObservations({
   onReview,
@@ -13,16 +15,35 @@ export default function StoreObservations({
   onReview: (source: string) => void;
 }) {
   const [state, setState] = useState<LoadState>({ kind: 'idle' });
+  const request = useRef<AbortController | null>(null);
+  useEffect(() => () => request.current?.abort(), []);
+  async function load() {
+    request.current?.abort();
+    const controller = new AbortController();
+    request.current = controller;
+    setState((current) =>
+      current.kind === 'ready'
+        ? { ...current, refreshing: true }
+        : { kind: 'loading' },
+    );
+    try {
+      const catalogModule = await import('../lib/store-observations');
+      const data = await catalogModule.loadStoreObservations(
+        new URL(window.location.href),
+        controller.signal,
+      );
+      if (!controller.signal.aborted)
+        setState({ kind: 'ready', data, refreshing: false });
+    } catch {
+      if (!controller.signal.aborted) setState({ kind: 'error' });
+    }
+  }
   return (
     <details
       className="research-products store-observations"
       onToggle={(event) => {
         if (!event.currentTarget.open || state.kind !== 'idle') return;
-        setState({ kind: 'loading' });
-        void import('../lib/store-observations').then(
-          (data) => setState({ kind: 'ready', data }),
-          () => setState({ kind: 'error' }),
-        );
+        void load();
       }}
     >
       <summary>
@@ -45,7 +66,25 @@ export default function StoreObservations({
         </div>
       )}
       {state.kind === 'ready' && (
-        <ObservedOptions data={state.data} onReview={onReview} />
+        <>
+          <output className="catalog-provenance">
+            {state.refreshing
+              ? 'Checking the hosted catalog…'
+              : state.data.origin === 'hosted'
+                ? 'Published catalog loaded. Observation dates are shown below.'
+                : 'Hosted catalog unavailable. Showing the bundled snapshot.'}
+          </output>
+          {state.data.origin === 'bundled' && (
+            <button
+              className="button secondary"
+              disabled={state.refreshing}
+              onClick={() => void load()}
+            >
+              Retry hosted catalog
+            </button>
+          )}
+          <ObservedOptions data={state.data} onReview={onReview} />
+        </>
       )}
     </details>
   );
@@ -95,10 +134,10 @@ function ObservedOptions({
         options.
       </output>
       <div className="research-product-list">
-        {matches.slice(0, limit).map((product) => (
+        {matches.slice(0, limit).map((product, index) => (
           <article
             className="research-product"
-            key={`${product.url}|${product.sku}`}
+            key={`${product.url}|${product.sku}|${product.observedAt}|${index}`}
           >
             <span className="catalog-brand">
               {product.brand} · Store observation

@@ -1,5 +1,5 @@
 export async function requestText(
-  request: Request,
+  request: Pick<Request, 'headers' | 'body'>,
   maxRequestBytes: number,
 ): Promise<string | null> {
   if (Number(request.headers.get('content-length')) > maxRequestBytes) {
