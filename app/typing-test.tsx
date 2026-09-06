@@ -81,38 +81,53 @@ export default function TypingTest({
           Open Monkeytype <ArrowUpRight size={14} />
         </a>
       </div>
-      {status !== 'ready' && (
-        <div
-          className="typing-load"
-          role={status === 'error' ? 'alert' : 'status'}
-        >
-          {status === 'loading' ? (
-            'Preparing your typing test…'
-          ) : (
-            <>
-              <p>The typing test could not load.</p>
-              <button
-                className="button secondary"
-                onClick={() => {
-                  setStatus('loading');
-                  setAttempt((n) => n + 1);
-                }}
-              >
-                <RotateCcw size={16} /> Retry typing test
-              </button>
-            </>
-          )}
-        </div>
-      )}
-      <iframe
-        key={attempt}
-        ref={frame}
-        src="monkeytype/index.html"
-        title="Monkeytype guest typing test"
-        className="typing-frame"
-        style={{ height }}
-        onError={() => setStatus('error')}
-      />
+      {/* oxlint-disable jsx-a11y/no-noninteractive-tabindex -- Keyboard users need to scroll this monitor viewport to reach results. */}
+      <section
+        className="monitor-display"
+        tabIndex={0}
+        aria-label="Monitor screen. Scroll for test results and settings."
+      >
+        {status !== 'ready' && (
+          <div
+            className="typing-load"
+            role={status === 'error' ? 'alert' : 'status'}
+          >
+            {status === 'loading' ? (
+              'Preparing your typing test…'
+            ) : (
+              <>
+                <p>The typing test could not load.</p>
+                <button
+                  className="button secondary"
+                  onClick={() => {
+                    setStatus('loading');
+                    setAttempt((n) => n + 1);
+                  }}
+                >
+                  <RotateCcw size={16} /> Retry typing test
+                </button>
+              </>
+            )}
+          </div>
+        )}
+        <iframe
+          key={attempt}
+          ref={frame}
+          src="monkeytype/index.html"
+          title="Monkeytype guest typing test"
+          className="typing-frame"
+          style={{ height }}
+          onLoad={() => {
+            const document = frame.current?.contentDocument;
+            if (!document?.head) return;
+            const theme = document.createElement('style');
+            theme.textContent = `:root { --bg-color: #18221c !important; --main-color: #d7dfbb !important; --caret-color: #e5c788 !important; --sub-color: #a0b29e !important; --sub-alt-color: #223229 !important; --text-color: #f1eedf !important; --error-color: #f29581 !important; --error-extra-color: #c95d4b !important; }`;
+            document.head.appendChild(theme);
+          }}
+          onError={() => setStatus('error')}
+        />
+      </section>
+      {/* oxlint-enable jsx-a11y/no-noninteractive-tabindex */}
       <div className="typing-footer">
         <span>Type to begin. Your keyboard responds below.</span>
         <a href="monkeytype/source.html" target="_blank" rel="noreferrer">

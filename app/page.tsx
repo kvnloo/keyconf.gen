@@ -35,6 +35,8 @@ import {
   Shuffle,
   Maximize2,
   Minimize2,
+  Wind,
+  Pause,
 } from 'lucide-react';
 import KeyboardScene, { type SceneOptions } from './keyboard-scene';
 import ImportDialog from './import-dialog';
@@ -345,6 +347,7 @@ function KeyboardStudio({
   const sampleState = pack ? (currentRecording?.state ?? 'loading') : 'ready';
   const [lastKey, setLastKey] = useState('');
   const [demo, setDemo] = useState(false);
+  const [roomMotion, setRoomMotion] = useState(true);
   const dialog = useRef<HTMLDialogElement>(null);
   const audio = useRef<KeyboardAudio | null>(null);
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
@@ -367,19 +370,22 @@ function KeyboardStudio({
         exploded,
         view,
         environment: 'desk',
+        roomMotion,
       };
     }
     return {
       ...visibleBuild.palette,
       caseColor: visibleBuild.caseColor,
       device: { kind: 'keyboard', layout: visibleBuild.layout },
-      exploded,
+      exploded: experience === 'typing' ? false : exploded,
       view,
       finish: visibleBuild.finish,
       profile: visibleBuild.profile,
-      environment: landing ? 'desk' : 'studio',
+      environment:
+        experience === 'typing' ? 'typing' : landing ? 'desk' : 'studio',
+      roomMotion,
     };
-  }, [visibleBuild, landing, featured, exploded, view]);
+  }, [visibleBuild, landing, featured, exploded, view, experience, roomMotion]);
   function customizePreview() {
     if (featured.kind === 'control-deck') {
       window.location.hash = 'deck=' + encodeDeck(featured.build);
@@ -782,17 +788,6 @@ function KeyboardStudio({
         </div>
       </div>
       <div className="workspace">
-        {experience === 'typing' && (
-          <TypingTest
-            onPress={press}
-            onRelease={release}
-            onExit={() => {
-              stopDemo();
-              returnToTypingLauncher.current = true;
-              setExperience('builder');
-            }}
-          />
-        )}
         <section className="stage">
           <div className="stage-heading">
             <div className="eyebrow">
@@ -857,11 +852,19 @@ function KeyboardStudio({
             <span className="status-dot" /> 3D design study{' '}
             <ArrowUpRight size={13} />
           </div>
-          <KeyboardScene
-            options={options}
-            onPress={press}
-            onRelease={release}
-          />
+          <KeyboardScene options={options} onPress={press} onRelease={release}>
+            {experience === 'typing' && (
+              <TypingTest
+                onPress={press}
+                onRelease={release}
+                onExit={() => {
+                  stopDemo();
+                  returnToTypingLauncher.current = true;
+                  setExperience('builder');
+                }}
+              />
+            )}
+          </KeyboardScene>
           {!landing && (
             <VolumeDial
               value={volume}
@@ -880,6 +883,19 @@ function KeyboardStudio({
             />
           )}
           <div className="stage-bottom">
+            {(landing || experience === 'typing') && (
+              <button
+                className="room-motion"
+                aria-pressed={!roomMotion}
+                aria-label={
+                  roomMotion ? 'Pause room motion' : 'Resume room motion'
+                }
+                onClick={() => setRoomMotion(!roomMotion)}
+              >
+                {roomMotion ? <Wind size={15} /> : <Pause size={15} />}
+                <span>{roomMotion ? 'Breeze on' : 'Room paused'}</span>
+              </button>
+            )}
             <div className="view-controls">
               <button
                 onClick={() => setView(view === 'top' ? 'perspective' : 'top')}

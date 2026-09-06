@@ -63,17 +63,29 @@ try {
     () => document.querySelector('.scene-host')?.dataset.renderState === 'idle',
   );
   assert.equal(await page.locator('.scene-host canvas').count(), 1);
+  await button(page, 'Explode').click();
   await button(page, 'Start typing test').click();
   const frame = page.frameLocator(
     'iframe[title="Monkeytype guest typing test"]',
   );
   await frame.locator('#words .word').first().waitFor();
   await page.locator('.typing-load').waitFor({ state: 'hidden' });
-  const widget = await page.locator('.typing-widget').boundingBox();
-  const keyboard = await page.locator('.scene-host').boundingBox();
+  await page.waitForFunction(
+    () =>
+      document.querySelector('.scene-host')?.dataset.monitor === 'projected',
+  );
+  const monitor = await page.locator('.monitor-display').boundingBox();
+  const scene = await page.locator('.scene-host').boundingBox();
+  const keyboardY = await page
+    .locator('.scene-host')
+    .evaluate((element) => Number(element.dataset.keyboardY));
   assert.ok(
-    keyboard.y >= widget.y + widget.height - 2,
-    'Keyboard must be below the test widget',
+    monitor.width > 550,
+    'Desktop monitor must be large enough to read',
+  );
+  assert.ok(
+    scene.y + keyboardY > monitor.y + monitor.height,
+    'Rendered keyboard must remain below the monitor',
   );
   await page.waitForFunction(
     () => document.querySelector('.scene-host')?.dataset.renderState === 'idle',
@@ -106,8 +118,13 @@ try {
     'Typing must respect mute',
   );
   await button(frame, 'Restart Test').click();
+  if (!(await button(frame, 'words').isVisible()))
+    await button(frame, 'test settings').click();
   await button(frame, 'words').click();
+  if (!(await button(frame, '10').isVisible()))
+    await button(frame, 'test settings').click();
   await button(frame, '10').click();
+  await page.keyboard.press('Escape');
   await frame.locator('#words .word').nth(9).waitFor();
   await frame
     .locator('#words .word')
@@ -141,6 +158,11 @@ try {
   await button(page, 'Back to builder').click();
   await page.locator('.typing-frame').waitFor({ state: 'detached' });
   assert.equal(await page.locator('.typing-frame').count(), 0);
+  assert.equal(
+    await button(page, 'Explode').getAttribute('aria-pressed'),
+    'true',
+    'Returning must restore the exploded builder view',
+  );
   assert.equal(
     await page.getByRole('textbox', { name: 'Build name' }).inputValue(),
     buildName,
@@ -182,6 +204,11 @@ try {
     await phoneFrame
       .locator('html')
       .evaluate((element) => element.scrollWidth <= innerWidth),
+  );
+  const phoneMonitor = await phone.locator('.monitor-display').boundingBox();
+  assert.ok(
+    phoneMonitor.width >= 300,
+    'Phone monitor must preserve readable text',
   );
   await button(phoneFrame, 'test settings').tap();
   await phone.screenshot({

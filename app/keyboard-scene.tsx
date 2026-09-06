@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type {
   SceneOptions,
   SceneStatus,
@@ -11,7 +11,9 @@ export default function KeyboardScene({
   options,
   onPress,
   onRelease,
+  children,
 }: {
+  children?: ReactNode;
   options: SceneOptions;
   onPress: (code: string) => void;
   onRelease: (code: string) => void;
@@ -63,8 +65,10 @@ export default function KeyboardScene({
     <fieldset
       className="scene-host"
       ref={host}
+      data-scene-status={status.kind}
       aria-label="Interactive keyboard preview"
     >
+      {children}
       {status.kind === 'loading' && (
         <output className="model-status">Preparing your keyboard…</output>
       )}

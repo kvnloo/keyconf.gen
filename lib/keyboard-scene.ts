@@ -1,10 +1,27 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import type { Build, Palette } from './build';
 import { legendInk } from './appearance';
 import { createDeskScene } from './desk-scene';
+import { monitorTransform, type ScreenPoint } from './monitor-projection';
+
+// Steam contributes to the color pass, but must not cast rectangular occlusion.
+class RoomOcclusion extends GTAOPass {
+  override render(...args: Parameters<GTAOPass['render']>) {
+    this.camera.layers.disable(1);
+    try {
+      super.render(...args);
+    } finally {
+      this.camera.layers.enable(1);
+    }
+  }
+}
 
 export type SceneOptions = Pick<Build, 'caseColor' | 'finish' | 'profile'> &
   Omit<Palette, 'name'> & {
@@ -18,7 +35,8 @@ export type SceneOptions = Pick<Build, 'caseColor' | 'finish' | 'profile'> &
         };
     exploded: boolean;
     view: string;
-    environment: 'desk' | 'studio';
+    environment: 'desk' | 'studio' | 'typing';
+    roomMotion?: boolean;
   };
 export type SceneStatus =
   | { kind: 'loading' | 'ready' }
@@ -55,12 +73,15 @@ export function createKeyboardScene(
   let stopped = false;
   let graphicsLost = false;
   let frame = 0;
+  let ambientTimer = 0;
   let visible = true;
   let lastFrame = 0;
   let generation = 0;
   let model: THREE.Group | null = null;
   let cameraTarget: THREE.Vector3 | null = null;
   let focusHeight = 0.4;
+  let focusDepth = 0;
+  let ambientTime = 0;
   let assembledDistance = 11;
   const models = new Map<string, Promise<THREE.Group>>();
   const loaded = new Set<THREE.Group>();
@@ -79,7 +100,7 @@ export function createKeyboardScene(
   });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.type = THREE.VSMShadowMap;
   renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.toneMappingExposure = 1;
   renderer.domElement.tabIndex = 0;
@@ -98,6 +119,7 @@ export function createKeyboardScene(
   room.dispose();
   const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 150);
   camera.position.set(7, 15, 19);
+  camera.layers.enable(1);
   const controls = new OrbitControls(camera, renderer.domElement);
   renderer.domElement.style.touchAction = 'pan-y pinch-zoom';
   controls.enableDamping = !reduced;
@@ -108,14 +130,15 @@ export function createKeyboardScene(
   controls.target.set(0, 0.4, 0);
   controls.enablePan = false;
   const light = new THREE.DirectionalLight('#ffffff', 2.2);
-  light.position.set(-5, 14, 7);
+  light.position.set(-12, 19, -10);
   light.castShadow = true;
   light.shadow.mapSize.set(2048, 2048);
   light.shadow.camera.left = -14;
   light.shadow.camera.right = 14;
   light.shadow.camera.top = 12;
   light.shadow.camera.bottom = -12;
-  light.shadow.radius = 4;
+  light.shadow.radius = 3;
+  light.shadow.blurSamples = 8;
   light.shadow.normalBias = 0.03;
   light.shadow.bias = -0.0001;
   scene.add(light);
@@ -130,8 +153,25 @@ export function createKeyboardScene(
   ground.position.y = -0.22;
   ground.receiveShadow = true;
   scene.add(ground);
-  const desk = createDeskScene();
+  const desk = createDeskScene(wake);
   scene.add(desk.group);
+  const renderTarget = new THREE.WebGLRenderTarget(1, 1, {
+    type: THREE.HalfFloatType,
+    samples: 2,
+  });
+  const composer = new EffectComposer(renderer, renderTarget);
+  composer.addPass(new RenderPass(scene, camera));
+  const occlusion = new RoomOcclusion(scene, camera, 1, 1);
+  occlusion.updateGtaoMaterial({
+    radius: 0.9,
+    thickness: 1.5,
+    distanceFallOff: 0.75,
+    samples: 12,
+  });
+  occlusion.blendIntensity = 0.7;
+  composer.addPass(occlusion);
+  const output = new OutputPass();
+  composer.addPass(output);
   const grain = new Uint8Array(128 * 128 * 4);
   for (let i = 0; i < grain.length; i += 4) {
     const value = 150 + Math.floor(Math.random() * 80);
@@ -147,14 +187,22 @@ export function createKeyboardScene(
   noise.needsUpdate = true;
 
   function wake() {
+    window.clearTimeout(ambientTimer);
+    ambientTimer = 0;
     if (!stopped && !graphicsLost && !frame && visible && !document.hidden) {
       frame = requestAnimationFrame(render);
       element.dataset.renderState = 'active';
     }
   }
   function appearance(snap = false) {
-    desk.group.visible = options.environment === 'desk';
+    desk.group.visible = options.environment !== 'studio';
     ground.visible = !desk.group.visible;
+    renderer.domElement.setAttribute(
+      'aria-label',
+      options.environment === 'typing'
+        ? 'Keyboard preview. Type inside the monitor or click a key to try your build.'
+        : 'Keyboard preview. Type to press keys. Arrow keys rotate the view; plus and minus zoom. Tab returns to page controls.',
+    );
     const lighting =
       options.device.kind === 'control-deck'
         ? options.device.lighting
@@ -162,9 +210,11 @@ export function createKeyboardScene(
     light.color.set(
       lighting === 'Daylight' || desk.group.visible ? '#fff1db' : '#ffffff',
     );
-    light.intensity = lighting === 'After hours' ? 0.7 : 2.2;
+    light.intensity =
+      lighting === 'After hours' ? 0.7 : desk.group.visible ? 0.9 : 2.2;
     fill.intensity = lighting === 'After hours' ? 0.3 : 0.8;
-    scene.environmentIntensity = lighting === 'After hours' ? 0.35 : 0.7;
+    scene.environmentIntensity =
+      lighting === 'After hours' ? 0.35 : desk.group.visible ? 0.72 : 0.7;
     const colors = new Map([
       ['case', options.caseColor],
       ['alpha', options.alpha],
@@ -198,15 +248,40 @@ export function createKeyboardScene(
     wake();
   }
   function setView() {
+    const typing = options.environment === 'typing';
+    controls.enableRotate = controls.enableZoom = !typing;
+    controls.enableDamping = !reduced && !typing;
+    controls.maxDistance = typing ? 80 : 46;
+    focusDepth = typing ? -3 : 0;
+    desk.monitor.scale.y = typing && element.clientWidth < 700 ? 1.65 : 1;
+    if (typing) {
+      const narrow = element.clientWidth < 700;
+      focusHeight = narrow ? 10 : 5;
+      cameraTarget = new THREE.Vector3(0, narrow ? 25 : 17, narrow ? 52 : 38);
+      fitTypingCamera();
+      controls.update();
+      camera.position.copy(cameraTarget);
+      controls.target.set(0, focusHeight, focusDepth);
+      controls.update();
+      cameraTarget = null;
+      wake();
+      return;
+    }
+    resize();
     const deck = options.device.kind === 'control-deck';
     const distance = deck
       ? options.exploded
         ? 0.55
         : 0.46
       : options.environment === 'desk'
-        ? 1.12
+        ? 1.24
         : 1;
-    focusHeight = deck && options.exploded ? 1.35 : 0.4;
+    focusHeight =
+      deck && options.exploded
+        ? 1.35
+        : options.environment === 'desk'
+          ? 1.8
+          : 0.4;
     controls.minDistance = options.device.kind === 'control-deck' ? 7 : 12;
     cameraTarget =
       options.view === 'top'
@@ -363,11 +438,19 @@ export function createKeyboardScene(
       }
     }
     controls.target.y = approach(controls.target.y, focusHeight, 10);
+    controls.target.z = approach(controls.target.z, focusDepth, 10);
     const orbiting = controls.update(delta);
-    renderer.render(scene, camera);
+    const ambient =
+      desk.group.visible && options.roomMotion !== false && !reduced;
+    if (ambient) ambientTime += delta;
+    if (desk.group.visible) desk.updateAmbient(ambientTime, camera);
+    if (desk.group.visible) composer.render(delta);
+    else renderer.render(scene, camera);
+    projectMonitor();
     if (moving || orbiting) wake();
+    else if (ambient) ambientTimer = window.setTimeout(wake, 1000 / 30);
     element.dataset.renderFrames = String(renderer.info.render.frame);
-    element.dataset.renderState = frame ? 'active' : 'idle';
+    element.dataset.renderState = frame || ambientTimer ? 'active' : 'idle';
   }
   function clearKeys() {
     for (const code of down) callbacks.release(code);
@@ -398,6 +481,7 @@ export function createKeyboardScene(
     )
       return;
     if (
+      options.environment !== 'typing' &&
       event.target === renderer.domElement &&
       [
         'ArrowLeft',
@@ -484,11 +568,75 @@ export function createKeyboardScene(
     clicked = '';
     wake();
   }
+  function fitTypingCamera() {
+    const framing = camera.clone();
+    framing.position.copy(cameraTarget ?? camera.position);
+    framing.lookAt(0, focusHeight, focusDepth);
+    framing.updateMatrixWorld();
+    let tangent = 0;
+    const bounds = [
+      ...[-10.3, 10.3].flatMap((x) =>
+        [3, 15.2 * desk.monitor.scale.y].map(
+          (y) => new THREE.Vector3(x, y, -10.5),
+        ),
+      ),
+      ...[-8.5, 8.5].flatMap((x) =>
+        [-3.5, 3.5].map((z) => new THREE.Vector3(x, 0, z)),
+      ),
+    ];
+    for (const bound of bounds) {
+      const point = bound.applyMatrix4(framing.matrixWorldInverse);
+      tangent = Math.max(
+        tangent,
+        Math.abs(point.y / point.z),
+        Math.abs(point.x / point.z) / camera.aspect,
+      );
+    }
+    camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(tangent * 1.055));
+    camera.updateProjectionMatrix();
+  }
+  function projectMonitor() {
+    const display = element.querySelector<HTMLElement>('.monitor-display');
+    if (!display || options.environment !== 'typing') return;
+    const corners = [
+      [-9.56, 5.41],
+      [9.56, 5.41],
+      [9.56, -5.41],
+      [-9.56, -5.41],
+    ].map(([x, y]) => {
+      const point = desk.screen
+        .localToWorld(new THREE.Vector3(x, y, 0))
+        .project(camera);
+      return {
+        x: ((point.x + 1) * element.clientWidth) / 2,
+        y: ((1 - point.y) * element.clientHeight) / 2,
+      };
+    }) as [ScreenPoint, ScreenPoint, ScreenPoint, ScreenPoint];
+    const width = Math.max(
+      320,
+      Math.round(
+        Math.hypot(corners[1].x - corners[0].x, corners[1].y - corners[0].y),
+      ),
+    );
+    const height = (width * 10.82 * desk.monitor.scale.y) / 19.12;
+    const transform = monitorTransform(corners, width, height);
+    if (!transform) return;
+    display.style.width = `${width}px`;
+    display.style.height = `${height}px`;
+    display.style.transform = transform;
+    element.dataset.monitor = 'projected';
+    const keyFront = new THREE.Vector3(0, 1, 4).project(camera);
+    element.dataset.keyboardY = String(
+      ((1 - keyFront.y) * element.clientHeight) / 2,
+    );
+  }
   function resize() {
     const width = Math.max(element.clientWidth, 1),
       height = Math.max(element.clientHeight, 1);
     const aspect = width / height;
     renderer.setSize(width, height);
+    composer.setSize(width, height);
+    occlusion.setSize(Math.round(width * 0.75), Math.round(height * 0.75));
     camera.aspect = aspect;
     camera.fov = THREE.MathUtils.radToDeg(
       2 *
@@ -497,13 +645,24 @@ export function createKeyboardScene(
             Math.max(1, 1.5 / aspect),
         ),
     );
-    camera.updateProjectionMatrix();
+    if (options.environment === 'typing') {
+      desk.monitor.scale.y = width < 700 ? 1.65 : 1;
+      focusHeight = width < 700 ? 10 : 5;
+      cameraTarget = new THREE.Vector3(
+        0,
+        width < 700 ? 25 : 17,
+        width < 700 ? 52 : 38,
+      );
+      fitTypingCamera();
+    } else camera.updateProjectionMatrix();
     wake();
   }
   function visibility() {
     if (document.hidden) {
       clearKeys();
       cancelAnimationFrame(frame);
+      window.clearTimeout(ambientTimer);
+      ambientTimer = 0;
       frame = 0;
       element.dataset.renderState = 'paused';
     } else {
@@ -513,7 +672,7 @@ export function createKeyboardScene(
   }
   function motion() {
     reduced = preference.matches;
-    controls.enableDamping = !reduced;
+    controls.enableDamping = !reduced && options.environment !== 'typing';
     wake();
   }
   function orbitStart() {
@@ -524,6 +683,8 @@ export function createKeyboardScene(
     event.preventDefault();
     graphicsLost = true;
     cancelAnimationFrame(frame);
+    window.clearTimeout(ambientTimer);
+    ambientTimer = 0;
     frame = 0;
     callbacks.status({
       kind: 'error',
@@ -540,6 +701,8 @@ export function createKeyboardScene(
       wake();
     } else {
       cancelAnimationFrame(frame);
+      window.clearTimeout(ambientTimer);
+      ambientTimer = 0;
       frame = 0;
       element.dataset.renderState = 'paused';
     }
@@ -559,6 +722,7 @@ export function createKeyboardScene(
   renderer.domElement.addEventListener('webglcontextlost', contextLost);
   resize();
   setView();
+  appearance(true);
   void loadModel(initial.device);
   return {
     update(next: SceneOptions, handlers: Callbacks) {
@@ -589,6 +753,8 @@ export function createKeyboardScene(
       stopped = true;
       generation++;
       cancelAnimationFrame(frame);
+      window.clearTimeout(ambientTimer);
+      ambientTimer = 0;
       observer.disconnect();
       intersection.disconnect();
       controls.dispose();
@@ -604,6 +770,9 @@ export function createKeyboardScene(
       renderer.domElement.removeEventListener('webglcontextlost', contextLost);
       loaded.forEach(disposeModel);
       desk.dispose();
+      occlusion.dispose();
+      output.dispose();
+      composer.dispose();
       ground.geometry.dispose();
       ground.material.dispose();
       noise.dispose();

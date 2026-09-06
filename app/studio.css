@@ -1253,3 +1253,220 @@ body {
     left: 16px;
   }
 }
+
+/* The test stays real DOM, projected onto the desk monitor's four corners. */
+.studio-shell.typing-mode .workspace {
+  max-width: none;
+}
+.studio-shell.typing-mode .workspace .stage {
+  height: calc(100svh - 148px);
+  min-height: 780px;
+}
+.studio-shell.typing-mode .stage .scene-host {
+  inset: 0;
+  min-height: 0;
+}
+.studio-shell.typing-mode .typing-widget {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  pointer-events: none;
+  z-index: 2;
+}
+.typing-mode .typing-heading {
+  position: absolute;
+  top: 18px;
+  left: 24px;
+  right: 24px;
+  border: 0;
+  padding: 0;
+  pointer-events: auto;
+}
+.typing-mode .typing-heading a {
+  margin-left: auto;
+}
+.typing-mode .typing-footer {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 12px;
+  border: 0;
+  padding: 0;
+  pointer-events: auto;
+  font-size: 11px;
+}
+.monitor-display {
+  position: absolute;
+  left: 0;
+  top: 90px;
+  width: calc(100% - 48px);
+  margin: 0 24px;
+  max-height: 60%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  pointer-events: auto;
+  background: #18221c;
+  transform-origin: 0 0;
+  scrollbar-width: thin;
+  color-scheme: dark;
+}
+.scene-host[data-monitor='projected'][data-scene-status='ready']
+  .monitor-display {
+  top: 0;
+  margin: 0;
+  max-height: none;
+}
+.scene-host:not([data-scene-status='ready']) .monitor-display {
+  transform: none !important;
+  width: calc(100% - 48px) !important;
+  height: auto !important;
+}
+.typing-mode .typing-frame {
+  display: block;
+  min-height: 100%;
+  border: 0;
+}
+.typing-mode .typing-load {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #18221c;
+}
+.studio-shell.typing-mode .stage .view-controls {
+  display: none;
+}
+.studio-shell.typing-mode .stage-bottom > span {
+  display: none;
+}
+.studio-shell.typing-mode .stage > .volume-dial {
+  bottom: 70px;
+  right: 24px;
+}
+.studio-shell.typing-mode .stage-bottom {
+  bottom: 70px;
+}
+.room-motion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #b6c5b526;
+  border-radius: 24px;
+  background: #17221de8;
+  color: #ced8c7;
+  font-size: 11px;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+}
+.stage-bottom:has(.room-motion) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.typing-mode .scene-host:not([data-scene-status='ready']) .model-status {
+  top: auto;
+  bottom: 130px;
+  transform: translateX(-50%);
+}
+@media (max-width: 700px) {
+  .studio-shell.typing-mode .workspace .stage {
+    min-height: 880px;
+    height: calc(100svh - 130px);
+  }
+  .typing-mode .typing-heading {
+    left: 14px;
+    right: 14px;
+    top: 18px;
+    gap: 8px;
+  }
+  .typing-mode .typing-title {
+    display: none;
+  }
+  .typing-mode .typing-heading a {
+    font-size: 10px;
+  }
+  .typing-mode .typing-footer {
+    left: 14px;
+    right: 14px;
+    bottom: 12px;
+    gap: 12px;
+    font-size: 9px;
+  }
+  .studio-shell.typing-mode .stage > .volume-dial {
+    right: 14px;
+    bottom: 64px;
+  }
+  .studio-shell.typing-mode .stage-bottom {
+    left: 14px;
+    transform: none;
+    bottom: 68px;
+  }
+  .screen-home .room-motion span {
+    display: none;
+  }
+  .room-motion {
+    padding: 8px 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .room-motion {
+    display: none;
+  }
+}
+.typing-mode .typing-heading {
+  padding: 10px 12px;
+  background: #111c16e8;
+  border: 1px solid #b6c5b526;
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+}
+.typing-mode .typing-heading .button {
+  background: transparent;
+}
+.studio-shell.typing-mode .workspace {
+  min-height: 0;
+}
+.typing-mode .typing-heading {
+  top: 8px;
+  padding: 6px 10px;
+}
+.studio-shell.typing-mode .stage-bottom {
+  justify-content: flex-start;
+  left: 24px;
+  right: auto;
+  transform: none;
+}
+@media (max-width: 700px) {
+  .studio-shell.typing-mode .stage-bottom {
+    left: 14px;
+  }
+}
+.stage:has(.scene-host[data-scene-status='error']) .room-motion {
+  display: none;
+}
+.typing-mode .typing-heading {
+  background: none;
+  border: 0;
+  backdrop-filter: none;
+  pointer-events: none;
+}
+.typing-mode .typing-heading > * {
+  pointer-events: auto;
+}
+.typing-mode .typing-heading .button,
+.typing-mode .typing-heading > a,
+.typing-mode .typing-title {
+  background: #142119eb;
+  border-radius: 10px;
+}
+.typing-mode .typing-title {
+  padding: 10px;
+}
+.typing-mode .typing-heading > a {
+  padding: 12px;
+}
