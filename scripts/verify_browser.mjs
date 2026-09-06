@@ -46,6 +46,22 @@ try {
   await tab(page, 'Components').click();
   await page.getByRole('combobox', { name: 'Starting assembly' }).click();
   await page
+    .getByRole('option', { name: '75% · Keychron Q1 HE 8K', exact: true })
+    .click();
+  await page.getByText(/Wired 75%.*not measured latency/).waitFor();
+  await button(page, 'Magnetic').click();
+  await button(page, 'Use Keychron Ultra-Fast Lime Magnetic').waitFor();
+  await button(page, 'Contact').click();
+  assert.equal(
+    await button(page, 'Use Keychron Ultra-Fast Lime Magnetic').count(),
+    0,
+  );
+  await page
+    .getByRole('group', { name: 'Switch technology filter' })
+    .getByRole('button', { name: 'All', exact: true })
+    .click();
+  await page.getByRole('combobox', { name: 'Starting assembly' }).click();
+  await page
     .getByRole('option', { name: '75% · Keychron Q1 Max', exact: true })
     .click();
   await button(page, 'Import a website').click();

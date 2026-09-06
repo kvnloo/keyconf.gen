@@ -1,11 +1,15 @@
 import type { Part, Selection } from './catalog';
 import type { Build } from './build';
 
-export const catalogObservedAt = '2026-09-05';
+export const catalogObservedAt = 'September 5–6, 2026';
 const q1Max =
   'https://www.keychron.com/products/keychron-q1-max-qmk-via-wireless-custom-mechanical-keyboard';
 const q1He =
   'https://www.keychron.com/products/keychron-q1-he-qmk-wireless-custom-keyboard';
+const q1He8k =
+  'https://www.keychron.com/products/keychron-q1-he-8k-magnetic-switch-keyboard';
+const lime =
+  'https://www.keychron.com/products/keychron-ultra-fast-lime-magnetic-switch';
 const nk65 = 'https://novelkeys.com/products/nk65-entry-edition';
 const doubleRail =
   'https://www.keychron.com/products/gateron-double-rail-magnetic-switch';
@@ -26,6 +30,25 @@ const contactChoices = {
   keycaps: 'keychron-bow',
 };
 export const assemblies: Assembly[] = [
+  {
+    id: 'q1-he-8k',
+    name: 'Q1 HE 8K',
+    brand: 'Keychron',
+    layout: '75',
+    finish: 'Aluminum',
+    mount: 'Factory assembly',
+    availability: 'reference',
+    source: q1He8k,
+    note: 'Wired 75% · up to 8,000 Hz polling, not measured latency. September 6, 2026: Keychron lists Jade support in one section and Lime-only in another; Jade fit remains unresolved here.',
+    selection: {
+      case: 'q1-he-8k-case',
+      pcb: 'q1-he-8k-pcb',
+      plate: 'q1-he-8k-plate',
+      stabilizers: 'q1-he-8k-stabs',
+      switch: 'ultrafast-lime',
+      keycaps: 'q1-he-8k-caps',
+    },
+  },
   {
     id: 'tofu60',
     name: 'Tofu60 Redux',
@@ -128,6 +151,62 @@ const kitParts: {
   category: Part['category'];
   detail: string;
 }[] = [
+  {
+    id: 'q1-he-8k-case',
+    name: 'Q1 HE 8K case',
+    brand: 'Keychron',
+    source: q1He8k,
+    family: 'q1-he-8k',
+    category: 'case',
+    detail: 'Factory component · aluminum · 75%',
+  },
+  {
+    id: 'q1-he-8k-pcb',
+    name: 'Q1 HE 8K PCB',
+    brand: 'Keychron',
+    source: q1He8k,
+    family: 'q1-he-8k',
+    category: 'pcb',
+    detail: 'Factory component · wired magnetic · 1,000/2,000/8,000 Hz polling',
+  },
+  {
+    id: 'q1-he-8k-plate',
+    name: 'Q1 HE 8K plate',
+    brand: 'Keychron',
+    source: q1He8k,
+    family: 'q1-he-8k',
+    category: 'plate',
+    detail: 'Factory component · aluminum plate',
+  },
+  {
+    id: 'q1-he-8k-stabs',
+    name: 'Q1 HE 8K factory stabilizers',
+    brand: 'Keychron',
+    source: q1He8k,
+    family: 'screw',
+    category: 'stabilizers',
+    detail: 'Factory component · PCB screw-in',
+  },
+  {
+    id: 'q1-he-8k-caps',
+    name: 'Q1 HE 8K factory keycaps',
+    brand: 'Keychron',
+    source: q1He8k,
+    family: 'mx',
+    category: 'keycaps',
+    detail:
+      'Factory component · OSA profile · double-shot PBT; verify exact layout variant',
+  },
+  {
+    id: 'ultrafast-lime',
+    name: 'Ultra-Fast Lime Magnetic',
+    brand: 'Keychron',
+    source: lime,
+    family: 'keychron-ultrafast',
+    category: 'switch',
+    detail:
+      'Magnetic · manufacturer-listed for Q HE 8K; not a mechanical contact switch',
+  },
   {
     id: 'nk65-case',
     name: 'NK65 Entry case',
@@ -340,6 +419,7 @@ export const extraParts: Part[] = [
 export type SwitchInterface =
   | 'mx-contact'
   | 'keychron-double-rail'
+  | 'keychron-ultrafast'
   | 'other-magnetic';
 export const pcbInterfaces: Record<string, SwitchInterface> = {
   'redux-pcb': 'mx-contact',
@@ -347,10 +427,12 @@ export const pcbInterfaces: Record<string, SwitchInterface> = {
   'nk65-pcb': 'mx-contact',
   'q1-max-pcb': 'mx-contact',
   'q1-he-pcb': 'keychron-double-rail',
+  'q1-he-8k-pcb': 'keychron-ultrafast',
 };
 export function switchInterface(part: Part): SwitchInterface | undefined {
   if (part.category !== 'switch' || part.evidence !== 'documented') return;
   if (part.family === 'mx') return 'mx-contact';
   if (part.family === 'keychron-double-rail') return 'keychron-double-rail';
+  if (part.family === 'keychron-ultrafast') return 'keychron-ultrafast';
   if (part.family === 'he') return 'other-magnetic';
 }

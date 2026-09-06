@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { catalog, categories, checkBuild } from '../lib/catalog.ts';
-import { assemblies } from '../lib/component-data.ts';
+import { assemblies, pcbInterfaces } from '../lib/component-data.ts';
 import {
   defaultBuild,
   encodeBuild,
@@ -61,7 +61,9 @@ test('magnetic compatibility distinguishes the specified double-rail family from
       .status,
     'unknown',
   );
-  for (const assembly of assemblies.filter((a) => a.id !== 'q1-he')) {
+  for (const assembly of assemblies.filter(
+    (a) => pcbInterfaces[a.selection.pcb] === 'mx-contact',
+  )) {
     assert.equal(
       checkBuild(
         { ...assembly.selection, switch: 'double-rail-nebula' },
@@ -71,6 +73,32 @@ test('magnetic compatibility distinguishes the specified double-rail family from
       'incompatible',
     );
   }
+});
+
+test('Q1 HE 8K uses its own assembly and Lime reference without resolving conflicting Jade guidance', () => {
+  const kit = assemblies.find((a) => a.id === 'q1-he-8k');
+  assert.ok(kit);
+  const checks = checkBuild(kit.selection, catalog, '75');
+  assert.equal(checks[0].status, 'documented');
+  assert.equal(checks[1].status, 'documented');
+  assert.equal(checks[2].status, 'documented');
+  assert.match(kit.note, /not measured latency/);
+  assert.match(kit.note, /unresolved/);
+  for (const id of ['magnetic-jade', 'double-rail-nebula'])
+    assert.equal(
+      checkBuild({ ...kit.selection, switch: id }, catalog, '75')[1].status,
+      'unknown',
+    );
+  assert.equal(
+    checkBuild({ ...kit.selection, switch: 'oil-king' }, catalog, '75')[1]
+      .status,
+    'incompatible',
+  );
+  assert.equal(
+    checkBuild({ ...kit.selection, plate: 'q1-he-plate' }, catalog, '75')[0]
+      .status,
+    'unknown',
+  );
 });
 
 test('mixed or unverified core parts cannot inherit an assembly check', () => {

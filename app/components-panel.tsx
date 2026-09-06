@@ -11,6 +11,7 @@ import {
 import {
   assemblies,
   catalogObservedAt,
+  switchInterface,
   type Assembly,
 } from '../lib/component-data';
 import TechnologyGuide from './technology-guide';
@@ -50,18 +51,20 @@ export default function ComponentsPanel({
       a.selection.pcb === selection.pcb &&
       a.selection.plate === selection.plate,
   );
-  const matches = parts.filter(
-    (part) =>
+  const matches = parts.filter((part) => {
+    const electrical = switchInterface(part);
+    return (
       part.category === category &&
       (technology === 'all' ||
         category !== 'switch' ||
         (technology === 'contact'
-          ? part.family === 'mx'
-          : ['he', 'keychron-double-rail'].includes(part.family))) &&
+          ? electrical === 'mx-contact'
+          : electrical !== undefined && electrical !== 'mx-contact')) &&
       `${part.name} ${part.brand} ${part.detail}`
         .toLowerCase()
-        .includes(query.trim().toLowerCase()),
-  );
+        .includes(query.trim().toLowerCase())
+    );
+  });
   const conflicts = checks.filter(
     (check) => check.status === 'incompatible',
   ).length;

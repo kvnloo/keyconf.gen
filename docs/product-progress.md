@@ -297,3 +297,11 @@ Store observation cards now offer Review import alongside their retailer link. T
 The 320/1920px browser journey now checks source transfer, no automatic import request, explicit preview, switch category, add confirmation, focus and generic-import reset. It passes in development and the built Pages app. All 73 tests, types, lint, formatting and both builds pass. A cropped element capture appeared to show the skip link over content; a fresh viewport capture and measured bounds placed it entirely above the viewport while the search field held focus. No CSS change was made from that unconfirmed screenshot artifact.
 
 The preceding deferred-download release `ce2db47` passed all GitHub checks and deployment in run `34043561034`. Public nightly release metadata confirms that source. The new review-import action is a later checkpoint and is not claimed public until its own publication completes.
+
+## Q1 HE 8K assembly reference
+
+Added six sourced component references and a separate starting assembly, bringing the builder catalog to 45 parts and six assemblies. [Evidence and source conflicts](verification/q1-he-8k.md) explain the documented Lime pairing and why Jade remains unresolved. The scene continues to represent an illustrative layout, not product CAD. No new sound recording or measured latency is implied.
+
+The new magnetic family exposed a duplicated family list in the component filter. The filter now uses the same interface classification as compatibility, so Lime appears under Magnetic and not Contact. The full 74-test suite, types, lint, formatting and both builds pass. Browser checks verify selection at 390px, technology filtering, documented limitations, no overflow and clean-page share restoration in development and production. The full import/share/audio-recovery browser regression also passes and now includes the 8K selection/filter check in CI.
+
+The preceding Review import release `5443971` passed check and deploy in GitHub run `34043949842`. Public nightly metadata confirms that source, and its actual public observation journey passes, including deferred download, failed-download recovery and the explicit review/import flow. The 8K assembly is a later source checkpoint awaiting its own CI/publication.

@@ -211,7 +211,8 @@ export function checkBuild(
     pcbInterface === swInterface &&
     (pcb?.id === 'q1-max-pcb' ||
       pcb?.id === 'nk65-pcb' ||
-      pcb?.id === 'q1-he-pcb');
+      pcb?.id === 'q1-he-pcb' ||
+      pcb?.id === 'q1-he-8k-pcb');
   result.push({
     status:
       excluded || electricalConflict
@@ -227,9 +228,11 @@ export function checkBuild(
       : electricalConflict
         ? 'These parts use different electrical interfaces. A contact switch cannot use this magnetic sensor PCB, and a magnetic switch cannot use this contact PCB.'
         : documentedSwitch
-          ? pcbInterface === 'keychron-double-rail'
-            ? 'Keychron lists this Gateron Double-Rail family for the original Q1 HE. This does not extend to the Q1 HE 8K.'
-            : 'The manufacturer lists 3/5-pin MX contact switches for this PCB. Check the exact pin variant and housing clearance.'
+          ? pcbInterface === 'keychron-ultrafast'
+            ? 'Keychron lists Ultra-Fast Lime for Q1 HE 8K. Other magnetic families need separate evidence and calibration support.'
+            : pcbInterface === 'keychron-double-rail'
+              ? 'Keychron lists this Gateron Double-Rail family for the original Q1 HE. This does not extend to the Q1 HE 8K.'
+              : 'The manufacturer lists 3/5-pin MX contact switches for this PCB. Check the exact pin variant and housing clearance.'
           : 'Confirm the exact switch family, pin count, sensor support and calibration. A matching stem or magnet is not proof of PCB compatibility.',
     source:
       excluded || documentedSwitch
@@ -246,7 +249,9 @@ export function checkBuild(
     stabs?.evidence === 'documented' &&
     assembly &&
     assembly.selection.stabilizers === stabs?.id &&
-    ['nk65-entry', 'q1-max', 'q1-he', 'bakeneko60'].includes(assembly.id);
+    ['nk65-entry', 'q1-max', 'q1-he', 'q1-he-8k', 'bakeneko60'].includes(
+      assembly.id,
+    );
   result.push({
     status:
       reduxConflict || oRingConflict || plateMountConflict
