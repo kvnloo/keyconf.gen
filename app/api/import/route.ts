@@ -1,31 +1,6 @@
+import { requestText } from '../../../lib/request-text.ts';
 import { importWebsite } from '../../../lib/import-products.ts';
 const maxRequestBytes = 12_288;
-
-async function requestText(request: Request): Promise<string | null> {
-  if (Number(request.headers.get('content-length')) > maxRequestBytes) {
-    await request.body?.cancel();
-    return null;
-  }
-  if (!request.body) return '';
-  const reader = request.body.getReader();
-  const decoder = new TextDecoder();
-  let bytes = 0;
-  let text = '';
-  try {
-    while (true) {
-      const chunk = await reader.read();
-      if (chunk.done) return text + decoder.decode();
-      bytes += chunk.value.byteLength;
-      if (bytes > maxRequestBytes) {
-        await reader.cancel();
-        return null;
-      }
-      text += decoder.decode(chunk.value, { stream: true });
-    }
-  } finally {
-    reader.releaseLock();
-  }
-}
 
 function cors(request: Request) {
   const origin = request.headers.get('origin');
@@ -55,7 +30,7 @@ export async function POST(request: Request) {
       { status: 403 },
     );
   try {
-    const text = await requestText(request);
+    const text = await requestText(request, maxRequestBytes);
     if (text === null)
       return Response.json(
         { error: 'Request is too large.' },

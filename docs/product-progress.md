@@ -331,3 +331,11 @@ The selected-switch release was blocked by CI run `34045112167`: production typi
 The local catalog now stores a content-addressed archive of extraction source and Node version for each newly collected page. The importer and pricing parser are archived once per hash; page links commit atomically with observations. Exports verify archive integrity, and historical pages remain explicitly unknown instead of inheriting current source on replay. This addresses extractor-version evidence, not raw-response archiving or hosted ingestion.
 
 All 78 tests, strict types, lint and formatting pass. A real twelve-option Divinikey observation retained its archive, and a no-network replay returned identical evidence. The earlier 128 observations remained intact with unknown extractor provenance. Public snapshot contents and application behavior are unchanged. The previous phone-readiness release remains under GitHub verification and has not yet been claimed deployed.
+
+## Hosted catalog publication in progress
+
+Added D1 schema/migrations, credential-restricted snapshot publication, public readback and a publication CLI. The parser verifies original page hashes, source, ordering and counts. The existing bounded request reader is shared with the import route without changing its limit or cleanup behavior. All 81 tests, types, lint, formatting and the Worker build pass. A scoped migration-tool dependency override retains a clean audit and working migration generation.
+
+Actual local D1 publication/readback succeeds, but the rapid rejected-upload verification crashes Wrangler's proxy with `Network connection lost`. Isolated unauthorized and oversized requests return their expected statuses; the sequence remains unresolved. [Hosted catalog status](hosted-catalog.md) records the reproducer, experiments and remaining deployment/UI work. This backend is deliberately not deployed or claimed finished.
+
+Both preceding GitHub releases passed. Public nightly metadata confirms `7bc90ecd636c93414e5e0d803593a6ae2f43ab46`, run 45, published September 6 at 16:39:47 UTC. Stable main/dev source versions remain unchanged.

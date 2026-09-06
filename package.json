@@ -11,7 +11,7 @@
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint --max-warnings 0",
     "format": "oxfmt",
-    "format:check": "oxfmt --check app lib scripts tests videos/keyconf-launch/scripts next.config.ts vite.config.ts vite.pages.config.ts tsconfig.json .oxlintrc.json .github/workflows/publish.yml package.json",
+    "format:check": "oxfmt --check app lib db scripts tests videos/keyconf-launch/scripts drizzle.config.ts next.config.ts vite.config.ts vite.pages.config.ts tsconfig.json .oxlintrc.json .github/workflows/publish.yml package.json",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "build:pages": "vite build --config vite.pages.config.ts",
@@ -24,7 +24,10 @@
     "verify:featured": "node --experimental-strip-types scripts/verify_featured.mjs",
     "verify:observations": "node scripts/verify_observations.mjs",
     "verify:room": "node scripts/verify_room.mjs",
-    "catalog:observe": "node --experimental-strip-types scripts/observe_catalog.mjs"
+    "catalog:observe": "node --experimental-strip-types scripts/observe_catalog.mjs",
+    "db:generate": "drizzle-kit generate",
+    "catalog:publish": "node --experimental-strip-types scripts/publish_catalog.mjs",
+    "verify:catalog": "node scripts/verify_catalog.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
@@ -47,6 +50,8 @@
     "@types/three": "^0.185.4",
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-rsc": "0.5.34",
+    "drizzle-kit": "^0.31.10",
+    "drizzle-orm": "^0.45.2",
     "oxfmt": "0.61.0",
     "oxlint": "1.76.0",
     "oxlint-tsgolint": "7.0.2001",
@@ -56,5 +61,10 @@
     "vite": "8.2.2",
     "wrangler": "4.129.0"
   },
-  "type": "module"
+  "type": "module",
+  "overrides": {
+    "@esbuild-kit/core-utils": {
+      "esbuild": "0.25.12"
+    }
+  }
 }
