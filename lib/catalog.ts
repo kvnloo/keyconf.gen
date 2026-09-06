@@ -280,14 +280,22 @@ export function checkBuild(
           ? assembly.source
           : (stabs?.source ?? ''),
   });
+  const suppliedCaps =
+    assembly?.suppliedKeycaps &&
+    assembly.layout === layout &&
+    caps?.id === assembly.selection.keycaps &&
+    caps.evidence === 'documented' &&
+    sw?.id === assembly.selection.switch &&
+    sw.evidence === 'documented';
   result.push({
-    status: 'unknown',
+    status: suppliedCaps ? 'documented' : 'unknown',
     title: 'Keycap kit & row coverage',
-    detail:
-      caps?.evidence === 'documented'
+    detail: suppliedCaps
+      ? 'The manufacturer supplies these keycaps with this factory assembly and switch. Match the exact regional layout and revision before ordering; this does not establish coverage for mixed builds.'
+      : caps?.evidence === 'documented'
         ? 'Compare the kit diagram with every key width and sculpted row. MX stems alone do not establish full coverage; Cherry profiles can also interfere with some north-facing switch setups.'
         : 'The exact keycap inventory is unverified. Check stems, modifier widths, spacebar length and sculpted rows.',
-    source: caps?.source ?? '',
+    source: suppliedCaps ? assembly.source : (caps?.source ?? ''),
   });
   return result;
 }

@@ -23,6 +23,7 @@ export type Assembly = Pick<Build, 'layout' | 'finish'> & {
   source: string;
   note: string;
   availability: 'reference' | 'retired';
+  suppliedKeycaps?: true;
   selection: Selection;
 };
 const contactChoices = {
@@ -32,6 +33,7 @@ const contactChoices = {
 export const assemblies: Assembly[] = [
   {
     id: 'q1-he-8k',
+    suppliedKeycaps: true,
     name: 'Q1 HE 8K',
     brand: 'Keychron',
     layout: '75',

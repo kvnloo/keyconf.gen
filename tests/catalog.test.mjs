@@ -33,7 +33,7 @@ test('every starting assembly resolves six distinct-category products with docum
     assert.equal(
       checks.find((check) => check.title === 'Keycap kit & row coverage')
         ?.status,
-      'unknown',
+      assembly.suppliedKeycaps ? 'documented' : 'unknown',
     );
   }
 });
@@ -169,4 +169,24 @@ test('an entire starting assembly survives portable sharing and a single undo', 
     buildReducer(history, { kind: 'undo' }).present,
     defaultBuild,
   );
+});
+
+test('supplied keycap coverage is documented only for the unchanged factory combination', () => {
+  const kit = assemblies.find((a) => a.id === 'q1-he-8k');
+  const coverage = (selection, parts = catalog, layout = '75') =>
+    checkBuild(selection, parts, layout).find(
+      (c) => c.title === 'Keycap kit & row coverage',
+    );
+  assert.equal(coverage(kit.selection).status, 'documented');
+  for (const patch of [
+    { keycaps: 'keychron-bow' },
+    { switch: 'oil-king' },
+    { plate: 'q1-he-plate' },
+  ])
+    assert.equal(coverage({ ...kit.selection, ...patch }).status, 'unknown');
+  assert.equal(coverage(kit.selection, catalog, '65').status, 'unknown');
+  const unverified = catalog.map((p) =>
+    p.id === kit.selection.keycaps ? { ...p, evidence: 'unknown' } : p,
+  );
+  assert.equal(coverage(kit.selection, unverified).status, 'unknown');
 });

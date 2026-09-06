@@ -305,3 +305,11 @@ Added six sourced component references and a separate starting assembly, bringin
 The new magnetic family exposed a duplicated family list in the component filter. The filter now uses the same interface classification as compatibility, so Lime appears under Magnetic and not Contact. The full 74-test suite, types, lint, formatting and both builds pass. Browser checks verify selection at 390px, technology filtering, documented limitations, no overflow and clean-page share restoration in development and production. The full import/share/audio-recovery browser regression also passes and now includes the 8K selection/filter check in CI.
 
 The preceding Review import release `5443971` passed check and deploy in GitHub run `34043949842`. Public nightly metadata confirms that source, and its actual public observation journey passes, including deferred download, failed-download recovery and the explicit review/import flow. The 8K assembly is a later source checkpoint awaiting its own CI/publication.
+
+## Supplied keycap relationship
+
+The Q1 HE 8K reference now identifies its supplied keycaps as documented only with the original documented assembly, original switch, supplied caps and matching layout. Changing caps, switches, plate, layout or evidence removes that status. Other kit coverage stays unknown. The UI still asks users to match the exact regional variant and revision. A failing-before regression demonstrated the earlier blanket unknown result; all 75 tests now pass.
+
+Browser verification checks the factory relationship and its removal after choosing a different switch. The first broader browser run later failed at an unrelated audio readiness check: a JavaScript click followed visibility alone. A controlled delayed-sample experiment confirmed that a visible disabled play button does nothing when clicked through JavaScript. The verifier now waits for Playwright actionability before the in-page click. The original scheduled-voice and mute assertions and deadline remain intact; the full browser regression passes. Application playback code is unchanged.
+
+Strict types, lint, formatting and both builds pass. The production phone/share journey also passes with the supplied-keycap relationship. The preceding assembly release `bda3575` completed check and deploy in GitHub run `34044373374`; this keycap change is a later source checkpoint.

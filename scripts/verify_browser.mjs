@@ -49,9 +49,15 @@ try {
     .getByRole('option', { name: '75% · Keychron Q1 HE 8K', exact: true })
     .click();
   await page.getByText(/Wired 75%.*not measured latency/).waitFor();
+  const keycapFit = page
+    .locator('.fit-check')
+    .filter({ hasText: 'Keycap kit & row coverage' });
+  assert.match(await keycapFit.getAttribute('class'), /documented/);
   await button(page, 'Magnetic').click();
   await button(page, 'Use Keychron Ultra-Fast Lime Magnetic').waitFor();
   await button(page, 'Contact').click();
+  await button(page, 'Use Gateron Oil King').click();
+  assert.match(await keycapFit.getAttribute('class'), /unknown/);
   assert.equal(
     await button(page, 'Use Keychron Ultra-Fast Lime Magnetic').count(),
     0,
@@ -178,6 +184,7 @@ try {
     .click();
   await button(audioPage, 'Try a typing sequence').waitFor();
   assert.equal(await audioPage.evaluate(() => window.keyconfAudioProbe()), 0);
+  await button(audioPage, 'Try a typing sequence').click({ trial: true });
   const muteCheck = await audioPage.evaluate(async () => {
     const button = (name) =>
       Array.from(document.querySelectorAll('button')).find(
