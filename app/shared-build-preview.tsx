@@ -2,7 +2,7 @@
 import AccessoryFitNotes from './accessory-fit-notes';
 import { accessoryHost } from '../lib/accessory-hosts.ts';
 import { isQ1MaxAssembly } from '../lib/keyboard-variant';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -26,10 +26,12 @@ export default function SharedBuildPreview({
   build,
   onCustomize,
   publication,
+  creatorDetails,
 }: {
   build: Build;
   onCustomize: () => void;
   publication?: PublicPublication;
+  creatorDetails?: ReactNode;
 }) {
   const [exploded, setExploded] = useState(false);
   const [view, setView] = useState('perspective');
@@ -153,7 +155,11 @@ export default function SharedBuildPreview({
         <div>
           <span className="preview-eyebrow">SHARED KEYBOARD</span>
           <h1>{build.name}</h1>
-          <p>A snapshot to explore. Your saved build stays untouched.</p>
+          <p>
+            {publication
+              ? `By ${publication.author.displayName} · @${publication.author.handle}`
+              : 'A snapshot to explore. Your saved build stays untouched.'}
+          </p>
         </div>
         <button className="preview-customize" onClick={onCustomize}>
           Customize a copy <ArrowRight size={17} />
@@ -196,6 +202,7 @@ export default function SharedBuildPreview({
           </span>
         </section>
         <aside className="preview-details" aria-label="Shared build details">
+          {creatorDetails}
           <BuildFeedback build={build} published={!!publication} />
           <section className="preview-sound">
             <span className="preview-eyebrow">LISTEN</span>

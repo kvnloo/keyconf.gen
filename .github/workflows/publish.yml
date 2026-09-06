@@ -30,9 +30,9 @@ jobs:
       - name: Verify browser journeys and accessibility
         shell: bash
         run: |
-          npm run dev > /tmp/keyconf-preview.log 2>&1 &
+          setsid npm run dev > /tmp/keyconf-preview.log 2>&1 &
           preview_pid=$!
-          trap 'kill "$preview_pid" || true' EXIT
+          trap 'kill -- -"$preview_pid" 2>/dev/null || true' EXIT
           for attempt in {1..60}; do
             if curl --fail --silent http://localhost:3000/ > /dev/null; then break; fi
             sleep 1
@@ -57,15 +57,20 @@ jobs:
           npm run build
           node --experimental-strip-types scripts/seed_publication_fixture.mjs
           npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to /tmp/keyconf-publication-state --file /tmp/keyconf-publication-fixtures.sql > /tmp/keyconf-fixture-seed.log
-          npx wrangler dev --config dist/server/wrangler.json --persist-to /tmp/keyconf-publication-state --port 4180 > /tmp/keyconf-publication-worker.log 2>&1 &
+          mkdir -p outputs
+          setsid npx wrangler dev --config dist/server/wrangler.json --persist-to /tmp/keyconf-publication-state --port 4180 > outputs/publication-worker.log 2>&1 &
           PUBLICATION_WORKER_PID=$!
-          trap 'kill "$PUBLICATION_WORKER_PID" 2>/dev/null || true' EXIT
+          trap 'kill -- -"$PUBLICATION_WORKER_PID" 2>/dev/null || true' EXIT
           for attempt in {1..30}; do
             if curl --fail --silent http://localhost:4180/ > /dev/null; then break; fi
             sleep 1
           done
           curl --fail --silent http://localhost:4180/ > /dev/null
-          KEYCONF_HEADED=1 xvfb-run -a npm run verify:publication
+          if ! KEYCONF_HEADED=1 xvfb-run -a npm run verify:publication; then
+            tail -100 outputs/publication-worker.log
+            ps -o pid,ppid,stat,rss,args -p "$PUBLICATION_WORKER_PID" || true
+            exit 1
+          fi
       - name: Build this branch's preview
         run: npm run build:pages -- --base "/${{ github.event.repository.name }}/${CHANNEL}/"
       - name: Verify rendered production experience

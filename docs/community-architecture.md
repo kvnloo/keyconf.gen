@@ -276,3 +276,13 @@ checks that these explanations are visible. Screenshot review also caught a
 nested-route asset error despite a canvas existing. The Worker document now
 sets a root asset base, while the separate static Pages entry remains unchanged;
 the verifier requires a ready scene and loaded key audio before proceeding.
+
+The public preview's full creator details now sit in the side panel, with a
+compact byline beneath the build title. This removes the separate release block
+above the main navigation and brings the keyboard into the first viewport.
+
+The first hosted-page CI attempt lost its local Worker during withdrawn-link
+navigation. Its stdout was not retained, so the cause was not established.
+Worker output is now included in failure artifacts. Verification servers run in
+separate process groups and cleanup terminates their child processes as well as
+the npm wrapper, preventing earlier dev servers being left behind between steps.

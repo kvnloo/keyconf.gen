@@ -14,57 +14,60 @@ export default function PublishedBuild({
 }) {
   const { author, release, evidence } = publication;
   const [notice, setNotice] = useState('');
+  const creatorDetails = (
+    <section className="publication-author" aria-label="Creator and release">
+      <div>
+        <span className="preview-eyebrow">
+          {release.kind === 'drop' ? 'CREATOR DROP' : 'PUBLISHED BUILD'}
+        </span>
+        <h2>
+          {author.displayName} <small>@{author.handle}</small>
+        </h2>
+        <p>{publication.note}</p>
+      </div>
+      <div className="publication-links">
+        {author.links.map((link) => (
+          <a key={link.url} href={link.url} target="_blank" rel="noreferrer">
+            {link.label} ↗
+          </a>
+        ))}
+      </div>
+      {release.kind === 'drop' && (
+        <div>
+          <p>{release.availability}</p>
+          {release.externalUrl && (
+            <a href={release.externalUrl} target="_blank" rel="noreferrer">
+              Visit the creator ↗
+            </a>
+          )}
+        </div>
+      )}
+      <output aria-live="polite">{notice}</output>
+      <button
+        onClick={() => {
+          const url = URL.createObjectURL(
+            new Blob([JSON.stringify(publication.build, null, 2)], {
+              type: 'application/json',
+            }),
+          );
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'keyconf-build.json';
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }}
+      >
+        Download build file
+      </button>
+    </section>
+  );
   return (
     <>
-      <section className="publication-author" aria-label="Creator and release">
-        <div>
-          <span className="preview-eyebrow">
-            {release.kind === 'drop' ? 'CREATOR DROP' : 'PUBLISHED BUILD'}
-          </span>
-          <h2>
-            {author.displayName} <small>@{author.handle}</small>
-          </h2>
-          <p>{publication.note}</p>
-        </div>
-        <div className="publication-links">
-          {author.links.map((link) => (
-            <a key={link.url} href={link.url} target="_blank" rel="noreferrer">
-              {link.label} ↗
-            </a>
-          ))}
-        </div>
-        {release.kind === 'drop' && (
-          <div>
-            <p>{release.availability}</p>
-            {release.externalUrl && (
-              <a href={release.externalUrl} target="_blank" rel="noreferrer">
-                Visit the creator ↗
-              </a>
-            )}
-          </div>
-        )}
-        <output aria-live="polite">{notice}</output>
-        <button
-          onClick={() => {
-            const url = URL.createObjectURL(
-              new Blob([JSON.stringify(publication.build, null, 2)], {
-                type: 'application/json',
-              }),
-            );
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'keyconf-build.json';
-            link.click();
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-          }}
-        >
-          Download build file
-        </button>
-      </section>
       {publication.customization === 'available' ? (
         <SharedBuildPreview
           build={publication.build}
           publication={publication}
+          creatorDetails={creatorDetails}
           onCustomize={() => {
             try {
               window.location.href = `/#build=${encodeBuild(publication.build)}`;
@@ -78,6 +81,7 @@ export default function PublishedBuild({
         />
       ) : (
         <main className="shared-preview publication-archive">
+          {creatorDetails}
           <Link href="/#studio">Open your studio →</Link>
           <h1>{publication.title}</h1>
           <p>

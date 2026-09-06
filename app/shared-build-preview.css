@@ -363,3 +363,19 @@
     gap: 8px;
   }
 }
+.preview-details .publication-author {
+  display: block;
+  padding: 0 0 24px;
+  margin-bottom: 20px;
+  background: transparent;
+}
+.preview-details .publication-author h2 {
+  font-size: 1.125rem;
+}
+.preview-details .publication-author small {
+  display: block;
+  margin-top: 4px;
+}
+.preview-details .publication-author button {
+  margin-top: 12px;
+}
