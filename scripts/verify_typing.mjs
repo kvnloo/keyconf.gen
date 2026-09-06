@@ -76,6 +76,14 @@ try {
   );
   await frame.locator('#words .word').first().waitFor({ timeout: 60000 });
   await page.locator('.typing-load').waitFor({ state: 'hidden' });
+  // Projection resizes the iframe across Monkeytype's settings breakpoint.
+  await page.waitForFunction(() => {
+    const host = document.querySelector('.scene-host');
+    return (
+      host?.dataset.monitor === 'projected' &&
+      host.dataset.renderState === 'idle'
+    );
+  });
   // Use a word-count test so rendering evidence cannot expire a timed test.
   if (!(await button(frame, 'words').isVisible()))
     await button(frame, 'test settings').click();
@@ -84,10 +92,6 @@ try {
     await button(frame, 'test settings').click();
   await button(frame, '10').click();
   await page.keyboard.press('Escape');
-  await page.waitForFunction(
-    () =>
-      document.querySelector('.scene-host')?.dataset.monitor === 'projected',
-  );
   const monitor = await page.locator('.monitor-display').boundingBox();
   const scene = await page.locator('.scene-host').boundingBox();
   const keyboardY = await page
@@ -156,10 +160,6 @@ try {
   await frame.locator('#wordsInput').focus();
   await page.keyboard.type(words.join(' ') + ' ', { delay: 60 });
   await frame.locator('#result').waitFor({ state: 'visible' });
-  const result = await frame.locator('#result').innerText();
-  assert.match(result, /wpm/i);
-  assert.match(result, /100%/);
-  assert.match(result, /words 10/);
   await frame.locator('#words .word').first().waitFor({ state: 'detached' });
   await frame
     .locator('body')
@@ -169,6 +169,15 @@ try {
           requestAnimationFrame(() => requestAnimationFrame(resolve)),
         ),
     );
+  const result = await frame.locator('#result').innerText();
+  assert.match(result, /wpm/i);
+  assert.match(result, /100%/);
+  assert.match(result, /words 10/);
+  assert.doesNotMatch(
+    result,
+    /\b(?:failed|invalid)\b/i,
+    'Monkeytype must complete successfully, including its performance checks',
+  );
   assert.deepEqual(
     errors,
     [],
