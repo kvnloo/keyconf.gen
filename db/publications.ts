@@ -25,6 +25,7 @@ function publication(row: Row) {
   const metadata = parsePublicationRequest(JSON.parse(row.metadata));
   const author = parseCommunityProfile(JSON.parse(row.author));
   const { build, evidence } = restoreSnapshot(row);
+  const selected = new Set(Object.values(build.selection));
   return {
     id: row.id,
     title: metadata.title,
@@ -38,7 +39,11 @@ function publication(row: Row) {
             externalUrl: metadata.externalUrl,
           },
     author,
-    build: { ...build, name: metadata.title },
+    build: {
+      ...build,
+      name: metadata.title,
+      customParts: build.customParts.filter((part) => selected.has(part.id)),
+    },
     evidence,
     publishedAt: row.publishedAt,
     withdrawnAt: row.withdrawnAt,

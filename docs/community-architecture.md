@@ -190,3 +190,19 @@ integration still require implementation before enabling publishing.
 Owner release management uses a bounded summary list ordered by publication
 time and ID, including withdrawn entries. It does not restore 3D payloads, so
 retired parts cannot prevent a creator finding a release to withdraw.
+
+### Public evidence audit follow-up
+
+Public build projection now filters selected imports again, including legacy
+snapshots that bypassed the current save parser. The stored revision remains
+unchanged. SQLite coverage seeds an unused private import into a saved payload,
+publishes it, and checks public exclusion alongside retained selected source,
+unknown fit evidence and the original saved payload.
+
+Independent read-only audit confirmed the evidence projection still accepts any
+syntactically valid JSON, including null, unknown fields and unsafe nested URLs.
+It also confirmed that restoration depends on current catalog IDs. Before
+exposing publication endpoints, implement a versioned public evidence parser
+that reconstructs allowed nested fields and validates URLs, plus an explicit
+unavailable-geometry path for retired IDs that preserves frozen source evidence.
+Do not present the current internal projection as a validated public API.

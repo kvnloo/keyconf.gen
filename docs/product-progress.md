@@ -573,3 +573,9 @@ owner isolation, repeat removal, missing/private/withdrawn rejection, withdrawal
 redaction, invalid cursors and use of the owner list index. All 18 community
 tests passed. No favorite endpoint or UI is exposed; Google setup and hosted
 identity verification remain deferred.
+
+Favorite storage shipped in nightly version 12 from `5772fa9`; the live database
+contains `community_favorite` with account, publication and timestamp columns.
+All 139 tests, types, lint and the production build passed locally. The prior
+feedback CI failed because its headed browser command lacked a virtual display;
+`5772fa9` adds the wrapper used by the other headed checks. Its CI is pending.

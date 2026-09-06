@@ -254,6 +254,41 @@ test('account saves strip unselected imports and retain selected sources and acc
   );
   assert.match(evidence.catalogDigest, /^[a-f0-9]{64}$/);
   assert.match(evidence.sound.accuracy, /full build match unverified/);
+  await saveProfile(db, alice, profile);
+  const legacyPayload = JSON.stringify({
+    ...request.build,
+    customParts: [unused, selected],
+  });
+  db.sqlite
+    .prepare('UPDATE community_build SET payload=? WHERE id=?')
+    .run(legacyPayload, result.id);
+  const publication = await publishBuild(db, alice, {
+    operationId: 'import-evidence-publication',
+    buildId: result.id,
+    title: 'Imported switch study',
+    note: '',
+    kind: 'build',
+  });
+  const publicRead = await readPublicPublication(db, publication.id);
+  assert.deepEqual(publicRead.build.customParts, [selected]);
+  assert.equal(JSON.stringify(publicRead).includes(unused.source), false);
+  assert.equal(
+    publicRead.evidence.components.find((part) => part.id === selected.id)
+      .evidence,
+    'unknown',
+  );
+  assert.equal(
+    publicRead.evidence.accessoryReferences[0].source,
+    accessory.source,
+  );
+  assert.deepEqual(publicRead.evidence, evidence);
+  assert.equal(
+    db.sqlite
+      .prepare('SELECT payload FROM community_build WHERE id=?')
+      .get(result.id).payload,
+    legacyPayload,
+  );
+
   assert.deepEqual(
     (await readBuild(db, alice, result.id)).build.accessories,
     request.build.accessories,
