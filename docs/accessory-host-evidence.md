@@ -64,3 +64,13 @@ assemblies return to unknown fit. Duplicate occupants exceed the slot capacity.
 Keep the same assessment in editor, shared preview and private revision evidence.
 Exact case geometry, cap finish variants and any other board host remain separate
 work; firmware coordinates alone do not prove enclosure clearances.
+
+### Reviewed ANSI position data
+
+`reference-assets/keychron-q1-max-layout.json` records all 82 official matrix
+positions, the 81 normal keycaps, and the separate stock encoder. It includes
+source hashes, attribution, and the transform from QMK coordinates to centered
+scene coordinates. `tests/q1-layout.test.mjs` checks every transformed position,
+key width, unique key target, and encoder separation. The Windows base layer has
+right Ctrl and no dedicated End cap. This is reference data for the forthcoming
+scene adapter; adding it does not change the deployed generic model.

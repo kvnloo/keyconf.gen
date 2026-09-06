@@ -1,0 +1,1544 @@
+{
+  "id": "keychron-q1-max-ansi-encoder",
+  "name": "Keychron Q1 Max ANSI knob",
+  "layout": "LAYOUT_ansi_82",
+  "baseLayer": "WIN_BASE",
+  "matrixPositionCount": 82,
+  "normalKeycapCount": 81,
+  "unit": "u",
+  "bounds": {
+    "width": 16.25,
+    "height": 6.5
+  },
+  "coordinateTransform": {
+    "qmkOrigin": "top-left key bounds, x right and y down",
+    "sceneOrigin": "center of complete 16.25u by 6.5u layout bounds, x right and y up",
+    "x": "qmk.x + width / 2 - 8.125",
+    "y": "3.25 - qmk.y - height / 2"
+  },
+  "keys": [
+    {
+      "label": "Esc",
+      "code": "Escape",
+      "width": 1,
+      "x": -7.625,
+      "y": 2.75
+    },
+    {
+      "label": "F1",
+      "code": "F1",
+      "width": 1,
+      "x": -6.375,
+      "y": 2.75
+    },
+    {
+      "label": "F2",
+      "code": "F2",
+      "width": 1,
+      "x": -5.375,
+      "y": 2.75
+    },
+    {
+      "label": "F3",
+      "code": "F3",
+      "width": 1,
+      "x": -4.375,
+      "y": 2.75
+    },
+    {
+      "label": "F4",
+      "code": "F4",
+      "width": 1,
+      "x": -3.375,
+      "y": 2.75
+    },
+    {
+      "label": "F5",
+      "code": "F5",
+      "width": 1,
+      "x": -2.125,
+      "y": 2.75
+    },
+    {
+      "label": "F6",
+      "code": "F6",
+      "width": 1,
+      "x": -1.125,
+      "y": 2.75
+    },
+    {
+      "label": "F7",
+      "code": "F7",
+      "width": 1,
+      "x": -0.125,
+      "y": 2.75
+    },
+    {
+      "label": "F8",
+      "code": "F8",
+      "width": 1,
+      "x": 0.875,
+      "y": 2.75
+    },
+    {
+      "label": "F9",
+      "code": "F9",
+      "width": 1,
+      "x": 2.125,
+      "y": 2.75
+    },
+    {
+      "label": "F10",
+      "code": "F10",
+      "width": 1,
+      "x": 3.125,
+      "y": 2.75
+    },
+    {
+      "label": "F11",
+      "code": "F11",
+      "width": 1,
+      "x": 4.125,
+      "y": 2.75
+    },
+    {
+      "label": "F12",
+      "code": "F12",
+      "width": 1,
+      "x": 5.125,
+      "y": 2.75
+    },
+    {
+      "label": "Del",
+      "code": "Delete",
+      "width": 1,
+      "x": 6.375,
+      "y": 2.75
+    },
+    {
+      "label": "`",
+      "code": "Backquote",
+      "width": 1,
+      "x": -7.625,
+      "y": 1.5
+    },
+    {
+      "label": "1",
+      "code": "Digit1",
+      "width": 1,
+      "x": -6.625,
+      "y": 1.5
+    },
+    {
+      "label": "2",
+      "code": "Digit2",
+      "width": 1,
+      "x": -5.625,
+      "y": 1.5
+    },
+    {
+      "label": "3",
+      "code": "Digit3",
+      "width": 1,
+      "x": -4.625,
+      "y": 1.5
+    },
+    {
+      "label": "4",
+      "code": "Digit4",
+      "width": 1,
+      "x": -3.625,
+      "y": 1.5
+    },
+    {
+      "label": "5",
+      "code": "Digit5",
+      "width": 1,
+      "x": -2.625,
+      "y": 1.5
+    },
+    {
+      "label": "6",
+      "code": "Digit6",
+      "width": 1,
+      "x": -1.625,
+      "y": 1.5
+    },
+    {
+      "label": "7",
+      "code": "Digit7",
+      "width": 1,
+      "x": -0.625,
+      "y": 1.5
+    },
+    {
+      "label": "8",
+      "code": "Digit8",
+      "width": 1,
+      "x": 0.375,
+      "y": 1.5
+    },
+    {
+      "label": "9",
+      "code": "Digit9",
+      "width": 1,
+      "x": 1.375,
+      "y": 1.5
+    },
+    {
+      "label": "0",
+      "code": "Digit0",
+      "width": 1,
+      "x": 2.375,
+      "y": 1.5
+    },
+    {
+      "label": "-",
+      "code": "Minus",
+      "width": 1,
+      "x": 3.375,
+      "y": 1.5
+    },
+    {
+      "label": "=",
+      "code": "Equal",
+      "width": 1,
+      "x": 4.375,
+      "y": 1.5
+    },
+    {
+      "label": "Backspace",
+      "code": "Backspace",
+      "width": 2,
+      "x": 5.875,
+      "y": 1.5
+    },
+    {
+      "label": "PgUp",
+      "code": "PageUp",
+      "width": 1,
+      "x": 7.625,
+      "y": 1.5
+    },
+    {
+      "label": "Tab",
+      "code": "Tab",
+      "width": 1.5,
+      "x": -7.375,
+      "y": 0.5
+    },
+    {
+      "label": "Q",
+      "code": "KeyQ",
+      "width": 1,
+      "x": -6.125,
+      "y": 0.5
+    },
+    {
+      "label": "W",
+      "code": "KeyW",
+      "width": 1,
+      "x": -5.125,
+      "y": 0.5
+    },
+    {
+      "label": "E",
+      "code": "KeyE",
+      "width": 1,
+      "x": -4.125,
+      "y": 0.5
+    },
+    {
+      "label": "R",
+      "code": "KeyR",
+      "width": 1,
+      "x": -3.125,
+      "y": 0.5
+    },
+    {
+      "label": "T",
+      "code": "KeyT",
+      "width": 1,
+      "x": -2.125,
+      "y": 0.5
+    },
+    {
+      "label": "Y",
+      "code": "KeyY",
+      "width": 1,
+      "x": -1.125,
+      "y": 0.5
+    },
+    {
+      "label": "U",
+      "code": "KeyU",
+      "width": 1,
+      "x": -0.125,
+      "y": 0.5
+    },
+    {
+      "label": "I",
+      "code": "KeyI",
+      "width": 1,
+      "x": 0.875,
+      "y": 0.5
+    },
+    {
+      "label": "O",
+      "code": "KeyO",
+      "width": 1,
+      "x": 1.875,
+      "y": 0.5
+    },
+    {
+      "label": "P",
+      "code": "KeyP",
+      "width": 1,
+      "x": 2.875,
+      "y": 0.5
+    },
+    {
+      "label": "[",
+      "code": "BracketLeft",
+      "width": 1,
+      "x": 3.875,
+      "y": 0.5
+    },
+    {
+      "label": "]",
+      "code": "BracketRight",
+      "width": 1,
+      "x": 4.875,
+      "y": 0.5
+    },
+    {
+      "label": "\\",
+      "code": "Backslash",
+      "width": 1.5,
+      "x": 6.125,
+      "y": 0.5
+    },
+    {
+      "label": "PgDn",
+      "code": "PageDown",
+      "width": 1,
+      "x": 7.625,
+      "y": 0.5
+    },
+    {
+      "label": "Caps",
+      "code": "CapsLock",
+      "width": 1.75,
+      "x": -7.25,
+      "y": -0.5
+    },
+    {
+      "label": "A",
+      "code": "KeyA",
+      "width": 1,
+      "x": -5.875,
+      "y": -0.5
+    },
+    {
+      "label": "S",
+      "code": "KeyS",
+      "width": 1,
+      "x": -4.875,
+      "y": -0.5
+    },
+    {
+      "label": "D",
+      "code": "KeyD",
+      "width": 1,
+      "x": -3.875,
+      "y": -0.5
+    },
+    {
+      "label": "F",
+      "code": "KeyF",
+      "width": 1,
+      "x": -2.875,
+      "y": -0.5
+    },
+    {
+      "label": "G",
+      "code": "KeyG",
+      "width": 1,
+      "x": -1.875,
+      "y": -0.5
+    },
+    {
+      "label": "H",
+      "code": "KeyH",
+      "width": 1,
+      "x": -0.875,
+      "y": -0.5
+    },
+    {
+      "label": "J",
+      "code": "KeyJ",
+      "width": 1,
+      "x": 0.125,
+      "y": -0.5
+    },
+    {
+      "label": "K",
+      "code": "KeyK",
+      "width": 1,
+      "x": 1.125,
+      "y": -0.5
+    },
+    {
+      "label": "L",
+      "code": "KeyL",
+      "width": 1,
+      "x": 2.125,
+      "y": -0.5
+    },
+    {
+      "label": ";",
+      "code": "Semicolon",
+      "width": 1,
+      "x": 3.125,
+      "y": -0.5
+    },
+    {
+      "label": "'",
+      "code": "Quote",
+      "width": 1,
+      "x": 4.125,
+      "y": -0.5
+    },
+    {
+      "label": "Enter",
+      "code": "Enter",
+      "width": 2.25,
+      "x": 5.75,
+      "y": -0.5
+    },
+    {
+      "label": "Home",
+      "code": "Home",
+      "width": 1,
+      "x": 7.625,
+      "y": -0.5
+    },
+    {
+      "label": "Shift",
+      "code": "ShiftLeft",
+      "width": 2.25,
+      "x": -7.0,
+      "y": -1.5
+    },
+    {
+      "label": "Z",
+      "code": "KeyZ",
+      "width": 1,
+      "x": -5.375,
+      "y": -1.5
+    },
+    {
+      "label": "X",
+      "code": "KeyX",
+      "width": 1,
+      "x": -4.375,
+      "y": -1.5
+    },
+    {
+      "label": "C",
+      "code": "KeyC",
+      "width": 1,
+      "x": -3.375,
+      "y": -1.5
+    },
+    {
+      "label": "V",
+      "code": "KeyV",
+      "width": 1,
+      "x": -2.375,
+      "y": -1.5
+    },
+    {
+      "label": "B",
+      "code": "KeyB",
+      "width": 1,
+      "x": -1.375,
+      "y": -1.5
+    },
+    {
+      "label": "N",
+      "code": "KeyN",
+      "width": 1,
+      "x": -0.375,
+      "y": -1.5
+    },
+    {
+      "label": "M",
+      "code": "KeyM",
+      "width": 1,
+      "x": 0.625,
+      "y": -1.5
+    },
+    {
+      "label": ",",
+      "code": "Comma",
+      "width": 1,
+      "x": 1.625,
+      "y": -1.5
+    },
+    {
+      "label": ".",
+      "code": "Period",
+      "width": 1,
+      "x": 2.625,
+      "y": -1.5
+    },
+    {
+      "label": "/",
+      "code": "Slash",
+      "width": 1,
+      "x": 3.625,
+      "y": -1.5
+    },
+    {
+      "label": "Shift",
+      "code": "ShiftRight",
+      "width": 1.75,
+      "x": 5.0,
+      "y": -1.5
+    },
+    {
+      "label": "↑",
+      "code": "ArrowUp",
+      "width": 1,
+      "x": 6.625,
+      "y": -1.75
+    },
+    {
+      "label": "Ctrl",
+      "code": "ControlLeft",
+      "width": 1.25,
+      "x": -7.5,
+      "y": -2.5
+    },
+    {
+      "label": "Win",
+      "code": "MetaLeft",
+      "width": 1.25,
+      "x": -6.25,
+      "y": -2.5
+    },
+    {
+      "label": "Alt",
+      "code": "AltLeft",
+      "width": 1.25,
+      "x": -5.0,
+      "y": -2.5
+    },
+    {
+      "label": "",
+      "code": "Space",
+      "width": 6.25,
+      "x": -1.25,
+      "y": -2.5
+    },
+    {
+      "label": "Alt",
+      "code": "AltRight",
+      "width": 1,
+      "x": 2.375,
+      "y": -2.5
+    },
+    {
+      "label": "Fn",
+      "code": "Fn",
+      "width": 1,
+      "x": 3.375,
+      "y": -2.5
+    },
+    {
+      "label": "Ctrl",
+      "code": "ControlRight",
+      "width": 1,
+      "x": 4.375,
+      "y": -2.5
+    },
+    {
+      "label": "←",
+      "code": "ArrowLeft",
+      "width": 1,
+      "x": 5.625,
+      "y": -2.75
+    },
+    {
+      "label": "↓",
+      "code": "ArrowDown",
+      "width": 1,
+      "x": 6.625,
+      "y": -2.75
+    },
+    {
+      "label": "→",
+      "code": "ArrowRight",
+      "width": 1,
+      "x": 7.625,
+      "y": -2.75
+    }
+  ],
+  "stockEncoder": {
+    "label": "Mute",
+    "code": "AudioVolumeMute",
+    "width": 1,
+    "x": 7.625,
+    "y": 2.75,
+    "matrix": [
+      0,
+      14
+    ],
+    "qmkX": 15.25,
+    "qmkY": 0,
+    "qmkCode": "KC_MUTE",
+    "rotationCounterclockwise": "AudioVolumeDown",
+    "rotationClockwise": "AudioVolumeUp",
+    "pinA": "B14",
+    "pinB": "B15"
+  },
+  "sourcePositions": [
+    {
+      "matrix": [
+        0,
+        0
+      ],
+      "x": 0,
+      "y": 0,
+      "qmkCode": "KC_ESC",
+      "code": "Escape",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        0,
+        1
+      ],
+      "x": 1.25,
+      "y": 0,
+      "qmkCode": "KC_F1",
+      "code": "F1",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        0,
+        2
+      ],
+      "x": 2.25,
+      "y": 0,
+      "qmkCode": "KC_F2",
+      "code": "F2",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        0,
+        3
+      ],
+      "x": 3.25,
+      "y": 0,
+      "qmkCode": "KC_F3",
+      "code": "F3",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        0,
+        4
+      ],
+      "x": 4.25,
+      "y": 0,
+      "qmkCode": "KC_F4",
+      "code": "F4",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        0,
+        5
+      ],
+      "x": 5.5,
+      "y": 0,
+      "qmkCode": "KC_F5",
+      "code": "F5",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        0,
+        6
+      ],
+      "x": 6.5,
+      "y": 0,
+      "qmkCode": "KC_F6",
+      "code": "F6",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        0,
+        7
+      ],
+      "x": 7.5,
+      "y": 0,
+      "qmkCode": "KC_F7",
+      "code": "F7",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        0,
+        8
+      ],
+      "x": 8.5,
+      "y": 0,
+      "qmkCode": "KC_F8",
+      "code": "F8",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        0,
+        9
+      ],
+      "x": 9.75,
+      "y": 0,
+      "qmkCode": "KC_F9",
+      "code": "F9",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        0,
+        10
+      ],
+      "x": 10.75,
+      "y": 0,
+      "qmkCode": "KC_F10",
+      "code": "F10",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        0,
+        11
+      ],
+      "x": 11.75,
+      "y": 0,
+      "qmkCode": "KC_F11",
+      "code": "F11",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        0,
+        12
+      ],
+      "x": 12.75,
+      "y": 0,
+      "qmkCode": "KC_F12",
+      "code": "F12",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        0,
+        13
+      ],
+      "x": 14,
+      "y": 0,
+      "qmkCode": "KC_DEL",
+      "code": "Delete",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        0,
+        14
+      ],
+      "x": 15.25,
+      "y": 0,
+      "qmkCode": "KC_MUTE",
+      "code": "AudioVolumeMute",
+      "kind": "encoder-push"
+    },
+    {
+      "matrix": [
+        1,
+        0
+      ],
+      "x": 0,
+      "y": 1.25,
+      "qmkCode": "KC_GRV",
+      "code": "Backquote",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        1,
+        1
+      ],
+      "x": 1,
+      "y": 1.25,
+      "qmkCode": "KC_1",
+      "code": "Digit1",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        1,
+        2
+      ],
+      "x": 2,
+      "y": 1.25,
+      "qmkCode": "KC_2",
+      "code": "Digit2",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        1,
+        3
+      ],
+      "x": 3,
+      "y": 1.25,
+      "qmkCode": "KC_3",
+      "code": "Digit3",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        1,
+        4
+      ],
+      "x": 4,
+      "y": 1.25,
+      "qmkCode": "KC_4",
+      "code": "Digit4",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        1,
+        5
+      ],
+      "x": 5,
+      "y": 1.25,
+      "qmkCode": "KC_5",
+      "code": "Digit5",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        1,
+        6
+      ],
+      "x": 6,
+      "y": 1.25,
+      "qmkCode": "KC_6",
+      "code": "Digit6",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        1,
+        7
+      ],
+      "x": 7,
+      "y": 1.25,
+      "qmkCode": "KC_7",
+      "code": "Digit7",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        1,
+        8
+      ],
+      "x": 8,
+      "y": 1.25,
+      "qmkCode": "KC_8",
+      "code": "Digit8",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        1,
+        9
+      ],
+      "x": 9,
+      "y": 1.25,
+      "qmkCode": "KC_9",
+      "code": "Digit9",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        1,
+        10
+      ],
+      "x": 10,
+      "y": 1.25,
+      "qmkCode": "KC_0",
+      "code": "Digit0",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        1,
+        11
+      ],
+      "x": 11,
+      "y": 1.25,
+      "qmkCode": "KC_MINS",
+      "code": "Minus",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        1,
+        12
+      ],
+      "x": 12,
+      "y": 1.25,
+      "qmkCode": "KC_EQL",
+      "code": "Equal",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        1,
+        13
+      ],
+      "x": 13,
+      "y": 1.25,
+      "w": 2,
+      "qmkCode": "KC_BSPC",
+      "code": "Backspace",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        1,
+        14
+      ],
+      "x": 15.25,
+      "y": 1.25,
+      "qmkCode": "KC_PGUP",
+      "code": "PageUp",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        0
+      ],
+      "x": 0,
+      "y": 2.25,
+      "w": 1.5,
+      "qmkCode": "KC_TAB",
+      "code": "Tab",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        1
+      ],
+      "x": 1.5,
+      "y": 2.25,
+      "qmkCode": "KC_Q",
+      "code": "KeyQ",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        2
+      ],
+      "x": 2.5,
+      "y": 2.25,
+      "qmkCode": "KC_W",
+      "code": "KeyW",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        3
+      ],
+      "x": 3.5,
+      "y": 2.25,
+      "qmkCode": "KC_E",
+      "code": "KeyE",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        4
+      ],
+      "x": 4.5,
+      "y": 2.25,
+      "qmkCode": "KC_R",
+      "code": "KeyR",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        5
+      ],
+      "x": 5.5,
+      "y": 2.25,
+      "qmkCode": "KC_T",
+      "code": "KeyT",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        6
+      ],
+      "x": 6.5,
+      "y": 2.25,
+      "qmkCode": "KC_Y",
+      "code": "KeyY",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        7
+      ],
+      "x": 7.5,
+      "y": 2.25,
+      "qmkCode": "KC_U",
+      "code": "KeyU",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        8
+      ],
+      "x": 8.5,
+      "y": 2.25,
+      "qmkCode": "KC_I",
+      "code": "KeyI",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        9
+      ],
+      "x": 9.5,
+      "y": 2.25,
+      "qmkCode": "KC_O",
+      "code": "KeyO",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        10
+      ],
+      "x": 10.5,
+      "y": 2.25,
+      "qmkCode": "KC_P",
+      "code": "KeyP",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        11
+      ],
+      "x": 11.5,
+      "y": 2.25,
+      "qmkCode": "KC_LBRC",
+      "code": "BracketLeft",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        12
+      ],
+      "x": 12.5,
+      "y": 2.25,
+      "qmkCode": "KC_RBRC",
+      "code": "BracketRight",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        13
+      ],
+      "x": 13.5,
+      "y": 2.25,
+      "w": 1.5,
+      "qmkCode": "KC_BSLS",
+      "code": "Backslash",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        2,
+        14
+      ],
+      "x": 15.25,
+      "y": 2.25,
+      "qmkCode": "KC_PGDN",
+      "code": "PageDown",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        3,
+        0
+      ],
+      "x": 0,
+      "y": 3.25,
+      "w": 1.75,
+      "qmkCode": "KC_CAPS",
+      "code": "CapsLock",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        3,
+        1
+      ],
+      "x": 1.75,
+      "y": 3.25,
+      "qmkCode": "KC_A",
+      "code": "KeyA",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        3,
+        2
+      ],
+      "x": 2.75,
+      "y": 3.25,
+      "qmkCode": "KC_S",
+      "code": "KeyS",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        3,
+        3
+      ],
+      "x": 3.75,
+      "y": 3.25,
+      "qmkCode": "KC_D",
+      "code": "KeyD",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        3,
+        4
+      ],
+      "x": 4.75,
+      "y": 3.25,
+      "qmkCode": "KC_F",
+      "code": "KeyF",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        3,
+        5
+      ],
+      "x": 5.75,
+      "y": 3.25,
+      "qmkCode": "KC_G",
+      "code": "KeyG",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        3,
+        6
+      ],
+      "x": 6.75,
+      "y": 3.25,
+      "qmkCode": "KC_H",
+      "code": "KeyH",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        3,
+        7
+      ],
+      "x": 7.75,
+      "y": 3.25,
+      "qmkCode": "KC_J",
+      "code": "KeyJ",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        3,
+        8
+      ],
+      "x": 8.75,
+      "y": 3.25,
+      "qmkCode": "KC_K",
+      "code": "KeyK",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        3,
+        9
+      ],
+      "x": 9.75,
+      "y": 3.25,
+      "qmkCode": "KC_L",
+      "code": "KeyL",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        3,
+        10
+      ],
+      "x": 10.75,
+      "y": 3.25,
+      "qmkCode": "KC_SCLN",
+      "code": "Semicolon",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        3,
+        11
+      ],
+      "x": 11.75,
+      "y": 3.25,
+      "qmkCode": "KC_QUOT",
+      "code": "Quote",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        3,
+        12
+      ],
+      "x": 12.75,
+      "y": 3.25,
+      "w": 2.25,
+      "qmkCode": "KC_ENT",
+      "code": "Enter",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        3,
+        13
+      ],
+      "x": 15.25,
+      "y": 3.25,
+      "qmkCode": "KC_HOME",
+      "code": "Home",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        4,
+        0
+      ],
+      "x": 0,
+      "y": 4.25,
+      "w": 2.25,
+      "qmkCode": "KC_LSFT",
+      "code": "ShiftLeft",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        4,
+        2
+      ],
+      "x": 2.25,
+      "y": 4.25,
+      "qmkCode": "KC_Z",
+      "code": "KeyZ",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        4,
+        3
+      ],
+      "x": 3.25,
+      "y": 4.25,
+      "qmkCode": "KC_X",
+      "code": "KeyX",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        4,
+        4
+      ],
+      "x": 4.25,
+      "y": 4.25,
+      "qmkCode": "KC_C",
+      "code": "KeyC",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        4,
+        5
+      ],
+      "x": 5.25,
+      "y": 4.25,
+      "qmkCode": "KC_V",
+      "code": "KeyV",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        4,
+        6
+      ],
+      "x": 6.25,
+      "y": 4.25,
+      "qmkCode": "KC_B",
+      "code": "KeyB",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        4,
+        7
+      ],
+      "x": 7.25,
+      "y": 4.25,
+      "qmkCode": "KC_N",
+      "code": "KeyN",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        4,
+        8
+      ],
+      "x": 8.25,
+      "y": 4.25,
+      "qmkCode": "KC_M",
+      "code": "KeyM",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        4,
+        9
+      ],
+      "x": 9.25,
+      "y": 4.25,
+      "qmkCode": "KC_COMM",
+      "code": "Comma",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        4,
+        10
+      ],
+      "x": 10.25,
+      "y": 4.25,
+      "qmkCode": "KC_DOT",
+      "code": "Period",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        4,
+        11
+      ],
+      "x": 11.25,
+      "y": 4.25,
+      "qmkCode": "KC_SLSH",
+      "code": "Slash",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        4,
+        13
+      ],
+      "x": 12.25,
+      "y": 4.25,
+      "w": 1.75,
+      "qmkCode": "KC_RSFT",
+      "code": "ShiftRight",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        4,
+        14
+      ],
+      "x": 14.25,
+      "y": 4.5,
+      "qmkCode": "KC_UP",
+      "code": "ArrowUp",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        5,
+        0
+      ],
+      "x": 0,
+      "y": 5.25,
+      "w": 1.25,
+      "qmkCode": "KC_LCTL",
+      "code": "ControlLeft",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        5,
+        1
+      ],
+      "x": 1.25,
+      "y": 5.25,
+      "w": 1.25,
+      "qmkCode": "KC_LGUI",
+      "code": "MetaLeft",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        5,
+        2
+      ],
+      "x": 2.5,
+      "y": 5.25,
+      "w": 1.25,
+      "qmkCode": "KC_LALT",
+      "code": "AltLeft",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        5,
+        6
+      ],
+      "x": 3.75,
+      "y": 5.25,
+      "w": 6.25,
+      "qmkCode": "KC_SPC",
+      "code": "Space",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        5,
+        9
+      ],
+      "x": 10,
+      "y": 5.25,
+      "qmkCode": "KC_RALT",
+      "code": "AltRight",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        5,
+        10
+      ],
+      "x": 11,
+      "y": 5.25,
+      "qmkCode": "FN_WIN",
+      "code": "Fn",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        5,
+        11
+      ],
+      "x": 12,
+      "y": 5.25,
+      "qmkCode": "KC_RCTL",
+      "code": "ControlRight",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        5,
+        12
+      ],
+      "x": 13.25,
+      "y": 5.5,
+      "qmkCode": "KC_LEFT",
+      "code": "ArrowLeft",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        5,
+        13
+      ],
+      "x": 14.25,
+      "y": 5.5,
+      "qmkCode": "KC_DOWN",
+      "code": "ArrowDown",
+      "kind": "keycap"
+    },
+    {
+      "matrix": [
+        5,
+        14
+      ],
+      "x": 15.25,
+      "y": 5.5,
+      "qmkCode": "KC_RGHT",
+      "code": "ArrowRight",
+      "kind": "keycap"
+    }
+  ],
+  "notes": [
+    "Browser KeyboardEvent.code identifiers name physical keys. The Fn entry is a studio placement identifier: FN_WIN is a firmware layer switch and normally produces no browser keyboard event.",
+    "The encoder push maps to the consumer mute usage, represented by AudioVolumeMute. Browser delivery depends on the OS; keep this control separate from normal keycap placement targets.",
+    "Windows base layer has Home, PageUp, PageDown and Delete. End is available through Fn+Home; there is no base End keycap.",
+    "Mac mode changes the top-row functions and bottom modifiers. This asset deliberately represents the default Windows base layer.",
+    "Coordinates specify switch/control positions. The bounding rectangle is a layout extent, not a measured enclosure outline.",
+    "The encoder grid width is 1u because QMK omits w. Actual knob diameter is a separate manufacturer specification, 16 mm."
+  ],
+  "source": {
+    "repository": "Keychron/qmk_firmware",
+    "commit": "9ada9b7baecb9591c469b9b068146ac5891a480a",
+    "layoutUrl": "https://github.com/Keychron/qmk_firmware/blob/9ada9b7baecb9591c469b9b068146ac5891a480a/keyboards/keychron/q1_max/ansi_encoder/keyboard.json",
+    "keymapUrl": "https://github.com/Keychron/qmk_firmware/blob/9ada9b7baecb9591c469b9b068146ac5891a480a/keyboards/keychron/q1_max/ansi_encoder/keymaps/default/keymap.c",
+    "boardUrl": "https://github.com/Keychron/qmk_firmware/blob/9ada9b7baecb9591c469b9b068146ac5891a480a/keyboards/keychron/q1_max/info.json",
+    "licenseUrl": "https://github.com/Keychron/qmk_firmware/blob/9ada9b7baecb9591c469b9b068146ac5891a480a/LICENSE",
+    "upstreamLicense": "GPL-2.0-or-later in keymap.c; repository LICENSE is GNU GPL version 2",
+    "upstreamCopyright": "Copyright 2023 ~ 2025 @ Keychron (https://www.keychron.com)",
+    "derived": "Factual position and default Windows mapping transcription; labels and browser-code mapping added for Keyconf; no firmware implementation copied.",
+    "sourceSha256": {
+      "keyconf-q1-max-keyboard.json": "949edf31b11b15a397b980a3db8f15d599775bddacbeabeb55701aea26a67c87",
+      "keyconf-q1-max-keymap.c": "11ee71d615d539eb8e43484f044340c9dd7c90da834467a458f51e3529b2b74d"
+    }
+  }
+}
