@@ -393,3 +393,30 @@ Removed the unshipped ChatGPT account/API drafts. No account route is exposed. G
 Added a compact Music popover and Focus-mode access. Lofi again by OMF-Games is sourced under CC0 with original-file attribution; the original mono Vorbis is retained with an MP3 compatibility transcode. No music auto-start or pre-opt-in fetch. User volume is independent of keyboard build data. Native keyboard audio and mounted sound references suppress music completely; paused user intent is never undone by clearing a blocker. Recovery has a short delay and fade, and page hiding/disposal cancel pending playback.
 
 Local checks passed: five controller/asset tests, browser decoding and nonzero output, zero gain/paused music at keyboard source starts, mounted-reference suppression, overlapping priorities, late promises, pause/recovery, reload, and 320/390/1280 px accessibility/bounds. The reference iframe was stubbed and the visibility event simulated; live mobile/YouTube and subjective listening remain unverified. Production/CI/publish evidence follows separately.
+
+## Shared configuration previews (2026-09-06)
+
+New share links open an isolated `#preview=` page with the real keyboard scene,
+exploded view, sound controls, compatibility notes and original maker links.
+“Customize a copy” explicitly imports the configuration; Undo restores the saved
+build loaded at that moment. Legacy `#build=` links retain their import behavior.
+Preview visits do not create or persist a device draft. Clean studio instances
+also no longer write their captured build on exit, preventing a stale tab from
+overwriting newer saved work. Pending edits still flush on exit.
+
+This is the portable-preview portion of COMMUNITY-3. There is no verified creator
+identity, immutable server publication, client feedback, favorites or profile UI
+yet. Google setup remains deferred at the user's request. Returning from a
+preview remounts the studio and restores its saved build; earlier in-memory
+undo/redo history does not survive that route change.
+
+Validation includes 120 passing unit tests, type checking, lint, and the existing
+browser restoration/audio/storage-denial journey. The dedicated preview verifier
+covers source links, rendered geometry, responsive accessibility, cross-tab
+storage isolation, explicit copy/Undo, malformed URLs and a cold visitor. Audio
+startup regression observes real AudioParam ramp commands while delaying the
+resume promise; it does not claim human listening or headphone verification.
+
+The preview browser check uses software rendering and reduced motion, as the
+existing accessory rendering check does. Screenshot capture follows a fresh
+preview load, separate from the delayed audio-resume test.

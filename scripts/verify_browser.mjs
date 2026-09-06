@@ -96,7 +96,7 @@ try {
   const shareUrl = await page
     .getByRole('textbox', { name: 'Build link' })
     .inputValue();
-  assert.ok(new URL(shareUrl).hash.startsWith('#build='));
+  assert.ok(new URL(shareUrl).hash.startsWith('#preview='));
   await page.keyboard.press('Escape');
   const downloadPending = page.waitForEvent('download');
   await button(page, 'Export your build').click();
@@ -112,6 +112,9 @@ try {
   const friend = await browser.newContext();
   const friendPage = await friend.newPage();
   await friendPage.goto(shareUrl);
+  await friendPage
+    .getByRole('button', { name: 'Customize a copy', exact: true })
+    .click();
   await saved(friendPage);
   assert.equal(
     await friendPage.getByRole('textbox', { name: 'Build name' }).inputValue(),

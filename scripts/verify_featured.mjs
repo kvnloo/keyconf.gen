@@ -15,7 +15,7 @@ async function snapshot() {
     .getByRole('textbox', { name: 'Build link' })
     .inputValue();
   await button('Close dialog').click();
-  return decodeBuild(new URL(url).hash.slice(7));
+  return decodeBuild(new URL(url).hash.slice(9));
 }
 
 try {

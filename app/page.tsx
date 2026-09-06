@@ -8,6 +8,8 @@ import {
   useSyncExternalStore,
 } from 'react';
 import ControlDeckStudio from './control-deck-studio';
+import SharedBuildPreview from './shared-build-preview';
+import { sharedPreview, previewLink } from '../lib/shared-preview';
 import PreviewLabel from './preview-label';
 import {
   decodeDeck,
@@ -66,7 +68,6 @@ import {
   layouts,
   finishes,
   profiles,
-  encodeBuild,
   readBuildFile,
   parseCustomParts,
 } from '../lib/build';
@@ -90,6 +91,40 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [notice]);
   const hash = useSyncExternalStore(subscribeLocation, currentHash, serverHash);
+  const preview = useMemo(() => sharedPreview(hash), [hash]);
+  if (preview.kind === 'error')
+    return (
+      <main className="shared-preview">
+        <section className="preview-link-error">
+          <h1>Preview unavailable</h1>
+          <p role="alert">{preview.message}</p>
+          <p>Your saved build has not been changed.</p>
+          <a href="#studio">Return to your studio</a>
+        </section>
+      </main>
+    );
+  if (preview.kind === 'ready')
+    return (
+      <SharedBuildPreview
+        key={hash}
+        build={preview.build}
+        onCustomize={() => {
+          window.location.hash = hash.replace(/^#preview=/, '#build=');
+        }}
+      />
+    );
+  return <DeviceWorkspace hash={hash} notice={notice} setNotice={setNotice} />;
+}
+
+function DeviceWorkspace({
+  hash,
+  notice,
+  setNotice,
+}: {
+  hash: string;
+  notice: string;
+  setNotice: (notice: string) => void;
+}) {
   const manager = useBuild(setNotice, {
     shortcutsEnabled:
       ['#studio', '#sound', '#play', '#build-settings', '#fit-checks'].includes(
@@ -582,7 +617,7 @@ function KeyboardStudio({
         return false;
       }
       setEnabled(true);
-      audio.current?.setLevel(true, volume);
+      audio.current?.setLevel(true, soundRef.current.volume);
       return true;
     } catch {
       music.setBlocked('keyboard', soundRef.current.enabled);
@@ -651,12 +686,11 @@ function KeyboardStudio({
   }
   async function shareBuild() {
     try {
-      const url = new URL(window.location.href);
-      url.hash = 'build=' + encodeBuild(build);
-      setShareUrl(url.href);
+      const url = previewLink(build, window.location.href);
+      setShareUrl(url);
       setModal('share');
       try {
-        await navigator.clipboard.writeText(url.href);
+        await navigator.clipboard.writeText(url);
         setNotice(
           'Build link copied. Anyone with the link can open this design.',
         );
@@ -1644,8 +1678,8 @@ function KeyboardStudio({
             </div>
             <h2>Pass it around.</h2>
             <p className="muted">
-              This link includes your design, selected components and sound
-              preference. Your friend can make it their own.
+              This link opens an independent preview of your design, parts and
+              sound preference. Your friend can customize a copy when ready.
             </p>
             <label htmlFor="share-link">Build link</label>
             <input

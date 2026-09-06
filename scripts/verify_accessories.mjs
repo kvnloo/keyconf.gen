@@ -46,7 +46,7 @@ try {
     .getByRole('textbox', { name: 'Build link' })
     .inputValue();
   assert.equal(
-    decodeBuild(new URL(url).hash.slice(7)).accessories[0].location.slotId,
+    decodeBuild(new URL(url).hash.slice(9)).accessories[0].location.slotId,
     'upper-right',
   );
   await page.getByRole('button', { name: 'Close dialog' }).click();
@@ -111,7 +111,7 @@ try {
     .getByRole('textbox', { name: 'Build link' })
     .inputValue();
   assert.equal(
-    decodeBuild(new URL(artisanLink).hash.slice(7)).accessories[0].location
+    decodeBuild(new URL(artisanLink).hash.slice(9)).accessories[0].location
       .keyId,
     'Escape',
   );

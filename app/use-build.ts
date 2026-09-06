@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { useHistoryShortcuts } from './use-history-shortcuts';
 import { previewStorageKey } from '../lib/preview-storage';
 import {
@@ -19,20 +19,42 @@ export function useBuild(
   { shortcutsEnabled = true }: { shortcutsEnabled?: boolean } = {},
 ) {
   const storageKey = previewStorageKey('keyconf-build-v1');
-  const [{ history, ready }, dispatch] = useReducer(
+  const [{ history, ready, persisted }, dispatch] = useReducer(
     (
-      state: { history: BuildHistory; ready: boolean },
-      action: BuildAction,
-    ) => ({
-      history: buildReducer(state.history, action),
-      ready: state.ready || action.kind === 'restore',
-    }),
-    { history: initialHistory, ready: false },
+      state: {
+        history: BuildHistory;
+        ready: boolean;
+        persisted: { build: Build; status: 'saved' | 'unavailable' } | null;
+      },
+      action:
+        | BuildAction
+        | { kind: 'loaded'; build: Build; fromStorage: boolean }
+        | { kind: 'persisted'; build: Build; status: 'saved' | 'unavailable' },
+    ) => {
+      if (action.kind === 'persisted')
+        return {
+          ...state,
+          persisted: { build: action.build, status: action.status },
+        };
+      if (action.kind === 'loaded')
+        return {
+          history: buildReducer(state.history, {
+            kind: 'restore',
+            build: action.build,
+          }),
+          ready: true,
+          persisted: action.fromStorage
+            ? { build: action.build, status: 'saved' as const }
+            : null,
+        };
+      return {
+        ...state,
+        history: buildReducer(state.history, action),
+        ready: state.ready || action.kind === 'restore',
+      };
+    },
+    { history: initialHistory, ready: false, persisted: null },
   );
-  const [persisted, setPersisted] = useState<{
-    build: Build;
-    status: 'saved' | 'unavailable';
-  } | null>(null);
   const saveState = !ready
     ? 'loading'
     : persisted?.status === 'unavailable'
@@ -40,6 +62,7 @@ export function useBuild(
       : persisted?.build === history.present
         ? 'saved'
         : 'saving';
+  const savedBuild = persisted?.status === 'saved' ? persisted.build : null;
   const canPersist = useRef(true);
   const latestBuild = useRef<Build | null>(null);
   useEffect(
@@ -56,8 +79,10 @@ export function useBuild(
   );
 
   useEffect(() => {
+    if (location.hash.startsWith('#preview=')) return;
     let saved = defaultBuild;
     let raw: string | null = null;
+    let fromStorage = false;
     try {
       raw = localStorage.getItem(storageKey);
       saved = raw
@@ -71,6 +96,7 @@ export function useBuild(
               ),
             ),
           };
+      fromStorage = !!raw;
     } catch {
       if (raw) {
         try {
@@ -86,7 +112,7 @@ export function useBuild(
         'The saved build could not be restored. Open a build file to recover your design, or continue with a new one.',
       );
     }
-    dispatch({ kind: 'restore', build: saved });
+    dispatch({ kind: 'loaded', build: saved, fromStorage });
     const restoreLink = () => {
       if (!location.hash.startsWith('#build=')) return;
       try {
@@ -96,7 +122,9 @@ export function useBuild(
           '',
           location.pathname + location.search + '#studio',
         );
-        notify('Shared build opened. Changes save on this device.');
+        notify(
+          'Shared build opened in your studio. Undo returns to your previous build.',
+        );
       } catch (error) {
         notify(
           error instanceof Error
@@ -112,17 +140,35 @@ export function useBuild(
 
   useEffect(() => {
     if (!ready) return;
+    if (savedBuild === history.present) {
+      latestBuild.current = null;
+      return;
+    }
     latestBuild.current = history.present;
     const save = () => {
+      if (latestBuild.current !== history.present) return;
       if (!canPersist.current) {
-        setPersisted({ build: history.present, status: 'unavailable' });
+        dispatch({
+          kind: 'persisted',
+          build: history.present,
+          status: 'unavailable',
+        });
         return;
       }
       try {
         localStorage.setItem(storageKey, JSON.stringify(history.present));
-        setPersisted({ build: history.present, status: 'saved' });
+        latestBuild.current = null;
+        dispatch({
+          kind: 'persisted',
+          build: history.present,
+          status: 'saved',
+        });
       } catch {
-        setPersisted({ build: history.present, status: 'unavailable' });
+        dispatch({
+          kind: 'persisted',
+          build: history.present,
+          status: 'unavailable',
+        });
       }
     };
     const timer = setTimeout(save, 250);
@@ -131,7 +177,7 @@ export function useBuild(
       clearTimeout(timer);
       window.removeEventListener('pagehide', save);
     };
-  }, [history.present, ready, storageKey]);
+  }, [history.present, ready, storageKey, savedBuild]);
 
   const edit = useCallback(
     (patch: Partial<Build>, group?: string) =>
