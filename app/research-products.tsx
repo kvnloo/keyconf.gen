@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { ArrowUpRight, Search } from 'lucide-react';
 import data from '../data/research-seed.json';
+import StoreObservations from './store-observations';
 
 export default function ResearchProducts() {
   const [query, setQuery] = useState('');
@@ -90,6 +91,7 @@ export default function ResearchProducts() {
           <p>No references match. Try a different name or category.</p>
         )}
       </div>
+      <StoreObservations />
     </section>
   );
 }

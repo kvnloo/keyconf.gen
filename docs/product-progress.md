@@ -275,3 +275,11 @@ Live HTTP verification at 15:37:37 UTC returned 12 and 11 Divinikey collection v
 The source change passes 72 tests, strict types, lint, formatting, both builds and the local 320px import/retry/export journey. The prior response-cleanup GitHub run `34041815913` completed successfully, including deployment. CI for the new routing is recorded separately after execution.
 
 During the upload, a new local run `divinikey-switches-2026-09-06` retained 128 distinct variant URL/SKU pairs across 21 brands and twelve pages, observed from 15:34:05 to 15:34:19 UTC. More pagination remains. This was a fresh run, not a resume: the original `divinikey-switches-20260906-nightly` run and its 35 observations remain intact. SQLite integrity and foreign-key checks pass. The new evidence export is `work/divinikey-observations-expanded.json`; these observations have not been published as reviewed builder parts.
+
+## Discover store observations
+
+Added a separate, collapsible browser for the 128 source observations in Discover. Search covers brand, name and SKU; twelve options appear initially, with explicit expansion, empty states and reset. Cards preserve original variant links, pack names, observed prices, timestamps and historical availability. The interface explicitly identifies partial coverage, named-option pricing and unknown compatibility. These listings do not enter the builder's approved parts catalog.
+
+The committed snapshot retains complete normalized page evidence and hashes. A regression confirms all hashes, unique variant identities and original values; all 73 tests pass. Types, lint, formatting, actionlint and both builds pass. The actual browser journey passes at 320 and 1920 pixels in development and the production Pages build, covering search, expansion, links, keyboard disclosure, empty/reset and overflow. Captures were inspected, and this journey now runs in CI. Hosted ingestion and review remain unfinished.
+
+The preceding backend-routing release `c7c5121` passed GitHub run `34042941703` and is public on nightly Pages, confirmed by release metadata. The observation browser is a later source change; its public release is recorded only after CI and deployment complete.

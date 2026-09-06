@@ -22,6 +22,7 @@
     "verify:decks": "node scripts/verify_decks.mjs",
     "verify:typing": "node scripts/verify_typing.mjs",
     "verify:featured": "node --experimental-strip-types scripts/verify_featured.mjs",
+    "verify:observations": "node scripts/verify_observations.mjs",
     "verify:room": "node scripts/verify_room.mjs",
     "catalog:observe": "node --experimental-strip-types scripts/observe_catalog.mjs"
   },

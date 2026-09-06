@@ -2004,3 +2004,32 @@ fieldset.scene-host {
     display: none;
   }
 }
+
+.store-observations {
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+.store-observations summary {
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 550;
+  padding-block: 12px;
+}
+.store-observations summary:focus-visible {
+  outline: 2px solid var(--muted);
+  outline-offset: 4px;
+}
+.store-observations > .catalog-search {
+  margin-top: 20px;
+}
+.store-observations > .button {
+  margin-top: 16px;
+}
+.store-observations output {
+  display: block;
+  margin-block: 12px;
+}
+.store-observations .research-product {
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}

@@ -46,6 +46,7 @@ jobs:
           npm run verify:import-pages
           npm run verify:interface
           npm run verify:featured
+          npm run verify:observations
           npm run verify:decks
       - name: Build this branch's preview
         run: npm run build:pages -- --base "/${{ github.event.repository.name }}/${CHANNEL}/"
