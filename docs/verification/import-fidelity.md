@@ -30,3 +30,7 @@ Observed September 6 UTC through the local server route:
 The Storefront fallback is a storewide first-page preview even when entered through a collection. It inspects up to 40 products and 20 variants per product, returns at most 80 options and reports further products/variants. Collection filtering, full pagination and durable observation history remain ingestion work. The structured-data parser supports common Schema.org fields and local references; it is not a complete JSON-LD processor for remote contexts, aliases or custom base rules.
 
 Old browser tabs can still read the API's legacy price/currency fields. The server fills those fields only for exact prices, so a range never becomes an invented exact price during rollout. The new UI uses the explicit price model. Saved builds keep the existing portable format.
+
+## Published verification
+
+The same import browser journey passed on `https://keyconf-studio.kvnloo.chatgpt.site/` after Sites version 9 deployed. The production API also returned the 80-option Divinikey preview, including distinct variant URLs and USD prices. [GitHub Actions 34007099673](https://github.com/kvnloo/keyconf.gen/actions/runs/34007099673) passed types, lint, 38 tests and all browser journeys, then deployed Pages. The deployed source is `b40e245cd17fb21ed0928c2106fcf555e37a544a`.

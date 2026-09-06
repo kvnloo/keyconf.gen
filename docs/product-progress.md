@@ -181,3 +181,9 @@ Fixed aggregate offers being presented as exact prices, mixed-currency/stock amb
 [Import verification](verification/import-fidelity.md) records five failing-before cases, six passing import tests, the 38-test full suite, passing type/lint checks and both production builds, and a passing 320 px import-to-download/share journey into a fresh desktop browser. The adjacent sharing/audio/recovery browser suite also passes. Live local-server requests returned both KBDfans plate options and 80 Divinikey options; oversized KBDfans/NovelKeys homepages failed explicitly. The CI workflow now runs the import journey. Publication outcomes follow the release checks.
 
 The broader goal remains active. Next ingestion work is collection-specific previews and pagination, followed by durable source observations and further catalog evidence. The current generic preview is not universal ingestion.
+
+### Published import checkpoint
+
+Published `b40e245cd17fb21ed0928c2106fcf555e37a544a` to Sites version 9 and GitHub Pages. [Actions run 34007099673](https://github.com/kvnloo/keyconf.gen/actions/runs/34007099673) passed all checks and deployed Pages. Sites deployment `appgdep_6a9cd44951a08191863a288f9bfe2be6` succeeded September 6, 2026 at 02:47:54 UTC. The complete import/mobile/download/share regression passed against the public Sites URL, and the production API returned 80 distinct Divinikey options with exact prices, variant links and explicit coverage. This closes the prior paragraph's publication gate.
+
+The source push took several minutes after its upload finished, then succeeded. A subsequent idempotent push confirmed it was current. No source rollback, force push or alternate Site was needed. The shipped runtime is the validated commit above; this progress note is a documentation follow-up.
