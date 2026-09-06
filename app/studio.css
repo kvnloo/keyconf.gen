@@ -510,21 +510,24 @@ body {
   font-size: 12px;
 }
 .preview-part small {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.4;
   color: #afbaaa;
 }
+.preview-part .preview-color-note {
+  color: #d0d9c8;
+}
 .preview-note {
-  color: #aebaab;
-  font-size: 10px;
+  color: #c1cdba;
+  font-size: 12px;
   line-height: 1.65;
   margin: 14px 0 20px;
 }
 .preview-safe {
   display: block;
   text-align: center;
-  font-size: 9px;
-  color: #aebca8;
+  font-size: 11px;
+  color: #c1cdba;
   line-height: 1.5;
   margin-top: 12px;
 }
@@ -551,10 +554,25 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.24em;
 }
-.gallery-title > span:last-child {
-  color: #abb8a3;
-  letter-spacing: 0.02em;
-  text-transform: none;
+.gallery-controls {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+  margin-left: 12px;
+}
+.gallery-controls button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ffffff38;
+  border-radius: 50%;
+  color: #e1eadb;
+  background: #131c16ed;
+}
+.gallery-controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 .featured-cards {
   display: grid;
@@ -564,6 +582,7 @@ body {
   padding: 5px 3px 12px;
   margin: -5px -3px -12px;
   scroll-snap-type: x proximity;
+  scroll-padding-inline: 3px;
   scrollbar-width: thin;
   scrollbar-color: #7b8d7470 transparent;
 }
@@ -604,7 +623,13 @@ body {
   margin: 3px 0 5px;
 }
 .featured-number {
-  font-size: 9px;
+  font-size: 10px;
+}
+.featured-card-state {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
 }
 .featured-card strong {
   display: block;
@@ -613,9 +638,9 @@ body {
 }
 .featured-card small {
   display: block;
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.5;
-  color: #a8b69f;
+  color: #bfccb6;
   margin-top: 5px;
 }
 .screen-home .stage-bottom {
@@ -1097,9 +1122,6 @@ body {
   }
   .featured-gallery {
     margin: 15px 15px 30px;
-  }
-  .gallery-title > span:last-child {
-    display: none;
   }
   .featured-cards {
     grid-template-columns: repeat(6, 172px);

@@ -39,6 +39,50 @@ try {
   assert.equal(original.audio.volume, 1.8);
 
   await link('keyconf beta').click();
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const more = button('More builds');
+  await page.waitForFunction(
+    () => !document.querySelector('[aria-label="More builds"]')?.disabled,
+  );
+  assert.equal(await button('Previous builds').isEnabled(), false);
+  for (let step = 0; step < 6 && (await more.isEnabled()); step++) {
+    const before = await page
+      .locator('.featured-cards')
+      .evaluate((el) => el.scrollLeft);
+    await more.click();
+    await page.waitForFunction(
+      (before) => document.querySelector('.featured-cards').scrollLeft > before,
+      before,
+    );
+    await page.waitForFunction(() => {
+      const strip = document.querySelector('.featured-cards');
+      return (
+        document.querySelector('[aria-label="More builds"]').disabled ===
+        strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 1
+      );
+    });
+  }
+  await page.waitForFunction(() => {
+    const strip = document
+      .querySelector('.featured-cards')
+      .getBoundingClientRect();
+    const last = document
+      .querySelector('.featured-card:last-child')
+      .getBoundingClientRect();
+    return last.left >= strip.left - 1 && last.right <= strip.right + 1;
+  });
+  assert.equal(await more.isEnabled(), false);
+  assert.equal(
+    await button('Preview Forest Line').getAttribute('aria-pressed'),
+    'true',
+    'Browsing the strip must not change the selected build',
+  );
+  await button('Previous builds').click();
+  await page.waitForFunction(
+    () => !document.querySelector('[aria-label="More builds"]')?.disabled,
+  );
+  await page.setViewportSize({ width: 1280, height: 900 });
   await button('Preview Blush').click();
   await button('Preview Grok Bot').click();
   await button('Preview Codex Micro').click();
@@ -52,7 +96,23 @@ try {
 
   await link('keyconf beta').click();
   await button('Preview Blush').click();
-  await button('Customize this build').click();
+  assert.equal(
+    await button('Customize Blush').count(),
+    2,
+    'Both entry points must name the selected build',
+  );
+  assert.equal(
+    await button('Preview Blush').getAttribute('aria-pressed'),
+    'true',
+  );
+  assert.equal(
+    await button('Preview Forest Line').getAttribute('aria-pressed'),
+    'false',
+  );
+  await page
+    .getByRole('complementary', { name: 'Featured build preview' })
+    .getByRole('button', { name: 'Customize Blush', exact: true })
+    .click();
   const customized = await snapshot();
   assert.equal(customized.name, 'Blush');
   assert.equal(customized.layout, '65');
@@ -122,7 +182,7 @@ try {
     }
   }
   console.log(
-    'PASS: preview isolation, explicit customization and one-step undo, four-route persistence, volume keyboard control and muted reload.',
+    'PASS: all six presets reachable at 320px without changing selection; preview isolation, named customization and one-step undo, four-route persistence, volume control and muted reload.',
   );
 } finally {
   await context.close();

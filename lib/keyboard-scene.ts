@@ -80,6 +80,7 @@ export function createKeyboardScene(
   let model: THREE.Group | null = null;
   let cameraTarget: THREE.Vector3 | null = null;
   let focusHeight = 0.4;
+  let focusX = 0;
   let focusDepth = 0;
   let ambientTime = 0;
   let assembledDistance = 11;
@@ -280,6 +281,7 @@ export function createKeyboardScene(
     controls.enableDamping = !reduced && !software && !typing;
     controls.maxDistance = typing ? 80 : 46;
     focusDepth = typing ? -3 : 0;
+    focusX = 0;
     desk.monitor.scale.y = typing && element.clientWidth < 700 ? 1.65 : 1;
     if (typing) {
       const narrow = element.clientWidth < 700;
@@ -296,17 +298,21 @@ export function createKeyboardScene(
     }
     resize();
     const deck = options.device.kind === 'control-deck';
+    const featuredKeyboard =
+      !deck && options.environment === 'desk' && options.view === 'perspective';
+    focusX = featuredKeyboard ? -2 : 0;
     const distance = deck
       ? options.exploded
         ? 0.55
         : 0.46
-      : options.environment === 'desk'
+      : options.environment === 'desk' && !featuredKeyboard
         ? 1.24
         : 1;
-    focusHeight =
-      deck && options.exploded
+    focusHeight = featuredKeyboard
+      ? -1.4
+      : deck && options.exploded
         ? 1.35
-        : options.environment === 'desk'
+        : options.environment === 'desk' && !featuredKeyboard
           ? 1.8
           : 0.4;
     controls.minDistance = options.device.kind === 'control-deck' ? 7 : 12;
@@ -317,7 +323,9 @@ export function createKeyboardScene(
           ? new THREE.Vector3(0, 6, 25)
           : deck
             ? new THREE.Vector3(-7, 27, 14)
-            : new THREE.Vector3(-7, 18, 21);
+            : featuredKeyboard
+              ? new THREE.Vector3(-7, 25, 18)
+              : new THREE.Vector3(-7, 18, 21);
     cameraTarget.multiplyScalar(distance);
     wake();
   }
@@ -465,6 +473,7 @@ export function createKeyboardScene(
         cameraTarget = null;
       }
     }
+    controls.target.x = approach(controls.target.x, focusX, 10);
     controls.target.y = approach(controls.target.y, focusHeight, 10);
     controls.target.z = approach(controls.target.z, focusDepth, 10);
     const orbiting = controls.update(delta);

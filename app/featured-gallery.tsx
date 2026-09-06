@@ -1,7 +1,9 @@
 /* oxlint-disable next/no-img-element -- Pre-sized local Blender renders also ship unchanged to the static Pages export. */
 import {
   ArrowRight,
-  ArrowUpRight,
+  Check,
+  ChevronLeft,
+  ChevronRight,
   Box,
   Cpu,
   Layers,
@@ -9,6 +11,7 @@ import {
   Grip,
   SquareDashed,
 } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { featuredBuilds, type FeaturedBuild } from '../lib/featured-builds';
 import { catalog, categories } from '../lib/catalog';
 import { controlDecks } from '../lib/control-deck';
@@ -20,13 +23,63 @@ export function FeaturedGallery({
   selected: string;
   onSelect: (preset: FeaturedBuild) => void;
 }) {
+  const strip = useRef<HTMLDivElement>(null);
+  const stripId = useId();
+  const [edges, setEdges] = useState({ previous: false, next: false });
+  useEffect(() => {
+    const element = strip.current;
+    if (!element) return;
+    const measure = () =>
+      setEdges({
+        previous: element.scrollLeft > 1,
+        next:
+          element.scrollLeft + element.clientWidth < element.scrollWidth - 1,
+      });
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    element.addEventListener('scroll', measure, { passive: true });
+    return () => {
+      observer.disconnect();
+      element.removeEventListener('scroll', measure);
+    };
+  }, []);
+  function browse(direction: -1 | 1) {
+    const element = strip.current;
+    if (!element) return;
+    element.scrollBy({
+      left: direction * element.clientWidth,
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'instant'
+        : 'smooth',
+    });
+  }
   return (
     <section className="featured-gallery" aria-label="Featured builds">
       <div className="gallery-title">
-        <span>Featured builds</span>
-        <span>Find your starting point</span>
+        <span>Choose a starting build</span>
+        <div className="gallery-controls">
+          <button
+            type="button"
+            aria-label="Previous builds"
+            aria-controls={stripId}
+            disabled={!edges.previous}
+            onClick={() => browse(-1)}
+          >
+            <ChevronLeft size={17} />
+          </button>
+          <button
+            type="button"
+            aria-label="More builds"
+            aria-controls={stripId}
+            disabled={!edges.next}
+            onClick={() => browse(1)}
+          >
+            <ChevronRight size={17} />
+          </button>
+        </div>
       </div>
-      <div className="featured-cards">
+      <div className="featured-cards" id={stripId} ref={strip}>
         {featuredBuilds.map((preset, index) => (
           <button
             className="featured-card"
@@ -46,7 +99,10 @@ export function FeaturedGallery({
               <span className="featured-number">
                 {String(index + 1).padStart(2, '0')}
               </span>
-              <ArrowUpRight size={14} />
+              <span className="featured-card-state">
+                {selected === preset.id && <Check size={12} />}
+                {selected === preset.id ? 'Selected' : 'Preview'}
+              </span>
             </span>
             <strong>{preset.name}</strong>
             <small>{preset.subtitle}</small>
@@ -115,14 +171,18 @@ export function FeaturedInspector({
                   <div>
                     <span>{categoryNames[category]}</span>
                     <small>{part?.name ?? 'Not selected'}</small>
+                    {category === 'keycaps' && (
+                      <small className="preview-color-note">
+                        Preview colors are independent.
+                      </small>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
           <p className="preview-note">
-            An original 3D study. The palette is independent of the retail
-            keycap reference. Review part fit in the workshop.
+            Original 3D study. Review part fit in the workshop.
           </p>
         </>
       ) : (
@@ -136,7 +196,7 @@ export function FeaturedInspector({
         </div>
       )}
       <button className="button full" onClick={onCustomize}>
-        Customize this build <ArrowRight size={17} />
+        Customize {featured.name} <ArrowRight size={17} />
       </button>
       <span className="preview-safe">
         Browsing keeps your current build intact.

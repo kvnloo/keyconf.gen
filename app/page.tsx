@@ -826,7 +826,7 @@ function KeyboardStudio({
             {landing ? (
               <div className="landing-actions">
                 <button className="button" onClick={customizePreview}>
-                  Start building <ArrowRight size={18} />
+                  Customize {featured.name} <ArrowRight size={18} />
                 </button>
                 <a href="#studio">
                   Resume {build.name} <ArrowUpRight size={13} />

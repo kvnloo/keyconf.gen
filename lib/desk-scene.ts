@@ -560,12 +560,6 @@ export function createDeskScene(invalidate: () => void) {
     glow.addColorStop(1, '#13201b');
     idle.fillStyle = glow;
     idle.fillRect(0, 0, 1600, 900);
-    idle.fillStyle = '#d8dfc9';
-    idle.font = '54px sans-serif';
-    idle.fillText('keyconf', 110, 750);
-    idle.font = '16px monospace';
-    idle.fillStyle = '#91aa91';
-    idle.fillText('A SPACE TO MAKE THINGS.', 114, 792);
   }
   const idleTexture = new THREE.CanvasTexture(idleCanvas);
   idleTexture.colorSpace = THREE.SRGBColorSpace;
