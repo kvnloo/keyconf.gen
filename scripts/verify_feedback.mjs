@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
+import AxeBuilder from '@axe-core/playwright';
 import { defaultBuild } from '../lib/build.ts';
 import { previewLink, sharedPreview } from '../lib/shared-preview.ts';
 const browser = await chromium.launch({
@@ -11,7 +12,10 @@ const browser = await chromium.launch({
   ],
 });
 try {
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+  });
+  const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.addInitScript(() => {
@@ -72,6 +76,58 @@ try {
   await notes.fill('  ');
   assert.equal(await copy.isDisabled(), true);
   assert.equal(await fallback.count(), 0);
+  const storedBefore = await page.evaluate(() => JSON.stringify(localStorage));
+  await page.getByText('Compare another build', { exact: true }).click();
+  const upload = page.getByLabel('Build file to compare', { exact: true });
+  await upload.setInputFiles({
+    name: 'revision.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({ ...build, layout: '75' })),
+  });
+  await page.getByText('1 setting differs.', { exact: false }).waitFor();
+  assert.equal(
+    await page.locator('.preview-comparison dt').textContent(),
+    'Layout',
+  );
+  assert.match(
+    await page.locator('.preview-comparison dl').textContent(),
+    /60%.*75%/,
+  );
+  await upload.setInputFiles({
+    name: 'invalid.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{'),
+  });
+  await page
+    .locator('.preview-comparison output')
+    .filter({ hasText: 'This file is not readable JSON.' })
+    .waitFor();
+  assert.equal(
+    await page.locator('.preview-comparison dt').textContent(),
+    'Layout',
+  );
+  assert.equal(
+    await page.evaluate(() => JSON.stringify(localStorage)),
+    storedBefore,
+  );
+  assert.equal(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > innerWidth,
+    ),
+    false,
+  );
+  const accessibility = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze();
+  assert.deepEqual(
+    accessibility.violations.map((v) => ({
+      id: v.id,
+      targets: v.nodes.map((n) => n.target),
+    })),
+    [],
+  );
+  await page.getByRole('button', { name: 'Clear comparison' }).click();
+  assert.equal(await page.locator('.preview-comparison dt').count(), 0);
   assert.deepEqual(errors, []);
   console.log(
     'Feedback copy, exact build link, denied-clipboard fallback, empty notes and mobile layout passed.',

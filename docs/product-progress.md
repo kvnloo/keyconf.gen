@@ -628,3 +628,19 @@ snapshots across timestamp ties, checks uniqueness and exact ordering, rejects
 invalid cursors, and proves another account cannot read the owner's page. All
 20 community tests passed. This prepares the account library; it does not expose
 an account UI or change the deferred Google setup.
+
+## Shared-build comparison
+
+Shared previews and archived public releases now include a collapsed comparison
+panel. Visitors can choose an exported Keyconf keyboard file and inspect changes
+to selected parts, visual settings, accessories and saved audio settings without
+importing it into their device draft. It supports both the standard export
+wrapper and plain build files through the existing reader. Files stay local;
+there is no upload or automatic feedback submission. Names, palette names,
+unused imported parts and accessory record IDs are excluded from comparison.
+Unsupported retired files retain the existing import validation limitation.
+
+The browser check loads a revision with one layout change, verifies both values,
+rejects malformed JSON while preserving the previous comparison, checks local
+storage is unchanged, clears the result and runs mobile overflow/accessibility
+checks. All 144 unit tests, type checking, lint and the production build passed.

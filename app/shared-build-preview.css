@@ -379,3 +379,29 @@
 .preview-details .publication-author button {
   margin-top: 12px;
 }
+
+.preview-comparison input {
+  max-width: 100%;
+  font: inherit;
+  font-size: 0.875rem;
+}
+.preview-comparison dl > div {
+  padding: 12px 0;
+  border-top: 1px solid #ffffff22;
+}
+.preview-comparison dt {
+  text-transform: capitalize;
+  font-weight: 600;
+}
+.preview-comparison dd {
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+  font-size: 0.875rem;
+}
+.preview-comparison dd span {
+  display: block;
+  color: #b7c6b9;
+  font-size: 0.75rem;
+  margin-bottom: 3px;
+}

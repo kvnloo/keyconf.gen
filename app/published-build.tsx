@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import AccessoryFitNotes from './accessory-fit-notes';
 import BuildFeedback from './build-feedback';
+import BuildComparison from './build-comparison';
 import { useState } from 'react';
 import type { PublicPublication } from '../db/publications';
 import { encodeBuild } from '../lib/build';
@@ -90,6 +91,7 @@ export default function PublishedBuild({
             original parts and sources are preserved below.
           </p>
           <BuildFeedback build={publication.build} published />
+          <BuildComparison build={publication.build} />
           <h2>Original parts</h2>
           <ul className="preview-parts">
             {[...evidence.components, ...evidence.accessoryReferences].map(
