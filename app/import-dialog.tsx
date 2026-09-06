@@ -4,6 +4,7 @@ import { ArrowUpRight, Check, Globe, LoaderCircle } from 'lucide-react';
 import { categories, type Part, type Category } from '../lib/catalog';
 import StudioSelect from './studio-select';
 import { formatProductPrice } from '../lib/product-pricing';
+import { importEndpoint } from '../lib/import-endpoint';
 import {
   parseStructuredProducts,
   publicUrl,
@@ -60,9 +61,7 @@ export default function ImportDialog({
         setSelected(new Set(products.map((_, i) => i)));
       } else {
         const response = await fetch(
-          window.location.hostname === 'kvnloo.github.io'
-            ? 'https://keyconf-studio.kvnloo.chatgpt.site/api/import'
-            : '/api/import',
+          importEndpoint(new URL(window.location.href)),
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

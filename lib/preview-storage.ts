@@ -1,8 +1,8 @@
 export function previewChannel(): 'dev' | 'nightly' | null {
   if (typeof document === 'undefined') return null;
-  const channel = new URL(document.baseURI).pathname.match(
-    /^\/keyconf\.gen\/(dev|nightly)\/$/,
-  )?.[1];
+  const url = new URL(document.baseURI);
+  if (url.hostname === 'keyconf-nightly.kvnloo.chatgpt.site') return 'nightly';
+  const channel = url.pathname.match(/^\/keyconf\.gen\/(dev|nightly)\/$/)?.[1];
   return channel === 'dev' || channel === 'nightly' ? channel : null;
 }
 
