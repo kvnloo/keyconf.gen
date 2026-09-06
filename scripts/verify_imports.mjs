@@ -126,6 +126,7 @@ try {
   const friendPage = await friend.newPage();
   friendPage.on('pageerror', (error) => errors.push(error.message));
   await friendPage.goto(share);
+  await button(friendPage, 'Customize a copy').first().click();
   await saved(friendPage);
   await friendPage
     .getByRole('tab', { name: 'Components', exact: true })
