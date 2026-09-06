@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 25
     concurrency:
       group: keyconf-check-${{ github.ref }}
-      cancel-in-progress: true
+      cancel-in-progress: ${{ github.ref_name != 'nightly' }}
     env:
       CHANNEL: ${{ contains(fromJSON('["main","dev","nightly"]'), github.ref_name) && github.ref_name || 'main' }}
     steps:
