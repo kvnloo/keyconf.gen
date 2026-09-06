@@ -94,3 +94,10 @@ browser run reached the expected 81-switch scene and confirmed stock-cap fit,
 but screenshot capture timed out; a subsequent development navigation timed
 out. Production-preview visual verification is therefore still required before
 this change is treated as visually accepted or published.
+
+The headed production-browser run subsequently passed assembled and exploded
+captures plus the shared-preview fit check without page errors. Visual review
+found the stock knob was obscured below the elevated keycaps in exploded mode.
+The keyboard knob now uses the keycap explosion offset, while control-deck dial
+behavior stays unchanged. The updated Pages build passes; its final visual
+capture and hosted rebuild are in progress.

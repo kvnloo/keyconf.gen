@@ -462,7 +462,7 @@ export function createKeyboardScene(
         pcb: 0.51,
         switches: device.kind === 'keyboard' ? 2.3 : 1.75,
         screen: 1.01,
-        control_dial: 1.01,
+        control_dial: device.kind === 'keyboard' ? 4.8 : 1.01,
         control_joystick: 1.01,
       })) {
         const layer = model.getObjectByName(name);
