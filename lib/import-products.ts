@@ -312,21 +312,26 @@ async function fetchPublic(
   });
   if (r.status >= 300 && r.status < 400) {
     const location = r.headers.get('location');
+    await r.body?.cancel();
     if (!location || redirects >= 3)
       throw new Error('The store redirected too many times.');
     return fetchPublic(publicUrl(new URL(location, u).href), {}, redirects + 1);
   }
-  if (!r.ok)
+  if (!r.ok) {
+    await r.body?.cancel();
     throw new Error(
       'The store returned HTTP ' +
         r.status +
         '. Try a public product page or a JSON-LD export.',
     );
+  }
   return r;
 }
 async function boundedText(r: Response) {
-  if (Number(r.headers.get('content-length')) > 2_000_000)
+  if (Number(r.headers.get('content-length')) > 2_000_000) {
+    await r.body?.cancel();
     throw new Error('The page is too large to preview.');
+  }
   if (!r.body) return '';
   const reader = r.body.getReader();
   const decoder = new TextDecoder();
