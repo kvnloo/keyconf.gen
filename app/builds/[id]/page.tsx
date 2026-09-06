@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { env } from 'cloudflare:workers';
 import { notFound } from 'next/navigation';
 import {
@@ -9,6 +10,34 @@ import { CommunityError } from '../../../lib/community';
 import PublishedBuild from '../../published-build';
 
 export const dynamic = 'force-dynamic';
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  if (/^[a-zA-Z0-9_-]{16,100}$/.test(id)) {
+    try {
+      const publication = await readPublicPublication(env.DB, id);
+      return {
+        title: `${publication.title} | Keyconf`,
+        description:
+          `${publication.title} by ${publication.author.displayName}. ${publication.note}`.slice(
+            0,
+            300,
+          ),
+      };
+    } catch {
+      // Missing, withdrawn and unreadable records share neutral metadata.
+    }
+  }
+  return {
+    title: 'Build unavailable | Keyconf',
+    description: 'This keyboard release is not available.',
+    robots: { index: false, follow: false },
+  };
+}
+
 export default async function BuildPage({
   params,
 }: {

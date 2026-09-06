@@ -31,6 +31,7 @@ try {
   const active = new URL(`builds/${ids.active}`, base).href;
   const response = await page.goto(active);
   assert.equal(response.status(), 200);
+  assert.equal(await page.title(), 'Local active release | Keyconf');
   await page
     .getByRole('heading', { name: 'Local active release', exact: true })
     .waitFor();
@@ -110,6 +111,14 @@ try {
   for (const id of [ids.withdrawn, 'missing-publication-id']) {
     const res = await page.goto(new URL(`builds/${id}`, base).href);
     assert.equal(res.status(), 404);
+    assert.doesNotMatch(
+      await page.title(),
+      /Local (active|retired|withdrawn) release/,
+    );
+    assert.match(
+      await page.locator('meta[name=robots]').first().getAttribute('content'),
+      /noindex/,
+    );
     assert.equal(
       (await page.content()).includes('Frozen release notes.'),
       false,

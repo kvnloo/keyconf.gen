@@ -579,3 +579,20 @@ contains `community_favorite` with account, publication and timestamp columns.
 All 139 tests, types, lint and the production build passed locally. The prior
 feedback CI failed because its headed browser command lacked a virtual display;
 `5772fa9` adds the wrapper used by the other headed checks. Its CI is pending.
+
+## Public creator pages
+
+Nightly version 16 serves `/builds/[id]` with creator attribution, source-backed
+parts, frozen compatibility explanations, recorded-sound scope, explicit copy
+customization and download recovery. Retired items retain their evidence;
+missing and withdrawn releases return 404. Creator details sit beside the
+keyboard, which is visible in the first desktop viewport. This has been checked
+against a built Worker and isolated local D1 fixtures, including phone layouts
+and automated accessibility checks. Test creators were not published.
+
+The initial CI Worker connection failure did not recur after process-group
+cleanup and retained diagnostics were added; the public-page CI step passed on
+`6156d0d`. Root-cause certainty remains limited by missing logs from the first
+run. Full CI completion for that run is still being checked. Accounts and a
+creator publishing UI remain unfinished, so visitors cannot yet publish their
+own releases through the site.
