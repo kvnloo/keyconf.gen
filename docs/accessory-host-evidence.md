@@ -74,3 +74,23 @@ scene coordinates. `tests/q1-layout.test.mjs` checks every transformed position,
 key width, unique key target, and encoder separation. The Windows base layer has
 right Ctrl and no dedicated End cap. This is reference data for the forthcoming
 scene adapter; adding it does not change the deployed generic model.
+
+### Q1 Max implementation in progress
+
+The runtime adapter now derives 81 cap positions from the reviewed layout and
+adds a separate 16 mm diameter, 14 mm high illustrative stock knob. It activates
+only for the Q1 Max case, PCB and plate together at 75%. It reuses the original
+illustrative enclosure and cap geometry; it is not a manufacturer enclosure CAD
+reproduction. The accessory picker, shared preview assessments and community
+snapshot assessments resolve that same assembly. Only a replacement knob cap
+in `stock-knob` gets the maker-supported fit claim. Key widths are documented;
+artisan stem and sculpt clearance remain unverified. Dedicated tests cover
+mixed assemblies, duplicate slot occupancy and encoder-versus-cap distinctions.
+Browser validation and publishing of this implementation remain pending.
+
+Validation checkpoint: current TypeScript check, lint, formatting and all 127
+unit/integration tests pass. The production Pages build passes. The initial
+browser run reached the expected 81-switch scene and confirmed stock-cap fit,
+but screenshot capture timed out; a subsequent development navigation timed
+out. Production-preview visual verification is therefore still required before
+this change is treated as visually accepted or published.

@@ -33,7 +33,8 @@
     "verify:switches": "node scripts/verify_switches.mjs",
     "verify:accessory-rendering": "node --experimental-strip-types scripts/verify_accessory_rendering.mjs",
     "verify:shared-preview": "node scripts/verify_shared_preview.mjs",
-    "verify:search": "node scripts/verify_search.mjs"
+    "verify:search": "node scripts/verify_search.mjs",
+    "verify:q1": "node --experimental-strip-types scripts/verify_q1.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

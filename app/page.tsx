@@ -1,4 +1,5 @@
 'use client';
+import { isQ1MaxAssembly } from '../lib/keyboard-variant';
 import {
   useCallback,
   useEffect,
@@ -480,7 +481,11 @@ function KeyboardStudio({
     return {
       ...visibleBuild.palette,
       caseColor: visibleBuild.caseColor,
-      device: { kind: 'keyboard', layout: visibleBuild.layout },
+      device: {
+        kind: 'keyboard',
+        layout: visibleBuild.layout,
+        q1Max: isQ1MaxAssembly(visibleBuild),
+      },
       switchId: visibleBuild.selection.switch,
       accessories: visibleBuild.accessories,
       exploded: experience === 'typing' ? false : exploded,
@@ -1476,6 +1481,7 @@ function KeyboardStudio({
                   />
                   <BuildAccessories
                     layout={build.layout}
+                    selection={build.selection}
                     selections={build.accessories}
                     onChange={(accessories) => edit({ accessories })}
                   />

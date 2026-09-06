@@ -1,5 +1,6 @@
 'use client';
 
+import { accessoryHost, documentedKeys } from '../lib/accessory-hosts';
 import { useState } from 'react';
 import {
   accessoryCatalog,
@@ -16,14 +17,18 @@ import './build-accessories.css';
 export default function BuildAccessories({
   selections,
   layout,
+  selection,
   onChange,
 }: {
   selections: AccessorySelection[];
   layout: Build['layout'];
+  selection: Build['selection'];
   onChange: (selections: AccessorySelection[]) => void;
 }) {
   const [notice, setNotice] = useState('');
-  const assessments = assessAccessories(selections);
+  const host = accessoryHost({ layout, selection });
+  const keys = documentedKeys({ layout, selection }) ?? layouts[layout];
+  const assessments = assessAccessories(selections, host);
   function update(next: AccessorySelection) {
     onChange(selections.map((item) => (item.id === next.id ? next : item)));
   }
@@ -98,9 +103,8 @@ export default function BuildAccessories({
                     value={location.keyId}
                     options={[
                       { value: 'unassigned', label: 'Choose a key' },
-                      ...(!layouts[layout].some(
-                        (key) => key.code === location.keyId,
-                      ) && location.keyId !== 'unassigned'
+                      ...(!keys.some((key) => key.code === location.keyId) &&
+                      location.keyId !== 'unassigned'
                         ? [
                             {
                               value: location.keyId,
@@ -109,7 +113,7 @@ export default function BuildAccessories({
                             },
                           ]
                         : []),
-                      ...layouts[layout].map((key) => ({
+                      ...keys.map((key) => ({
                         value: key.code,
                         label: `${key.label || key.code} · ${key.code} · ${key.width}u${key.width !== product.sizeU ? ' · different width' : ''}`,
                         disabled:
@@ -127,10 +131,39 @@ export default function BuildAccessories({
                     }
                   />
                   <p>
-                    Key choices follow the {layout}% visual study. Matching
-                    width does not verify stem, profile or clearance.
+                    Key choices follow{' '}
+                    {host
+                      ? 'the documented Q1 Max ANSI layout'
+                      : `the ${layout}% visual study`}
+                    . Matching width does not verify stem, profile or clearance.
                   </p>
                 </>
+              ) : host?.slots ? (
+                <StudioSelect
+                  aria-label={`Board slot for ${product.name}`}
+                  value={location.slotId}
+                  options={[
+                    { value: 'unassigned', label: 'Choose a slot' },
+                    ...host.slots.map((slot) => ({
+                      value: slot.id,
+                      label: 'Stock knob cap',
+                      disabled: !slot.kinds.includes(product.kind),
+                    })),
+                    ...(location.slotId !== 'unassigned' &&
+                    !host.slots.some((slot) => slot.id === location.slotId)
+                      ? [
+                          {
+                            value: location.slotId,
+                            label: `${location.slotId} · undocumented slot`,
+                            disabled: true,
+                          },
+                        ]
+                      : []),
+                  ]}
+                  onValueChange={(slotId) =>
+                    update({ ...item, location: { kind: 'embedded', slotId } })
+                  }
+                />
               ) : (
                 <label className="accessory-placement">
                   Board slot
@@ -189,7 +222,7 @@ export default function BuildAccessories({
                 <button
                   type="button"
                   className="text-button"
-                  disabled={selections.length >= 32}
+                  disabled={selections.length >= 100}
                   onClick={() => {
                     onChange([
                       ...selections,

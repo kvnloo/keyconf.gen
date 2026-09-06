@@ -1,4 +1,5 @@
 import { parseBuild } from '../lib/build.ts';
+import { accessoryHost } from '../lib/accessory-hosts.ts';
 import { catalog, categories, checkBuild } from '../lib/catalog.ts';
 import {
   accessoryCatalog,
@@ -155,7 +156,10 @@ export async function saveBuild(
     accessoryReferences: accessoryCatalog.filter((product) =>
       build.accessories.some((accessory) => accessory.productId === product.id),
     ),
-    accessoryCompatibility: assessAccessories(build.accessories),
+    accessoryCompatibility: assessAccessories(
+      build.accessories,
+      accessoryHost(build),
+    ),
     sound: {
       ...build.audio,
       accuracy: recording

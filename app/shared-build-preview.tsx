@@ -1,4 +1,6 @@
 'use client';
+import { accessoryHost } from '../lib/accessory-hosts.ts';
+import { isQ1MaxAssembly } from '../lib/keyboard-variant';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
@@ -47,7 +49,10 @@ export default function SharedBuildPreview({
     () => checkBuild(build.selection, parts, build.layout),
     [build, parts],
   );
-  const accessoryChecks = assessAccessories(build.accessories);
+  const accessoryChecks = assessAccessories(
+    build.accessories,
+    accessoryHost(build),
+  );
   const sound: SoundSettings = {
     ...build.audio,
     enabled,
@@ -61,7 +66,11 @@ export default function SharedBuildPreview({
       caseColor: build.caseColor,
       finish: build.finish,
       profile: build.profile,
-      device: { kind: 'keyboard', layout: build.layout },
+      device: {
+        kind: 'keyboard',
+        layout: build.layout,
+        q1Max: isQ1MaxAssembly(build),
+      },
       switchId: build.selection.switch,
       accessories: build.accessories,
       exploded,

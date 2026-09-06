@@ -1,3 +1,4 @@
+import { adaptQ1MaxModel } from './q1-model';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -29,7 +30,7 @@ class RoomOcclusion extends GTAOPass {
 export type SceneOptions = Pick<Build, 'caseColor' | 'finish' | 'profile'> &
   Omit<Palette, 'name'> & {
     device:
-      | { kind: 'keyboard'; layout: Build['layout'] }
+      | { kind: 'keyboard'; layout: Build['layout']; q1Max?: boolean }
       | {
           kind: 'control-deck';
           model: 'grok-bot' | 'codex-micro';
@@ -378,7 +379,9 @@ export function createKeyboardScene(
   }
   function modelIdFor(device: SceneOptions['device']) {
     return device.kind === 'keyboard'
-      ? `keyboard-${device.layout}`
+      ? device.q1Max
+        ? `keyboard-q1-max`
+        : `keyboard-${device.layout}`
       : device.model;
   }
   function updateAccessories() {
@@ -413,13 +416,19 @@ export function createKeyboardScene(
     let promise = models.get(modelId);
     if (!promise) {
       promise = new GLTFLoader()
-        .loadAsync(new URL(`models/${modelId}.glb`, document.baseURI).href)
+        .loadAsync(
+          new URL(
+            `models/${modelId === 'keyboard-q1-max' ? 'keyboard-75' : modelId}.glb`,
+            document.baseURI,
+          ).href,
+        )
         .then((gltf) => {
           if (stopped) {
             disposeModel(gltf.scene);
             return gltf.scene;
           }
           if (device.kind === 'keyboard') {
+            if (device.q1Max) adaptQ1MaxModel(gltf.scene);
             const positions: THREE.Vector3[] = [];
             gltf.scene.traverse((object) => {
               if (object.name.startsWith('key_'))
