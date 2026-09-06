@@ -455,3 +455,20 @@ navigation, explicit mutations and Undo, original sources, accessory selection,
 empty results, 320/390/1440 widths, accessibility, focus and typing navigation.
 Runtime search uses existing catalog records; it adds no remote queries or
 account data. Creator search, favorites and attributed feedback remain pending.
+
+## Search release and first knob host evidence
+
+Search release `dbc3917d362875253df177bbe80a0752843e79b8` passed full CI and
+GitHub Pages deployment in run
+[34056332605](https://github.com/kvnloo/keyconf.gen/actions/runs/34056332605).
+The nightly release marker confirms run 58, published September 6, 2026 at
+20:00:43.039Z. Sites nightly version 7 and its full search browser check also
+succeeded. The suite contains 124 passing tests.
+
+Manufacturer research now supports a first specific knob-host implementation:
+the Keychron replacement cap on a stock Q1 Max knob. A reusable STEP inspector
+verified three CAD solids and the cap's 16 × 16 × 14 mm envelope. The firmware
+layout differs from the existing generic 75% model, so adding a cylinder on an
+arbitrary key would be incorrect. `docs/accessory-host-evidence.md` records the
+source links, immutable firmware revision, CAD hash, measured results and required
+layout/compatibility integration. Installed knob rendering is still pending.
