@@ -159,3 +159,29 @@ them or claim verification of the creator's ownership. Saving an empty list
 removes the saved links. Migration `0002_far_famine.sql` adds a non-null JSON
 list with an empty default, preserving pre-existing profile identity and bio.
 This storage support does not expose public profiles or enable sign-in.
+
+### Publication storage in progress
+
+A publication references an existing immutable `community_build` snapshot.
+Creation derives ownership from the trusted subject and requires the owner's
+chosen profile. Release metadata and author profile are frozen. Retries use a
+per-owner operation key and a digest of normalized request fields, independent
+of later profile edits. Public projection excludes private owner/operation/build
+identifiers and replaces the private draft name with the reviewed release title.
+Recorded evidence is read from the saved snapshot rather than regenerated.
+
+Withdrawal returns only an ID and the original withdrawal timestamp. It must
+remain available even when a retired part makes the saved build unrestorable.
+The public read then returns not found, and retrying publication returns the
+withdrawal receipt without making the release public again. The persistence
+implementation is under review; no publication endpoints or UI are exposed.
+
+The publication write path now checks existing operations before restoring
+snapshots, validates new owned payload/evidence before inserting, and rereads
+the winning row after the guarded insert. An independent review found and
+confirmed the correction to an earlier insert-before-validation ordering. SQLite
+regressions cover zero writes for malformed/retired snapshots, unchanged
+operation keys after failure, profile-independent retries, and simultaneous
+identical/conflicting requests. Eighteen focused checks, types and lint pass.
+The full release suite is pending; public evidence response shapes and API/UI
+integration still require implementation before enabling publishing.

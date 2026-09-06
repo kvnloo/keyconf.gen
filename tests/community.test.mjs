@@ -1,3 +1,8 @@
+import {
+  publishBuild,
+  readPublicPublication,
+  withdrawPublication,
+} from '../db/publications.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
@@ -473,5 +478,205 @@ test('creator-link migration preserves existing profiles and gives them an empty
       bio: 'Custom commissions',
       links: '[]',
     },
+  );
+});
+
+test('publications freeze a saved revision and chosen author, with private fields excluded', async (t) => {
+  const db = database(t);
+  const saved = await saveBuild(
+    db,
+    alice,
+    save({ ...defaultBuild, name: 'Private client draft' }),
+  );
+  const request = {
+    operationId: 'publication-operation-001',
+    buildId: saved.id,
+    title: 'Public release',
+    note: 'Built for quiet typing.',
+    kind: 'build',
+  };
+  await assert.rejects(publishBuild(db, alice, request), {
+    code: 'profile_required',
+  });
+  await saveProfile(db, alice, profile);
+  await assert.rejects(publishBuild(db, bob, request), {
+    code: 'build_not_found',
+  });
+  const released = await publishBuild(db, alice, request);
+  await saveProfile(db, alice, {
+    ...profile,
+    displayName: 'New name',
+    bio: 'Changed',
+  });
+  await saveBuild(
+    db,
+    alice,
+    save({ ...defaultBuild, caseColor: '#000000' }, 'another-save-operation'),
+  );
+  assert.deepEqual(await publishBuild(db, alice, request), released);
+  const visible = await readPublicPublication(db, released.id);
+  assert.equal(visible.author.displayName, 'Alice');
+  assert.equal(visible.build.name, 'Public release');
+  assert.equal(visible.build.caseColor, defaultBuild.caseColor);
+  const serialized = JSON.stringify(visible);
+  for (const privateValue of [
+    alice,
+    saved.id,
+    request.operationId,
+    'Private client draft',
+  ])
+    assert.equal(serialized.includes(privateValue), false);
+  await assert.rejects(
+    publishBuild(db, alice, { ...request, title: 'Different release' }),
+    { code: 'operation_conflict' },
+  );
+});
+
+test('publication withdrawal is owner-only, repeatable, and cannot be undone by retrying publish', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const request = {
+    operationId: 'publication-operation-002',
+    buildId: saved.id,
+    title: 'Drop',
+    note: '',
+    kind: 'drop',
+    availability: 'Ask the maker',
+    externalUrl: 'https://example.com/commissions',
+  };
+  const released = await publishBuild(db, alice, request);
+  await assert.rejects(withdrawPublication(db, bob, released.id), {
+    code: 'publication_not_found',
+  });
+  assert.equal(
+    (await readPublicPublication(db, released.id)).withdrawnAt,
+    null,
+  );
+  const withdrawn = await withdrawPublication(db, alice, released.id);
+  assert.ok(withdrawn.withdrawnAt);
+  assert.deepEqual(
+    await withdrawPublication(db, alice, released.id),
+    withdrawn,
+  );
+  await assert.rejects(readPublicPublication(db, released.id), {
+    code: 'publication_not_found',
+  });
+  assert.deepEqual(await publishBuild(db, alice, request), withdrawn);
+});
+
+test('retired build parts cannot prevent withdrawal or silently change a published snapshot', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const request = {
+    operationId: 'retired-publication-001',
+    buildId: saved.id,
+    title: 'Historical build',
+    note: '',
+    kind: 'build',
+  };
+  const released = await publishBuild(db, alice, request);
+  const retired = JSON.stringify({
+    ...saved.build,
+    selection: { ...saved.build.selection, case: 'retired-case' },
+  });
+  db.sqlite
+    .prepare('UPDATE community_build SET payload=? WHERE id=?')
+    .run(retired, saved.id);
+  await assert.rejects(readPublicPublication(db, released.id), {
+    code: 'saved_build_unavailable',
+  });
+  const receipt = await withdrawPublication(db, alice, released.id);
+  assert.ok(receipt.withdrawnAt);
+  assert.deepEqual(await publishBuild(db, alice, request), receipt);
+  assert.deepEqual(await withdrawPublication(db, alice, released.id), receipt);
+  assert.equal(
+    db.sqlite
+      .prepare('SELECT payload FROM community_build WHERE id=?')
+      .get(saved.id).payload,
+    retired,
+  );
+  await assert.rejects(readPublicPublication(db, released.id), {
+    code: 'publication_not_found',
+  });
+});
+
+test('invalid saved snapshots cannot create a publication or consume its operation key', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const request = {
+    operationId: 'invalid-publication-001',
+    buildId: saved.id,
+    title: 'Reviewed build',
+    note: '',
+    kind: 'build',
+  };
+  const original = db.sqlite
+    .prepare('SELECT payload,evidence FROM community_build WHERE id=?')
+    .get(saved.id);
+  for (const [field, damaged] of [
+    ['payload', '{broken'],
+    ['evidence', '{broken'],
+    [
+      'payload',
+      JSON.stringify({
+        ...saved.build,
+        selection: { ...saved.build.selection, case: 'retired-case' },
+      }),
+    ],
+  ]) {
+    db.sqlite
+      .prepare(`UPDATE community_build SET ${field}=? WHERE id=?`)
+      .run(damaged, saved.id);
+    await assert.rejects(publishBuild(db, alice, request), {
+      code: 'saved_build_unavailable',
+    });
+    assert.equal(
+      db.sqlite.prepare('SELECT COUNT(*) AS n FROM community_publication').get()
+        .n,
+      0,
+    );
+    db.sqlite
+      .prepare(`UPDATE community_build SET ${field}=? WHERE id=?`)
+      .run(original[field], saved.id);
+  }
+  const released = await publishBuild(db, alice, request);
+  db.sqlite.prepare('UPDATE community_profile SET links=?').run('{broken');
+  assert.deepEqual(await publishBuild(db, alice, request), released);
+});
+
+test('concurrent publication retries converge and conflicting requests cannot overwrite the winner', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const request = {
+    operationId: 'concurrent-publication-001',
+    buildId: saved.id,
+    title: 'Release',
+    note: '',
+    kind: 'build',
+  };
+  const copies = await Promise.all([
+    publishBuild(db, alice, request),
+    publishBuild(db, alice, request),
+  ]);
+  assert.deepEqual(copies[0], copies[1]);
+  const contested = { ...request, operationId: 'concurrent-publication-002' };
+  const results = await Promise.allSettled([
+    publishBuild(db, alice, contested),
+    publishBuild(db, alice, { ...contested, title: 'Different' }),
+  ]);
+  assert.equal(
+    results.filter((result) => result.status === 'fulfilled').length,
+    1,
+  );
+  const failure = results.find((result) => result.status === 'rejected');
+  assert.equal(failure.reason.code, 'operation_conflict');
+  assert.equal(
+    db.sqlite.prepare('SELECT COUNT(*) AS n FROM community_publication').get()
+      .n,
+    2,
   );
 });

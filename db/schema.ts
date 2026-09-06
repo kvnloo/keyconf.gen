@@ -56,3 +56,33 @@ export const communityBuilds = sqliteTable(
     ),
   ],
 );
+
+export const communityPublications = sqliteTable(
+  'community_publication',
+  {
+    id: text('id').primaryKey(),
+    accountId: text('account_id')
+      .notNull()
+      .references(() => communityAccounts.id),
+    buildId: text('build_id')
+      .notNull()
+      .references(() => communityBuilds.id),
+    operationId: text('operation_id').notNull(),
+    requestDigest: text('request_digest').notNull(),
+    metadata: text('metadata').notNull(),
+    author: text('author').notNull(),
+    publishedAt: text('published_at').notNull(),
+    withdrawnAt: text('withdrawn_at'),
+  },
+  (table) => [
+    uniqueIndex('community_publication_account_operation').on(
+      table.accountId,
+      table.operationId,
+    ),
+    index('community_publication_account_published').on(
+      table.accountId,
+      table.publishedAt,
+      table.id,
+    ),
+  ],
+);
