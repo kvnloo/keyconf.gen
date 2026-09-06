@@ -17,6 +17,7 @@ import { KeyboardAudio, type SoundSettings } from '../lib/audio';
 import { soundPacks } from '../lib/sound-packs';
 import KeyboardScene, { type SceneOptions } from './keyboard-scene';
 import VolumeDial from './volume-dial';
+import BuildFeedback from './build-feedback';
 import './shared-build-preview.css';
 
 export default function SharedBuildPreview({
@@ -189,6 +190,7 @@ export default function SharedBuildPreview({
           </span>
         </section>
         <aside className="preview-details" aria-label="Shared build details">
+          <BuildFeedback build={build} />
           <section className="preview-sound">
             <span className="preview-eyebrow">LISTEN</span>
             <h2>{pack?.name ?? 'Synthesized study'}</h2>

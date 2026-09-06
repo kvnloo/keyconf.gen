@@ -544,3 +544,17 @@ payloads stay out of the list. Real SQLite coverage checks timestamp ties,
 complete traversal, owner isolation, withdrawal visibility and use of the owner
 index. Google sign-in, public profiles, favorites, publication review UI and
 client feedback remain unfinished.
+
+## Feedback from a shared preview
+
+Shared previews now have a collapsed feedback panel. A visitor writes notes and
+copies them with the exact portable build preview link to paste into their
+conversation with the builder. A denied clipboard exposes a selectable message;
+empty notes cannot be copied. Notes are ephemeral and nothing is sent or stored
+as a community comment. This supports existing creator/client conversations
+while authenticated proposals and durable feedback remain unfinished.
+
+The real browser check covers successful copy, restoration of the included
+build link, denied-clipboard recovery and selection, empty-note handling, no
+page errors and no horizontal overflow at 390 CSS pixels. It runs in CI through
+`verify:feedback`. Type checking and lint passed for the component.

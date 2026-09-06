@@ -76,6 +76,7 @@ jobs:
           npm run verify:accessory-rendering
           xvfb-run -a npm run verify:q1
           npm run verify:shared-preview
+          npm run verify:feedback
       - uses: actions/upload-artifact@v4
         if: github.event_name != 'pull_request' && contains(fromJSON('["main","dev","nightly"]'), github.ref_name)
         with:

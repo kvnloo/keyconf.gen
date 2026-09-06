@@ -252,3 +252,42 @@
     padding: 22px;
   }
 }
+
+.preview-feedback {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #ffffff22;
+}
+.preview-feedback summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 12px 0;
+}
+.preview-feedback label {
+  display: block;
+  margin: 16px 0 8px;
+  font-size: 0.875rem;
+}
+.preview-feedback textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  padding: 12px;
+  color: #e9ede6;
+  background: #111713;
+  border: 1px solid #ffffff44;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.preview-feedback textarea::placeholder {
+  color: #b7c6b9;
+}
+.preview-feedback .preview-customize {
+  width: 100%;
+  font-size: 0.875rem;
+}
+.preview-feedback output {
+  margin-top: 12px;
+}
