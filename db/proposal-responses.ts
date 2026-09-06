@@ -176,14 +176,12 @@ export async function listProposalResponses(
     linkVersion: number;
     createdAt: string;
   }>();
-  const items = results
-    .slice(0, 25)
-    .map((row) => ({
-      id: row.id,
-      author: parseCommunityProfile(JSON.parse(row.author)),
-      linkVersion: row.linkVersion,
-      createdAt: row.createdAt,
-    }));
+  const items = results.slice(0, 25).map((row) => ({
+    id: row.id,
+    author: parseCommunityProfile(JSON.parse(row.author)),
+    linkVersion: row.linkVersion,
+    createdAt: row.createdAt,
+  }));
   const last = items.at(-1);
   return {
     items,
