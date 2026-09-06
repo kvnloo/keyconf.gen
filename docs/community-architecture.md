@@ -1,12 +1,12 @@
 # Community architecture
 
-Status: proposed, September 6, 2026. This document defines a buildable extension. It does not claim accounts, community publishing or client proposals are shipped.
+Status: storage foundation implemented locally, September 6, 2026; Google setup explicitly deferred by the user. This document defines a buildable extension. It does not claim accounts, community publishing or client proposals are shipped.
 
 ## Product decision
 
 Keep the keyboard studio as the main activity. Add a public collection of people's builds, private favorites, and client proposals that open directly into a preconfigured design. A creator drop is a named, published configuration with an author and a release date. It may carry creator-written availability text and a validated external purchase or enquiry link. Keyconf does not infer stock, operate checkout, accept payment or claim endorsements.
 
-Visitors can browse and customize without signing in. Sign in with ChatGPT is required to save account builds, favorite a published build, publish, or submit attributed feedback. Existing device saves, portable links, exports, imported parts, sound, typing, compatibility checks and independent control-deck studies stay available.
+Visitors can browse and customize without signing in. Sign in with Google is the chosen account entry point, required to save account builds, favorite a published build, publish, or submit attributed feedback. Existing device saves, portable links, exports, imported parts, sound, typing, compatibility checks and independent control-deck studies stay available.
 
 ## Current implementation and consequences
 
@@ -45,13 +45,11 @@ Proposal editing uses its own local draft key, separate from `keyconf-build-v1`,
 
 ## Identity and authorization boundary
 
-Use the supported dispatch-owned Sites SIWC flow. The official pinned archive is available at `work/sites-auth-template/openai-create-sites-0.3.0.tgz`. Its inspected member `package/templates/addons/auth/app/chatgpt-auth.ts` exports `getChatGPTUser`, `requireChatGPTUser`, `chatGPTSignInPath` and `chatGPTSignOutPath`. Copy only that member to `app/chatgpt-auth.ts` for implementation; do not run the initializer over this checkout. The helper uses `next/headers` and `next/navigation`, requires both forwarded ID and email, decodes the optional full-name claim and validates relative return paths. Keep its imports server-only. Its `displayName` fallback is email, so never copy it into public profile data automatically.
+Google is the selected provider as of September 6, 2026. The user has not created a Google project and explicitly deferred setup. Provider-neutral storage and validation are implemented; no account route or authentication endpoint is exposed. The previous SIWC implementation plan is superseded. Google sign-in is not live. The available Sites documentation describes dispatch-owned ChatGPT authentication but does not establish an external Google authentication path. Confirm that integration before shipping provider-specific routes or buttons; do not label a ChatGPT redirect as Google sign-in.
 
-Protected browser pages use `requireChatGPTUser` and `dynamic = 'force-dynamic'`. APIs check `getChatGPTUser` and return 401 JSON for missing identity. Start sign-in with an ordinary anchor and `target="_top"`, using a same-origin relative return path. Do not fetch or prefetch the sign-in route. The dispatcher owns `/signin-with-chatgpt`, `/signout-with-chatgpt` and `/callback`.
+Google Identity Services requires a web OAuth client ID and registered site origins. See [Google setup](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid). Production configuration and an end-to-end hosted sign-in/sign-out test remain release requirements.
 
-Map the verified `oai-authenticated-user-id` to a private account row. Never accept an owner ID from request JSON. The public profile uses an app-generated ID and user-selected handle. Platform name is optional; email/name claims must not become a public profile by default. A creator is simply a user who publishes a build. SIWC identifies that user; it does not prove company affiliation or workspace membership.
-
-Every private read and write includes the verified owner predicate in the database operation. Publication reads join an active publication to exactly its pinned revision. A guessed build ID never grants access to a private revision. Favorites belong to the signed-in account and remain private. API responses must be explicit projections, not serialization of entire joined rows.
+Keep storage provider-neutral. Map a server-verified, provider-qualified subject to a private account row. Never accept an owner ID from request JSON. Validate identity server-side for every private API; anonymous requests return 401. Account responses must not be shared-cached. Public display names and handles are explicitly chosen; identity email/name must not be published automatically. Signing in must preserve the device draft.
 
 Keep account and proposal write APIs same-origin on Sites. Require the expected Origin for browser mutations, reject missing or mismatched origins, and do not enable credentialed cross-origin writes for Pages. Public reads may remain separate. On Pages, Community/account controls navigate to the matching Sites channel. Existing public catalog/import CORS policies do not become authentication policies.
 
@@ -94,7 +92,7 @@ For keyboard revisions, derive the selected-part evidence and compatibility/reco
 
 A drop is an immutable publication, so changing the working build cannot change a released drop. A later edit produces another revision/publication. Unpublishing hides its public detail and removes it from feeds. A favorite of a withdrawn item displays “Build unavailable”; it does not reveal the retained private revision.
 
-Proposals use cryptographically random tokens with at least 256 bits of entropy; store only a digest. Only a link holder can read or submit, and submission additionally requires SIWC. This is a bearer-link invitation, not proof that the holder is the intended client. The UI must say that plainly. The owner can close a proposal or rotate its token. Because only a digest is retained, a lost create response can recover the proposal by operation ID and issue a fresh link through rotation; the server cannot recover the original token. Check openness and token validity in the response insert itself to prevent a close/submit race. Responses are visible only to their author and the proposal owner.
+Proposals use cryptographically random tokens with at least 256 bits of entropy; store only a digest. Only a link holder can read or submit, and submission additionally requires a verified signed-in account. This is a bearer-link invitation, not proof that the holder is the intended client. The UI must say that plainly. The owner can close a proposal or rotate its token. Because only a digest is retained, a lost create response can recover the proposal by operation ID and issue a fresh link through rotation; the server cannot recover the original token. Check openness and token validity in the response insert itself to prevent a close/submit race. Responses are visible only to their author and the proposal owner.
 
 Exclude proposals from public search, sitemap and metadata previews; send `noindex` and `Referrer-Policy: no-referrer`, and avoid third-party assets on proposal pages. Redact raw tokens from application logs. A copied link can still be forwarded, and closing it cannot retract a previously downloaded configuration.
 
@@ -102,7 +100,7 @@ Exclude proposals from public search, sitemap and metadata previews; send `noind
 
 Ship one complete proposal loop on nightly before building a public feed:
 
-1. Add SIWC and account/profile records. A visitor signs in and explicitly chooses a public display name only when sharing with another person.
+1. Integrate verified Google sign-in and account/profile records. A visitor signs in and explicitly chooses a public display name only when sharing with another person.
 2. Save one keyboard build as a private immutable account revision, with visible save and failure states. Preserve current device save and export behavior.
 3. Create a proposal from that revision and copy its link. Open the link in a separate anonymous browser context and preview it without changing that browser's saved studio build.
 4. Customize the proposal in its isolated draft. Sign in as another user and submit the configuration plus a note once. A retry returns the existing response through its operation ID.
@@ -118,7 +116,7 @@ Optional music belongs after the community loop. Keep it off by default with its
 
 | Check | Required evidence |
 | --- | --- |
-| Real identity | Hosted SIWC completes and returns to the exact proposal/account route; sign-out works. Anonymous API writes return 401. Forged identity headers cannot impersonate an account on the hosted URL. |
+| Real identity | Hosted Google sign-in completes and returns to the exact proposal/account route; sign-out works. Anonymous API writes return 401. Forged identity headers cannot impersonate an account on the hosted URL. |
 | Two-account isolation | Account B cannot read, save, publish, withdraw or list account A's private builds through changed IDs. A sees only responses to A's proposals; another client cannot see those responses. |
 | Anonymous continuity | Browse and existing studio/portable-link flows work before sign-in. Save, preview, sign-in return and proposal editing preserve the preexisting keyboard/control-deck drafts and undo behavior. |
 | Persistence | Account saves and submitted responses survive fresh browser sessions and Worker restarts. A stale save returns 409 without losing either revision. Identical response retries produce one row. |
@@ -131,3 +129,9 @@ Optional music belongs after the community loop. Keep it off by default with its
 The first slice is complete only after the hosted two-user loop and isolation checks pass. Local fake headers and a successful build cannot prove dispatch behavior. Catalog changes remain a restore risk until revision migration/repair is implemented. Link proposals provide convenient sharing but are not suitable for claims of named-recipient confidentiality. Public profile and drop content needs withdrawal and operator removal before opening unrestricted publishing.
 
 Authentication and storage decisions follow the installed Sites [authentication guidance](/home/kvn/.codex/plugins/cache/openai-bundled/sites/0.1.57/skills/sites-building/references/authentication.md), [storage guidance](/home/kvn/.codex/plugins/cache/openai-bundled/sites/0.1.57/skills/sites-building/references/persistence-and-storage.md) and [SQLite guidance](/home/kvn/.codex/plugins/cache/openai-bundled/sites/0.1.57/skills/sites-building/references/sqlite.md). Recheck their current helper contract at implementation time.
+
+## Account storage implementation, September 6
+
+`db/community.ts`, `lib/community.ts`, and migration `0001_panoramic_ken_ellis.sql` implement private account/profile/build storage. Eight real SQLite tests cover chosen normalized handles, owner-only reads, idempotent operations, conflict retries, source-evidence retention, invalid input, bounded request bodies and private error responses. The list returns the newest 100 snapshots using the owner/date index; pagination is still needed before promising an unlimited library.
+
+The unfinished ChatGPT-specific account page and API drafts were removed when Google was selected and setup deferred. No sign-in button, account page, or community API is being shipped with this storage foundation. The UI, hosted Google identity/session boundary, end-to-end account verification, favorites, public profiles and proposals remain pending.

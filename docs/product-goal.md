@@ -46,7 +46,7 @@ Expose these choices contextually in the build's parts/mods flow. A separate con
 ## First delivery sequence
 
 1. Research representative creators' actual public commission, content and drop workflows. Record sources, uncertainties and inferred opportunities.
-2. Build the account/profile and private saved-build foundation using Sites authentication and D1. Keep static Pages account actions pointed at the same-origin Sites flow.
+2. Build the account/profile and private saved-build foundation using Google sign-in and D1, after verifying the supported Sites integration. Keep static Pages account actions pointed at the same-origin Sites flow.
 3. Deliver one complete creator-to-client journey: save a revision, share an unlisted preview, experience it, customize a separate copy and submit revision-specific feedback.
 4. Add favorites and opt-in public creator profiles/build collections. Add drops through existing purchase/enquiry destinations before considering commerce infrastructure.
 5. Add optional background music with verified keyboard-audio priority. Research music generation/licensing; do not publish unlicensed tracks or silently start playback.

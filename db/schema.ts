@@ -1,4 +1,4 @@
-import { sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const catalogSnapshots = sqliteTable('catalog_snapshot', {
   id: text('id').primaryKey(),
@@ -13,3 +13,45 @@ export const catalogPublications = sqliteTable('catalog_publication', {
     .notNull()
     .references(() => catalogSnapshots.id),
 });
+
+export const communityAccounts = sqliteTable('community_account', {
+  id: text('id').primaryKey(),
+  subject: text('subject').notNull().unique(),
+  createdAt: text('created_at').notNull(),
+});
+
+export const communityProfiles = sqliteTable('community_profile', {
+  accountId: text('account_id')
+    .primaryKey()
+    .references(() => communityAccounts.id),
+  handle: text('handle').notNull().unique(),
+  displayName: text('display_name').notNull(),
+  bio: text('bio').notNull(),
+});
+
+export const communityBuilds = sqliteTable(
+  'community_build',
+  {
+    id: text('id').primaryKey(),
+    accountId: text('account_id')
+      .notNull()
+      .references(() => communityAccounts.id),
+    operationId: text('operation_id').notNull(),
+    requestDigest: text('request_digest').notNull(),
+    name: text('name').notNull(),
+    payload: text('payload').notNull(),
+    evidence: text('evidence').notNull(),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    uniqueIndex('community_build_account_operation').on(
+      table.accountId,
+      table.operationId,
+    ),
+    index('community_build_account_created').on(
+      table.accountId,
+      table.createdAt,
+      table.id,
+    ),
+  ],
+);

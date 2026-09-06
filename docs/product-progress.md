@@ -381,3 +381,9 @@ A stricter result review found a second typing-test gap: Monkeytype can display 
 Rendered accessory verification passed for artisan replacement, a twelve-key macropad on each desk side, explosion, all-key-layout restoration, mismatched/duplicate rejection, removal and mobile reflow. Visual inspection found overlapping layer links and volume controls on phones; spacing was corrected and intersection assertions now cover 320, 390 and 1280 widths. All 105 unit tests pass. Exact manufacturer geometry and embedded-module fit remain unimplemented.
 
 The strengthened typing verifier completed successfully in GitHub run 34050454518 at 18:06:01 UTC, including actual successful 10-word result, mobile and recovery. That job was later canceled during the separate room verifier; its overall conclusion does not establish a typing failure. Local Xvfb/software-rendered probes still encountered slow-timer failures, even after individually disabling redraws, key messages, screenshots and projection transforms. No speculative renderer changes were made. Retain the strict assertion and treat this local/CI divergence as an unresolved environment/performance limit, not a proven app regression or universal performance pass.
+
+## Provider-neutral account storage; Google setup deferred
+
+The user selected Google sign-in and explicitly deferred creating its Google Cloud project. Added private account/profile/immutable build tables, a generated migration and shared request/response parsers. Eight real SQLite tests pass for owner isolation, operation retries/conflicts, unique chosen handles, source evidence retention, validation and bounded list/query behavior. No emails or identity names become public automatically.
+
+Removed the unshipped ChatGPT account/API drafts. No account route is exposed. Google configuration, Sites cookie/browser-policy verification and the public community experience remain open. This is storage groundwork, not a shipped sign-in feature.
