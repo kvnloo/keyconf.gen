@@ -1,0 +1,13 @@
+{
+  "format": "png-sequence",
+  "count": 1080,
+  "first": "frame_000001.png",
+  "last": "frame_001080.png",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "duration": 36,
+  "allHeadersVerified": true,
+  "hyperframesVersion": "0.8.29",
+  "renderJobId": "27f6a854-6c5f-4463-b43b-b79e6d834e42"
+}

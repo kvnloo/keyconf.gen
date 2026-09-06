@@ -11,13 +11,16 @@ class AudioClips(HTMLParser):
   if tag=='audio':self.clips.append(dict(attrs))
 parser=AudioClips();parser.feed((root/'index.html').read_text());mix=np.zeros((duration*sr,2))
 for clip in parser.clips:
+ if clip.get('data-fx-chain'):raise ValueError('Add FX rendering before mastering a clip with data-fx-chain')
  signal,rate=sf.read(root/clip['src'],always_2d=True)
  if rate!=sr:raise ValueError(f'Expected 48 kHz source: {clip["src"]}')
  start=round(float(clip['data-start'])*sr);count=min(len(signal),round(float(clip['data-duration'])*sr),len(mix)-start)
  gain=np.full(count,float(clip.get('data-volume',1)))
  for lane in json.loads(clip.get('data-automation','{"lanes":[]}'))['lanes']:
   if lane['target']!='volume':raise ValueError('Add support before rendering a new effect lane')
-  points=lane['points'];gain*=np.interp(np.arange(count)/sr,[p['t'] for p in points],[p['v'] for p in points])
+  points=lane['points']
+  if any(any(key in point for key in ['curve','viaX','viaY']) for point in points):raise ValueError('This master supports linear volume envelopes only')
+  gain*=np.interp(np.arange(count)/sr,[p['t'] for p in points],[p['v'] for p in points])
  mix[start:start+count]+=signal[:count]*gain[:,None]
 pre=root/'renders/premaster.wav';pre.parent.mkdir(exist_ok=True);sf.write(pre,mix,sr,subtype='PCM_24')
 def measure(path):

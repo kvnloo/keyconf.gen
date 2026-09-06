@@ -15,10 +15,10 @@ if (!process.argv.includes('--encode-only')) {
     '.hyperframes/frame-cache', '--output', 'renders/frames']);
 }
 const frames = readdirSync('renders/frames').filter(name => /^frame_\d{6}\.png$/.test(name)).sort();
-if (frames.length !== 1080 || frames[0] !== 'frame_000000.png' || frames.at(-1) !== 'frame_001079.png') {
+if (frames.length !== 1080 || frames[0] !== 'frame_000001.png' || frames.at(-1) !== 'frame_001080.png') {
   throw new Error('Expected the complete 1080-frame sequence before encoding');
 }
-run('ffmpeg', ['-y', '-framerate', '30', '-start_number', '0', '-i',
+run('ffmpeg', ['-y', '-framerate', '30', '-start_number', '1', '-i',
   'renders/frames/frame_%06d.png', '-i', 'assets/audio/master.wav',
   '-map', '0:v:0', '-map', '1:a:0', '-c:v', 'libx264', '-preset', 'slow',
   '-crf', '16', '-pix_fmt', 'yuv420p', '-vf', 'scale=in_range=pc:out_range=tv',

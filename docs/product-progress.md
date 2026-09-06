@@ -161,3 +161,9 @@ The complete headed typing regression now passes with deliberately delayed audio
 ### Published desk and volume checkpoint
 
 Published commit `052506917ca4ecaefba57695bfc99cc278b180a4` to the public Sites URL as version 8 and to GitHub Pages. [Actions run 33999093432](https://github.com/kvnloo/keyconf.gen/actions/runs/33999093432) passed types, lint, 32 tests, the browser/interface/featured/deck/real-typing regressions, and deployment. Sites deployment `appgdep_6a9ca980090c8191be82cdcdb793aba7` succeeded on September 5, 2026 at 23:47 UTC. The subsequent public-site film capture loaded the keyboard and completed an active Monkeytype word-mode sequence without a page error. This closes the prior candidate's CI and publication gates.
+
+### Hyperframes launch film
+
+Created the 36-second launch film in [videos/keyconf-launch](../videos/keyconf-launch/README.md). It combines original Blender shots of the app model, real preset and inspector captures, the recorded Ink Black audition, and active Monkeytype footage from the public site. Hyperframes and its official production skills are installed locally. The portable project includes local assets, licensed sample attribution, a 24-bit audio master, and scripts to edit and render it again.
+
+The final MP4 contains all 1,080 frames at 1920×1080/30 fps with 36-second stereo audio. Its measured loudness is −17.9 LUFS with −4.5 dBTP; no limiter or compressor was used. Frame, runtime, layout, contrast, final decoding, and visual checks are recorded in the film's verification documentation. The launch film is complete. The broader product goal remains active, including catalog depth, ingestion coverage, and the limits of unmeasured keyboard acoustics.

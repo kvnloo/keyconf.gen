@@ -23,7 +23,7 @@ Open `http://localhost:3333/#project/keyconf-launch`. The finished file is `rend
 - App screenshots come from keyconf commit `052506917ca4ecaefba57695bfc99cc278b180a4`. Captures use actual controls and preset selections, with no reconstructed UI.
 - Blender stills use `assets/models/keyboard-60.glb`, the same original geometry used in the app, recolored with the actual Forest Line palette. These are product illustrations, not photographs of manufactured hardware.
 - Typing footage is a real guest-test run. Its source segment and key-event times are in `assets/audio/typing-cues.json`.
-- The listening scene uses Gateron Ink Black press/release recordings from tplai/kbsim under MIT. The film changes level and modest stereo position, without pitch shifting. It does not claim to reproduce a specific complete assembly or recording environment.
+- The listening scene uses Gateron Ink Black press/release recordings from tplai/kbsim under MIT. The film changes level and modest stereo position, without pitch shifting. The source recordings were distributed as MP3; the lossless master preserves the completed mix without making those source recordings lossless. It does not claim to reproduce a specific complete assembly or recording environment.
 - The score is an original deterministic 80 BPM composition. `scripts/compose-score.py` regenerates it. Music fades around the recorded audition so keyboard transients remain audible.
 
 ## Source and attribution
