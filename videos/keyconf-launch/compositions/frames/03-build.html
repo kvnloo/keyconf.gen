@@ -1,0 +1,210 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Arial";
+      src: url("assets/fonts/Arial-compatible.ttf") format("truetype");
+      font-style: normal;
+      font-weight: 400 500;
+      font-display: block;
+    }
+
+    @font-face {
+      font-family: "JetBrains Mono";
+      src: url("assets/fonts/JetBrainsMono-Regular.woff2") format("woff2");
+      font-style: normal;
+      font-weight: 400 500;
+      font-display: block;
+    }
+
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+      font-family: "Arial";
+      color: #e9ede6;
+    }
+
+    #root * {
+      box-sizing: border-box;
+    }
+
+    [id="scene-03-build-ground"] {
+      position: absolute;
+      inset: 0;
+      background: #111713;
+    }
+
+    [id="scene-03-build-topbar"] {
+      position: absolute;
+      top: 3.333333cqw;
+      left: 5cqw;
+      width: 90cqw;
+      height: 2.395833cqw;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      border-bottom: 2px solid #293321;
+      color: #b6c6a8;
+      font-family: "JetBrains Mono";
+      font-size: 26px;
+      font-weight: 500;
+      line-height: 1;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    [id="scene-03-build-headline"] {
+      position: absolute;
+      top: 7.291667cqw;
+      left: 5cqw;
+      width: 78cqw;
+      margin: 0;
+      color: #c4d1b9;
+      font-size: 4.583333cqw;
+      font-weight: 500;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    [id="scene-03-build-viewport"] {
+      position: absolute;
+      top: 15.625cqw;
+      left: 5cqw;
+      width: 90cqw;
+      height: 35.15625cqw;
+      overflow: hidden;
+      border-radius: 8px;
+      background: #293321;
+    }
+
+    [id="scene-03-build-viewport"] img {
+      position: absolute;
+      left: 0;
+      display: block;
+      width: 90cqw;
+      height: 50.625cqw;
+      max-width: none;
+      object-fit: fill;
+    }
+
+    [id="scene-03-build-built"] {
+      top: -7.734375cqw;
+    }
+
+    [id="scene-03-build-exploded"] {
+      top: -6.515625cqw;
+    }
+
+    [id="scene-03-build-outline"] {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    [id="scene-03-build-outline-path"] {
+      fill: none;
+      stroke: #b6c6a8;
+      stroke-width: 2px;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    [id="scene-03-build-assembly"],
+    [id="scene-03-build-parts"] {
+      position: absolute;
+      left: 5cqw;
+      width: 90cqw;
+      min-height: 24px;
+      margin: 0;
+      color: #c4d1b9;
+      font-family: "JetBrains Mono";
+      font-size: 24px;
+      font-weight: 500;
+      line-height: 1;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    [id="scene-03-build-assembly"] {
+      top: 51.5625cqw;
+    }
+
+    [id="scene-03-build-parts"] {
+      top: 13.125cqw;
+    }
+    [id="scene-03-build-topbar"] { top: 64px; border-bottom: 0; }
+    .film-wordmark { font-family: "Arial"; font-size: 42px; line-height: 1; letter-spacing: -0.04em; text-transform: none; color: #E9EDE6; }
+  </style>
+
+  <div data-hf-id="hf-1v6c" id="root" data-composition-id="scene-03-build" data-duration="6" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-six9" id="scene-03-build-ground" class="clip" data-start="0" data-duration="6" data-track-index="0"></div>
+
+    <div data-hf-id="hf-1q0b" id="scene-03-build-topbar" class="clip" data-start="0" data-duration="6" data-track-index="1">
+      <span data-hf-id="hf-u5e4" class="film-wordmark">keyconf</span><span data-hf-id="hf-tn7z">BUILD / 03</span>
+    </div>
+
+    <h1 data-hf-id="hf-jcza" id="scene-03-build-headline" class="clip" data-start="0" data-duration="6" data-track-index="2">Make every layer yours.</h1>
+
+    <div data-hf-id="hf-g5gz" id="scene-03-build-viewport" class="clip" data-start="0" data-duration="6" data-track-index="3">
+      <img data-hf-id="hf-le2a" id="scene-03-build-built" src="assets/stills/build.png" width="1920" height="1080" alt="The actual Keyconf keyboard and components inspector">
+      <img data-hf-id="hf-4zpd" id="scene-03-build-exploded" src="assets/stills/exploded.png" width="1920" height="1080" alt="The actual Keyconf keyboard separated into its modeled layers">
+      <svg data-hf-id="hf-wmhi" id="scene-03-build-outline" viewBox="0 0 1728 675" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path data-hf-id="hf-w1hd" id="scene-03-build-outline-path" d="M 9 1 H 1719 Q 1727 1 1727 9 V 666 Q 1727 674 1719 674 H 9 Q 1 674 1 666 V 9 Q 1 1 9 1 Z" />
+      </svg>
+    </div>
+
+    <p data-hf-id="hf-nhhl" id="scene-03-build-assembly" class="clip" data-start="0" data-duration="6" data-track-index="4">Explore the assembly</p>
+    <p data-hf-id="hf-n4pp" id="scene-03-build-parts" class="clip" data-start="0" data-duration="6" data-track-index="5">Cases · keycaps · switches · plates</p>
+  </div>
+
+  <script src="assets/gsap.min.js"></script>
+  <script>
+    (() => {
+      const root = document.querySelector('[data-composition-id="scene-03-build"]');
+      const element = (name) => root.querySelector('[id="scene-03-build-' + name + '"]');
+      const headline = element("headline");
+      const assembly = element("assembly");
+      const parts = element("parts");
+      const content = [
+        { element: headline, hold: 0.21 },
+        { element: assembly, hold: 1 },
+        { element: parts, hold: 0.65 },
+      ];
+      let elapsed = 0;
+      const phases = content.map((entry) => {
+        const duration = 0.6 + entry.element.textContent.trim().length * 0.03 + entry.hold;
+        const start = elapsed;
+        elapsed = Math.round((elapsed + duration) * 1000) / 1000;
+        return { ...entry, start, end: elapsed };
+      });
+
+      const outline = element("outline-path");
+      const outlineLength = outline.getTotalLength();
+      outline.style.strokeDasharray = `${outlineLength}`;
+      outline.style.strokeDashoffset = `${outlineLength}`;
+
+      const timeline = gsap.timeline({ paused: true });
+      timeline.to({ time: 0 }, { time: 6, duration: 6, ease: "none" }, 0);
+      timeline.fromTo(element("topbar"), { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" }, 0);
+      timeline.fromTo(headline, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, 0.08);
+      timeline.fromTo(element("viewport"), { opacity: 0.7, y: 12 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, 0);
+
+      const revealAssembly = phases[1].start + 0.2;
+      timeline.fromTo(element("exploded"), { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "none" }, revealAssembly);
+      timeline.fromTo(element("built"), { opacity: 1 }, { opacity: 0, duration: 0.2, ease: "none" }, revealAssembly);
+      timeline.fromTo(outline, { strokeDashoffset: outlineLength }, { strokeDashoffset: 0, duration: 0.55, ease: "power2.out" }, phases[1].start + 0.75);
+      timeline.fromTo(assembly, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, ease: "power1.out" }, phases[1].start + 1.5);
+      timeline.fromTo(parts, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.45, ease: "power1.out" }, phases[2].start + 0.6);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["scene-03-build"] = timeline;
+    })();
+  </script>
+</template>

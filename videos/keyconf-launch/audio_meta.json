@@ -1,0 +1,31 @@
+{
+  "bgm": {
+    "path": "assets/audio/original-score.wav",
+    "volume": 0.8,
+    "automation": "See el-bgm in index.html. Music ducks for the recorded audition."
+  },
+  "voices": [],
+  "sfx": [
+    {
+      "frame": 1,
+      "file": "assets/audio/intro-keys.wav",
+      "offset_s": 0,
+      "duration_s": 6,
+      "volume": 1
+    },
+    {
+      "frame": 4,
+      "file": "assets/audio/audition.wav",
+      "offset_s": 1.6,
+      "duration_s": 4,
+      "volume": 1
+    },
+    {
+      "frame": 5,
+      "file": "assets/audio/typing-keys.wav",
+      "offset_s": 0,
+      "duration_s": 6,
+      "volume": 1
+    }
+  ]
+}

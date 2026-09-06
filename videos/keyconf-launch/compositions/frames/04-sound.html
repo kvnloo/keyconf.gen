@@ -1,0 +1,212 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Arial";
+      src: url("assets/fonts/Arial-compatible.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "JetBrains Mono";
+      src: url("assets/fonts/JetBrainsMono-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: block;
+    }
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+      font-family: "Arial";
+      color: #E9EDE6;
+    }
+    [id="scene-04-sound-ground"] {
+      position: absolute;
+      inset: 0;
+      background: #111713;
+    }
+    [id="scene-04-sound-content"] { position: absolute; inset: 0; }
+    [id="scene-04-sound-topbar"] {
+      position: absolute;
+      left: 5cqw;
+      right: 5cqw;
+      top: 8.888889cqh;
+      display: flex;
+      justify-content: space-between;
+      color: #C4D1B9;
+      font-family: "JetBrains Mono";
+      font-size: 24px;
+      font-weight: 500;
+      line-height: 1;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    [id="scene-04-sound-title"] {
+      position: absolute;
+      left: 5cqw;
+      top: 12.962963cqh;
+      margin: 0;
+      font-size: 5cqw;
+      font-weight: 500;
+      line-height: 0.96;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+    [id="scene-04-sound-screenshot"] {
+      position: absolute;
+      left: 37.5cqw;
+      top: 25.462963cqh;
+      box-sizing: border-box;
+      width: 58.333333cqw;
+      height: 58.333333cqh;
+      object-fit: contain;
+      border: 2px solid #293321;
+      border-radius: 8px;
+    }
+    [id="scene-04-sound-label"] {
+      position: absolute;
+      left: 5cqw;
+      top: 33.333333cqh;
+      margin: 0;
+      font-size: 1.875cqw;
+      font-weight: 500;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+    }
+    [id="scene-04-sound-source"] {
+      position: absolute;
+      left: 5cqw;
+      top: 39.074074cqh;
+      width: 29.166667cqw;
+      margin: 0;
+      color: #C4D1B9;
+      font-family: "Arial";
+      font-size: 24px;
+      font-weight: 400;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+    [id="scene-04-sound-wave"] {
+      position: absolute;
+      left: 5cqw;
+      top: 48.148148cqh;
+      width: 27.083333cqw;
+      height: 16.666667cqh;
+    }
+    [id="scene-04-sound-wave-svg"] { display: block; width: 100%; height: 100%; overflow: visible; }
+    [id="scene-04-sound-wave-base"] {
+      fill: none;
+      stroke: #C4D1B9;
+      stroke-width: 2;
+      opacity: 0.23;
+    }
+    [id="scene-04-sound-wave-ink"] {
+      fill: none;
+      stroke: #E9EDE6;
+      stroke-width: 2;
+    }
+    [id="scene-04-sound-playhead"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 2px;
+      height: 100%;
+      background: #B6C6A8;
+      transform-origin: 50% 50%;
+    }
+    [id="scene-04-sound-closing"] {
+      position: absolute;
+      left: 5cqw;
+      top: 77.777778cqh;
+      width: 29.166667cqw;
+      margin: 0;
+      font-size: 1.875cqw;
+      font-weight: 500;
+      line-height: 1.16;
+      letter-spacing: -0.01em;
+    }
+    [id="scene-04-sound-topbar"] { top: 64px; border-bottom: 0; }
+    .film-wordmark { font-family: "Arial"; font-size: 42px; line-height: 1; letter-spacing: -0.04em; text-transform: none; color: #E9EDE6; }
+  </style>
+  <div data-hf-id="hf-1o0m" id="root" data-composition-id="scene-04-sound" data-duration="6" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-ytvj" id="scene-04-sound-ground" class="clip" data-start="0" data-duration="6" data-track-index="0"></div>
+    <div data-hf-id="hf-pm50" id="scene-04-sound-content" class="clip" data-start="0" data-duration="6" data-track-index="1">
+      <div data-hf-id="hf-42uz" id="scene-04-sound-topbar"><span data-hf-id="hf-u5e4" class="film-wordmark">keyconf</span><span data-hf-id="hf-0b57">SOUND / 04</span></div>
+      <h1 data-hf-id="hf-frr9" id="scene-04-sound-title">Hear the difference.</h1>
+      <img data-hf-id="hf-kxeq" id="scene-04-sound-screenshot" src="assets/stills/sound.png" alt="The actual keyconf Sound Lab with Gateron Ink Black selected">
+      <p data-hf-id="hf-4f9i" id="scene-04-sound-label">Recorded switch sounds</p>
+      <p data-hf-id="hf-0c42" id="scene-04-sound-source">Gateron Ink Black · recorded reference</p>
+      <div data-hf-id="hf-lwuz" id="scene-04-sound-wave" aria-label="Measured waveform of the recorded audition">
+        <svg data-hf-id="hf-uf44" id="scene-04-sound-wave-svg" viewBox="0 0 520 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path data-hf-id="hf-82qk" id="scene-04-sound-wave-base" />
+          <g data-hf-id="hf-y761" id="scene-04-sound-wave-ink" />
+        </svg>
+        <div data-hf-id="hf-8ps3" id="scene-04-sound-playhead"></div>
+      </div>
+      <p data-hf-id="hf-xz8g" id="scene-04-sound-closing">Listen before you build.</p>
+    </div>
+  </div>
+  <script src="assets/gsap.min.js"></script>
+  <script>
+    (() => {
+      const el = (name) => document.getElementById("scene-04-sound-" + name);
+      const waveData = {"duration":4,"sampleRate":48000,"samples":[0.0,0.254751617285669,0.02018199875572591,0.006788461871993753,0.005036911501639582,0.0021200316792301006,0.06836874045511851,0.005935785064851855,0.002717163961298619,0.001870029872874851,0.001146362338812061,0.0,0.24820719854569595,0.032907140307373434,0.012798961547778083,0.005268376705766962,0.0030824406162723948,0.06545808543488785,0.013289038588241677,0.0040894566316640795,0.0017904172926045214,0.0013966274932498033,0.0,0.0,0.0,0.2380092173200829,0.08979985192697557,0.012473468740060709,0.006355207909959912,0.004314988291935857,0.06241183562580736,0.03977586832829058,0.0040975409783759135,0.0021910116577367952,0.0013475736997844666,0.0,0.0,0.0,0.0,0.24962617307135543,0.024259475250456713,0.008240145593970303,0.004525597900332936,0.0,0.06545808543488785,0.005378472884103189,0.0022979524130783023,0.0017904172926045214,0.0,0.0,0.0,0.0,0.0,0.24697043984053865,0.02546240028923657,0.013398044836219649,0.004666226714475407,0.0026468185238236104,0.06836874045511851,0.009113834217283012,0.0030505943867721813,0.001870029872874851,0.0014587298416092478,0.0,0.0,0.0,0.3796528725952159,0.08285268236114107,0.042204979256017044,0.01033608918496427,0.005767056390419381,0.06836874045511851,0.013879948124075565,0.004271298147435399,0.001870029872874851,0.0014587298416092478,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.24820719854569595,0.032907140307373434,0.012798961547778083,0.005268376705766962,0.0030824406162723948,0.06545808543488785,0.013289038588241677,0.0040894566316640795,0.0017904172926045214,0.0013966274932498033,0.0,0.0,0.0,0.0,0.2380092173200829,0.023130502086039822,0.012473468740060709,0.0046227840265784335,0.002684973216192854,0.06241183562580736,0.008319754310280576,0.0027847989323896054,0.0017070959076367902,0.0013316320659255386,0.0,0.0,0.24962617307135543,0.024259475250456713,0.013082284381949465,0.004848416790255102,0.002816023666242935,0.06545808543488785,0.008725831935224023,0.0029207217606650095,0.0017904172926045214,0.0013966274932498033,0.0,0.0,0.0,0.0,0.24697043984053865,0.02546240028923657,0.009285374185038109,0.0038254809510696024,0.0026468185238236104,0.06836874045511851,0.005935785064851855,0.002717163961298619,0.001870029872874851,0.001146362338812061,0.0,0.0,0.0,0.0,0.0,0.254751617285669,0.02018199875572591,0.006788461871993753,0.005036911501639582,0.0021200316792301006,0.06836874045511851,0.005935785064851855,0.002717163961298619,0.001870029872874851,0.001146362338812061,0.0,0.0,0.0,0.0,0.36348995176022303,0.01160862620827937,0.04040819122200464,0.0055215361201469354,0.0,0.06545808543488785,0.005378472884103189,0.0022979524130783023,0.0017904172926045214,0.0,0.0,0.0,0.0,0.0,0.0,0.2380092173200829,0.023130502086039822,0.007856670553787583,0.004314988291935857,0.0,0.06241183562580736,0.005128172682264235,0.0021910116577367952,0.0017070959076367902,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.24962617307135543,0.024259475250456713,0.013082284381949465,0.004848416790255102,0.002816023666242935,0.06545808543488785,0.008725831935224023,0.0029207217606650095,0.0017904172926045214,0.0013966274932498033,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"source":"Gateron Ink Black, tplai/kbsim, MIT. Unpitched original sample bytes decoded; fixed gain and panning."};
+      const svgNamespace = "http://www.w3.org/2000/svg";
+      const peak = Math.max(...waveData.samples);
+      const bars = [];
+      const commands = [];
+      waveData.samples.forEach((amplitude, index) => {
+        const x = index / (waveData.samples.length - 1) * 520;
+        const halfHeight = amplitude / peak * 80;
+        const d = `M${x.toFixed(3)} ${(90 - halfHeight).toFixed(3)}V${(90 + halfHeight).toFixed(3)}`;
+        commands.push(d);
+        if (amplitude > 0) {
+          const path = document.createElementNS(svgNamespace, "path");
+          path.setAttribute("id", "scene-04-sound-sample-" + index);
+          path.setAttribute("d", d);
+          el("wave-ink").appendChild(path);
+          const length = path.getTotalLength();
+          path.style.strokeDasharray = String(length);
+          path.style.strokeDashoffset = String(length);
+          bars.push({ path, length, time: index / (waveData.samples.length - 1) * waveData.duration });
+        }
+      });
+      el("wave-base").setAttribute("d", commands.join(" "));
+
+      const content = [
+        { body: "Hear the difference.", hold: 0.15, minimum: 1.6 },
+        { body: "Gateron Ink Black · recorded reference", hold: 1.4, minimum: 2.9 },
+        { body: "Listen before you build.", hold: 0, minimum: 1.5 },
+      ];
+      let elapsed = 0;
+      const beats = content.map((item) => {
+        const duration = Math.max(item.minimum, 0.55 + item.body.length * 0.025 + item.hold);
+        const start = elapsed;
+        elapsed += duration;
+        return { start, end: elapsed };
+      });
+      const timeline = gsap.timeline({ paused: true });
+      timeline.fromTo(el("topbar"), { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, 0);
+      timeline.fromTo(el("title"), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.42, ease: "power3.out" }, 0);
+      timeline.fromTo(el("screenshot"), { opacity: 0.3 }, { opacity: 1, duration: 0.42, ease: "power1.out" }, 0);
+      timeline.fromTo(el("label"), { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, 0.45);
+      timeline.fromTo(el("source"), { opacity: 0 }, { opacity: 1, duration: 0.36, ease: "power1.out" }, 1.02);
+      timeline.fromTo(el("wave"), { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power1.out" }, beats[1].start - 0.2);
+      timeline.fromTo(el("playhead"), { x: 0 }, { x: 520, duration: waveData.duration, ease: "none" }, beats[1].start);
+      for (const bar of bars) {
+        timeline.fromTo(bar.path, { strokeDashoffset: bar.length }, {
+          strokeDashoffset: 0,
+          duration: waveData.duration / waveData.samples.length,
+          ease: "none",
+        }, beats[1].start + bar.time);
+      }
+      timeline.fromTo(el("closing"), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, beats[2].start + 0.1);
+      timeline.to({}, { duration: 6 }, 0);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["scene-04-sound"] = timeline;
+    })();
+  </script>
+</template>

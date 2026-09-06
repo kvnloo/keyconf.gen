@@ -1,0 +1,200 @@
+<template>
+  <div data-hf-id="hf-xpul" id="root" data-composition-id="scene-01-invitation" data-width="1920" data-height="1080" data-duration="6">
+    <div data-hf-id="hf-z6ym" id="scene-01-invitation-ground" class="clip" data-start="0" data-duration="6" data-track-index="0"></div>
+    <div data-hf-id="hf-pqba" id="scene-01-invitation-photograph" class="clip" data-start="0" data-duration="6" data-track-index="1">
+      <div data-hf-id="hf-3pdl" id="scene-01-invitation-camera">
+        <img data-hf-id="hf-97iw" id="scene-01-invitation-macro" src="assets/stills/macro.png" alt="A close view of the Forest Line keyboard's sculpted keycaps">
+        <div data-hf-id="hf-6744" id="scene-01-invitation-hero">
+          <img data-hf-id="hf-l30y" id="scene-01-invitation-product" src="assets/stills/product.png" alt="The complete Forest Line keyboard">
+        </div>
+      </div>
+      <div data-hf-id="hf-hty7" id="scene-01-invitation-shade"></div>
+      <div data-hf-id="hf-wm04" id="scene-01-invitation-image-cut"></div>
+    </div>
+    <div data-hf-id="hf-u6da" id="scene-01-invitation-copy" class="clip" data-start="0" data-duration="6" data-track-index="2">
+      <div data-hf-id="hf-ug98" id="scene-01-invitation-wordmark">keyconf</div>
+      <div data-hf-id="hf-lxmf" id="scene-01-invitation-title" aria-label="Your next keyboard. Starts here.">
+        <div data-hf-id="hf-exz7" class="scene-01-invitation-line"><span data-hf-id="hf-a3je" id="scene-01-invitation-line-one">Your next</span></div>
+        <div data-hf-id="hf-wow3" class="scene-01-invitation-line"><span data-hf-id="hf-exc1" id="scene-01-invitation-line-two">keyboard.</span></div>
+        <div data-hf-id="hf-prxu" class="scene-01-invitation-line scene-01-invitation-accent"><span data-hf-id="hf-5o5b" id="scene-01-invitation-line-three">Starts here.</span></div>
+      </div>
+      <div data-hf-id="hf-f5l4" id="scene-01-invitation-footline">A studio for your next build.</div>
+    </div>
+  </div>
+  <style>
+    @font-face {
+      font-family: "Arial";
+      src: url("assets/fonts/Arial-compatible.ttf") format("truetype");
+      font-weight: 400 600;
+      font-style: normal;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "JetBrains Mono";
+      src: url("assets/fonts/JetBrainsMono-Regular.woff2") format("woff2");
+      font-weight: 400 500;
+      font-style: normal;
+      font-display: block;
+    }
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      container-type: size;
+      color: #E9EDE6;
+      font-family: "Arial";
+    }
+    [id="scene-01-invitation-ground"],
+    [id="scene-01-invitation-photograph"],
+    [id="scene-01-invitation-copy"],
+    [id="scene-01-invitation-camera"],
+    [id="scene-01-invitation-hero"],
+    [id="scene-01-invitation-shade"],
+    [id="scene-01-invitation-image-cut"] {
+      position: absolute;
+      inset: 0;
+    }
+    [id="scene-01-invitation-ground"] {
+      background: #111713;
+    }
+    [id="scene-01-invitation-photograph"] {
+      overflow: hidden;
+    }
+    [id="scene-01-invitation-camera"] {
+      transform-origin: 50% 50%;
+      will-change: transform;
+    }
+    [id="scene-01-invitation-macro"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    [id="scene-01-invitation-hero"] {
+      background: #111713;
+    }
+    [id="scene-01-invitation-product"] {
+      position: absolute;
+      left: 220px;
+      top: 0;
+      width: 1975px;
+      height: 1111px;
+      object-fit: contain;
+    }
+    [id="scene-01-invitation-shade"] {
+      background: linear-gradient(90deg, #111713 0%, rgba(17,23,19,.9) 28%, rgba(17,23,19,0) 70%);
+      opacity: 1;
+    }
+    [id="scene-01-invitation-image-cut"] {
+      background: #111713;
+    }
+    [id="scene-01-invitation-copy"] {
+      pointer-events: none;
+    }
+    [id="scene-01-invitation-wordmark"] {
+      position: absolute;
+      left: 5cqw;
+      top: 5.925926cqh;
+      font-family: "Arial";
+      font-size: 42px;
+      font-weight: 500;
+      line-height: 1.2;
+      letter-spacing: -0.04em;
+      color: #E9EDE6;
+    }
+    [id="scene-01-invitation-title"] {
+      position: absolute;
+      left: 5cqw;
+      top: 15.740741cqh;
+      width: 46.875cqw;
+      font-size: 6.041667cqw;
+      font-weight: 500;
+      line-height: 0.98;
+      letter-spacing: -0.025em;
+      font-optical-sizing: auto;
+    }
+    [class~="scene-01-invitation-line"] {
+      overflow: hidden;
+      height: 6.354167cqw;
+    }
+    [class~="scene-01-invitation-line"] span {
+      display: block;
+      white-space: nowrap;
+      will-change: transform, opacity, filter;
+    }
+    [class~="scene-01-invitation-accent"] {
+      color: #C4D1B9;
+    }
+    [id="scene-01-invitation-footline"] {
+      position: absolute;
+      left: 5cqw;
+      bottom: 8.888889cqh;
+      font-size: 1.5625cqw;
+      font-weight: 400;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      color: #D1DBC8;
+    }
+  </style>
+  <script src="assets/gsap.min.js"></script>
+  <script>
+    (function () {
+      const byId = (name) => document.getElementById("scene-01-invitation-" + name);
+      const content = [
+        { body: "Your next keyboard.", hold: 0.78 },
+        { body: "Starts here.", hold: 0.69 },
+        { body: "A studio for your next build.", hold: 1.38 }
+      ];
+      let cumulative = 0;
+      const phases = content.map((entry) => {
+        const start = cumulative;
+        cumulative += 0.45 + entry.body.length * 0.03 + entry.hold;
+        return { start, end: cumulative };
+      });
+      const tl = gsap.timeline({ paused: true });
+      const camera = byId("camera");
+      const phase = { scale: 1.085 };
+      const drift = { p: 0 };
+      const renderCamera = () => {
+        const dx = Math.sin(drift.p) * 3;
+        const dy = Math.sin(drift.p * 1.3) * 1.5;
+        camera.style.transform = `scale(${phase.scale}) translate(${dx}px, ${dy}px)`;
+      };
+      renderCamera();
+
+      tl.to(phase, { scale: 1.045, duration: phases[0].end, ease: "power2.out" }, 0);
+      tl.to(phase, { scale: 1, duration: phases[1].end - phases[1].start, ease: "power3.out" }, phases[1].start);
+      tl.to(phase, { scale: 1.025, duration: phases[2].end - phases[2].start, ease: "power2.inOut" }, phases[2].start);
+      tl.to(drift, {
+        p: Math.PI * 2,
+        duration: 6,
+        ease: "none",
+        onUpdate: renderCamera
+      }, 0);
+
+      tl.fromTo(byId("hero"), { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, phases[1].start + 0.12);
+      tl.to(byId("shade"), { opacity: 0, duration: 0.001, ease: "none" }, phases[1].start + 0.12);
+      tl.fromTo(byId("image-cut"), { opacity: 0 }, { opacity: 1, duration: 0.12, ease: "power2.in" }, phases[1].start);
+      tl.to(byId("image-cut"), { opacity: 0, duration: 0.12, ease: "power2.out" }, phases[1].start + 0.121);
+
+      tl.fromTo(byId("wordmark"), { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.05);
+      tl.fromTo([byId("line-one"), byId("line-two")],
+        { opacity: 0, x: -36, y: 18, filter: "blur(6px)" },
+        { opacity: 1, x: 0, y: 0, filter: "blur(0px)", duration: 0.8, stagger: 0.14, ease: "power3.out" },
+        0.16
+      );
+      tl.fromTo(byId("line-three"),
+        { opacity: 0, x: -36, y: 18, filter: "blur(6px)" },
+        { opacity: 1, x: 0, y: 0, filter: "blur(0px)", duration: 0.8, ease: "power3.out" },
+        phases[1].start + 0.6
+      );
+      tl.fromTo(byId("footline"), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }, phases[2].start + 1);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["scene-01-invitation"] = tl;
+    })();
+  </script>
+</template>
