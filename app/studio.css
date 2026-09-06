@@ -1470,3 +1470,8 @@ body {
 .typing-mode .typing-heading > a {
   padding: 12px;
 }
+.typing-mode
+  .stage:has(.scene-host[data-render-quality='efficient'])
+  .room-motion {
+  display: none;
+}

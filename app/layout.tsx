@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Keyconf | Your keyboard, every detail',
+  icons: { icon: 'favicon.svg' },
   description:
     'Build a keyboard in 3D. Explore materials, colors, parts, and sound with source-backed compatibility.',
 };

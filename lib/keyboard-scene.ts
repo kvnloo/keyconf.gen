@@ -98,9 +98,21 @@ export function createKeyboardScene(
     alpha: true,
     powerPreference: 'high-performance',
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const gl = renderer.getContext();
+  const debug = gl.getExtension('WEBGL_debug_renderer_info');
+  const rendererName = String(
+    gl.getParameter(debug ? debug.UNMASKED_RENDERER_WEBGL : gl.RENDERER),
+  );
+  const software =
+    /swiftshader|llvmpipe|softpipe|software rasterizer|microsoft basic render/i.test(
+      rendererName,
+    );
+  element.dataset.renderQuality = software ? 'efficient' : 'full';
+  renderer.setPixelRatio(
+    software ? 0.75 : Math.min(window.devicePixelRatio, 2),
+  );
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.VSMShadowMap;
+  renderer.shadowMap.type = software ? THREE.PCFShadowMap : THREE.VSMShadowMap;
   renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.toneMappingExposure = 1;
   renderer.domElement.tabIndex = 0;
@@ -113,7 +125,9 @@ export function createKeyboardScene(
   const scene = new THREE.Scene();
   const pmrem = new THREE.PMREMGenerator(renderer);
   const room = new RoomEnvironment();
-  const env = pmrem.fromScene(room, 0.04);
+  const env = pmrem.fromScene(room, software ? 0 : 0.04, 0.1, 100, {
+    size: software ? 32 : 256,
+  });
   scene.environment = env.texture;
   scene.environmentIntensity = 0.7;
   room.dispose();
@@ -132,7 +146,7 @@ export function createKeyboardScene(
   const light = new THREE.DirectionalLight('#ffffff', 2.2);
   light.position.set(-12, 19, -10);
   light.castShadow = true;
-  light.shadow.mapSize.set(2048, 2048);
+  light.shadow.mapSize.set(software ? 512 : 2048, software ? 512 : 2048);
   light.shadow.camera.left = -14;
   light.shadow.camera.right = 14;
   light.shadow.camera.top = 12;
@@ -153,25 +167,37 @@ export function createKeyboardScene(
   ground.position.y = -0.22;
   ground.receiveShadow = true;
   scene.add(ground);
-  const desk = createDeskScene(wake);
+  const desk = createDeskScene(() => {
+    deskCacheDirty = true;
+    wake();
+  });
   scene.add(desk.group);
-  const renderTarget = new THREE.WebGLRenderTarget(1, 1, {
-    type: THREE.HalfFloatType,
-    samples: 2,
-  });
-  const composer = new EffectComposer(renderer, renderTarget);
-  composer.addPass(new RenderPass(scene, camera));
-  const occlusion = new RoomOcclusion(scene, camera, 1, 1);
-  occlusion.updateGtaoMaterial({
-    radius: 0.9,
-    thickness: 1.5,
-    distanceFallOff: 0.75,
-    samples: 12,
-  });
-  occlusion.blendIntensity = 0.7;
-  composer.addPass(occlusion);
-  const output = new OutputPass();
-  composer.addPass(output);
+  const effects = software
+    ? null
+    : (() => {
+        const renderTarget = new THREE.WebGLRenderTarget(1, 1, {
+          type: THREE.HalfFloatType,
+          samples: 2,
+        });
+        const composer = new EffectComposer(renderer, renderTarget);
+        composer.addPass(new RenderPass(scene, camera));
+        const occlusion = new RoomOcclusion(scene, camera, 1, 1);
+        occlusion.updateGtaoMaterial({
+          radius: 0.9,
+          thickness: 1.5,
+          distanceFallOff: 0.75,
+          samples: 12,
+        });
+        occlusion.blendIntensity = 0.7;
+        composer.addPass(occlusion);
+        const output = new OutputPass();
+        composer.addPass(output);
+        return { composer, occlusion, output };
+      })();
+  const deskCache = software
+    ? new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType })
+    : null;
+  let deskCacheDirty = true;
   const grain = new Uint8Array(128 * 128 * 4);
   for (let i = 0; i < grain.length; i += 4) {
     const value = 150 + Math.floor(Math.random() * 80);
@@ -248,6 +274,7 @@ export function createKeyboardScene(
     wake();
   }
   function setView() {
+    deskCacheDirty = true;
     const typing = options.environment === 'typing';
     controls.enableRotate = controls.enableZoom = !typing;
     controls.enableDamping = !reduced && !typing;
@@ -441,14 +468,34 @@ export function createKeyboardScene(
     controls.target.z = approach(controls.target.z, focusDepth, 10);
     const orbiting = controls.update(delta);
     const ambient =
-      desk.group.visible && options.roomMotion !== false && !reduced;
+      desk.group.visible &&
+      options.roomMotion !== false &&
+      !reduced &&
+      !(software && options.environment === 'typing');
     if (ambient) ambientTime += delta;
     if (desk.group.visible) desk.updateAmbient(ambientTime, camera);
-    if (desk.group.visible) composer.render(delta);
+    if (deskCache && options.environment === 'typing') {
+      if (deskCacheDirty) {
+        if (model) model.visible = false;
+        renderer.setRenderTarget(deskCache);
+        renderer.render(scene, camera);
+        renderer.setRenderTarget(null);
+        if (model) model.visible = true;
+        deskCacheDirty = false;
+      }
+      desk.group.visible = false;
+      ground.visible = true;
+      scene.background = deskCache.texture;
+      renderer.render(scene, camera);
+      scene.background = null;
+      desk.group.visible = true;
+      ground.visible = false;
+    } else if (desk.group.visible && effects) effects.composer.render(delta);
     else renderer.render(scene, camera);
     projectMonitor();
     if (moving || orbiting) wake();
-    else if (ambient) ambientTimer = window.setTimeout(wake, 1000 / 30);
+    else if (ambient)
+      ambientTimer = window.setTimeout(wake, 1000 / (software ? 12 : 30));
     element.dataset.renderFrames = String(renderer.info.render.frame);
     element.dataset.renderState = frame || ambientTimer ? 'active' : 'idle';
   }
@@ -635,8 +682,16 @@ export function createKeyboardScene(
       height = Math.max(element.clientHeight, 1);
     const aspect = width / height;
     renderer.setSize(width, height);
-    composer.setSize(width, height);
-    occlusion.setSize(Math.round(width * 0.75), Math.round(height * 0.75));
+    deskCache?.setSize(
+      Math.max(1, Math.round(width * renderer.getPixelRatio())),
+      Math.max(1, Math.round(height * renderer.getPixelRatio())),
+    );
+    deskCacheDirty = true;
+    effects?.composer.setSize(width, height);
+    effects?.occlusion.setSize(
+      Math.round(width * 0.75),
+      Math.round(height * 0.75),
+    );
     camera.aspect = aspect;
     camera.fov = THREE.MathUtils.radToDeg(
       2 *
@@ -654,6 +709,10 @@ export function createKeyboardScene(
         width < 700 ? 52 : 38,
       );
       fitTypingCamera();
+      camera.position.copy(cameraTarget);
+      controls.target.set(0, focusHeight, focusDepth);
+      controls.update();
+      cameraTarget = null;
     } else camera.updateProjectionMatrix();
     wake();
   }
@@ -770,9 +829,10 @@ export function createKeyboardScene(
       renderer.domElement.removeEventListener('webglcontextlost', contextLost);
       loaded.forEach(disposeModel);
       desk.dispose();
-      occlusion.dispose();
-      output.dispose();
-      composer.dispose();
+      effects?.occlusion.dispose();
+      effects?.output.dispose();
+      effects?.composer.dispose();
+      deskCache?.dispose();
       ground.geometry.dispose();
       ground.material.dispose();
       noise.dispose();

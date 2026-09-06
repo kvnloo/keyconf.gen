@@ -42,9 +42,22 @@ jobs:
           npm run verify:interface
           npm run verify:featured
           npm run verify:decks
-          npm run verify:typing
-          npm run verify:room
       - run: npm run build:pages
+      - name: Verify rendered production experience
+        shell: bash
+        run: |
+          npx vite preview --config vite.pages.config.ts --host 127.0.0.1 --port 4173 > /tmp/keyconf-production.log 2>&1 &
+          production_pid=$!
+          trap 'kill "$production_pid" || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/keyconf.gen/ > /dev/null; then break; fi
+            sleep 1
+          done
+          export KEYCONF_BASE_URL=http://127.0.0.1:4173/keyconf.gen/
+          export KEYCONF_HEADED=1
+          export KEYCONF_SOFTWARE=1
+          xvfb-run -a npm run verify:typing
+          xvfb-run -a npm run verify:room
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main'
         with:

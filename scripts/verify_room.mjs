@@ -3,14 +3,18 @@ import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
 const base = process.env.KEYCONF_BASE_URL ?? 'http://localhost:3000/';
 const headed = process.env.KEYCONF_HEADED === '1';
+const software = !headed || process.env.KEYCONF_SOFTWARE === '1';
 const browser = await chromium.launch({
   headless: !headed,
-  args: headed
+  args: !software
     ? []
     : [
         '--use-gl=angle',
         '--use-angle=swiftshader',
         '--enable-unsafe-swiftshader',
+        ...(headed && process.platform === 'linux'
+          ? ['--ozone-platform=x11']
+          : []),
       ],
 });
 const evidence = [];
@@ -33,8 +37,25 @@ try {
         response.status(),
       );
   });
+  const textureLoads = [
+    'solarpunk-sketchbook.png',
+    'solarpunk-window-garden.png',
+  ].map((name) =>
+    page
+      .waitForResponse((response) =>
+        response.url().endsWith('/textures/' + name),
+      )
+      .then((response) => response.finished()),
+  );
   await page.goto(base);
+  await Promise.all(textureLoads);
   await page.locator('.scene-host[data-scene-status="ready"]').waitFor();
+  if (software)
+    assert.equal(
+      await page.locator('.scene-host').getAttribute('data-render-quality'),
+      'efficient',
+      'Software rendering must use the lighter effects path',
+    );
   await page.waitForFunction(
     () =>
       document.querySelector('.scene-host')?.dataset.renderState === 'active',
@@ -59,9 +80,10 @@ try {
   await page
     .getByRole('button', { name: 'Resume room motion', exact: true })
     .click();
+  const moving = await page.locator('.scene-host canvas').screenshot();
   await page.waitForTimeout(1400);
   assert.ok(
-    !(await page.locator('.scene-host canvas').screenshot()).equals(frozen),
+    !(await page.locator('.scene-host canvas').screenshot()).equals(moving),
     'Breeze and steam must change rendered pixels',
   );
   await page.evaluate(() => {

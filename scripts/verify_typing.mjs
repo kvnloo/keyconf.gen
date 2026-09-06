@@ -4,14 +4,18 @@ import { writeFile } from 'node:fs/promises';
 
 const base = process.env.KEYCONF_BASE_URL ?? 'http://localhost:3000/';
 const headed = process.env.KEYCONF_HEADED === '1';
+const software = !headed || process.env.KEYCONF_SOFTWARE === '1';
 const browser = await chromium.launch({
   headless: !headed,
-  args: headed
+  args: !software
     ? []
     : [
         '--use-gl=angle',
         '--use-angle=swiftshader',
         '--enable-unsafe-swiftshader',
+        ...(headed && process.platform === 'linux'
+          ? ['--ozone-platform=x11']
+          : []),
       ],
 });
 const evidence = [];
@@ -58,6 +62,8 @@ try {
     .inputValue();
   await page.waitForFunction(
     () => document.querySelector('.model-status') === null,
+    null,
+    { timeout: 60000 },
   );
   await page.waitForFunction(
     () => document.querySelector('.scene-host')?.dataset.renderState === 'idle',
@@ -68,8 +74,16 @@ try {
   const frame = page.frameLocator(
     'iframe[title="Monkeytype guest typing test"]',
   );
-  await frame.locator('#words .word').first().waitFor();
+  await frame.locator('#words .word').first().waitFor({ timeout: 60000 });
   await page.locator('.typing-load').waitFor({ state: 'hidden' });
+  // Use a word-count test so rendering evidence cannot expire a timed test.
+  if (!(await button(frame, 'words').isVisible()))
+    await button(frame, 'test settings').click();
+  await button(frame, 'words').click();
+  if (!(await button(frame, '10').isVisible()))
+    await button(frame, 'test settings').click();
+  await button(frame, '10').click();
+  await page.keyboard.press('Escape');
   await page.waitForFunction(
     () =>
       document.querySelector('.scene-host')?.dataset.monitor === 'projected',
@@ -90,41 +104,49 @@ try {
   await page.waitForFunction(
     () => document.querySelector('.scene-host')?.dataset.renderState === 'idle',
   );
-  const before = await page.locator('.scene-host canvas').screenshot();
+  await page.evaluate(() => {
+    const host = document.querySelector('.scene-host');
+    window.scrollTo(0, scrollY + host.getBoundingClientRect().top);
+  });
+  const keyboardPixels = async () => {
+    const screen = await page.locator('.monitor-display').boundingBox();
+    const host = await page.locator('.scene-host').boundingBox();
+    const y = Math.max(0, screen.y + screen.height + 12);
+    const height = Math.min(host.y + host.height, 900) - y;
+    assert.ok(height > 100, 'Keyboard must be visible below the monitor');
+    return page.screenshot({
+      timeout: 60000,
+      clip: { x: host.x, y, width: host.width, height },
+    });
+  };
+  const before = await keyboardPixels();
   await frame.locator('#wordsInput').focus();
   const audioBefore = await page.evaluate(() =>
     window.keyconfTypingAudioCount(),
   );
-  await page.keyboard.down('a');
+  // Capture a modifier before starting Monkeytype's performance-sensitive timer.
+  await page.keyboard.down('Shift');
   await page.waitForFunction(
     (previous) => window.keyconfTypingAudioCount() > previous,
     audioBefore,
   );
-  const pressed = await page.locator('.scene-host canvas').screenshot();
+  const pressed = await keyboardPixels();
   assert.ok(
     !before.equals(pressed),
     'A key held inside Monkeytype must change the rendered keyboard',
   );
-  await page.keyboard.up('a');
+  await page.keyboard.up('Shift');
   await button(page, 'Mute keyboard').click();
   const mutedCount = await page.evaluate(() =>
     window.keyconfTypingAudioCount(),
   );
   await frame.locator('#wordsInput').focus();
-  await page.keyboard.press('b');
+  await page.keyboard.press('Shift');
   assert.equal(
     await page.evaluate(() => window.keyconfTypingAudioCount()),
     mutedCount,
     'Typing must respect mute',
   );
-  await button(frame, 'Restart Test').click();
-  if (!(await button(frame, 'words').isVisible()))
-    await button(frame, 'test settings').click();
-  await button(frame, 'words').click();
-  if (!(await button(frame, '10').isVisible()))
-    await button(frame, 'test settings').click();
-  await button(frame, '10').click();
-  await page.keyboard.press('Escape');
   await frame.locator('#words .word').nth(9).waitFor();
   await frame
     .locator('#words .word')
@@ -152,7 +174,10 @@ try {
     [],
     'Completed test must dispose queued word updates',
   );
-  await page.screenshot({ path: 'outputs/typing-results.png', fullPage: true });
+  await page.screenshot({
+    path: 'outputs/typing-results.png',
+    fullPage: false,
+  });
   await frame.locator('#nextTestButton').click();
   await frame.locator('#wordsInput').waitFor({ state: 'visible' });
   await button(page, 'Back to builder').click();
@@ -213,7 +238,7 @@ try {
   await button(phoneFrame, 'test settings').tap();
   await phone.screenshot({
     path: 'outputs/typing-mobile-settings.png',
-    fullPage: true,
+    fullPage: false,
   });
   await phone.keyboard.press('Escape');
   await button(phone, 'Back to builder').tap();
