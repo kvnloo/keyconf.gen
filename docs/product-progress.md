@@ -617,3 +617,14 @@ publication link without trying to import retired parts. Feedback remains an
 explicit copy action, not a submitted account comment. The publication browser
 check covers denied-clipboard recovery, exact archived link retention, unchanged
 local storage, phone overflow and accessibility with the feedback panel open.
+
+
+## Complete saved-build traversal
+
+Private build storage now returns 25-summary pages and a continuation cursor,
+replacing the 100-item cutoff. The query uses the existing owner/date/ID index
+and never selects full build payloads. Real SQLite verification traverses 106
+snapshots across timestamp ties, checks uniqueness and exact ordering, rejects
+invalid cursors, and proves another account cannot read the owner's page. All
+20 community tests passed. This prepares the account library; it does not expose
+an account UI or change the deferred Google setup.

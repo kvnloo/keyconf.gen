@@ -84,7 +84,7 @@ const save = (build = defaultBuild, operation = operationId) =>
 test('profiles require chosen identity and enforce normalized unique handles in SQLite', async (t) => {
   const db = database(t);
   assert.equal(await readProfile(db, alice), null);
-  assert.deepEqual(await listBuilds(db, alice), []);
+  assert.deepEqual(await listBuilds(db, alice), { items: [], next: null });
   assert.deepEqual(
     await saveProfile(
       db,
@@ -117,7 +117,7 @@ test('profiles require chosen identity and enforce normalized unique handles in 
   );
 });
 
-test('account list bounds results and SQLite uses the owner and date index', async (t) => {
+test('account list traverses all snapshots across timestamp ties using the owner index', async (t) => {
   const db = database(t);
   const first = await saveBuild(db, alice, save());
   const seed = db.sqlite
@@ -140,9 +140,42 @@ test('account list bounds results and SQLite uses the owner and date index', asy
   }
   db.sqlite.exec('PRAGMA optimize');
   const builds = await listBuilds(db, alice);
-  assert.equal(builds.length, 100);
-  assert.deepEqual(await listBuilds(db, bob), []);
-  const query = db.queries.find((sql) => sql.includes('LIMIT 100'));
+  assert.equal(builds.items.length, 25);
+  const all = [...builds.items];
+  let cursor = builds.next;
+  while (cursor) {
+    const page = await listBuilds(db, alice, cursor);
+    assert.ok(page.items.length <= 25);
+    all.push(...page.items);
+    cursor = page.next;
+  }
+  assert.equal(all.length, 106);
+  assert.equal(new Set(all.map((build) => build.id)).size, 106);
+  assert.deepEqual(
+    all.map((build) => build.id),
+    db.sqlite
+      .prepare(
+        'SELECT id FROM community_build WHERE account_id=? ORDER BY created_at DESC,id DESC',
+      )
+      .all(seed.account_id)
+      .map((row) => row.id),
+  );
+  assert.deepEqual(await listBuilds(db, bob, builds.next), {
+    items: [],
+    next: null,
+  });
+  for (const cursor of [
+    { id: first.id, createdAt: 'invalid' },
+    { id: first.id, createdAt: '2026-01-01' },
+    { id: 'invalid', createdAt: first.createdAt },
+  ])
+    await assert.rejects(listBuilds(db, alice, cursor), {
+      code: 'invalid_request',
+      status: 400,
+    });
+  assert.deepEqual(Object.keys(all[0]).sort(), ['createdAt', 'id', 'name']);
+  assert.deepEqual(await listBuilds(db, bob), { items: [], next: null });
+  const query = db.queries.find((sql) => sql.includes('LIMIT 26'));
   assert.ok(query);
   const plan = db.sqlite.prepare(`EXPLAIN QUERY PLAN ${query}`).all(alice);
   assert.ok(
@@ -167,7 +200,7 @@ test('private builds are owner-only immutable snapshots with idempotent retries'
   await assert.rejects(readBuild(db, bob, "' OR 1=1 --"), {
     code: 'build_not_found',
   });
-  assert.deepEqual(await listBuilds(db, bob), []);
+  assert.deepEqual(await listBuilds(db, bob), { items: [], next: null });
   await assert.rejects(
     saveBuild(db, alice, save({ ...defaultBuild, name: 'Different draft' })),
     { code: 'operation_conflict', status: 409 },
@@ -184,7 +217,7 @@ test('private builds are owner-only immutable snapshots with idempotent retries'
     save({ ...defaultBuild, name: 'New copy' }, 'operation-id-00000002'),
   );
   assert.notEqual(copy.id, first.id);
-  const summaries = await listBuilds(db, alice);
+  const { items: summaries } = await listBuilds(db, alice);
   assert.equal(summaries.length, 2);
   assert.deepEqual(parseSavedBuildSummaries(summaries), summaries);
   assert.equal(JSON.stringify(first).includes(alice), false);

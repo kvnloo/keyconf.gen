@@ -85,7 +85,7 @@ Define the schema in `db/schema.ts`; add generated, inspected, schema-only Drizz
 
 There is no `community_build_revision` table. Keep the deployed immutable snapshot model for the first account UI: saving edits creates another snapshot, and publication references that exact owned snapshot. Do not invent revision numbers or stale-update behavior for a mutable record that does not exist. If a grouped version history is introduced later, specify its migration and concurrency contract before exposing it.
 
-Publication ownership uses a guarded `INSERT ... SELECT` and guarded reads. Identical per-owner operation retries return the existing result; conflicting reuse returns 409. Keep these properties when exposing HTTP routes. Account build listing currently stops at 100; add pagination before promising a complete library. Publication and favorite lists already have bounded cursor pagination.
+Publication ownership uses a guarded `INSERT ... SELECT` and guarded reads. Identical per-owner operation retries return the existing result; conflicting reuse returns 409. Keep these properties when exposing HTTP routes. Account build, publication and favorite lists use bounded cursor pagination. Account build pages return 25 summaries ordered by creation time and ID, with a continuation cursor when more exist.
 
 Account snapshot storage currently accepts keyboards only. Control decks retain their separate local format and cannot be advertised as account-saveable. A future shared document envelope can discriminate keyboard and control-deck payloads once both storage and UI support it. Existing request validators bound input and strip unused imported parts. Oversized drafts must retain file export and a clear error.
 
@@ -133,7 +133,7 @@ Authentication and storage decisions follow the installed Sites [authentication 
 
 ## Account storage implementation, September 6
 
-`db/community.ts`, `lib/community.ts`, and migration `0001_panoramic_ken_ellis.sql` implement private account/profile/build storage. Eight real SQLite tests cover chosen normalized handles, owner-only reads, idempotent operations, conflict retries, source-evidence retention, invalid input, bounded request bodies and private error responses. The list returns the newest 100 snapshots using the owner/date index; pagination is still needed before promising an unlimited library.
+`db/community.ts`, `lib/community.ts`, and migration `0001_panoramic_ken_ellis.sql` implement private account/profile/build storage. Eight real SQLite tests cover chosen normalized handles, owner-only reads, idempotent operations, conflict retries, source-evidence retention, invalid input, bounded request bodies and private error responses. The list now traverses snapshots in pages of 25 using the owner/date/ID index. Real SQLite checks cover all 106 fixture snapshots across tied timestamps, owner isolation and invalid cursors.
 
 The unfinished ChatGPT-specific account page and API drafts were removed when Google was selected and setup deferred. No sign-in button, account page, or private community API is exposed. Public release viewing and favorite storage have since shipped. Hosted Google identity/session verification, account and favorite interfaces, public profile pages and proposals remain pending.
 

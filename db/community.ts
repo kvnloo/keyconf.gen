@@ -88,14 +88,36 @@ export async function saveProfile(
 export async function listBuilds(
   db: Database,
   subject: string,
-): Promise<SavedBuildSummary[]> {
-  const result = await db
-    .prepare(
-      'SELECT id, name, created_at AS createdAt FROM community_build WHERE account_id=(SELECT id FROM community_account WHERE subject=?) ORDER BY created_at DESC, id DESC LIMIT 100',
-    )
-    .bind(subject)
-    .all<SavedBuildSummary>();
-  return result.results;
+  cursor?: Pick<SavedBuildSummary, 'createdAt' | 'id'>,
+) {
+  if (
+    cursor &&
+    (!/^[a-zA-Z0-9_-]{16,100}$/.test(cursor.id) ||
+      !Number.isFinite(Date.parse(cursor.createdAt)) ||
+      new Date(cursor.createdAt).toISOString() !== cursor.createdAt)
+  )
+    throw new CommunityError(
+      'invalid_request',
+      'This saved-build page cursor is invalid.',
+      400,
+    );
+  const where = cursor ? ' AND (created_at<? OR (created_at=? AND id<?))' : '';
+  const statement = db.prepare(
+    `SELECT id, name, created_at AS createdAt FROM community_build WHERE account_id=(SELECT id FROM community_account WHERE subject=?)${where} ORDER BY created_at DESC, id DESC LIMIT 26`,
+  );
+  const query = cursor
+    ? statement.bind(subject, cursor.createdAt, cursor.createdAt, cursor.id)
+    : statement.bind(subject);
+  const { results } = await query.all<SavedBuildSummary>();
+  const items = results.slice(0, 25);
+  const last = items.at(-1);
+  return {
+    items,
+    next:
+      results.length > 25 && last
+        ? { createdAt: last.createdAt, id: last.id }
+        : null,
+  };
 }
 
 type StoredBuild = SavedBuildSummary & { payload: string };
