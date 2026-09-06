@@ -31,7 +31,7 @@ With the local server running, `npm run verify:browser` checks shared links, imp
 
 ## Deployment
 
-GitHub Actions checks types, lint, compatibility/import parsing/assets and the browser flows above, then deploys the browser app to [GitHub Pages](https://kvnloo.github.io/keyconf.gen/) whenever `main` changes. PRs run checks without deploying. Public assets include the original `.blend` source.
+GitHub Actions checks types, lint, data/assets, browser journeys and the rendered production experience before publishing each branch to its own preview: [main](https://kvnloo.github.io/keyconf.gen/main/), [dev](https://kvnloo.github.io/keyconf.gen/dev/), and [nightly](https://kvnloo.github.io/keyconf.gen/nightly/). The original Pages URL opens main and preserves shared-build fragments. PRs run checks without deploying. Failed checks leave the last successful preview online. See [Development and releases](docs/development.md) for the branch policy and deployment architecture. Public assets include the original `.blend` source.
 
 The Pages version calls the server-backed Sites importer at `https://keyconf-studio.kvnloo.chatgpt.site/api/import`. The server permits only its own origin and `https://kvnloo.github.io`. Pasted JSON-LD imports also work without that service. Server changes must be built and published through Sites separately; the GitHub workflow does not hold Sites credentials or deploy its backend. The workflow is complete for the Pages app, not automatic backend releases.
 

@@ -1,17 +1,20 @@
 name: Check and publish keyboard studio
 on:
   push:
-    branches: [main]
+    branches: [main, dev, nightly]
   pull_request:
   workflow_dispatch:
 permissions:
   contents: read
-concurrency:
-  group: keyconf-${{ github.ref }}
-  cancel-in-progress: true
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    concurrency:
+      group: keyconf-check-${{ github.ref }}
+      cancel-in-progress: true
+    env:
+      CHANNEL: ${{ contains(fromJSON('["main","dev","nightly"]'), github.ref_name) && github.ref_name || 'main' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -42,37 +45,97 @@ jobs:
           npm run verify:interface
           npm run verify:featured
           npm run verify:decks
-      - run: npm run build:pages
+      - name: Build this branch's preview
+        run: npm run build:pages -- --base "/${{ github.event.repository.name }}/${CHANNEL}/"
       - name: Verify rendered production experience
         shell: bash
         run: |
-          npx vite preview --config vite.pages.config.ts --host 127.0.0.1 --port 4173 > /tmp/keyconf-production.log 2>&1 &
+          npx vite preview --config vite.pages.config.ts --base "/${{ github.event.repository.name }}/${CHANNEL}/" --host 127.0.0.1 --port 4173 > /tmp/keyconf-production.log 2>&1 &
           production_pid=$!
           trap 'kill "$production_pid" || true' EXIT
+          export KEYCONF_BASE_URL="http://127.0.0.1:4173/${{ github.event.repository.name }}/${CHANNEL}/"
           for attempt in {1..30}; do
-            if curl --fail --silent http://127.0.0.1:4173/keyconf.gen/ > /dev/null; then break; fi
+            if curl --fail --silent "$KEYCONF_BASE_URL" > /dev/null; then break; fi
             sleep 1
           done
-          export KEYCONF_BASE_URL=http://127.0.0.1:4173/keyconf.gen/
+          curl --fail --silent "$KEYCONF_BASE_URL" > /dev/null
           export KEYCONF_HEADED=1
           export KEYCONF_SOFTWARE=1
           xvfb-run -a npm run verify:typing
           xvfb-run -a npm run verify:room
-      - uses: actions/upload-pages-artifact@v3
-        if: github.ref == 'refs/heads/main'
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request' && contains(fromJSON('["main","dev","nightly"]'), github.ref_name)
         with:
+          name: pages-candidate
           path: pages-dist
+          retention-days: 7
+      - name: Keep failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-failure
+          path: |
+            outputs/*.json
+            outputs/*.png
+            /tmp/keyconf-preview.log
+            /tmp/keyconf-production.log
+          retention-days: 7
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && contains(fromJSON('["main","dev","nightly"]'), github.ref_name)
     needs: check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: keyconf-pages-publish
+      cancel-in-progress: false
     permissions:
+      contents: write
       pages: write
       id-token: write
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url }}${{ github.ref_name }}/
     steps:
-      - name: Deploy to GitHub Pages
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: pages-candidate
+          path: ${{ runner.temp }}/pages-candidate
+      - name: Preserve other previews and update only this branch
+        env:
+          CHANNEL: ${{ github.ref_name }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_NUMBER: ${{ github.run_number }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          pages_tree="$RUNNER_TEMP/pages-tree"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*'
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git worktree add --detach "$pages_tree" origin/gh-pages
+          else
+            git worktree add --detach "$pages_tree" HEAD
+            git -C "$pages_tree" checkout --orphan gh-pages
+            git -C "$pages_tree" rm -rf . > /dev/null
+          fi
+          node scripts/assemble-pages.mjs "$RUNNER_TEMP/pages-candidate" "$pages_tree" "$CHANNEL" "$SOURCE_SHA" "$RUN_NUMBER" "$REPOSITORY"
+          git -C "$pages_tree" config user.name 'github-actions[bot]'
+          git -C "$pages_tree" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C "$pages_tree" add --all
+          if ! git -C "$pages_tree" diff --cached --quiet; then
+            git -C "$pages_tree" commit -m "Publish $CHANNEL from $SOURCE_SHA"
+            git -C "$pages_tree" push origin HEAD:gh-pages
+          fi
+          mkdir "$RUNNER_TEMP/pages-site"
+          rsync -a --exclude=.git "$pages_tree/" "$RUNNER_TEMP/pages-site/"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/pages-site
+      - name: Deploy all three previews to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

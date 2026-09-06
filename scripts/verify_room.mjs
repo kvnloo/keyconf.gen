@@ -66,10 +66,13 @@ try {
   await page.waitForFunction(
     () => document.querySelector('.scene-host')?.dataset.renderState === 'idle',
   );
-  const frozen = await page.locator('.scene-host canvas').screenshot();
+  const roomBounds = await page.locator('.scene-host canvas').boundingBox();
+  assert.ok(roomBounds && roomBounds.width > 0 && roomBounds.height > 0);
+  const captureRoom = () => page.screenshot({ clip: roomBounds });
+  const frozen = await captureRoom();
   await page.waitForTimeout(750);
   assert.deepEqual(
-    await page.locator('.scene-host canvas').screenshot(),
+    await captureRoom(),
     frozen,
     'Pausing must freeze the actual rendered room',
   );
@@ -80,10 +83,14 @@ try {
   await page
     .getByRole('button', { name: 'Resume room motion', exact: true })
     .click();
-  const moving = await page.locator('.scene-host canvas').screenshot();
+  assert.deepEqual(
+    await page.locator('.scene-host canvas').boundingBox(),
+    roomBounds,
+  );
+  const moving = await captureRoom();
   await page.waitForTimeout(1400);
   assert.ok(
-    !(await page.locator('.scene-host canvas').screenshot()).equals(moving),
+    !(await captureRoom()).equals(moving),
     'Breeze and steam must change rendered pixels',
   );
   await page.evaluate(() => {
