@@ -43,6 +43,8 @@ import KeyboardScene, { type SceneOptions } from './keyboard-scene';
 import ImportDialog from './import-dialog';
 import TypingTest from './typing-test';
 import VolumeDial from './volume-dial';
+import MusicControls from './music-controls';
+import { StudioMusic } from '../lib/music';
 import { FeaturedGallery, FeaturedInspector } from './featured-gallery';
 import { featuredBuilds, customizeFeatured } from '../lib/featured-builds';
 import { encodeDeck } from '../lib/control-deck';
@@ -375,6 +377,24 @@ function KeyboardStudio({
   const visibleBuild =
     landing && featured.kind === 'keyboard' ? featured.build : build;
   const playbackEnabled = enabled && !landing && screen !== 'discover';
+  const [music] = useState(() => new StudioMusic());
+  useEffect(() => {
+    music.setBlocked('keyboard', playbackEnabled);
+    music.setBlocked('reference', reference !== null);
+  }, [music, playbackEnabled, reference]);
+  useEffect(() => {
+    const hide = () => {
+      if (document.hidden) music.pause();
+    };
+    document.addEventListener('visibilitychange', hide);
+    const leave = () => music.pause();
+    window.addEventListener('pagehide', leave);
+    return () => {
+      document.removeEventListener('visibilitychange', hide);
+      window.removeEventListener('pagehide', leave);
+      music.close();
+    };
+  }, [music]);
   const options = useMemo<SceneOptions>(() => {
     if (landing && featured.kind === 'control-deck') {
       const { colors, device, lighting, dial } = featured.build;
@@ -553,23 +573,30 @@ function KeyboardStudio({
     return () => window.removeEventListener('hashchange', leave);
   }, [stopDemo]);
   async function enableSound(action = audioAction.current.revision) {
+    music.setBlocked('keyboard', true);
     setReference(null);
     try {
       await audio.current?.unlock();
-      if (action !== audioAction.current.revision) return false;
+      if (action !== audioAction.current.revision) {
+        music.setBlocked('keyboard', soundRef.current.enabled);
+        return false;
+      }
       setEnabled(true);
       audio.current?.setLevel(true, volume);
       return true;
     } catch {
+      music.setBlocked('keyboard', soundRef.current.enabled);
       setNotice('Audio could not start. Try enabling sound again.');
       return false;
     }
   }
   function press(code: string) {
+    if (soundRef.current.enabled) music.setBlocked('keyboard', true);
     setLastKey(code.replace('Key', '').replace('Digit', ''));
     audio.current?.play(code, soundRef.current);
   }
   function release(code: string) {
+    if (soundRef.current.enabled) music.setBlocked('keyboard', true);
     audio.current?.play(code, soundRef.current, 'up');
   }
   async function playSequence(phrase: string[]) {
@@ -753,6 +780,7 @@ function KeyboardStudio({
           </a>
         </nav>
         <div className="header-utilities">
+          <MusicControls music={music} />
           <a className="header-resume" href="#studio">
             Resume build <ArrowUpRight size={13} />
           </a>
@@ -970,6 +998,7 @@ function KeyboardStudio({
               />
             )}
             <div className="stage-bottom">
+              {focusMode && <MusicControls music={music} />}
               {(landing || experience === 'typing') && (
                 <button
                   className="room-motion"
@@ -1520,6 +1549,7 @@ function KeyboardStudio({
                     selected={reference}
                     onSelect={(record) => {
                       if (record) {
+                        music.setBlocked('reference', true);
                         stopDemo();
                         audio.current?.setLevel(false, volume);
                         setEnabled(false);

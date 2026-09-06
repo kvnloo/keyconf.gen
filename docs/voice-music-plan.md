@@ -1,6 +1,6 @@
 # Optional music and a separate assistant
 
-Research date: 2026-09-06. This is a proposal based on source inspection and official provider documentation. No music was downloaded or generated, no provider session was started, and no application code was changed for this research.
+Research date: 2026-09-06. The research below informed the implemented music player described at the end of this document. The separate assistant and provider-generated music remain proposals. No generation or voice-provider session has been started.
 
 Ship one optional instrumental track first. Music starts only after a person presses Play, stays quiet, and fully mutes for keyboard audio and embedded sound tests. Keep a later conversational assistant in its own panel, with its own microphone and Stop controls. The Grok Bot device remains a configurable object in the scene.
 
@@ -82,3 +82,11 @@ Pass the selected build and known compatibility findings through a narrow contex
 ## Verification before shipping
 
 Listen to the actual music and test physical keys, onscreen keys, typing iframe input, native demos, recorded key releases, and synthesized tails. Music must be inaudible throughout native playback and throughout a mounted reference's startup, buffering, playback, and replacement. Verify Pause while suppressed, repeated enable/disable clicks, failed audio loads, tab hiding, navigation, unmount, and a late `play()` resolution. None may restart unwanted audio. Check browser autoplay denial and touch controls on a real mobile browser. A later assistant needs separate checks for denied microphone permission, pending permission during navigation, connection failure, interrupted speech, and teardown while audio is queued.
+
+## Implemented music, September 6, 2026
+
+Music now has an opt-in header popover and a Focus-mode control, one independently adjustable track, explicit Play/Pause intent, and full suppression while native keyboard audio is enabled or a sound-reference iframe is mounted. The gate is acquired synchronously before unlocking native audio, starting a note, or mounting a reference. Clearing all blockers waits 250 ms and fades music back over 400 ms. Pause, page hiding, page exit and disposal invalidate pending playback. Reload requires fresh opt-in. Volume uses Web Audio gain rather than relying on mobile media-element volume.
+
+The included track is **Lofi again** by omfgdude / OMF-Games, published under CC0 at [its original page](https://opengameart.org/content/lofi-again). The original 44.1 kHz mono Vorbis file is preserved; an explicitly documented 256 kbps MP3 transcode is used only for browsers without Vorbis support. This is a sourced lo-fi recording, not a generated, lossless or stereo master. Attribution is available in the player and `public/music/LICENSE.txt`. No music request is made before Play, or while an initially requested track is blocked.
+
+Five controller/asset tests cover overlapping blockers, recovery cancellation, late audio unlock/play completion, failure/retry, source paths and pinned bytes. Browser verification measures real decoded music output with an analyser, checks zero music gain and paused media at native source starts, tests reference suppression with a stubbed YouTube document, pause intent, recovery, reload, simulated visibility changes and 320/390/1280 px popover bounds/accessibility. It does not claim headphone listening review or a real mobile device/YouTube playback test. The assistant remains unimplemented and Google music generation remains optional.

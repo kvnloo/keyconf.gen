@@ -48,6 +48,7 @@ jobs:
           npm run verify:featured
           npm run verify:accessories
           npm run verify:switches
+          npm run verify:music
           npm run verify:observations
           npm run verify:decks
       - name: Build this branch's preview

@@ -1,0 +1,10 @@
+Lofi again — omfgdude (OMF-Games)
+Original source: https://opengameart.org/content/lofi-again
+Original file: https://opengameart.org/sites/default/files/lofiagain.ogg
+License: CC0 1.0 Universal
+License text: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+Source and license checked September 6, 2026.
+
+lofi-again.ogg is the original Vorbis file, 44.1 kHz mono, 87.809274 seconds.
+lofi-again.mp3 is a 256 kbps compatibility transcode of that file made with FFmpeg.
+No stereo, lossless, or high-resolution claim is made. The app applies only playback gain.

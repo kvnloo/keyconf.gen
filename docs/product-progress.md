@@ -387,3 +387,9 @@ The strengthened typing verifier completed successfully in GitHub run 3405045451
 The user selected Google sign-in and explicitly deferred creating its Google Cloud project. Added private account/profile/immutable build tables, a generated migration and shared request/response parsers. Eight real SQLite tests pass for owner isolation, operation retries/conflicts, unique chosen handles, source evidence retention, validation and bounded list/query behavior. No emails or identity names become public automatically.
 
 Removed the unshipped ChatGPT account/API drafts. No account route is exposed. Google configuration, Sites cookie/browser-policy verification and the public community experience remain open. This is storage groundwork, not a shipped sign-in feature.
+
+## Opt-in studio music and keyboard priority
+
+Added a compact Music popover and Focus-mode access. Lofi again by OMF-Games is sourced under CC0 with original-file attribution; the original mono Vorbis is retained with an MP3 compatibility transcode. No music auto-start or pre-opt-in fetch. User volume is independent of keyboard build data. Native keyboard audio and mounted sound references suppress music completely; paused user intent is never undone by clearing a blocker. Recovery has a short delay and fade, and page hiding/disposal cancel pending playback.
+
+Local checks passed: five controller/asset tests, browser decoding and nonzero output, zero gain/paused music at keyboard source starts, mounted-reference suppression, overlapping priorities, late promises, pause/recovery, reload, and 320/390/1280 px accessibility/bounds. The reference iframe was stubbed and the visibility event simulated; live mobile/YouTube and subjective listening remain unverified. Production/CI/publish evidence follows separately.
