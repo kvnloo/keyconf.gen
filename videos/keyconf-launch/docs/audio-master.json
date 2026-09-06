@@ -1,0 +1,31 @@
+{
+  "method": "Constant gain only. No compression, limiting, EQ, or pitch shift.",
+  "gainDb": 3.4200000000000017,
+  "sampleRate": 48000,
+  "channels": 2,
+  "duration": 36,
+  "sourceMeasurement": {
+    "input_i": "-21.42",
+    "input_tp": "-7.96",
+    "input_lra": "6.70",
+    "input_thresh": "-32.01",
+    "output_i": "-18.61",
+    "output_tp": "-2.46",
+    "output_lra": "6.60",
+    "output_thresh": "-29.03",
+    "normalization_type": "dynamic",
+    "target_offset": "0.61"
+  },
+  "masterMeasurement": {
+    "input_i": "-18.00",
+    "input_tp": "-4.54",
+    "input_lra": "6.70",
+    "input_thresh": "-28.59",
+    "output_i": "-18.61",
+    "output_tp": "-2.46",
+    "output_lra": "6.60",
+    "output_thresh": "-29.02",
+    "normalization_type": "dynamic",
+    "target_offset": "0.61"
+  }
+}

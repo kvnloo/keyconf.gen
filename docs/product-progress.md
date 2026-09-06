@@ -157,3 +157,7 @@ The independent reviewer confirmed first-key recorded output at 45% (peak 0.1059
 The corrected five-width and actual 200% zoom accessibility suite passes. All reviewed desk/dial/navigation/focus findings are resolved within their tested cases. Final full-suite CI and publication remain release gates, not assumptions.
 
 The complete headed typing regression now passes with deliberately delayed audio startup: rendered key response, recorded audio, mute, ten-word result, restart, preserved build/focus on return, 390px settings/entry, failed-frame retry and repeated entry. GitHub's first desk run exposed a test observing Sound's selected state before the hash navigation had rendered. Tab and destination assertions now wait for the expected public selected/current state; they still fail if navigation does not complete. No arbitrary sleep or assertion removal was used.
+
+### Published desk and volume checkpoint
+
+Published commit `052506917ca4ecaefba57695bfc99cc278b180a4` to the public Sites URL as version 8 and to GitHub Pages. [Actions run 33999093432](https://github.com/kvnloo/keyconf.gen/actions/runs/33999093432) passed types, lint, 32 tests, the browser/interface/featured/deck/real-typing regressions, and deployment. Sites deployment `appgdep_6a9ca980090c8191be82cdcdb793aba7` succeeded on September 5, 2026 at 23:47 UTC. The subsequent public-site film capture loaded the keyboard and completed an active Monkeytype word-mode sequence without a page error. This closes the prior candidate's CI and publication gates.

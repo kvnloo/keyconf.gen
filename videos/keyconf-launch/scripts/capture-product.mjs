@@ -1,5 +1,5 @@
 import { chromium } from 'playwright';
-import { mkdir, writeFile, copyFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 
 await mkdir('assets/footage', {recursive:true});
 await mkdir('assets/stills', {recursive:true});

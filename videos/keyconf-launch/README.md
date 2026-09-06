@@ -16,7 +16,7 @@ npm run snapshot
 npm run render
 ```
 
-Open `http://localhost:3333/#project/keyconf-launch`. The finished file is `renders/keyconf-launch.mp4`. `index.html` is the authoritative assembled composition; its six editable scenes live in `compositions/frames`. The root owns video timing, audio, and music automation. GSAP and fonts are local, so the film requires no runtime network requests.
+Open `http://localhost:3333/#project/keyconf-launch`. The finished file is `renders/keyconf-launch.mp4`. `index.html` is the authoritative assembled composition; its six editable scenes live in `compositions/frames`. The root owns video timing, audio, and music automation. The MP4 uses the included 24-bit master WAV, measured at −18 LUFS. The stem preview precedes the final 3.42 dB gain adjustment. GSAP and fonts are local, so the film requires no runtime network requests.
 
 ## What is real
 
@@ -35,3 +35,9 @@ Animation uses GSAP 3.13.0 under its standard no-charge license, https://gsap.co
 To regenerate the original music, install Python `numpy` and `soundfile`, then run `python scripts/compose-score.py`. `scripts/render-product.py` runs under Blender 4.3's Python API. Existing stills and audio are included, so neither Python nor Blender is required to edit text, preview, or render the film.
 
 Raw browser takes, dependency caches, and temporary diagnostics are excluded from the portable source package. The source package includes all media needed to render the final composition.
+
+## Export path
+
+Hyperframes 0.8.29 produced all 1080 capture callbacks but its streaming MP4 failed the duration gate by two frames. The reproducible render command therefore exports a PNG sequence through Hyperframes, verifies all 1080 numbered frames, then encodes H.264 with 320 kbps stereo AAC through FFmpeg. This preserves the complete 36 seconds and keeps the intermediate lossless.
+
+When changing audio, install Python `numpy` and `soundfile`, then run `npm run master:audio`. This reads the stem timing and volume envelopes from `index.html` and applies a constant gain to reach −18 LUFS while retaining at least 1.2 dB of true-peak headroom. There is no limiter or compressor. The included master lets ordinary video re-renders proceed without Python.
