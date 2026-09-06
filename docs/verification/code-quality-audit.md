@@ -30,7 +30,13 @@ A broader optional lint scan produced 730 diagnostics before changes. Most were 
 - Root and video dependency audits report zero known advisories in the inspected registry snapshot. This is not a penetration test or a permanent guarantee.
 - The existing MP4 revalidates at 1920×1080, 30 fps, 1,080 frames and 36 seconds, with complete decoding and zero near-black intervals. Its original audio measurements remain -19.08 LUFS and -1.19 dBTP. No new video was generated.
 
-Final public-preview and new GitHub CI results are recorded below after execution. Build notices about the large lazy Three.js chunk and Vinext's API classification remain upstream/tooling observations, not evidence of an inaccessible interface. Physical-phone performance across devices, standardized listening tests and production ingestion hardening remain separate acceptance work.
+GitHub run [34041169225](https://github.com/kvnloo/keyconf.gen/actions/runs/34041169225) passed every check and deployed commit `9a7e3a5a0d2aefd119d6ca10edc2f00ffec4818e` to nightly. Public release metadata and a fresh 390×844 browser journey confirmed that exact commit at 15:12:53 UTC. Room rendering, horizontal bounds, projected Monkeytype, settings, Back and root query/hash preservation passed with no runtime errors or failed same-origin HTTP asset responses. These checks used software graphics, not a physical phone.
+
+Main passed the first portion of a combined public journey. That run then timed out waiting for dev's monitor projection; its cause remains unconfirmed. A fresh dev-only run passed at 15:07:24 UTC with no runtime errors or failed asset responses. The later nightly-only run also passed. The original timeout remains inconclusive evidence rather than being erased by the retries. Main remains `70c8afa`, dev remains `74619e8`.
+
+The existing Hyperframes composition check passed 11 sampled times with zero runtime/layout issues and 8/8 text contrast checks. One timeline organization warning remains for four sequential elements in act-one. The configured automatic motion pass does not establish cinematographic quality. The encoded MP4 validation above is separate from this composition check.
+
+Build notices about the large lazy Three.js chunk and Vinext's API classification remain upstream/tooling observations. Physical-phone performance across devices, standardized listening tests and production ingestion hardening remain separate acceptance work.
 
 ## Feature status
 
