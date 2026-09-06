@@ -351,3 +351,9 @@ Sites version 2 deployed `3ea24f52b1b3b0c38c7055e6b50316a54d7c7622` at 16:56:14 
 Connected the observation browser to the published catalog. Opening the disclosure starts a bounded, timed fetch and validates the returned page evidence and safe product URLs. Failures visibly use the bundled snapshot; retry preserves the user's search/results. New requests cancel stale ones, and unmount aborts loading. Store options still require explicit import review and are not promoted to verified builder parts.
 
 All 82 tests, strict types, lint, formatting and both builds pass. Development and production browser checks cover 320/1920px loading, fallback/retry, original variant links, search/expansion, import review, failed-module recovery and overflow. A hosted-only fixture proves the server result is used. A separate 390px built reader loaded the real hosted catalog via a local redirect, verified 128 observations and searched them successfully. The test redirect initially retained the preview port; it was corrected without changing app routing. The new frontend awaits GitHub publication. Existing nightly Sites version 2 continues serving the durable catalog.
+
+## Hosted reader failure audit
+
+Added real-HTTP coverage for damaged/oversized/non-JSON catalog responses, externally canceled loading and stalled bodies. The stalled transfer falls back at the eight-second deadline and closes its unfinished response; external cancellation rejects instead of returning stale fallback data. All 85 tests, strict types, lint and formatting pass. The initial cancellation fixture observed an incoming request's close/error instead of response closure; the fixture was corrected before accepting results. Application behavior did not change.
+
+The reader release `c94a80f` passed its GitHub check job and is in deployment. The public Pages reader will be verified against the hosted catalog after its release metadata confirms that source.
