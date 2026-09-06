@@ -8,21 +8,23 @@ export default function TypingTest({
   onPress,
   onRelease,
   onExit,
+  onSearch,
 }: {
   onPress: (code: string) => void;
   onRelease: (code: string) => void;
   onExit: () => void;
+  onSearch: () => void;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
-  const callbacks = useRef({ onPress, onRelease });
+  const callbacks = useRef({ onPress, onRelease, onSearch });
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>(
     'loading',
   );
   const [attempt, setAttempt] = useState(0);
   const [height, setHeight] = useState(320);
   useEffect(() => {
-    callbacks.current = { onPress, onRelease };
-  }, [onPress, onRelease]);
+    callbacks.current = { onPress, onRelease, onSearch };
+  }, [onPress, onRelease, onSearch]);
   useEffect(() => {
     const held = new Set<string>();
     const clear = () => {
@@ -123,6 +125,23 @@ export default function TypingTest({
             const theme = document.createElement('style');
             theme.textContent = `:root { --bg-color: #18221c !important; --main-color: #d7dfbb !important; --caret-color: #e5c788 !important; --sub-color: #a0b29e !important; --sub-alt-color: #223229 !important; --text-color: #f1eedf !important; --error-color: #f29581 !important; --error-extra-color: #c95d4b !important; }`;
             document.head.appendChild(theme);
+            document.addEventListener(
+              'keydown',
+              (event) => {
+                if (
+                  (event.ctrlKey || event.metaKey) &&
+                  !event.altKey &&
+                  !event.shiftKey &&
+                  !event.isComposing &&
+                  event.key.toLowerCase() === 'k'
+                ) {
+                  event.preventDefault();
+                  event.stopImmediatePropagation();
+                  callbacks.current.onSearch();
+                }
+              },
+              true,
+            );
           }}
           onError={() => setStatus('error')}
         />

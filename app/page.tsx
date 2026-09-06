@@ -19,6 +19,7 @@ import {
 } from '../lib/control-deck';
 import {
   Layers,
+  Search,
   RotateCcw,
   ArrowUpRight,
   ArrowRight,
@@ -43,6 +44,7 @@ import {
 } from 'lucide-react';
 import KeyboardScene, { type SceneOptions } from './keyboard-scene';
 import ImportDialog from './import-dialog';
+import StudioSearch from './studio-search';
 import TypingTest from './typing-test';
 import VolumeDial from './volume-dial';
 import MusicControls from './music-controls';
@@ -58,7 +60,10 @@ import SampleWaveform from './sample-waveform';
 import ComponentsPanel from './components-panel';
 import SwitchDetail from './switch-detail';
 import BuildAccessories from './build-accessories';
-import { accessoryCatalog } from '../lib/build-accessories';
+import {
+  accessoryCatalog,
+  newAccessorySelection,
+} from '../lib/build-accessories';
 import ResearchProducts from './research-products';
 import StudioSelect from './studio-select';
 import { useBuild } from './use-build';
@@ -268,6 +273,7 @@ type Tab = 'design' | 'parts' | 'sound';
 type Modal =
   | 'import'
   | 'research'
+  | 'search'
   | 'share'
   | { kind: 'import'; source: string }
   | null;
@@ -366,7 +372,8 @@ function KeyboardStudio({
   useEffect(() => {
     if (!focusMode) return;
     const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setFocusAt(null);
+      if (event.key === 'Escape' && !document.querySelector('dialog[open]'))
+        setFocusAt(null);
     };
     window.addEventListener('keydown', escape);
     return () => window.removeEventListener('keydown', escape);
@@ -384,9 +391,31 @@ function KeyboardStudio({
     }
   }
   const [modal, setModal] = useState<Modal>(null);
+  const searchOrigin = useRef<HTMLElement | null>(null);
   const importing =
     modal === 'import' || (modal !== null && typeof modal === 'object');
   const reviewSwitch = (source: string) => setModal({ kind: 'import', source });
+  useEffect(() => {
+    const searchShortcut = (event: KeyboardEvent) => {
+      if (
+        (event.metaKey || event.ctrlKey) &&
+        !event.altKey &&
+        !event.shiftKey &&
+        event.key.toLowerCase() === 'k' &&
+        !event.isComposing
+      ) {
+        if (document.querySelector('dialog[open]')) return;
+        event.preventDefault();
+        searchOrigin.current =
+          document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+        setModal('search');
+      }
+    };
+    window.addEventListener('keydown', searchShortcut);
+    return () => window.removeEventListener('keydown', searchShortcut);
+  }, []);
   const [enabled, setEnabled] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const buildFile = useRef<HTMLInputElement>(null);
@@ -538,11 +567,19 @@ function KeyboardStudio({
     element.addEventListener('click', dismissBackdrop);
     if (modal) {
       element.showModal();
+      if (modal === 'search')
+        element
+          .querySelector<HTMLInputElement>('input[name="studio-search"]')
+          ?.focus();
       if (typeof modal === 'object')
         element
           .querySelector<HTMLInputElement>('input[name="store-url"]')
           ?.focus();
-    } else element.close();
+    } else {
+      element.close();
+      searchOrigin.current?.focus();
+      searchOrigin.current = null;
+    }
     return () => element.removeEventListener('click', dismissBackdrop);
   }, [modal]);
   useEffect(() => {
@@ -814,6 +851,19 @@ function KeyboardStudio({
           </a>
         </nav>
         <div className="header-utilities">
+          <button
+            className="header-search"
+            aria-label="Search parts and studio"
+            aria-keyshortcuts="Control+k Meta+k"
+            onClick={(event) => {
+              searchOrigin.current = event.currentTarget;
+              setModal('search');
+            }}
+          >
+            <Search size={18} />
+            <span>Find parts or jump to…</span>
+            <kbd>Ctrl / ⌘ K</kbd>
+          </button>
           <MusicControls music={music} />
           <a className="header-resume" href="#studio">
             Resume build <ArrowUpRight size={13} />
@@ -986,6 +1036,13 @@ function KeyboardStudio({
             >
               {experience === 'typing' && (
                 <TypingTest
+                  onSearch={() => {
+                    searchOrigin.current =
+                      document.activeElement instanceof HTMLElement
+                        ? document.activeElement
+                        : null;
+                    setModal('search');
+                  }}
                   onPress={press}
                   onRelease={release}
                   onExit={() => {
@@ -1660,9 +1717,21 @@ function KeyboardStudio({
             ? 'Import products'
             : modal === 'share'
               ? 'Share build'
-              : 'Research library'
+              : modal === 'search'
+                ? 'Search parts and studio'
+                : 'Research library'
         }
-        onCancel={() => setModal(null)}
+        onKeyDown={(event) => {
+          if (modal === 'search' && event.key === 'Escape') {
+            event.preventDefault();
+            event.stopPropagation();
+            setModal(null);
+          }
+        }}
+        onCancel={(event) => {
+          if (modal === 'search') event.preventDefault();
+          setModal(null);
+        }}
       >
         <button
           className="modal-close"
@@ -1671,6 +1740,52 @@ function KeyboardStudio({
         >
           <X size={20} />
         </button>
+        {modal === 'search' && (
+          <StudioSearch
+            parts={parts}
+            canAddAccessory={build.accessories.length < 100}
+            onNavigate={(destination) => {
+              setFocusAt(null);
+              setModal(null);
+              if (destination === 'parts') setTab('parts');
+              else if (destination === 'build') setTab('design');
+              else window.location.hash = destination;
+            }}
+            onPart={(part) => {
+              setFocusAt(null);
+              edit({ selection: { ...selection, [part.category]: part.id } });
+              setModal(null);
+              setTab('parts');
+              setNotice(
+                `${part.name} selected. Check the fit notes in Components.`,
+              );
+            }}
+            onAccessory={(part) => {
+              setFocusAt(null);
+              edit({
+                accessories: [
+                  ...build.accessories,
+                  newAccessorySelection(part.id),
+                ],
+              });
+              setModal(null);
+              setTab('parts');
+              setNotice(
+                `${part.name} added. Choose its placement in Accessories & artisan caps.`,
+              );
+              requestAnimationFrame(() => {
+                const plan = document.querySelector<HTMLDetailsElement>(
+                  'details.build-accessories',
+                );
+                if (plan) {
+                  plan.open = true;
+                  plan.scrollIntoView({ block: 'nearest' });
+                  plan.querySelector('summary')?.focus();
+                }
+              });
+            }}
+          />
+        )}
         {modal === 'share' && (
           <div className="share-content">
             <div className="modal-icon">

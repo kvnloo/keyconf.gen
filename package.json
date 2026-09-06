@@ -32,7 +32,8 @@
     "verify:music": "node scripts/verify_music.mjs",
     "verify:switches": "node scripts/verify_switches.mjs",
     "verify:accessory-rendering": "node --experimental-strip-types scripts/verify_accessory_rendering.mjs",
-    "verify:shared-preview": "node scripts/verify_shared_preview.mjs"
+    "verify:shared-preview": "node scripts/verify_shared_preview.mjs",
+    "verify:search": "node scripts/verify_search.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

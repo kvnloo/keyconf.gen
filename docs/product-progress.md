@@ -431,3 +431,27 @@ updates the imported-build browser journey to choose “Customize a copy.” The
 Sites nightly runtime remains the validated preview implementation from
 `d582c2386eb2a1a101a3e88d8784ef5763e9d76f`, version 6; its deployment and a
 fresh-visitor preview check succeeded. Main and dev were not promoted.
+
+## Unified studio search (September 6, 2026)
+
+The header search and Ctrl/Command K open one searchable list of current catalog
+parts, selected-session imported products, accessories and existing studio
+workspaces. Searches match all words across maker, product, description and
+category; common terms such as dials, displays and switches are included. Empty
+queries offer workspace destinations. No creator profiles or community activity
+are invented.
+
+Opening a product shows its existing description and original source before an
+explicit Use in build or Add to plan action. Selection uses the existing Undo
+history. Accessories retain the 100-selection boundary and open their placement
+plan after addition. Search navigation exits focus mode when configuration is
+needed. Esc closes search without leaving the underlying focus mode; focus
+returns to the opener. The same shortcut works inside the same-origin Monkeytype
+frame through the parent integration, without modifying the vendored engine.
+
+Independent read-only review identified the focus-mode and iframe shortcut gaps;
+both now have browser regression coverage. Search verification covers keyboard
+navigation, explicit mutations and Undo, original sources, accessory selection,
+empty results, 320/390/1440 widths, accessibility, focus and typing navigation.
+Runtime search uses existing catalog records; it adds no remote queries or
+account data. Creator search, favorites and attributed feedback remain pending.

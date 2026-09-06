@@ -1,0 +1,139 @@
+.studio-search {
+  padding: 12px 4px;
+}
+.modal .studio-search h2 {
+  font-family: inherit;
+  margin: 8px 0 24px;
+  font-size: clamp(24px, 4vw, 32px);
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+.modal .search-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 4px 12px;
+}
+.search-entry:focus-within {
+  outline: 2px solid #b9d3bd;
+  outline-offset: 2px;
+}
+.modal .search-entry input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  min-height: 48px;
+  font-size: 16px;
+  outline: none;
+}
+.search-count {
+  display: block;
+}
+.search-count,
+.search-hint {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 16px 0;
+}
+.search-results {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: min(420px, 45svh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.search-results button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 12px;
+  border-radius: 8px;
+}
+.search-results button:hover,
+.search-results button:focus-visible {
+  background: #ffffff0b;
+}
+.search-results button:focus-visible {
+  outline: 2px solid #b9d3bd;
+  outline-offset: -2px;
+}
+.search-results strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.search-results small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.search-results svg {
+  flex-shrink: 0;
+}
+.search-empty,
+.search-detail p {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.search-kind {
+  margin-top: 24px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.search-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.search-scope {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 20px 0;
+}
+.header-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 13px;
+  background: #ffffff06;
+}
+.header-search kbd {
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+}
+@media (max-width: 1100px) {
+  .header-search span,
+  .header-search kbd {
+    display: none;
+  }
+  .header-search {
+    padding: 10px;
+  }
+}
+@media (max-width: 500px) {
+  .studio-search {
+    padding: 8px 0;
+  }
+  .search-results button {
+    padding: 14px 4px;
+  }
+}
