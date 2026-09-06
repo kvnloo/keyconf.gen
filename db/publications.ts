@@ -171,3 +171,54 @@ export async function withdrawPublication(
     );
   return row;
 }
+
+export async function listOwnedPublications(
+  db: Database,
+  subject: string,
+  cursor?: { publishedAt: string; id: string },
+) {
+  if (
+    cursor &&
+    (!/^[a-zA-Z0-9_-]{16,100}$/.test(cursor.id) ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(
+        cursor.publishedAt,
+      ) ||
+      !Number.isFinite(Date.parse(cursor.publishedAt)))
+  )
+    throw new CommunityError(
+      'invalid_request',
+      'This publication page cursor is invalid.',
+      400,
+    );
+  const where = cursor
+    ? ' AND (published_at<? OR (published_at=? AND id<?))'
+    : '';
+  const statement = db.prepare(
+    `SELECT id,metadata,published_at AS publishedAt,withdrawn_at AS withdrawnAt FROM community_publication WHERE account_id=(SELECT id FROM community_account WHERE subject=?)${where} ORDER BY published_at DESC,id DESC LIMIT 26`,
+  );
+  const query = cursor
+    ? statement.bind(subject, cursor.publishedAt, cursor.publishedAt, cursor.id)
+    : statement.bind(subject);
+  const { results } =
+    await query.all<
+      Pick<Row, 'id' | 'metadata' | 'publishedAt' | 'withdrawnAt'>
+    >();
+  const items = results.slice(0, 25).map((row) => {
+    const metadata = parsePublicationRequest(JSON.parse(row.metadata));
+    return {
+      id: row.id,
+      title: metadata.title,
+      kind: metadata.kind,
+      publishedAt: row.publishedAt,
+      withdrawnAt: row.withdrawnAt,
+    };
+  });
+  const last = items.at(-1);
+  return {
+    items,
+    next:
+      results.length > 25 && last
+        ? { publishedAt: last.publishedAt, id: last.id }
+        : null,
+  };
+}

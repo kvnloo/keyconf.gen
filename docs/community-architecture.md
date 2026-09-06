@@ -174,7 +174,7 @@ Withdrawal returns only an ID and the original withdrawal timestamp. It must
 remain available even when a retired part makes the saved build unrestorable.
 The public read then returns not found, and retrying publication returns the
 withdrawal receipt without making the release public again. The persistence
-implementation is under review; no publication endpoints or UI are exposed.
+implementation has passed independent review; no publication endpoints or UI are exposed.
 
 The publication write path now checks existing operations before restoring
 snapshots, validates new owned payload/evidence before inserting, and rereads
@@ -183,5 +183,10 @@ confirmed the correction to an earlier insert-before-validation ordering. SQLite
 regressions cover zero writes for malformed/retired snapshots, unchanged
 operation keys after failure, profile-independent retries, and simultaneous
 identical/conflicting requests. Eighteen focused checks, types and lint pass.
-The full release suite is pending; public evidence response shapes and API/UI
+The 137-test release suite, production build and GitHub CI passed, and storage
+shipped in nightly version 10. Public evidence response shapes and API/UI
 integration still require implementation before enabling publishing.
+
+Owner release management uses a bounded summary list ordered by publication
+time and ID, including withdrawn entries. It does not restore 3D payloads, so
+retired parts cannot prevent a creator finding a release to withdraw.

@@ -1,4 +1,5 @@
 import {
+  listOwnedPublications,
   publishBuild,
   readPublicPublication,
   withdrawPublication,
@@ -678,5 +679,62 @@ test('concurrent publication retries converge and conflicting requests cannot ov
     db.sqlite.prepare('SELECT COUNT(*) AS n FROM community_publication').get()
       .n,
     2,
+  );
+});
+
+test('owner publication pages have stable boundaries, retain withdrawn entries and exclude other accounts', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  await saveProfile(db, bob, { ...profile, handle: 'bob_keys' });
+  const saved = await saveBuild(db, alice, save());
+  const other = await saveBuild(db, bob, save());
+  for (let i = 0; i < 28; i++)
+    await publishBuild(db, alice, {
+      operationId: `publication-page-${String(i).padStart(3, '0')}`,
+      buildId: saved.id,
+      title: `Build ${i}`,
+      note: '',
+      kind: 'build',
+    });
+  const foreign = await publishBuild(db, bob, {
+    operationId: 'publication-page-other',
+    buildId: other.id,
+    title: 'Bob private management',
+    note: '',
+    kind: 'build',
+  });
+  db.sqlite
+    .prepare('UPDATE community_publication SET published_at=?')
+    .run('2026-09-06T00:00:00.000Z');
+  const first = await listOwnedPublications(db, alice);
+  assert.equal(first.items.length, 25);
+  assert.ok(first.next);
+  await withdrawPublication(db, alice, first.items[0].id);
+  const second = await listOwnedPublications(db, alice, first.next);
+  assert.equal(second.items.length, 3);
+  assert.equal(second.next, null);
+  const ids = [...first.items, ...second.items].map((item) => item.id);
+  assert.equal(new Set(ids).size, 28);
+  assert.equal(ids.includes(foreign.id), false);
+  assert.ok((await listOwnedPublications(db, alice)).items[0].withdrawnAt);
+  assert.equal(JSON.stringify(first).includes('payload'), false);
+  assert.deepEqual(await listOwnedPublications(db, 'unknown-subject'), {
+    items: [],
+    next: null,
+  });
+  await assert.rejects(
+    listOwnedPublications(db, alice, { id: 'bad', publishedAt: 'yesterday' }),
+    { code: 'invalid_request' },
+  );
+  const query = db.queries.find(
+    (sql) =>
+      sql.includes('FROM community_publication WHERE account_id=') &&
+      sql.includes('ORDER BY'),
+  );
+  const plan = db.sqlite.prepare(`EXPLAIN QUERY PLAN ${query}`).all(alice);
+  assert.ok(
+    plan.some((row) =>
+      row.detail.includes('community_publication_account_published'),
+    ),
   );
 });

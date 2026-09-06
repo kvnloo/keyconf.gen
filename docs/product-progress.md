@@ -527,6 +527,20 @@ validated; duplicate URLs and embedded credentials are rejected. Links are
 outbound references, not verified ownership claims. The additive migration
 preserves existing profile identity and bio with an empty link-list default.
 Real SQLite tests cover persistence, owner isolation, replacement/removal and
-upgrading a database containing an older profile. All 130 tests and type
-checking pass. Production build and release checks are pending. Google setup,
+upgrading a database containing an older profile. All 130 tests, type checking and the production build passed. This shipped in
+nightly version 9, and its GitHub CI passed. Google setup,
 account routes and public profile UI remain deferred or unfinished.
+
+## Creator publication storage and library
+
+Nightly version 10 contains immutable creator publication storage and owner-only
+withdrawal, from commit `3db9424`. All 137 tests, type checking, lint, the
+production build and GitHub CI passed for that checkpoint. No account or
+publication endpoints are exposed yet.
+
+The owner library now reads 25 summaries per page using publication time and ID
+for stable ordering. Withdrawn releases remain manageable, while saved 3D
+payloads stay out of the list. Real SQLite coverage checks timestamp ties,
+complete traversal, owner isolation, withdrawal visibility and use of the owner
+index. Google sign-in, public profiles, favorites, publication review UI and
+client feedback remain unfinished.
