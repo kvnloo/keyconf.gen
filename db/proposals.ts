@@ -1,0 +1,153 @@
+import { CommunityError, parseCommunityProfile } from '../lib/community.ts';
+import { parseProposalRequest, type ProposalRequest } from '../lib/proposal.ts';
+import { restoreBuildSnapshot } from './build-snapshot.ts';
+
+type Database = Pick<D1Database, 'prepare'>;
+type ReceiptRow = {
+  id: string;
+  requestDigest: string;
+  tokenDigest: string;
+  closedAt: string | null;
+};
+async function digest(value: string) {
+  const bytes = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(value),
+  );
+  return Array.from(new Uint8Array(bytes), (byte) =>
+    byte.toString(16).padStart(2, '0'),
+  ).join('');
+}
+function unavailable() {
+  return new CommunityError(
+    'proposal_not_found',
+    'This proposal is not available.',
+    404,
+  );
+}
+function receipt(row: ReceiptRow, requestDigest: string) {
+  if (row.requestDigest !== requestDigest)
+    throw new CommunityError(
+      'operation_conflict',
+      'This proposal operation was already used for different content.',
+      409,
+    );
+  return { id: row.id, closedAt: row.closedAt };
+}
+
+export async function createProposal(
+  db: Database,
+  subject: string,
+  input: ProposalRequest,
+) {
+  const request = parseProposalRequest(input);
+  const requestDigest = await digest(JSON.stringify(request));
+  const lookup = () =>
+    db
+      .prepare(
+        'SELECT p.id,p.request_digest AS requestDigest,p.token_digest AS tokenDigest,p.closed_at AS closedAt FROM community_proposal p JOIN community_account a ON a.id=p.account_id WHERE a.subject=? AND p.operation_id=?',
+      )
+      .bind(subject, request.operationId)
+      .first<ReceiptRow>();
+  const existing = await lookup();
+  if (existing) return { ...receipt(existing, requestDigest), token: null };
+  const owned = await db
+    .prepare(
+      'SELECT b.payload,b.evidence FROM community_build b JOIN community_account a ON a.id=b.account_id WHERE b.id=? AND a.subject=?',
+    )
+    .bind(request.buildId, subject)
+    .first<{ payload: string; evidence: string }>();
+  if (!owned)
+    throw new CommunityError(
+      'build_not_found',
+      'This build is not available in your account.',
+      404,
+    );
+  restoreBuildSnapshot(owned);
+  const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) =>
+    byte.toString(16).padStart(2, '0'),
+  ).join('');
+  const tokenDigest = await digest(token);
+  await db
+    .prepare(`INSERT INTO community_proposal(id,account_id,build_id,operation_id,request_digest,title,brief,author,token_digest,created_at)
+    SELECT ?,a.id,b.id,?,?,?,?,json_object('handle',f.handle,'displayName',f.display_name,'bio',f.bio,'links',json(f.links)),?,?
+    FROM community_build b JOIN community_account a ON a.id=b.account_id JOIN community_profile f ON f.account_id=a.id
+    WHERE b.id=? AND a.subject=? ON CONFLICT(account_id,operation_id) DO NOTHING`)
+    .bind(
+      crypto.randomUUID(),
+      request.operationId,
+      requestDigest,
+      request.title,
+      request.brief,
+      tokenDigest,
+      new Date().toISOString(),
+      request.buildId,
+      subject,
+    )
+    .run();
+  const stored = await lookup();
+  if (!stored)
+    throw new CommunityError(
+      'profile_required',
+      'Choose your creator name and handle before sharing a proposal.',
+      409,
+    );
+  return {
+    ...receipt(stored, requestDigest),
+    token:
+      stored.tokenDigest === tokenDigest && stored.closedAt === null
+        ? token
+        : null,
+  };
+}
+
+export async function readProposalPreview(db: Database, token: string) {
+  if (!/^[a-f0-9]{64}$/.test(token)) throw unavailable();
+  const row = await db
+    .prepare(
+      'SELECT p.id,p.title,p.brief,p.author,p.created_at AS createdAt,b.payload,b.evidence FROM community_proposal p JOIN community_build b ON b.id=p.build_id AND b.account_id=p.account_id WHERE p.token_digest=? AND p.closed_at IS NULL',
+    )
+    .bind(await digest(token))
+    .first<{
+      id: string;
+      title: string;
+      brief: string;
+      author: string;
+      createdAt: string;
+      payload: string;
+      evidence: string;
+    }>();
+  if (!row) throw unavailable();
+  const { build, evidence } = restoreBuildSnapshot(row, true);
+  const selected = new Set(Object.values(build.selection));
+  return {
+    id: row.id,
+    title: row.title,
+    brief: row.brief,
+    author: parseCommunityProfile(JSON.parse(row.author)),
+    createdAt: row.createdAt,
+    build: {
+      ...build,
+      name: row.title,
+      customParts: build.customParts.filter((part) => selected.has(part.id)),
+    },
+    evidence,
+  };
+}
+
+export async function closeProposal(db: Database, subject: string, id: string) {
+  await db
+    .prepare(
+      'UPDATE community_proposal SET closed_at=COALESCE(closed_at,?) WHERE id=? AND account_id=(SELECT id FROM community_account WHERE subject=?)',
+    )
+    .bind(new Date().toISOString(), id, subject)
+    .run();
+  const row = await db
+    .prepare(
+      'SELECT id,closed_at AS closedAt FROM community_proposal WHERE id=? AND account_id=(SELECT id FROM community_account WHERE subject=?)',
+    )
+    .bind(id, subject)
+    .first<{ id: string; closedAt: string }>();
+  if (!row) throw unavailable();
+  return row;
+}

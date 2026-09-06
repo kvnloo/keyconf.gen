@@ -1,6 +1,6 @@
-import { parsePublicBuildEvidence } from '../lib/build-evidence.ts';
+import { restoreBuildSnapshot } from './build-snapshot.ts';
 import { CommunityError, parseCommunityProfile } from '../lib/community.ts';
-import { parseBuild, parseBuildSnapshot, type Build } from '../lib/build.ts';
+import { parseBuild } from '../lib/build.ts';
 import {
   parsePublicationRequest,
   type PublicationRequest,
@@ -25,7 +25,7 @@ const joins =
 function publication(row: Row) {
   const metadata = parsePublicationRequest(JSON.parse(row.metadata));
   const author = parseCommunityProfile(JSON.parse(row.author));
-  const { build, evidence } = restoreSnapshot(row, true);
+  const { build, evidence } = restoreBuildSnapshot(row, true);
   let customization: 'available' | 'unavailable' = 'available';
   try {
     parseBuild(build);
@@ -60,24 +60,6 @@ function publication(row: Row) {
 
 export type PublicPublication = ReturnType<typeof publication>;
 
-function restoreSnapshot(
-  row: Pick<Row, 'payload' | 'evidence'>,
-  historical = false,
-) {
-  try {
-    const build: Build = historical
-      ? parseBuildSnapshot(JSON.parse(row.payload))
-      : parseBuild(JSON.parse(row.payload));
-    const evidence = parsePublicBuildEvidence(JSON.parse(row.evidence), build);
-    return { build, evidence };
-  } catch {
-    throw new CommunityError(
-      'saved_build_unavailable',
-      'This saved build cannot currently be restored. Its snapshot is retained.',
-      422,
-    );
-  }
-}
 function operationResult(row: Row, requestDigest: string) {
   if (row.requestDigest !== requestDigest)
     throw new CommunityError(
@@ -125,7 +107,7 @@ export async function publishBuild(
       'This build is not available in your account.',
       404,
     );
-  restoreSnapshot(owned);
+  restoreBuildSnapshot(owned);
   await db
     .prepare(`INSERT INTO community_publication(id,account_id,build_id,operation_id,request_digest,metadata,author,published_at)
     SELECT ?,a.id,b.id,?,?,?,json_object('handle',f.handle,'displayName',f.display_name,'bio',f.bio,'links',json(f.links)),?

@@ -1,4 +1,10 @@
 import {
+  createProposal,
+  readProposalPreview,
+  closeProposal,
+} from '../db/proposals.ts';
+import { parseProposalRequest } from '../lib/proposal.ts';
+import {
   listOwnedPublications,
   publishBuild,
   readPublicPublication,
@@ -1062,4 +1068,236 @@ test('published snapshots preserve retired component, accessory and recording ev
     { code: 'saved_build_unavailable' },
   );
   assert.ok((await withdrawPublication(db, alice, release.id)).withdrawnAt);
+});
+
+test('proposal links freeze chosen identity and snapshots, store only token hashes, and close without leaking private fields', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(
+    db,
+    alice,
+    save({ ...defaultBuild, name: 'Private commission notes' }),
+  );
+  const request = {
+    operationId: 'proposal-operation-0001',
+    buildId: saved.id,
+    title: 'Client preview',
+    brief: 'Review the colors.',
+  };
+  const created = await createProposal(db, alice, request);
+  assert.match(created.token, /^[a-f0-9]{64}$/);
+  const stored = db.sqlite.prepare('SELECT * FROM community_proposal').get();
+  assert.equal(JSON.stringify(stored).includes(created.token), false);
+  const preview = await readProposalPreview(db, created.token);
+  assert.equal(preview.build.name, request.title);
+  assert.equal(preview.author.displayName, profile.displayName);
+  assert.equal(
+    JSON.stringify(preview).includes('Private commission notes'),
+    false,
+  );
+  assert.equal(JSON.stringify(preview).includes(alice), false);
+  assert.equal(JSON.stringify(preview).includes(stored.token_digest), false);
+  await saveProfile(db, alice, { ...profile, displayName: 'Later name' });
+  await saveBuild(
+    db,
+    alice,
+    save({ ...defaultBuild, layout: '75' }, 'operation-new-private-copy'),
+  );
+  assert.deepEqual(await readProposalPreview(db, created.token), preview);
+  assert.deepEqual(await createProposal(db, alice, request), {
+    id: created.id,
+    closedAt: null,
+    token: null,
+  });
+  await assert.rejects(
+    createProposal(db, alice, { ...request, brief: 'Changed request' }),
+    { code: 'operation_conflict' },
+  );
+  await assert.rejects(createProposal(db, bob, request), {
+    code: 'build_not_found',
+  });
+  await assert.rejects(closeProposal(db, bob, created.id), {
+    code: 'proposal_not_found',
+  });
+  for (const token of [
+    'bad',
+    '0'.repeat(64),
+    created.token.toUpperCase(),
+    ` ${created.token}`,
+  ])
+    await assert.rejects(readProposalPreview(db, token), {
+      code: 'proposal_not_found',
+    });
+  const closed = await closeProposal(db, alice, created.id);
+  assert.ok(closed.closedAt);
+  assert.deepEqual(await closeProposal(db, alice, created.id), closed);
+  await assert.rejects(readProposalPreview(db, created.token), {
+    code: 'proposal_not_found',
+  });
+  assert.deepEqual(await createProposal(db, alice, request), {
+    ...closed,
+    token: null,
+  });
+});
+
+test('concurrent proposal creation returns only the winning token and one row', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const request = {
+    operationId: 'proposal-concurrent-0001',
+    buildId: saved.id,
+    title: 'Client preview',
+    brief: '',
+  };
+  const results = await Promise.all([
+    createProposal(db, alice, request),
+    createProposal(db, alice, request),
+  ]);
+  assert.equal(new Set(results.map((result) => result.id)).size, 1);
+  assert.equal(results.filter((result) => result.token !== null).length, 1);
+  const winner = results.find((result) => result.token !== null);
+  assert.equal((await readProposalPreview(db, winner.token)).id, winner.id);
+  assert.equal(
+    db.sqlite.prepare('SELECT COUNT(*) AS count FROM community_proposal').get()
+      .count,
+    1,
+  );
+});
+
+test('proposal creation rejects damaged snapshots and closure survives later damage', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const request = {
+    operationId: 'proposal-damage-0001',
+    buildId: saved.id,
+    title: 'Client preview',
+    brief: '',
+  };
+  const original = db.sqlite
+    .prepare('SELECT evidence FROM community_build WHERE id=?')
+    .get(saved.id).evidence;
+  db.sqlite
+    .prepare('UPDATE community_build SET evidence=? WHERE id=?')
+    .run('null', saved.id);
+  await assert.rejects(createProposal(db, alice, request), {
+    code: 'saved_build_unavailable',
+  });
+  assert.equal(
+    db.sqlite.prepare('SELECT COUNT(*) AS count FROM community_proposal').get()
+      .count,
+    0,
+  );
+  db.sqlite
+    .prepare('UPDATE community_build SET evidence=? WHERE id=?')
+    .run(original, saved.id);
+  const created = await createProposal(db, alice, request);
+  db.sqlite
+    .prepare('UPDATE community_build SET payload=? WHERE id=?')
+    .run('{}', saved.id);
+  await assert.rejects(readProposalPreview(db, created.token), {
+    code: 'saved_build_unavailable',
+  });
+  const closed = await closeProposal(db, alice, created.id);
+  assert.ok(closed.closedAt);
+  assert.deepEqual(await createProposal(db, alice, request), {
+    ...closed,
+    token: null,
+  });
+});
+
+test('proposal boundary requires chosen creator identity and bounded plain text', async (t) => {
+  const db = database(t);
+  const saved = await saveBuild(db, alice, save());
+  const request = {
+    operationId: 'proposal-profile-0001',
+    buildId: saved.id,
+    title: 'Client preview',
+    brief: '',
+  };
+  await assert.rejects(createProposal(db, alice, request), {
+    code: 'profile_required',
+  });
+  for (const value of [
+    null,
+    { ...request, title: '' },
+    { ...request, title: 'x'.repeat(81) },
+    { ...request, brief: 'x'.repeat(2001) },
+    { ...request, brief: 'bad\u0000' },
+    { ...request, operationId: 'bad' },
+  ])
+    assert.throws(() => parseProposalRequest(value), {
+      code: 'invalid_request',
+    });
+  assert.equal(
+    parseProposalRequest({ ...request, brief: ' line 1\r\nline 2 ' }).brief,
+    'line 1\nline 2',
+  );
+  assert.equal(
+    db.sqlite.prepare('SELECT COUNT(*) AS count FROM community_proposal').get()
+      .count,
+    0,
+  );
+});
+
+test('conflicting concurrent proposals preserve one winner and retired catalog parts preserve its preview', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const request = {
+    operationId: 'proposal-conflict-0001',
+    buildId: saved.id,
+    title: 'First title',
+    brief: '',
+  };
+  const results = await Promise.allSettled([
+    createProposal(db, alice, request),
+    createProposal(db, alice, { ...request, title: 'Second title' }),
+  ]);
+  const success = results.find((item) => item.status === 'fulfilled');
+  const failure = results.find((item) => item.status === 'rejected');
+  assert.equal(failure.reason.code, 'operation_conflict');
+  const created = success.value;
+  const preview = await readProposalPreview(db, created.token);
+  const winningRequest = { ...request, title: preview.title };
+  const { catalog } = await import('../lib/catalog.ts');
+  const index = catalog.findIndex(
+    (part) => part.id === saved.build.selection.case,
+  );
+  assert.ok(index >= 0);
+  const [removed] = catalog.splice(index, 1);
+  try {
+    assert.deepEqual(await readProposalPreview(db, created.token), preview);
+    assert.deepEqual(await createProposal(db, alice, winningRequest), {
+      id: created.id,
+      closedAt: null,
+      token: null,
+    });
+    await assert.rejects(
+      createProposal(db, alice, {
+        ...winningRequest,
+        operationId: 'proposal-retired-new-0001',
+      }),
+      { code: 'saved_build_unavailable' },
+    );
+  } finally {
+    catalog.splice(index, 0, removed);
+  }
+  assert.equal(
+    db.sqlite.prepare('SELECT COUNT(*) AS count FROM community_proposal').get()
+      .count,
+    1,
+  );
+  const tokenQuery = db.queries.find((query) =>
+    query.includes('WHERE p.token_digest=?'),
+  );
+  const plan = db.sqlite
+    .prepare(`EXPLAIN QUERY PLAN ${tokenQuery}`)
+    .all('0'.repeat(64));
+  assert.ok(
+    plan.some((row) =>
+      row.detail.includes('community_proposal_token_digest_unique'),
+    ),
+  );
 });

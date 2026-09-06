@@ -80,7 +80,7 @@ Define the schema in `db/schema.ts`; add generated, inspected, schema-only Drizz
 | `community_build` | Deployed: immutable keyboard snapshot ID, owner, operation ID, request digest, private name, payload, source evidence and creation time. Unique owner/operation index and owner/date/ID list index. Each save creates a snapshot; there is no mutable latest-revision pointer. |
 | `community_publication` | Deployed: ID, owner, owned snapshot ID, operation ID/digest, frozen release metadata and author, publication time and optional withdrawal time. Unique owner/operation and owner/date/ID indexes. |
 | `community_favorite` | Deployed: account and publication foreign keys with a unique pair index, creation time and owner/date/publication index. Repeatable add/remove; withdrawn entries return an unavailable marker. |
-| `community_proposal` | Planned: ID, owner, immutable base snapshot, brief, unique token digest, creation time and optional closure time. Index owner/time. |
+| `community_proposal` | Implemented storage: ID, owner, immutable base snapshot, operation ID/digest, chosen title/brief/author, unique token digest, creation time and optional closure time. Owner listing and its index remain pending. |
 | `community_proposal_response` | Planned: ID, proposal ID, verified author, immutable submitted snapshot, note, creation time and operation ID unique within author/proposal. Index proposal/time. |
 
 There is no `community_build_revision` table. Keep the deployed immutable snapshot model for the first account UI: saving edits creates another snapshot, and publication references that exact owned snapshot. Do not invent revision numbers or stale-update behavior for a mutable record that does not exist. If a grouped version history is introduced later, specify its migration and concurrency contract before exposing it.
@@ -284,3 +284,26 @@ navigation. Its stdout was not retained, so the cause was not established.
 Worker output is now included in failure artifacts. Verification servers run in
 separate process groups and cleanup terminates their child processes as well as
 the npm wrapper, preventing earlier dev servers being left behind between steps.
+
+
+## Proposal storage boundary
+
+`db/proposals.ts` implements create, bearer-token preview reads and owner-only
+closure. No HTTP route, proposal page or authenticated create control is exposed
+yet. Creation requires the existing private chosen profile, not a public profile
+page or publication. It freezes that chosen identity and references an owned
+immutable keyboard snapshot. Preview replaces the private snapshot name with the
+chosen proposal title and validates frozen source evidence.
+
+Only SHA-256 token digests are stored. A successful winning create returns its
+256-bit random token once; an identical retry returns the existing receipt with
+`token: null`. Concurrent losing creates never return their unusable candidate
+tokens. Clients must not interpret a null token as a shareable link. Recovery by
+explicit token rotation is still unimplemented; retries do not rotate or reopen
+proposals. Closing remains possible even after snapshot damage.
+
+The UI, route-level noindex/no-referrer/no-store handling, isolated client draft,
+rotation, owner listing, attributed responses and change review remain required.
+Historical preview data is preserved, but its future UI must check current
+customization support before enabling the editor. No public test proposal is
+seeded by these storage tests.

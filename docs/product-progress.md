@@ -652,3 +652,23 @@ identity, and retains precise volume values. Identical labels include the
 underlying identity when it is the only difference. A regression test first
 reproduced the missed imported-part change, then passed after the correction;
 all four comparison tests, type checking and lint passed.
+
+
+## Revocable proposal storage
+
+The additive `0005_client_proposals.sql` migration adds owned proposals with an
+immutable base snapshot, frozen chosen identity, a private token digest and
+closure state. Create retries are idempotent; conflicting content returns 409.
+Only the winning concurrent create receives a usable raw token. Preview reads
+exclude private snapshot names, account subjects and token hashes. Closing is
+owner-only and works even when snapshot data is damaged.
+
+Real SQLite tests cover concurrent identical/conflicting operations, chosen
+profile requirements, bounded input, token syntax/digest storage, owner
+isolation, immutable previews, retired catalog parts, token-index use, damaged
+evidence rejection, repeat closure and no reopening through retries. A separate
+read-only review found no concrete blocker within this storage scope.
+
+No account endpoint or proposal page is exposed. Google integration, token
+rotation, owner lists, client response storage and the complete two-person
+proposal experience remain unfinished.

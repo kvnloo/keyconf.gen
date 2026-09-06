@@ -19,6 +19,7 @@ export type CommunityErrorCode =
   | 'operation_conflict'
   | 'build_not_found'
   | 'publication_not_found'
+  | 'proposal_not_found'
   | 'profile_required'
   | 'saved_build_unavailable'
   | 'storage_unavailable';

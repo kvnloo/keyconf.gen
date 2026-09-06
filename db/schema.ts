@@ -110,3 +110,30 @@ export const communityFavorites = sqliteTable(
     ),
   ],
 );
+
+export const communityProposals = sqliteTable(
+  'community_proposal',
+  {
+    id: text('id').primaryKey(),
+    accountId: text('account_id')
+      .notNull()
+      .references(() => communityAccounts.id),
+    buildId: text('build_id')
+      .notNull()
+      .references(() => communityBuilds.id),
+    operationId: text('operation_id').notNull(),
+    requestDigest: text('request_digest').notNull(),
+    title: text('title').notNull(),
+    brief: text('brief').notNull(),
+    author: text('author').notNull(),
+    tokenDigest: text('token_digest').notNull().unique(),
+    createdAt: text('created_at').notNull(),
+    closedAt: text('closed_at'),
+  },
+  (table) => [
+    uniqueIndex('community_proposal_account_operation').on(
+      table.accountId,
+      table.operationId,
+    ),
+  ],
+);
