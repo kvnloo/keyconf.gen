@@ -283,3 +283,9 @@ Added a separate, collapsible browser for the 128 source observations in Discove
 The committed snapshot retains complete normalized page evidence and hashes. A regression confirms all hashes, unique variant identities and original values; all 73 tests pass. Types, lint, formatting, actionlint and both builds pass. The actual browser journey passes at 320 and 1920 pixels in development and the production Pages build, covering search, expansion, links, keyboard disclosure, empty/reset and overflow. Captures were inspected, and this journey now runs in CI. Hosted ingestion and review remain unfinished.
 
 The preceding backend-routing release `c7c5121` passed GitHub run `34042941703` and is public on nightly Pages, confirmed by release metadata. The observation browser is a later source change; its public release is recorded only after CI and deployment complete.
+
+## Deferred catalog download
+
+The static observation snapshot initially added its data to the entry script. The disclosure now imports that data only when opened. It shows a loading status, keeps a failed download local to the observation browser, and offers an explicit page reload for recovery. Once loaded, closing and reopening retains the search and expanded results.
+
+The production Pages entry script fell from 550,687 to 510,068 bytes, or from 166,648 to 159,911 bytes using the same local gzip measurement. The separate snapshot module is 41,460 bytes, 6,141 gzipped. These are build-artifact sizes, not measured network timings or frame-rate claims. The browser regression verifies no snapshot request before opening, the existing search/expansion flows, deliberately blocked module download and successful reload recovery in development and production. Data hashes and original observation values remain unchanged.

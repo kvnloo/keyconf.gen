@@ -1,10 +1,55 @@
 'use client';
 import { useState } from 'react';
 import { ArrowUpRight, Search } from 'lucide-react';
-import { storeListings, storeSource } from '../lib/store-observations';
 import { formatProductPrice } from '../lib/product-pricing';
+type StoreData = typeof import('../lib/store-observations');
+type LoadState =
+  | { kind: 'idle' | 'loading' | 'error' }
+  | { kind: 'ready'; data: StoreData };
 
 export default function StoreObservations() {
+  const [state, setState] = useState<LoadState>({ kind: 'idle' });
+  return (
+    <details
+      className="research-products store-observations"
+      onToggle={(event) => {
+        if (!event.currentTarget.open || state.kind !== 'idle') return;
+        setState({ kind: 'loading' });
+        void import('../lib/store-observations').then(
+          (data) => setState({ kind: 'ready', data }),
+          () => setState({ kind: 'error' }),
+        );
+      }}
+    >
+      <summary>
+        Browse{' '}
+        {state.kind === 'ready' ? state.data.storeListings.length + ' ' : ''}
+        observed switch options
+      </summary>
+      {state.kind === 'loading' && <output>Loading store observations…</output>}
+      {state.kind === 'error' && (
+        <div>
+          <p>
+            The store observations could not be loaded. Your build is unchanged.
+          </p>
+          <button
+            className="button secondary"
+            onClick={() => window.location.reload()}
+          >
+            Reload page
+          </button>
+        </div>
+      )}
+      {state.kind === 'ready' && <ObservedOptions data={state.data} />}
+    </details>
+  );
+}
+
+function ObservedOptions({
+  data: { storeListings, storeSource },
+}: {
+  data: StoreData;
+}) {
   const [query, setQuery] = useState('');
   const [limit, setLimit] = useState(12);
   const words = query.toLowerCase().trim().split(/\s+/);
@@ -14,8 +59,7 @@ export default function StoreObservations() {
     return words.every((word) => text.includes(word));
   });
   return (
-    <details className="research-products store-observations">
-      <summary>Browse {storeListings.length} observed switch options</summary>
+    <>
       <p className="muted">
         A partial snapshot of Divinikey&apos;s switch collection. Each row is a
         store variant, which may be a pack. Prices are for the named option, not
@@ -79,6 +123,6 @@ export default function StoreObservations() {
           Show more options
         </button>
       )}
-    </details>
+    </>
   );
 }
