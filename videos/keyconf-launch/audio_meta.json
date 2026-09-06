@@ -1,31 +1,28 @@
 {
   "bgm": {
-    "path": "assets/audio/original-score.wav",
-    "volume": 0.8,
-    "automation": "See el-bgm in index.html. Music ducks for the recorded audition."
+    "path": "assets/audio/cinematic-score.wav",
+    "volume": 1,
+    "automation": "See cinematic-score in index.html; score ducks during the recorded sound-library audition."
   },
   "voices": [],
   "sfx": [
     {
-      "frame": 1,
-      "file": "assets/audio/intro-keys.wav",
+      "file": "assets/audio/cinematic-keys.wav",
       "offset_s": 0,
-      "duration_s": 6,
+      "duration_s": 36,
       "volume": 1
     },
     {
-      "frame": 4,
-      "file": "assets/audio/audition.wav",
-      "offset_s": 1.6,
-      "duration_s": 4,
-      "volume": 1
-    },
-    {
-      "frame": 5,
-      "file": "assets/audio/typing-keys.wav",
+      "file": "assets/audio/cinematic-motion.wav",
       "offset_s": 0,
-      "duration_s": 6,
-      "volume": 1
+      "duration_s": 36,
+      "volume": 0.7
     }
-  ]
+  ],
+  "master": {
+    "file": "assets/audio/master.wav",
+    "integratedLUFS": -19.08,
+    "truePeakDbTP": -1.2
+  },
+  "cueFile": "assets/audio/cinematic-cues.json"
 }

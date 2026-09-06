@@ -1,0 +1,132 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "KeyconfFilmSans";
+      src: url("assets/fonts/Arial-compatible.ttf") format("truetype");
+      font-style: normal;
+      font-weight: 400 600;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "KeyconfFilmMono";
+      src: url("assets/fonts/JetBrainsMono-Regular.woff2") format("woff2");
+      font-style: normal;
+      font-weight: 400 500;
+      font-display: block;
+    }
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+      color: #E9EDE6;
+      font-family: "KeyconfFilmSans";
+      -webkit-font-smoothing: antialiased;
+    }
+    .act-one-wordmark {
+      position: absolute;
+      left: 100px;
+      top: 75px;
+      font-size: 34px;
+      font-weight: 500;
+      line-height: 1;
+      letter-spacing: -0.055em;
+    }
+    .act-one-invitation {
+      position: absolute;
+      left: 100px;
+      top: 170px;
+      width: 620px;
+      height: 320px;
+    }
+    .act-one-invitation-inner {
+      width: 620px;
+      height: 320px;
+    }
+    .act-one-mask {
+      overflow: hidden;
+      width: 620px;
+      height: 157px;
+    }
+    .act-one-line {
+      display: block;
+      margin: 0;
+      font-size: 146px;
+      font-weight: 500;
+      line-height: 1.02;
+      letter-spacing: -0.035em;
+      white-space: nowrap;
+    }
+    .act-one-colors {
+      position: absolute;
+      left: 100px;
+      top: 145px;
+      width: 780px;
+      height: 145px;
+    }
+    .act-one-colors-inner {
+      margin: 0;
+      font-size: 115px;
+      font-weight: 500;
+      line-height: 1.02;
+      letter-spacing: -0.035em;
+      white-space: nowrap;
+    }
+    .act-one-preset {
+      position: absolute;
+      left: 100px;
+      top: 825px;
+      width: 480px;
+      height: 60px;
+      font-size: 42px;
+      font-weight: 500;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+  </style>
+  <div data-hf-id="hf-xv2v" id="root" data-composition-id="act-one" data-duration="10" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-seog" id="act-one-clip-1" class="clip act-one-wordmark" data-start="0" data-duration="10" data-track-index="1">keyconf</div>
+    <div data-hf-id="hf-wr04" id="act-one-clip-2" class="clip act-one-invitation" data-start="3.15" data-duration="2.85" data-track-index="2">
+      <div data-hf-id="hf-2zcy" id="act-one-invitation-inner" class="act-one-invitation-inner">
+        <div data-hf-id="hf-h6yk" class="act-one-mask"><span data-hf-id="hf-oan2" id="act-one-make-it" class="act-one-line">Make it</span></div>
+        <div data-hf-id="hf-r2t0" class="act-one-mask"><span data-hf-id="hf-7nvp" id="act-one-yours" class="act-one-line">yours.</span></div>
+      </div>
+    </div>
+    <div data-hf-id="hf-g51a" id="act-one-clip-3" class="clip act-one-colors" data-start="6" data-duration="4" data-track-index="2">
+      <div data-hf-id="hf-q6fj" id="act-one-colors-inner" class="act-one-colors-inner">Your colors.</div>
+    </div>
+    <div data-hf-id="hf-acoi" id="act-one-clip-4" class="clip act-one-preset" data-start="6" data-duration="1.25" data-track-index="3">Forest Line</div>
+    <div data-hf-id="hf-f6r9" id="act-one-clip-5" class="clip act-one-preset" data-start="7.25" data-duration="1.4" data-track-index="3">Blush</div>
+    <div data-hf-id="hf-inav" id="act-one-clip-6" class="clip act-one-preset" data-start="8.65" data-duration="1.15" data-track-index="3">Midnight</div>
+    <div data-hf-id="hf-08qm" id="act-one-clip-7" class="clip act-one-preset" data-start="9.8" data-duration="0.2" data-track-index="3">Forest Line</div>
+  </div>
+  <script>
+    (() => {
+      const timeline = gsap.timeline({ paused: true });
+      gsap.set(["#act-one-make-it", "#act-one-yours"], { yPercent: 110 });
+      gsap.set("#act-one-colors-inner", { x: 180, opacity: 0 });
+      timeline.fromTo("#act-one-make-it", { yPercent: 110 }, {
+        yPercent: 0, duration: 0.7, ease: "power3.out", immediateRender: false
+      }, 3.8);
+      timeline.fromTo("#act-one-yours", { yPercent: 110 }, {
+        yPercent: 0, duration: 0.7, ease: "power3.out", immediateRender: false
+      }, 4.3);
+      timeline.fromTo("#act-one-invitation-inner", { x: 0 }, {
+        x: -180, duration: 0.34, ease: "power4.in", immediateRender: false
+      }, 5.66);
+      timeline.fromTo("#act-one-invitation-inner", { opacity: 1 }, {
+        opacity: 0, duration: 0.3, ease: "none", immediateRender: false
+      }, 5.68);
+      timeline.fromTo("#act-one-colors-inner", { x: 180 }, {
+        x: 0, duration: 0.34, ease: "power4.out", immediateRender: false
+      }, 6);
+      timeline.fromTo("#act-one-colors-inner", { opacity: 0.35 }, {
+        opacity: 1, duration: 0.2, ease: "power3.out", immediateRender: false
+      }, 6);
+      timeline.set("#act-one-invitation-inner", { opacity: 0 }, 6);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["act-one"] = timeline;
+    })();
+  </script>
+</template>

@@ -16,11 +16,11 @@ narration: no
 
 User asked for an S+ tier launch video for keyconf using Hyperframes, based on the product built so far. Prior instructions authorize autonomous execution and local dependency installation. The real app is at http://localhost:3000/; release URL is https://keyconf-studio.kvnloo.chatgpt.site/.
 
-Chosen direction: tactile editorial product film. Forest greens, ivory legends, dark desk, precise motion. Actual app captures and original app models are the visual source. No invented app functionality or claims of exact acoustic reproduction.
+Revised direction: a tactile product film with a moving 3D camera, macro keypresses, color waves, layer separation and enlarged real UI. Forest greens, ivory legends, dark desk, precise motion. Actual app captures and an enriched representative study based on the original app model are the visual source. No invented app functionality or claims of exact acoustic reproduction.
 
 ## Decisions
 
-Defaulted to a 36-second, 1920x1080 landscape master for the website and easy sharing. No narration lets real recorded keyboard transients lead the edit. Six scenes reveal the product and its working interactions. User request authorizes the final render; do not introduce another approval checkpoint.
+Defaulted to a 36-second, 1920x1080 landscape master for the website and easy sharing. No narration lets real recorded keyboard transients lead the edit. Three acts use one continuous keyboard scene to reveal the product and its working interactions. User request authorizes the final render; do not introduce another approval checkpoint.
 
 Internal concepts considered: tactile desk invitation; quiet personal portrait of a build; switch listening ritual; reverse teardown from one key to full desk; six-key musical composition. The tactile desk invitation best connects the requested immersive design to actual functionality. Borrow the listening ritual for the sound scene and key rhythm for the opening.
 
@@ -31,3 +31,7 @@ Capture the current app, including featured Forest Line, customization, exploded
 ## Customizations
 
 Real keyboard sound, sparse score, local editable Hyperframes compositions, scene contact sheet, H.264 MP4 with stereo AAC. Titles remain large and readable without audio. Show the release URL at the end. No synthetic testimonials, usage statistics, precision claims or implied official hardware partnership.
+
+## Revision after source and motion review
+
+The user rejected the first cut’s render quality and limited motion, and requested closer study of Hyperframes’ repository and shipped examples. See `docs/references/launch-craft.md` for the inspected sources, findings and their implementation. Revision two replaces still-image camera simulations with a continuous deterministic Three.js scene. Technical checks support, but do not replace, visual review of the rendered film.

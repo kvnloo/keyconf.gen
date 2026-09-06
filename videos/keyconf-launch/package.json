@@ -4,16 +4,20 @@
   "type": "module",
   "scripts": {
     "dev": "npx --yes hyperframes@0.8.29 preview",
-    "check": "hyperframes check --at 1,3,9,15,21,27,33 --timeout 30000",
+    "check": "hyperframes check --at 0,4.8,7.4,8.8,13.5,17,20.5,24.5,29,33,36 --timeout 120000",
     "render": "node scripts/render.mjs",
     "publish": "npx --yes hyperframes@0.8.29 publish",
-    "snapshot": "hyperframes snapshot --at 1,3,9,15,21,27,33 --output snapshots/review --describe false",
-    "master:audio": "python scripts/master-audio.py"
+    "snapshot": "hyperframes snapshot --at 0,4.8,7.4,8.8,13.5,17,20.5,24.5,29,33,36 --output snapshots/review --timeout 120000 --describe false",
+    "master:audio": "python scripts/master-audio.py",
+    "build:stage": "esbuild scripts/cinematic-stage.mjs --bundle --format=esm --outfile=assets/cinematic-stage.js --minify",
+    "score": "python scripts/score-cinematic.py",
+    "verify:render": "node scripts/verify-render.mjs"
   },
   "devDependencies": {
     "gsap": "3.13.0",
     "hyperframes": "0.8.29",
     "playwright": "1.62.1",
-    "three": "0.185.1"
+    "three": "0.185.1",
+    "esbuild": "0.25.12"
   }
 }

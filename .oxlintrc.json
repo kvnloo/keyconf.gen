@@ -32,7 +32,8 @@
     "next-env.d.ts",
     "public/monkeytype/**",
     "third_party/**",
-    "pages-dist/**"
+    "pages-dist/**",
+    "videos/keyconf-launch/assets/cinematic-stage.js"
   ],
   "rules": {
     "no-array-constructor": "error",

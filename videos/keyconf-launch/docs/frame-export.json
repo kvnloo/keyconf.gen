@@ -1,13 +1,16 @@
 {
-  "format": "png-sequence",
-  "count": 1080,
-  "first": "frame_000001.png",
-  "last": "frame_001080.png",
+  "ok": true,
+  "file": "renders/keyconf-launch.mp4",
+  "bytes": 14988012,
+  "frameCount": 1080,
   "width": 1920,
   "height": 1080,
   "fps": 30,
-  "duration": 36,
-  "allHeadersVerified": true,
-  "hyperframesVersion": "0.8.29",
-  "renderJobId": "27f6a854-6c5f-4463-b43b-b79e6d834e42"
+  "videoDuration": "36.000000",
+  "audioDuration": "36.000000",
+  "audioSampleRate": "48000",
+  "audioChannels": 2,
+  "integratedLUFS": -19.08,
+  "truePeakDbTP": -1.19,
+  "blackIntervals": 0
 }

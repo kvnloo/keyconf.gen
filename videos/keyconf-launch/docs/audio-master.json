@@ -1,31 +1,31 @@
 {
   "method": "Constant gain only. No compression, limiting, EQ, or pitch shift.",
-  "gainDb": 3.4200000000000017,
+  "gainDb": 7.55,
   "sampleRate": 48000,
   "channels": 2,
   "duration": 36,
   "sourceMeasurement": {
-    "input_i": "-21.42",
-    "input_tp": "-7.96",
-    "input_lra": "6.70",
-    "input_thresh": "-32.01",
-    "output_i": "-18.61",
-    "output_tp": "-2.46",
-    "output_lra": "6.60",
-    "output_thresh": "-29.03",
+    "input_i": "-26.62",
+    "input_tp": "-8.75",
+    "input_lra": "6.10",
+    "input_thresh": "-36.99",
+    "output_i": "-17.97",
+    "output_tp": "-1.20",
+    "output_lra": "6.40",
+    "output_thresh": "-28.11",
     "normalization_type": "dynamic",
-    "target_offset": "0.61"
+    "target_offset": "-0.03"
   },
   "masterMeasurement": {
-    "input_i": "-18.00",
-    "input_tp": "-4.54",
-    "input_lra": "6.70",
-    "input_thresh": "-28.59",
-    "output_i": "-18.61",
-    "output_tp": "-2.46",
-    "output_lra": "6.60",
-    "output_thresh": "-29.02",
+    "input_i": "-19.08",
+    "input_tp": "-1.20",
+    "input_lra": "6.10",
+    "input_thresh": "-29.44",
+    "output_i": "-17.97",
+    "output_tp": "-1.20",
+    "output_lra": "6.40",
+    "output_thresh": "-28.11",
     "normalization_type": "dynamic",
-    "target_offset": "0.61"
+    "target_offset": "-0.03"
   }
 }

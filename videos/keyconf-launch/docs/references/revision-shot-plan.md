@@ -1,13 +1,3 @@
----
-format: 1920x1080
-duration: 36s
-message: Make a keyboard that feels like you.
-arc: Touch → Identity → Construction → Hear → Play → Start
-audience: Keyboard enthusiasts and first-time builders
-mode: autonomous
-music: original 120 BPM score with recorded keyboard transients
----
-
 # Revised 36-second cut
 
 A persistent deterministic Three.js stage carries the product. Three overlay compositions carry the short copy and captured proof. They are independently authored per Hyperframes' frame-worker workflow, then assembled and verified by the root agent.

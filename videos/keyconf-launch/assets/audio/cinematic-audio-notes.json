@@ -1,0 +1,8 @@
+{
+  "score": "Original 120 BPM composition, deterministic seed72065; no external music.",
+  "keypressSource": "Gateron Ink Black, tplai/kbsim, MIT. Decoded source samples, no pitch or EQ changes.",
+  "timing": "cinematic-cues.json is shared with Three.js. Typing times come from the actual captured test. Releases use an 85ms reconstruction.",
+  "sampleRate": 48000,
+  "seconds": 36,
+  "keysPeak": 0.32181877981505363
+}
