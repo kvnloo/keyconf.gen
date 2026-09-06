@@ -25,3 +25,7 @@ This follows GitHub's [custom Pages workflow](https://docs.github.com/en/pages/g
 ## Overnight continuation
 
 The current local task has a 30-minute heartbeat through 08:00 America/Chicago on September 6, 2026. It preserves this task's model settings and exact product goal. It resumes concrete unfinished work, runs one graphics browser at a time, records evidence and publishes only the nightly preview after successful checks. The computer and Codex must remain running for local work. The morning report should include actual published commits, checks and unresolved work; a scheduled wake-up is not proof that a release completed.
+
+Dev and nightly autosaves have independent keys for keyboards, imported legacy parts, recovery documents and control decks. Main keeps the original save keys, so existing users retain their builds after the root redirect. Share links and exported files can deliberately carry a build between previews. These paths share a browser origin, so this is save isolation, not a security boundary; Monkeytype's own guest preferences may remain shared.
+
+During first-time setup, a preview can finish before main. Its tested files are retained in the generated branch, but the combined site is not deployed until a main build exists. This prevents replacing the original public link with a redirect to a missing page.

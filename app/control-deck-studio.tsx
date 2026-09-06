@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import KeyboardScene, { type SceneOptions } from './keyboard-scene';
 import { useHistoryShortcuts } from './use-history-shortcuts';
+import { previewStorageKey } from '../lib/preview-storage';
 import {
   controlDecks,
   deckLighting,
@@ -79,7 +80,7 @@ export default function ControlDeckStudio({
   restoreLocal: boolean;
   onChange: (build: DeckBuild) => void;
 }) {
-  const storageKey = 'keyconf-deck-v1-' + initial.device;
+  const storageKey = previewStorageKey('keyconf-deck-v1-' + initial.device);
   const [restoration] = useState(() => {
     if (restoreLocal && typeof window !== 'undefined') {
       try {

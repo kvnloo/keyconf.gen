@@ -59,6 +59,9 @@ jobs:
             sleep 1
           done
           curl --fail --silent "$KEYCONF_BASE_URL" > /dev/null
+          if [[ "$CHANNEL" != main ]]; then
+            node --experimental-strip-types scripts/verify_preview_storage.mjs
+          fi
           export KEYCONF_HEADED=1
           export KEYCONF_SOFTWARE=1
           xvfb-run -a npm run verify:typing
@@ -107,6 +110,7 @@ jobs:
           name: pages-candidate
           path: ${{ runner.temp }}/pages-candidate
       - name: Preserve other previews and update only this branch
+        id: assembly
         env:
           CHANNEL: ${{ github.ref_name }}
           SOURCE_SHA: ${{ github.sha }}
@@ -133,9 +137,16 @@ jobs:
           fi
           mkdir "$RUNNER_TEMP/pages-site"
           rsync -a --exclude=.git "$pages_tree/" "$RUNNER_TEMP/pages-site/"
+          if [[ -f "$pages_tree/main/index.html" ]]; then
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/upload-pages-artifact@v3
+        if: steps.assembly.outputs.ready == 'true'
         with:
           path: ${{ runner.temp }}/pages-site
       - name: Deploy all three previews to GitHub Pages
+        if: steps.assembly.outputs.ready == 'true'
         id: deployment
         uses: actions/deploy-pages@v4

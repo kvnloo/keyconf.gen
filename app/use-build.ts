@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { useHistoryShortcuts } from './use-history-shortcuts';
+import { previewStorageKey } from '../lib/preview-storage';
 import {
   buildReducer,
   decodeBuild,
@@ -13,11 +14,11 @@ import {
   type BuildHistory,
 } from '../lib/build';
 
-const storageKey = 'keyconf-build-v1';
 export function useBuild(
   notify: (message: string) => void,
   { shortcutsEnabled = true }: { shortcutsEnabled?: boolean } = {},
 ) {
+  const storageKey = previewStorageKey('keyconf-build-v1');
   const [{ history, ready }, dispatch] = useReducer(
     (
       state: { history: BuildHistory; ready: boolean },
@@ -51,7 +52,7 @@ export function useBuild(
         }
       }
     },
-    [],
+    [storageKey],
   );
 
   useEffect(() => {
@@ -64,13 +65,19 @@ export function useBuild(
         : {
             ...defaultBuild,
             customParts: parseCustomParts(
-              JSON.parse(localStorage.getItem('keyconf-parts') || '[]'),
+              JSON.parse(
+                localStorage.getItem(previewStorageKey('keyconf-parts')) ||
+                  '[]',
+              ),
             ),
           };
     } catch {
       if (raw) {
         try {
-          localStorage.setItem('keyconf-build-recovery', raw);
+          localStorage.setItem(
+            previewStorageKey('keyconf-build-recovery'),
+            raw,
+          );
         } catch {
           canPersist.current = false;
         }
@@ -101,7 +108,7 @@ export function useBuild(
     restoreLink();
     window.addEventListener('hashchange', restoreLink);
     return () => window.removeEventListener('hashchange', restoreLink);
-  }, [notify]);
+  }, [notify, storageKey]);
 
   useEffect(() => {
     if (!ready) return;
@@ -124,7 +131,7 @@ export function useBuild(
       clearTimeout(timer);
       window.removeEventListener('pagehide', save);
     };
-  }, [history.present, ready]);
+  }, [history.present, ready, storageKey]);
 
   const edit = useCallback(
     (patch: Partial<Build>, group?: string) =>
