@@ -9,3 +9,5 @@ Publish the validated nightly source and Worker archive to the nightly Sites pro
 The backend supports collection pagination and streamed request/response bounds. It does not provide a hosted catalog collector, job queue, global rate limit, or DNS-rebinding-safe egress policy. Imported options remain observations for review, not approved compatibility claims.
 
 Verification before publication: 72 tests, strict type checking, lint and formatting pass. Deployment and live-store results are recorded in the product progress log after execution.
+
+Version 1 is live from `b473f150d4484c108c2ce488cbe7e6e0ec14f309`. The live check retrieved two distinct Divinikey collection pages, verified Pages-origin CORS, HTTP 413 request bounds and HTTP 403 origin rejection. This does not establish a global rate limit or complete network isolation.

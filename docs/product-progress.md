@@ -265,3 +265,13 @@ Final audit checkpoint: GitHub run `34041169225` passed checks and deployment fo
 ## Import response cleanup
 
 The next backend review found response streams left open when a store returned an HTTP error, redirected, or declared an oversized page. The importer now cancels these bodies before rejecting or following a redirect. Four tests using real Web Streams failed before the change and pass afterward, including cancellation before the destination request and zero body reads for rejected responses. The full suite passes 70 tests; type checking and the server build pass. This is resource cleanup, not a DNS-rebinding defense or a production rate limit. It remains nightly backend source pending deployment; public import behavior is unchanged.
+
+## Separate nightly backend published
+
+Sites version 1 at https://keyconf-nightly.kvnloo.chatgpt.site deployed source `b473f150d4484c108c2ce488cbe7e6e0ec14f309` successfully at 15:37:25 UTC on September 6. Deployment `appgdep_6a9d887ebe6481918c24311cf59e7210` is succeeded. The initial source upload took about fourteen minutes; it completed without being restarted. [Nightly backend ownership](nightly-backend.md) documents the separate project and branch-specific manifest.
+
+Live HTTP verification at 15:37:37 UTC returned 12 and 11 Divinikey collection variants on successive pages with no overlap. Pages-origin preflight returned 204, allowed-origin headers were present on both responses, oversized UTF-8 requests returned 413 and an unrelated origin returned 403. These are actual hosted API responses. Collection pagination and response/request bounds are now active on the nightly backend; main and dev still use the stable backend. The connected Pages client awaits its own GitHub publication checkpoint.
+
+The source change passes 72 tests, strict types, lint, formatting, both builds and the local 320px import/retry/export journey. The prior response-cleanup GitHub run `34041815913` completed successfully, including deployment. CI for the new routing is recorded separately after execution.
+
+During the upload, a new local run `divinikey-switches-2026-09-06` retained 128 distinct variant URL/SKU pairs across 21 brands and twelve pages, observed from 15:34:05 to 15:34:19 UTC. More pagination remains. This was a fresh run, not a resume: the original `divinikey-switches-20260906-nightly` run and its 35 observations remain intact. SQLite integrity and foreign-key checks pass. The new evidence export is `work/divinikey-observations-expanded.json`; these observations have not been published as reviewed builder parts.
