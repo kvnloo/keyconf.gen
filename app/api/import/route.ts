@@ -43,7 +43,20 @@ export async function POST(request: Request) {
       data.url.length > 2048
     )
       throw new Error('Enter a product or store URL.');
-    return Response.json(await importWebsite(data.url), { headers });
+    const result = await importWebsite(data.url);
+    return Response.json(
+      {
+        ...result,
+        products: result.products.map((product) => ({
+          ...product,
+          // Older open tabs require these fields. Only exact prices can use their old format.
+          price: product.pricing.kind === 'exact' ? product.pricing.amount : '',
+          currency:
+            product.pricing.kind === 'exact' ? product.pricing.currency : '',
+        })),
+      },
+      { headers },
+    );
   } catch (e) {
     return Response.json(
       {

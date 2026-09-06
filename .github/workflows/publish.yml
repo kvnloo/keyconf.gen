@@ -38,6 +38,7 @@ jobs:
             exit 1
           fi
           npm run verify:browser
+          npm run verify:imports
           npm run verify:interface
           npm run verify:featured
           npm run verify:decks

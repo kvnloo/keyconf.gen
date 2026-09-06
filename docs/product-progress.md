@@ -167,3 +167,17 @@ Published commit `052506917ca4ecaefba57695bfc99cc278b180a4` to the public Sites 
 Created the 36-second launch film in [videos/keyconf-launch](../videos/keyconf-launch/README.md). It combines original Blender shots of the app model, real preset and inspector captures, the recorded Ink Black audition, and active Monkeytype footage from the public site. Hyperframes and its official production skills are installed locally. The portable project includes local assets, licensed sample attribution, a 24-bit audio master, and scripts to edit and render it again.
 
 The final MP4 contains all 1,080 frames at 1920×1080/30 fps with 36-second stereo audio. Its measured loudness is −17.9 LUFS with −4.5 dBTP; no limiter or compressor was used. Frame, runtime, layout, contrast, final decoding, and visual checks are recorded in the film's verification documentation. The launch film is complete. The broader product goal remains active, including catalog depth, ingestion coverage, and the limits of unmeasured keyboard acoustics.
+
+### Repository-based launch film revision
+
+Replaced the first cut with three continuous Three.js acts after studying Hyperframes' shipped launch sources, its documented 3D adapter and motion recipes, and Ordinary Folk's Spline, Webflow and Gemini production accounts. [The research and decision record](../videos/keyconf-launch/docs/references/launch-craft.md) explains the source-quality failures, camera/geometry changes, real-interface crops and visual review corrections. This supersedes the film description and audio measurements above.
+
+The revised 36-second MP4 contains 1,080 frames at 1920×1080/30 fps, 48 kHz stereo AAC, explicit Rec.709 color metadata, measured −19.08 LUFS and −1.19 dBTP. Final decoding and frame checks found no black intervals. Commit `9e0a1e5cc816beaab17ff4e2464469e8fd0c6c4b` is public; [Actions run 34005821024](https://github.com/kvnloo/keyconf.gen/actions/runs/34005821024) passed and deployed Pages. The film remains an original representative study, not manufacturer CAD or measured build acoustics.
+
+### Import price and variant accuracy
+
+Fixed aggregate offers being presented as exact prices, mixed-currency/stock ambiguity, lost ProductGroup identities and first-variant-only Shopify catalog results. The preview and saved part details now distinguish exact, starting, range and unverified prices. Variant names, SKUs and purchase links stay distinct; compatibility remains unknown. The API retains exact-only legacy price fields for already-open browser tabs.
+
+[Import verification](verification/import-fidelity.md) records five failing-before cases, six passing import tests, the 38-test full suite, passing type/lint checks and both production builds, and a passing 320 px import-to-download/share journey into a fresh desktop browser. The adjacent sharing/audio/recovery browser suite also passes. Live local-server requests returned both KBDfans plate options and 80 Divinikey options; oversized KBDfans/NovelKeys homepages failed explicitly. The CI workflow now runs the import journey. Publication outcomes follow the release checks.
+
+The broader goal remains active. Next ingestion work is collection-specific previews and pagination, followed by durable source observations and further catalog evidence. The current generic preview is not universal ingestion.

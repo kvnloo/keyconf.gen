@@ -27,6 +27,8 @@ npm run build
 
 With the local server running, `npm run verify:browser` checks shared links, imported parts, downloaded-file restore, failed recording recovery, audio cancellation and storage denial in fresh Chromium contexts. Install the browser once with `npx playwright install chromium`. These checks deliberately disable WebGL to exercise the fallback; they do not measure 3D performance or replace visual review.
 
+`npm run verify:imports` checks variant selection and price ranges at 320 px, then verifies downloaded and shared builds in a fresh desktop browser. The import unit tests cover referenced ProductGroup variants, conflicting offers, malformed prices and Shopify variant identities.
+
 ## Deployment
 
 GitHub Actions checks types, lint, compatibility/import parsing/assets and the browser flows above, then deploys the browser app to [GitHub Pages](https://kvnloo.github.io/keyconf.gen/) whenever `main` changes. PRs run checks without deploying. Public assets include the original `.blend` source.
@@ -49,4 +51,4 @@ The [keyboard audio research](docs/audio-research.md) compares sound libraries, 
 
 `python3 scripts/import_sound_references.py` refreshes the creator-attributed video index from Click and Thock's public switch pages. `python3 scripts/import_sound_packs.py` reproducibly fetches seven packs from a pinned upstream revision after checking their audio license notices. The latter records SHA-256 hashes checked by the test suite. These are dedicated adapters, not universal audio extractors.
 
-The URL importer reads at most 2 MB per response and follows at most three redirects, rejecting non-public destinations. Shopify catalog previews read up to 40 products and one variant per product. Product-URL previews read up to 80 variants and omit prices when currency is not established. This is not a complete catalog crawler. Production ingestion needs queued adapters, retries, rate controls, versioned observations, and an egress policy that prevents DNS rebinding.
+The URL importer reads at most 2 MB per response and follows at most three redirects, rejecting non-public destinations. Shopify catalog previews inspect the first 40 products and up to 20 variants per product, returning at most 80 options. This fallback is storewide, including when opened from a collection URL, and reports additional products or variants. Product-URL previews read up to 80 variants and omit prices when currency is not established. Structured-data previews retain exact prices, ranges, starting prices and unknown values separately; conflicting currencies remain unverified. This is not a complete catalog crawler or a full JSON-LD processor. Production ingestion needs queued adapters, retries, rate controls, versioned observations, and an egress policy that prevents DNS rebinding.

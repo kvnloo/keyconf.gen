@@ -1,10 +1,16 @@
+import {
+  exactPrice,
+  isProductPrice,
+  offerPricing,
+  type ProductPrice,
+} from './product-pricing.ts';
+
 export type ImportedProduct = {
   name: string;
   brand: string;
   url: string;
   sku: string;
-  price: string;
-  currency: string;
+  pricing: ProductPrice;
   availability: string;
 };
 export type ImportResult = {
@@ -20,81 +26,156 @@ function record(x: unknown): x is Record<string, unknown> {
 function string(x: unknown) {
   return typeof x === 'string' ? x : typeof x === 'number' ? String(x) : '';
 }
+function list(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : value === undefined ? [] : [value];
+}
+function hasType(value: Record<string, unknown>, type: string) {
+  return list(value['@type']).some(
+    (t) =>
+      t === type ||
+      t === 'schema:' + type ||
+      t === 'https://schema.org/' + type ||
+      t === 'http://schema.org/' + type,
+  );
+}
 function safeLink(value: unknown, base: string) {
   try {
     const u = new URL(string(value) || base, base);
-    return u.protocol === 'https:' ? u.href : base;
+    return u.protocol === 'https:' && !u.username && !u.password
+      ? u.href
+      : base;
   } catch {
     return base;
   }
+}
+export function isImportResult(x: unknown): x is ImportResult {
+  return (
+    record(x) &&
+    Array.isArray(x.products) &&
+    x.products.length <= 80 &&
+    x.products.every(
+      (p) =>
+        record(p) &&
+        ['name', 'brand', 'url', 'sku', 'availability'].every(
+          (k) => typeof p[k] === 'string',
+        ) &&
+        isProductPrice(p.pricing),
+    ) &&
+    ['method', 'source', 'observedAt', 'coverage'].every(
+      (k) => typeof x[k] === 'string',
+    )
+  );
 }
 export function parseStructuredProducts(
   html: string,
   source: string,
 ): ImportedProduct[] {
-  const products: ImportedProduct[] = [];
-  const visited = new Set<string>();
-  function walk(value: unknown, depth = 0) {
-    if (depth > 12 || products.length >= 80) return;
+  const nodes: Record<string, unknown>[] = [];
+  const references = new Map<string, Record<string, unknown>>();
+  function nodeId(value: unknown) {
+    const id = string(value);
+    if (!id || id.startsWith('_:')) return id;
+    try {
+      return new URL(id, source).href;
+    } catch {
+      return id;
+    }
+  }
+  function collect(value: unknown, depth = 0) {
+    if (depth > 12 || nodes.length >= 10000) return;
     if (Array.isArray(value)) {
-      value.forEach((v) => walk(v, depth + 1));
+      value.forEach((v) => collect(v, depth + 1));
       return;
     }
     if (!record(value)) return;
-    const type = value['@type'];
-    if (
-      type === 'Product' ||
-      (Array.isArray(type) && type.includes('Product'))
-    ) {
-      const name = string(value.name).trim();
-      if (name) {
-        const offers = Array.isArray(value.offers)
-          ? value.offers
-          : [value.offers];
-        const offer = offers.find(record);
-        const brand = record(value.brand)
-          ? string(value.brand.name)
-          : string(value.brand);
-        const url = safeLink(value.url ?? offer?.url, source);
-        const sku = string(value.sku);
-        const key = sku + '|' + url + '|' + name;
-        if (!visited.has(key)) {
-          visited.add(key);
-          products.push({
-            name: name.slice(0, 300),
-            brand: brand.slice(0, 150),
-            url,
-            sku,
-            price: string(offer?.price ?? offer?.lowPrice),
-            currency: string(offer?.priceCurrency),
-            availability: string(offer?.availability).split('/').pop() ?? '',
-          });
-        }
-      }
-    }
-    for (const [key, v] of Object.entries(value))
-      if (
-        [
-          '@graph',
-          'mainEntity',
-          'itemListElement',
-          'item',
-          'hasVariant',
-          'isVariantOf',
-          'subjectOf',
-        ].includes(key)
-      )
-        walk(v, depth + 1);
+    nodes.push(value);
+    const id = nodeId(value['@id']);
+    if (id) references.set(id, { ...references.get(id), ...value });
+    for (const [key, child] of Object.entries(value))
+      if (key !== '@context') collect(child, depth + 1);
   }
   const script = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
   let match: RegExpExecArray | null;
   while ((match = script.exec(html)) !== null) {
     if (!/type\s*=\s*["']application\/ld\+json["']/i.test(match[1])) continue;
     try {
-      walk(JSON.parse(match[2]));
+      collect(JSON.parse(match[2]));
     } catch {
       continue;
     }
+  }
+  function resolve(value: unknown): Record<string, unknown> | undefined {
+    if (!record(value)) return undefined;
+    const target = references.get(nodeId(value['@id']));
+    return target ? { ...target, ...value } : value;
+  }
+  const parents = new Map<Record<string, unknown>, Record<string, unknown>>();
+  const parentIds = new Map<string, Record<string, unknown>>();
+  for (const node of nodes) {
+    if (!hasType(node, 'ProductGroup')) continue;
+    for (const variant of list(node.hasVariant)) {
+      if (!record(variant)) continue;
+      parents.set(variant, node);
+      const id = nodeId(variant['@id']);
+      if (id) parentIds.set(id, node);
+    }
+  }
+  const products: ImportedProduct[] = [],
+    visited = new Set<string>();
+  for (const raw of nodes) {
+    if (products.length >= 80) break;
+    const value = resolve(raw);
+    if (
+      !value ||
+      (!hasType(value, 'Product') && !hasType(value, 'ProductGroup'))
+    )
+      continue;
+    if (hasType(value, 'ProductGroup') && list(value.hasVariant).length)
+      continue;
+    const parent =
+      parents.get(raw) ??
+      parentIds.get(nodeId(value['@id'])) ??
+      resolve(value.isVariantOf);
+    const variation = [value.color, value.size, value.material]
+      .map(string)
+      .filter(Boolean)
+      .join(' · ');
+    const name =
+      string(value.name).trim() ||
+      [string(parent?.name).trim(), variation || string(value.sku)]
+        .filter(Boolean)
+        .join(' · ');
+    if (!name) continue;
+    const brandValue = value.brand ?? parent?.brand;
+    const brand = record(brandValue)
+      ? string(resolve(brandValue)?.name)
+      : string(brandValue);
+    const offers = list(value.offers).map(resolve);
+    const urls = new Set(offers.map((o) => string(o?.url)).filter(Boolean));
+    const offerUrl = urls.size === 1 ? [...urls][0] : undefined;
+    const url = safeLink(value.url ?? offerUrl ?? parent?.url, source);
+    const sku = string(value.sku);
+    const key = sku + '|' + url + '|' + name;
+    if (visited.has(key)) continue;
+    visited.add(key);
+    const stocks = offers.map(
+      (o) => string(o?.availability).split('/').pop() ?? '',
+    );
+    const known = new Set(stocks.filter(Boolean));
+    const availability =
+      known.size > 1
+        ? 'Varies by offer'
+        : stocks.some((s) => !s)
+          ? ''
+          : (stocks[0] ?? '');
+    products.push({
+      name: name.slice(0, 300),
+      brand: brand.slice(0, 150),
+      url,
+      sku,
+      pricing: offerPricing(offers),
+      availability,
+    });
   }
   return products;
 }
@@ -244,7 +325,7 @@ export async function importWebsite(input: string): Promise<ImportResult> {
         const products = data.variants
           .filter(record)
           .slice(0, 80)
-          .map((variant) => {
+          .map((variant): ImportedProduct => {
             const url = new URL(u);
             if (
               typeof variant.id === 'number' ||
@@ -262,8 +343,7 @@ export async function importWebsite(input: string): Promise<ImportResult> {
               brand: string(data.vendor),
               url: url.href,
               sku: string(variant.sku),
-              price: '',
-              currency: '',
+              pricing: { kind: 'unknown' },
               availability:
                 variant.available === true
                   ? 'Available'
@@ -296,11 +376,11 @@ export async function importWebsite(input: string): Promise<ImportResult> {
       observedAt: new Date().toISOString(),
       method: 'Product structured data',
       coverage:
-        'Products found on this page only. Prices and availability are snapshots; compatibility needs review.',
+        'Up to 80 product options found on this page. Prices and availability are snapshots; compatibility needs review.',
     };
   if (/cdn\.shopify\.com|Shopify\.shop/i.test(html)) {
     const query =
-      '{ products(first: 40) { nodes { title vendor onlineStoreUrl variants(first: 1) { nodes { sku price { amount currencyCode } availableForSale } } } pageInfo { hasNextPage } } }';
+      '{ products(first: 40) { nodes { title vendor onlineStoreUrl variants(first: 20) { nodes { id title sku price { amount currencyCode } availableForSale } pageInfo { hasNextPage } } } pageInfo { hasNextPage } } }';
     const r = await fetchPublic(new URL('/api/2026-07/graphql.json', u), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -314,29 +394,52 @@ export async function importWebsite(input: string): Promise<ImportResult> {
       Array.isArray(json.data.products.nodes)
     ) {
       const found: ImportedProduct[] = [];
+      let moreVariants = false;
       for (const item of json.data.products.nodes) {
         if (!record(item) || typeof item.title !== 'string') continue;
-        const variants =
-          record(item.variants) && Array.isArray(item.variants.nodes)
-            ? item.variants.nodes
-            : [];
-        const v = variants.find(record);
-        const price = record(v?.price) ? v.price : {};
-        found.push({
-          name: item.title,
-          brand: string(item.vendor),
-          url: safeLink(item.onlineStoreUrl, u.href),
-          sku: string(v?.sku),
-          price: string(price.amount),
-          currency: string(price.currencyCode),
-          availability:
-            v?.availableForSale === true
-              ? 'Available'
-              : v?.availableForSale === false
-                ? 'Unavailable'
-                : '',
-        });
+        const connection = record(item.variants) ? item.variants : {};
+        const variants = Array.isArray(connection.nodes)
+          ? connection.nodes
+          : [];
+        moreVariants ||=
+          record(connection.pageInfo) &&
+          connection.pageInfo.hasNextPage === true;
+        for (const variant of variants) {
+          if (!record(variant)) continue;
+          if (found.length >= 80) {
+            moreVariants = true;
+            break;
+          }
+          const title = string(variant.title);
+          const url = new URL(safeLink(item.onlineStoreUrl, u.href));
+          const variantId = string(variant.id).match(/(?:^|\/)(\d+)$/)?.[1];
+          if (
+            variantId &&
+            item.onlineStoreUrl &&
+            /\/products\/[^/]+\/?$/.test(url.pathname)
+          )
+            url.searchParams.set('variant', variantId);
+          const price = record(variant.price) ? variant.price : {};
+          found.push({
+            name:
+              item.title +
+              (title && title !== 'Default Title' ? ' · ' + title : ''),
+            brand: string(item.vendor),
+            url: url.href,
+            sku: string(variant.sku),
+            pricing: exactPrice(price.amount, price.currencyCode),
+            availability:
+              variant.availableForSale === true
+                ? 'Available'
+                : variant.availableForSale === false
+                  ? 'Unavailable'
+                  : '',
+          });
+        }
       }
+      const moreProducts =
+        record(json.data.products.pageInfo) &&
+        json.data.products.pageInfo.hasNextPage === true;
       if (found.length)
         return {
           products: found,
@@ -344,10 +447,16 @@ export async function importWebsite(input: string): Promise<ImportResult> {
           observedAt: new Date().toISOString(),
           method: 'Shopify Storefront API',
           coverage:
-            'Up to 40 products, first variant of each. This is a catalog preview, not a complete variant import.',
+            'Storewide preview of up to 80 options across the first 40 products, with up to 20 variants per product. ' +
+            (moreProducts ? 'The store has more products. ' : '') +
+            (moreVariants
+              ? 'More variants are available beyond this preview. '
+              : '') +
+            'Prices and stock are snapshots; compatibility needs review.',
         };
     }
   }
+
   throw new Error(
     'No readable product data found. This site may need a dedicated importer. Try a specific product URL, or paste its JSON-LD below.',
   );

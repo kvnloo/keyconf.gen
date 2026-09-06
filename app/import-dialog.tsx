@@ -3,37 +3,14 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Check, Globe, LoaderCircle } from 'lucide-react';
 import { categories, type Part, type Category } from '../lib/catalog';
 import StudioSelect from './studio-select';
+import { formatProductPrice } from '../lib/product-pricing';
 import {
   parseStructuredProducts,
   publicUrl,
+  isImportResult,
   type ImportResult,
   type ImportedProduct,
 } from '../lib/import-products';
-function isResult(x: unknown): x is ImportResult {
-  return (
-    typeof x === 'object' &&
-    x !== null &&
-    'products' in x &&
-    Array.isArray(x.products) &&
-    x.products.every(
-      (p: unknown) =>
-        typeof p === 'object' &&
-        p !== null &&
-        [
-          'name',
-          'brand',
-          'url',
-          'sku',
-          'price',
-          'currency',
-          'availability',
-        ].every((k) => k in p && typeof Reflect.get(p, k) === 'string'),
-    ) &&
-    ['method', 'source', 'observedAt', 'coverage'].every(
-      (k) => k in x && typeof Reflect.get(x, k) === 'string',
-    )
-  );
-}
 export default function ImportDialog({
   onAdd,
 }: {
@@ -98,7 +75,8 @@ export default function ImportDialog({
               : 'The store could not be read.',
           );
         }
-        if (!isResult(data)) throw new Error('Unexpected importer response.');
+        if (!isImportResult(data))
+          throw new Error('Unexpected importer response.');
         setResult(data);
         setSelected(new Set(data.products.map((_, i) => i)));
       }
@@ -122,9 +100,7 @@ export default function ImportDialog({
               category,
               detail: [
                 p.sku,
-                p.price && p.currency
-                  ? p.currency + ' ' + p.price
-                  : 'Price not verified',
+                formatProductPrice(p.pricing),
                 p.availability,
                 'Observed ' + result.observedAt.slice(0, 10),
               ]
@@ -262,7 +238,7 @@ export default function ImportDialog({
                   </small>
                 </span>
                 <span>
-                  {p.currency} {p.price || '—'}
+                  {formatProductPrice(p.pricing)}
                   <small>{p.availability || 'Stock unverified'}</small>
                 </span>
               </label>

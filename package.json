@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "build:pages": "vite build --config vite.pages.config.ts",
     "verify:browser": "node scripts/verify_browser.mjs",
+    "verify:imports": "node scripts/verify_imports.mjs",
     "verify:interface": "node scripts/verify_interface.mjs",
     "verify:decks": "node scripts/verify_decks.mjs",
     "verify:typing": "node scripts/verify_typing.mjs",

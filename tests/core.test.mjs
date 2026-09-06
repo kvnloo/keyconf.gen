@@ -72,7 +72,11 @@ test('ProductGroup variant data retains identifiers and offer currencies', () =>
     '<script type="application/ld+json">' + JSON.stringify(data) + '</script>';
   const result = parseStructuredProducts(html, 'https://example.com/shop');
   assert.equal(result.length, 2);
-  assert.equal(result[0].currency, 'USD');
+  assert.deepEqual(result[0].pricing, {
+    kind: 'exact',
+    amount: '99',
+    currency: 'USD',
+  });
   assert.equal(result[0].url, 'https://example.com/products/green');
   assert.equal(result[1].sku, 'K2');
 });
