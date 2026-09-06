@@ -134,7 +134,7 @@ try {
       .click();
     const sharedUrl = await page.evaluate(() => navigator.clipboard.readText());
     assert.equal(new URL(sharedUrl).origin, new URL(baseUrl).origin);
-    await page.getByRole('link', { name: 'keyconf', exact: true }).click();
+    await page.getByRole('link', { name: /^keyconf\b/ }).click();
     assert.deepEqual(
       await keyboardState(),
       expectedKeyboard,

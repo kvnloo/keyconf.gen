@@ -38,7 +38,7 @@ try {
   const original = await snapshot();
   assert.equal(original.audio.volume, 1.8);
 
-  await link('keyconf beta').click();
+  await link(/^keyconf\b/).click();
   await page.setViewportSize({ width: 320, height: 900 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const more = button('More builds');
@@ -94,7 +94,7 @@ try {
     'Browsing and preview shortcuts must preserve the working build',
   );
 
-  await link('keyconf beta').click();
+  await link(/^keyconf\b/).click();
   await button('Preview Blush').click();
   assert.equal(
     await button('Customize Blush').count(),

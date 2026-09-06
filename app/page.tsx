@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 import ControlDeckStudio from './control-deck-studio';
+import PreviewLabel from './preview-label';
 import {
   decodeDeck,
   newDeck,
@@ -682,7 +683,7 @@ function KeyboardStudio({
       </a>
       <header className="header studio-header">
         <a className="brand" href="#home">
-          keyconf <span>beta</span>
+          keyconf <PreviewLabel fallback="beta" />
         </a>
         <nav aria-label="Studio pages">
           <a

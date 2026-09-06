@@ -13,6 +13,7 @@ import {
 import KeyboardScene, { type SceneOptions } from './keyboard-scene';
 import { useHistoryShortcuts } from './use-history-shortcuts';
 import { previewStorageKey } from '../lib/preview-storage';
+import PreviewLabel from './preview-label';
 import {
   controlDecks,
   deckLighting,
@@ -211,7 +212,10 @@ export default function ControlDeckStudio({
       </a>
       <header className="deck-header">
         <a className="deck-brand" href="#studio">
-          <ArrowLeft size={16} /> keyconf
+          <ArrowLeft size={16} />
+          <span className="deck-brand-copy">
+            keyconf <PreviewLabel />
+          </span>
         </a>
         <nav aria-label="Control deck presets">
           <a

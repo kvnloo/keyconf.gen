@@ -29,6 +29,31 @@ try {
   const page = await context.newPage();
   page.setDefaultTimeout(15000);
   await page.goto(new URL('#studio', base).href);
+  const checkPreviewLabel = async () => {
+    for (const width of [320, 390, 768, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      const label = page.locator('.preview-label');
+      assert.equal(
+        (await label.textContent())?.trim(),
+        channel === 'nightly' ? 'Nightly' : 'Dev',
+      );
+      assert.ok(
+        await label.isVisible(),
+        `Preview label remains visible at ${width}px`,
+      );
+      const bounds = await label.boundingBox();
+      assert.ok(bounds && bounds.x >= 0 && bounds.x + bounds.width <= width);
+      const dimensions = await page.evaluate(() => ({
+        scroll: document.documentElement.scrollWidth,
+        client: document.documentElement.clientWidth,
+      }));
+      assert.ok(
+        dimensions.scroll <= dimensions.client,
+        `Preview has no horizontal overflow at ${width}px`,
+      );
+    }
+  };
+  await checkPreviewLabel();
   const saved = () =>
     page
       .locator('.save-state')
@@ -57,6 +82,7 @@ try {
   await page.goto(new URL('#deck/codex-micro', base).href);
   const study = page.getByRole('textbox', { name: 'Study name', exact: true });
   await study.waitFor();
+  await checkPreviewLabel();
   assert.notEqual(await study.inputValue(), 'Protected main deck');
   await study.fill('Preview control deck');
   await page.waitForFunction(
