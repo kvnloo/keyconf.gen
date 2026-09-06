@@ -17,7 +17,10 @@ import {
 
 type Database = Pick<D1Database, 'prepare'>;
 
-async function accountId(db: Database, subject: string): Promise<string> {
+export async function accountId(
+  db: Database,
+  subject: string,
+): Promise<string> {
   await db
     .prepare(
       'INSERT INTO community_account(id, subject, created_at) VALUES(?,?,?) ON CONFLICT(subject) DO NOTHING',

@@ -86,3 +86,27 @@ export const communityPublications = sqliteTable(
     ),
   ],
 );
+
+export const communityFavorites = sqliteTable(
+  'community_favorite',
+  {
+    accountId: text('account_id')
+      .notNull()
+      .references(() => communityAccounts.id),
+    publicationId: text('publication_id')
+      .notNull()
+      .references(() => communityPublications.id),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    uniqueIndex('community_favorite_account_publication').on(
+      table.accountId,
+      table.publicationId,
+    ),
+    index('community_favorite_account_created').on(
+      table.accountId,
+      table.createdAt,
+      table.publicationId,
+    ),
+  ],
+);

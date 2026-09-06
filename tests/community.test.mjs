@@ -738,3 +738,90 @@ test('owner publication pages have stable boundaries, retain withdrawn entries a
     ),
   );
 });
+
+test('favorites are private, repeatable, paginated and redact withdrawn releases', async (t) => {
+  const { addFavorite, removeFavorite, listFavorites } =
+    await import('../db/favorites.ts');
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const releases = [];
+  for (let i = 0; i < 27; i++) {
+    const release = await publishBuild(db, alice, {
+      operationId: `favorite-release-${String(i).padStart(3, '0')}`,
+      buildId: saved.id,
+      title: `Public title ${i}`,
+      note: '',
+      kind: 'build',
+    });
+    releases.push(release);
+    const first = await addFavorite(db, bob, release.id);
+    assert.deepEqual(await addFavorite(db, bob, release.id), first);
+  }
+  db.sqlite
+    .prepare('UPDATE community_favorite SET created_at=?')
+    .run('2026-09-06T00:00:00.000Z');
+  const page = await listFavorites(db, bob);
+  assert.equal(page.items.length, 25);
+  const next = await listFavorites(db, bob, page.next);
+  assert.equal(next.items.length, 2);
+  assert.equal(next.next, null);
+  assert.equal(
+    new Set([...page.items, ...next.items].map((item) => item.publicationId))
+      .size,
+    27,
+  );
+  assert.deepEqual(await listFavorites(db, alice), { items: [], next: null });
+  const target = page.items[0].publicationId;
+  await removeFavorite(db, alice, target);
+  assert.equal((await listFavorites(db, bob)).items.length, 25);
+  await withdrawPublication(db, alice, target);
+  const unavailable = (await listFavorites(db, bob)).items[0];
+  assert.deepEqual(unavailable, {
+    publicationId: target,
+    createdAt: '2026-09-06T00:00:00.000Z',
+    status: 'unavailable',
+  });
+  await assert.rejects(addFavorite(db, bob, target), {
+    code: 'publication_not_found',
+  });
+  await removeFavorite(db, bob, target);
+  await removeFavorite(db, bob, target);
+  assert.equal(
+    db.sqlite.prepare('SELECT COUNT(*) AS n FROM community_favorite').get().n,
+    26,
+  );
+  await assert.rejects(addFavorite(db, bob, saved.id), {
+    code: 'publication_not_found',
+  });
+  await assert.rejects(addFavorite(db, bob, 'missing'), {
+    code: 'publication_not_found',
+  });
+  const result = JSON.stringify(await listFavorites(db, bob));
+  for (const secret of [
+    'payload',
+    'subject',
+    'operationId',
+    'accountId',
+    saved.id,
+  ])
+    assert.equal(result.includes(secret), false);
+  await assert.rejects(
+    listFavorites(db, bob, {
+      publicationId: target,
+      createdAt: '2026-02-30T00:00:00.000Z',
+    }),
+    { code: 'invalid_request' },
+  );
+  const sql = db.queries.find(
+    (sql) =>
+      sql.includes('CASE WHEN p.withdrawn_at') &&
+      !sql.includes('f.created_at<?'),
+  );
+  assert.ok(
+    db.sqlite
+      .prepare(`EXPLAIN QUERY PLAN ${sql}`)
+      .all(bob)
+      .some((row) => row.detail.includes('community_favorite_account_created')),
+  );
+});

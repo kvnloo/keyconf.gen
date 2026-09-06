@@ -558,3 +558,18 @@ The real browser check covers successful copy, restoration of the included
 build link, denied-clipboard recovery and selection, empty-note handling, no
 page errors and no horizontal overflow at 390 CSS pixels. It runs in CI through
 `verify:feedback`. Type checking and lint passed for the component.
+
+## Private favorite storage
+
+Favorites reference published releases, never private drafts. The additive
+`0004_common_tag.sql` migration enforces one favorite per account and release.
+Adding is repeatable, removal is scoped to the trusted account, and list pages
+use creation time plus publication ID for stable traversal. Withdrawn items
+return only an unavailable marker and the favorite identifiers/timestamp.
+Neither private build payloads nor withdrawn release metadata are selected.
+
+Real SQLite checks cover 27 favorites across timestamp ties, repeat additions,
+owner isolation, repeat removal, missing/private/withdrawn rejection, withdrawal
+redaction, invalid cursors and use of the owner list index. All 18 community
+tests passed. No favorite endpoint or UI is exposed; Google setup and hosted
+identity verification remain deferred.
