@@ -1,0 +1,5 @@
+{
+  "objective": "Complete Keyconf Studio as a public, polished, immersive keyboard-building app based on the user's original vision: an intuitive and playful high-fidelity 3D configurator with detailed materials, colors, animations and microinteractions; evidence-backed keyboard, switch, case, PCB and keycap catalogs with explicit compatibility; practical product imports from supported websites; an engaging recorded-sound experience with searchable reference coverage and honest acoustic fidelity; shareable persistent builds; accessible responsive layouts and reliable performance. Audit the existing implementation, write and maintain a comprehensive product goal and measurable acceptance criteria in the repository, implement and verify the remaining work against the real app, keep progress committed and pushed to public GitHub with passing CI, and publish the finished experience. Do not claim exhaustive product coverage, exact simulated sound, or flawless behavior without evidence; clearly surface known limits and finish all feasible acceptance criteria before declaring completion.",
+  "status": "active",
+  "token_budget": null
+}

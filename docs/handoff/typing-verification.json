@@ -1,0 +1,8 @@
+{
+  "base": "http://127.0.0.1:4173/keyconf.gen/",
+  "evidence": [
+    "Real WebGL keyboard beneath Monkeytype; key animation and recorded audio; mute; 10-word result; restart; return and preserved build; no external iframe requests or runtime errors.",
+    "390px touch entry, iframe reflow, Monkeytype mobile settings, and return to builder.",
+    "Failed frame request exposes retry; retry and repeated entry recover."
+  ]
+}

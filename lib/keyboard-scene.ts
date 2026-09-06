@@ -136,7 +136,7 @@ export function createKeyboardScene(
   camera.layers.enable(1);
   const controls = new OrbitControls(camera, renderer.domElement);
   renderer.domElement.style.touchAction = 'pan-y pinch-zoom';
-  controls.enableDamping = !reduced;
+  controls.enableDamping = !reduced && !software;
   controls.dampingFactor = 0.1;
   controls.minDistance = 12;
   controls.maxDistance = 46;
@@ -277,7 +277,7 @@ export function createKeyboardScene(
     deskCacheDirty = true;
     const typing = options.environment === 'typing';
     controls.enableRotate = controls.enableZoom = !typing;
-    controls.enableDamping = !reduced && !typing;
+    controls.enableDamping = !reduced && !software && !typing;
     controls.maxDistance = typing ? 80 : 46;
     focusDepth = typing ? -3 : 0;
     desk.monitor.scale.y = typing && element.clientWidth < 700 ? 1.65 : 1;
@@ -412,7 +412,8 @@ export function createKeyboardScene(
     lastFrame = time;
     let moving = false;
     const approach = (current: number, target: number, speed: number) => {
-      if (reduced || Math.abs(current - target) < 0.0005) return target;
+      if (reduced || software || Math.abs(current - target) < 0.0005)
+        return target;
       moving = true;
       return THREE.MathUtils.damp(current, target, speed, delta);
     };
@@ -731,7 +732,8 @@ export function createKeyboardScene(
   }
   function motion() {
     reduced = preference.matches;
-    controls.enableDamping = !reduced && options.environment !== 'typing';
+    controls.enableDamping =
+      !reduced && !software && options.environment !== 'typing';
     wake();
   }
   function orbitStart() {
