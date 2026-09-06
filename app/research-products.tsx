@@ -4,7 +4,11 @@ import { ArrowUpRight, Search } from 'lucide-react';
 import data from '../data/research-seed.json';
 import StoreObservations from './store-observations';
 
-export default function ResearchProducts() {
+export default function ResearchProducts({
+  onReviewSwitch,
+}: {
+  onReviewSwitch: (source: string) => void;
+}) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const products = data.products.filter(
@@ -91,7 +95,7 @@ export default function ResearchProducts() {
           <p>No references match. Try a different name or category.</p>
         )}
       </div>
-      <StoreObservations />
+      <StoreObservations onReview={onReviewSwitch} />
     </section>
   );
 }

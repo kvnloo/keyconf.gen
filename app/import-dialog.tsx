@@ -19,15 +19,19 @@ type PreviewResult = Omit<ImportResult, 'products'> & {
 type ImportError = { kind: 'preview' | 'more' | 'add'; message: string };
 export default function ImportDialog({
   onAdd,
+  initialUrl = '',
+  initialCategory = 'case',
 }: {
   onAdd: (parts: Part[]) => void;
+  initialUrl?: string;
+  initialCategory?: Category;
 }) {
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState(initialUrl);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ImportError | null>(null);
   const [result, setResult] = useState<PreviewResult | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [category, setCategory] = useState<Category>('case');
+  const [category, setCategory] = useState<Category>(initialCategory);
   const [raw, setRaw] = useState('');
   const [added, setAdded] = useState(false);
   const request = useRef<AbortController | null>(null);

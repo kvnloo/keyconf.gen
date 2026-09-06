@@ -38,7 +38,7 @@ try {
     assert.ok((await cards.count()) > 0);
     for (const text of await cards.allTextContents())
       assert.match(text, /Gateron Ink/i);
-    const href = await cards.first().getAttribute('href');
+    const href = await cards.first().getByRole('link').getAttribute('href');
     assert.match(href, /https:\/\/divinikey.com\/products\/.*variant=/);
     assert.match(await section.innerText(), /not per switch/);
     await section.screenshot({
@@ -49,6 +49,68 @@ try {
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     );
+    const importRequests = [];
+    await page.route('**/api/import', async (route) => {
+      importRequests.push(route.request().postDataJSON());
+      await route.fulfill({
+        json: {
+          source: href,
+          observedAt: '2026-09-06T15:00:00.000Z',
+          method: 'Product structured data',
+          coverage: 'One fixture variant for the review journey.',
+          products: [
+            {
+              name: 'Reviewed test option',
+              brand: 'Fixture',
+              url: href,
+              sku: 'REVIEW-1',
+              pricing: { kind: 'exact', amount: '12.96', currency: 'USD' },
+              availability: 'Available',
+            },
+          ],
+        },
+      });
+    });
+    await cards
+      .first()
+      .getByRole('button', { name: /^Review import of/ })
+      .click();
+    assert.equal(
+      await page.getByRole('textbox', { name: 'Website URL' }).inputValue(),
+      href,
+    );
+    assert.equal(importRequests.length, 0);
+    assert.equal(
+      await page
+        .getByRole('textbox', { name: 'Website URL' })
+        .evaluate((element) => element === document.activeElement),
+      true,
+    );
+    await page.getByRole('button', { name: 'Preview', exact: true }).click();
+    await page.getByText('1 product found', { exact: true }).waitFor();
+    assert.equal(importRequests[0].url, href);
+    assert.equal(await page.locator('#import-category').innerText(), 'switch');
+    await page
+      .getByRole('button', { name: 'Add 1 selected products', exact: true })
+      .click();
+    await page
+      .getByRole('button', { name: 'Added to this browser', exact: true })
+      .waitFor();
+    await page
+      .getByRole('button', { name: 'Close dialog', exact: true })
+      .click();
+    await page
+      .getByRole('button', { name: 'Import a website', exact: true })
+      .first()
+      .click();
+    assert.equal(
+      await page.getByRole('textbox', { name: 'Website URL' }).inputValue(),
+      '',
+    );
+    await page
+      .getByRole('button', { name: 'Close dialog', exact: true })
+      .click();
+    await page.unroute('**/api/import');
     await section
       .getByRole('searchbox')
       .fill('there-is-no-switch-with-this-name');

@@ -7,7 +7,11 @@ type LoadState =
   | { kind: 'idle' | 'loading' | 'error' }
   | { kind: 'ready'; data: StoreData };
 
-export default function StoreObservations() {
+export default function StoreObservations({
+  onReview,
+}: {
+  onReview: (source: string) => void;
+}) {
   const [state, setState] = useState<LoadState>({ kind: 'idle' });
   return (
     <details
@@ -40,15 +44,19 @@ export default function StoreObservations() {
           </button>
         </div>
       )}
-      {state.kind === 'ready' && <ObservedOptions data={state.data} />}
+      {state.kind === 'ready' && (
+        <ObservedOptions data={state.data} onReview={onReview} />
+      )}
     </details>
   );
 }
 
 function ObservedOptions({
   data: { storeListings, storeSource },
+  onReview,
 }: {
   data: StoreData;
+  onReview: (source: string) => void;
 }) {
   const [query, setQuery] = useState('');
   const [limit, setLimit] = useState(12);
@@ -88,19 +96,18 @@ function ObservedOptions({
       </output>
       <div className="research-product-list">
         {matches.slice(0, limit).map((product) => (
-          <a
+          <article
             className="research-product"
             key={`${product.url}|${product.sku}`}
-            href={product.url}
-            target="_blank"
-            rel="noreferrer"
           >
             <span className="catalog-brand">
               {product.brand} · Store observation
             </span>
-            <strong>
-              {product.name} <ArrowUpRight size={14} />
-            </strong>
+            <a href={product.url} target="_blank" rel="noreferrer">
+              <strong>
+                {product.name} <ArrowUpRight size={14} />
+              </strong>
+            </a>
             <span>{formatProductPrice(product.pricing)} · Named option</span>
             <span>
               Observed{' '}
@@ -109,7 +116,14 @@ function ObservedOptions({
               </time>
               {product.availability ? ` · ${product.availability} then` : ''}
             </span>
-          </a>
+            <button
+              className="text-button"
+              onClick={() => onReview(product.url)}
+              aria-label={`Review import of ${product.name}`}
+            >
+              Review import
+            </button>
+          </article>
         ))}
       </div>
       {!matches.length && (

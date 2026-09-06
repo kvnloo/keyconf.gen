@@ -228,7 +228,12 @@ const sources = [
   },
 ];
 type Tab = 'design' | 'parts' | 'sound';
-type Modal = 'import' | 'research' | 'share' | null;
+type Modal =
+  | 'import'
+  | 'research'
+  | 'share'
+  | { kind: 'import'; source: string }
+  | null;
 function KeyboardStudio({
   hash,
   manager,
@@ -331,6 +336,9 @@ function KeyboardStudio({
     }
   }
   const [modal, setModal] = useState<Modal>(null);
+  const importing =
+    modal === 'import' || (modal !== null && typeof modal === 'object');
+  const reviewSwitch = (source: string) => setModal({ kind: 'import', source });
   const [enabled, setEnabled] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const buildFile = useRef<HTMLInputElement>(null);
@@ -459,8 +467,13 @@ function KeyboardStudio({
       if (event.target === element) setModal(null);
     };
     element.addEventListener('click', dismissBackdrop);
-    if (modal) element.showModal();
-    else element.close();
+    if (modal) {
+      element.showModal();
+      if (typeof modal === 'object')
+        element
+          .querySelector<HTMLInputElement>('input[name="store-url"]')
+          ?.focus();
+    } else element.close();
     return () => element.removeEventListener('click', dismissBackdrop);
   }, [modal]);
   useEffect(() => {
@@ -1463,7 +1476,7 @@ function KeyboardStudio({
             </button>
           </div>
           <TechnologyGuide />
-          <ResearchLibrary />
+          <ResearchLibrary onReviewSwitch={reviewSwitch} />
         </section>
       )}
       {landing && (
@@ -1476,7 +1489,7 @@ function KeyboardStudio({
         ref={dialog}
         className={'modal ' + (modal === 'research' ? 'research-modal' : '')}
         aria-label={
-          modal === 'import'
+          importing
             ? 'Import products'
             : modal === 'share'
               ? 'Share build'
@@ -1536,14 +1549,26 @@ function KeyboardStudio({
             </p>
           </div>
         )}
-        {modal === 'import' && <ImportDialog onAdd={addParts} />}{' '}
-        {modal === 'research' && <ResearchLibrary />}
+        {importing && (
+          <ImportDialog
+            onAdd={addParts}
+            initialUrl={typeof modal === 'object' ? modal?.source : undefined}
+            initialCategory={typeof modal === 'object' ? 'switch' : undefined}
+          />
+        )}{' '}
+        {modal === 'research' && (
+          <ResearchLibrary onReviewSwitch={reviewSwitch} />
+        )}
       </dialog>
     </main>
   );
 }
 
-function ResearchLibrary() {
+function ResearchLibrary({
+  onReviewSwitch,
+}: {
+  onReviewSwitch: (source: string) => void;
+}) {
   return (
     <div>
       <div className="eyebrow">THE REFERENCE LIBRARY</div>
@@ -1553,7 +1578,7 @@ function ResearchLibrary() {
         catalog, asset pipeline, and sound library, not an exhaustive keyboard
         database.
       </p>
-      <ResearchProducts />
+      <ResearchProducts onReviewSwitch={onReviewSwitch} />
       <div className="deck-entry-links">
         <a className="button secondary" href="#deck/grok-bot">
           Explore Grok Bot <ArrowUpRight size={15} />
