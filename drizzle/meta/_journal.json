@@ -15,6 +15,13 @@
       "when": 1788718915428,
       "tag": "0001_panoramic_ken_ellis",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788728673144,
+      "tag": "0002_far_famine",
+      "breakpoints": true
     }
   ]
 }

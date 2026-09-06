@@ -5,6 +5,7 @@ export type CommunityProfile = {
   handle: string;
   displayName: string;
   bio: string;
+  links: { label: string; url: string }[];
 };
 export type SavedBuildSummary = { id: string; name: string; createdAt: string };
 export type SavedBuild = SavedBuildSummary & { build: Build };
@@ -93,12 +94,7 @@ export function parseCommunityProfile(value: unknown): CommunityProfile {
     !displayName ||
     displayName.length > 60 ||
     bio.length > 160 ||
-    (displayName + bio)
-      .split('')
-      .some(
-        (character) =>
-          character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127,
-      )
+    hasControlCharacters(displayName + bio)
   ) {
     throw new CommunityError(
       'invalid_request',
@@ -106,7 +102,76 @@ export function parseCommunityProfile(value: unknown): CommunityProfile {
       400,
     );
   }
-  return { handle, displayName, bio };
+  const links = parseProfileLinks(value.links);
+  return { handle, displayName, bio, links };
+}
+
+function hasControlCharacters(value: string): boolean {
+  return value
+    .split('')
+    .some(
+      (character) =>
+        character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127,
+    );
+}
+
+function parseProfileLinks(value: unknown): CommunityProfile['links'] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 5)
+    throw new CommunityError(
+      'invalid_request',
+      'Add at most five creator links.',
+      400,
+    );
+  const urls = new Set<string>();
+  return value.map((entry: unknown) => {
+    if (
+      !object(entry) ||
+      typeof entry.label !== 'string' ||
+      typeof entry.url !== 'string'
+    )
+      throw new CommunityError(
+        'invalid_request',
+        'Each creator link needs a label and an HTTPS URL.',
+        400,
+      );
+    const label = entry.label.trim();
+    if (
+      !label ||
+      label.length > 40 ||
+      hasControlCharacters(label) ||
+      entry.url.length > 2048
+    )
+      throw new CommunityError(
+        'invalid_request',
+        'Use a short, single-line label and a URL of at most 2048 characters.',
+        400,
+      );
+    let url: URL;
+    try {
+      url = new URL(entry.url);
+    } catch {
+      throw new CommunityError(
+        'invalid_request',
+        'Enter a complete HTTPS creator link.',
+        400,
+      );
+    }
+    if (
+      url.href.length > 2048 ||
+      url.protocol !== 'https:' ||
+      url.username ||
+      url.password ||
+      urls.has(url.href)
+    )
+      throw new CommunityError(
+        'invalid_request',
+        'Creator links must be unique HTTPS URLs without embedded credentials.',
+        400,
+      );
+    urls.add(url.href);
+    return { label, url: url.href };
+  });
 }
 
 export function parseSaveBuildRequest(value: unknown): SaveBuildRequest {

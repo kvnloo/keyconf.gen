@@ -511,3 +511,22 @@ and back, assembled/exploded captures, shared preview, and usable customization
 with no horizontal overflow at 390 and 320 CSS pixels. This does not establish
 exact manufacturer enclosure fidelity, measured latency or human listening
 quality. The browser coverage is retained in `scripts/verify_q1.mjs`.
+
+Independent Q1 review found no actionable issues in the scoped implementation.
+The reviewer inspected the real GLB adaptation, cap widths and legend
+transforms, enclosure bounds, knob dimensions, model selection, placement
+compatibility and shared/private evidence integration; 18 focused tests passed.
+It did not independently repeat live-browser interaction or manufacturer-source
+research. Root performed the published-site browser checks described above.
+
+## Creator-profile link storage
+
+The private profile model now stores up to five labeled HTTPS links, suitable
+for a creator's channel, shop or commission page. URLs are normalized and
+validated; duplicate URLs and embedded credentials are rejected. Links are
+outbound references, not verified ownership claims. The additive migration
+preserves existing profile identity and bio with an empty link-list default.
+Real SQLite tests cover persistence, owner isolation, replacement/removal and
+upgrading a database containing an older profile. All 130 tests and type
+checking pass. Production build and release checks are pending. Google setup,
+account routes and public profile UI remain deferred or unfinished.

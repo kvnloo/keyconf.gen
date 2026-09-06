@@ -148,3 +148,14 @@ Next account-independent UI work is a single search entry across available
 parts and studio destinations. Show only implemented destinations and real
 product references. Creator search, favorites and attributed feedback remain
 dependent on the Google/account integration; do not fill them with fake users.
+
+### Creator link storage
+
+Profiles accept up to five labeled HTTPS links for channels, shops or commission
+pages. Labels are limited to 40 characters and URLs to 2048 characters. The
+boundary rejects credentials in URLs, duplicate normalized URLs and control
+characters in labels. Links are outbound references; the server does not fetch
+them or claim verification of the creator's ownership. Saving an empty list
+removes the saved links. Migration `0002_far_famine.sql` adds a non-null JSON
+list with an empty default, preserving pre-existing profile identity and bio.
+This storage support does not expose public profiles or enable sign-in.

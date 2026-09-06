@@ -27,6 +27,7 @@ export const communityProfiles = sqliteTable('community_profile', {
   handle: text('handle').notNull().unique(),
   displayName: text('display_name').notNull(),
   bio: text('bio').notNull(),
+  links: text('links').notNull().default('[]'),
 });
 
 export const communityBuilds = sqliteTable(

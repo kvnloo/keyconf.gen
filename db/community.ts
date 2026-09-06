@@ -8,6 +8,7 @@ import {
 import { soundPacks } from '../lib/sound-packs.ts';
 import {
   CommunityError,
+  parseCommunityProfile,
   type CommunityProfile,
   type SaveBuildRequest,
   type SavedBuild,
@@ -35,12 +36,15 @@ export async function readProfile(
   db: Database,
   subject: string,
 ): Promise<CommunityProfile | null> {
-  return db
+  const row = await db
     .prepare(
-      'SELECT p.handle, p.display_name AS displayName, p.bio FROM community_profile p JOIN community_account a ON a.id=p.account_id WHERE a.subject=?',
+      'SELECT p.handle, p.display_name AS displayName, p.bio, p.links FROM community_profile p JOIN community_account a ON a.id=p.account_id WHERE a.subject=?',
     )
     .bind(subject)
-    .first<CommunityProfile>();
+    .first<Omit<CommunityProfile, 'links'> & { links: string }>();
+  return row
+    ? parseCommunityProfile({ ...row, links: JSON.parse(row.links) })
+    : null;
 }
 
 export async function saveProfile(
@@ -52,9 +56,15 @@ export async function saveProfile(
   try {
     await db
       .prepare(
-        'INSERT INTO community_profile(account_id, handle, display_name, bio) VALUES(?,?,?,?) ON CONFLICT(account_id) DO UPDATE SET handle=excluded.handle, display_name=excluded.display_name, bio=excluded.bio',
+        'INSERT INTO community_profile(account_id, handle, display_name, bio, links) VALUES(?,?,?,?,?) ON CONFLICT(account_id) DO UPDATE SET handle=excluded.handle, display_name=excluded.display_name, bio=excluded.bio, links=excluded.links',
       )
-      .bind(owner, profile.handle, profile.displayName, profile.bio)
+      .bind(
+        owner,
+        profile.handle,
+        profile.displayName,
+        profile.bio,
+        JSON.stringify(profile.links),
+      )
       .run();
   } catch (error) {
     if (

@@ -67,6 +67,7 @@ const alice = 'private-platform-subject-alice';
 const bob = 'private-platform-subject-bob';
 const operationId = 'operation-id-00000001';
 const profile = {
+  links: [],
   handle: 'alice_keys',
   displayName: 'Alice',
   bio: 'Small keyboards.',
@@ -376,5 +377,101 @@ test('removed catalog IDs retain the stored snapshot and never silently substitu
         .get(result.id).payload,
     ),
     unsupported,
+  );
+});
+
+test('creator links normalize and persist without exposing another account', async (t) => {
+  const db = database(t);
+  const linked = parseCommunityProfile({
+    ...profile,
+    links: [
+      { label: ' Channel ', url: 'https://example.com' },
+      { label: 'Commissions', url: 'https://example.com/builds' },
+    ],
+  });
+  assert.deepEqual(linked.links[0], {
+    label: 'Channel',
+    url: 'https://example.com/',
+  });
+  await saveProfile(db, alice, linked);
+  assert.deepEqual(await readProfile(db, alice), linked);
+  assert.equal(await readProfile(db, bob), null);
+  await saveProfile(db, alice, { ...linked, links: [] });
+  assert.deepEqual((await readProfile(db, alice)).links, []);
+  assert.deepEqual(
+    parseCommunityProfile({
+      handle: 'old_profile',
+      displayName: 'Old profile',
+      bio: '',
+    }).links,
+    [],
+  );
+});
+
+test('creator links reject unsafe, duplicate and oversized values', () => {
+  for (const links of [
+    [{ label: 'Bad', url: 'javascript:alert(1)' }],
+    [{ label: 'Bad', url: 'https://user:password@example.com/' }],
+    [{ label: 'Bad', url: '/relative' }],
+    [{ label: '', url: 'https://example.com' }],
+    [{ label: 'bad\nlabel', url: 'https://example.com' }],
+    [
+      { label: 'A', url: 'https://example.com' },
+      { label: 'B', url: 'https://example.com/' },
+    ],
+    Array.from({ length: 6 }, (_, i) => ({
+      label: `Link ${i}`,
+      url: `https://example.com/${i}`,
+    })),
+  ])
+    assert.throws(() => parseCommunityProfile({ ...profile, links }), {
+      code: 'invalid_request',
+    });
+});
+
+test('creator-link migration preserves existing profiles and gives them an empty list', (t) => {
+  const sqlite = new DatabaseSync(':memory:');
+  t.after(() => sqlite.close());
+  sqlite.exec('PRAGMA foreign_keys=ON');
+  for (const file of [
+    '0000_supreme_tiger_shark.sql',
+    '0001_panoramic_ken_ellis.sql',
+  ])
+    sqlite.exec(
+      readFileSync(new URL(`../drizzle/${file}`, import.meta.url), 'utf8'),
+    );
+  sqlite
+    .prepare(
+      'INSERT INTO community_account(id,subject,created_at) VALUES(?,?,?)',
+    )
+    .run('legacy-owner', 'google:legacy-subject', '2026-09-06T00:00:00Z');
+  sqlite
+    .prepare(
+      'INSERT INTO community_profile(account_id,handle,display_name,bio) VALUES(?,?,?,?)',
+    )
+    .run(
+      'legacy-owner',
+      'legacy_builder',
+      'Legacy Builder',
+      'Custom commissions',
+    );
+  sqlite.exec(
+    readFileSync(
+      new URL('../drizzle/0002_far_famine.sql', import.meta.url),
+      'utf8',
+    ),
+  );
+  assert.deepEqual(
+    {
+      ...sqlite
+        .prepare('SELECT handle,display_name,bio,links FROM community_profile')
+        .get(),
+    },
+    {
+      handle: 'legacy_builder',
+      display_name: 'Legacy Builder',
+      bio: 'Custom commissions',
+      links: '[]',
+    },
   );
 });
