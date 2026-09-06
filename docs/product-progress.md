@@ -593,6 +593,18 @@ and automated accessibility checks. Test creators were not published.
 The initial CI Worker connection failure did not recur after process-group
 cleanup and retained diagnostics were added; the public-page CI step passed on
 `6156d0d`. Root-cause certainty remains limited by missing logs from the first
-run. Full CI completion for that run is still being checked. Accounts and a
+run. Full CI for that run passed. Version 17 from `82daccb` adds release titles and unavailable-page indexing protection; its check and deployment jobs also passed in run `34064484037`. Accounts and a
 creator publishing UI remain unfinished, so visitors cannot yet publish their
 own releases through the site.
+
+
+## Community implementation reconciliation
+
+The architecture now matches the deployed immutable snapshot model, public
+`/builds/[id]` route and publication/favorite storage. It no longer instructs
+future work to add duplicate revision tables or describes shipped storage as
+unimplemented. Account UI and the complete two-person proposal workflow remain
+required. Google setup stays deferred. The installed Sites authentication
+guidance requires confirmation of the external-provider integration before
+implementation; no available Sites tool establishes a Google session flow.
+This limits authentication work, not the remaining account-independent work.

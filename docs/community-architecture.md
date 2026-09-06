@@ -1,6 +1,6 @@
 # Community architecture
 
-Status: private storage foundation deployed on nightly, September 6, 2026; Google setup explicitly deferred by the user. This document defines a buildable extension. It does not claim accounts, community publishing or client proposals are shipped.
+Status: private storage and public release viewing deployed on nightly, September 6, 2026. Google setup is explicitly deferred. Account interfaces, creator publishing controls and client proposals remain unfinished. The record definitions below distinguish deployed storage from planned extensions.
 
 ## Product decision
 
@@ -30,7 +30,7 @@ Preserve Build, Sound, Play and Discover. Use one Community destination and an a
 | --- | --- |
 | `/community` | Recent published builds and drops in a compact grid. Each card has a build preview, name, actual author and build kind. Open a build. Empty state says no builds have been published and links to the studio. No fake popularity counts. |
 | `/u/[handle]` | User-chosen display name, handle, optional short bio and creator links, and that person's published builds/drops. Private builds and favorites are excluded. An unpublished profile returns not found to other visitors. |
-| `/b/[publicationId]` | Immutable published build, author, parts and recording provenance, and Customize / Favorite actions. A drop adds its title, short note and publication date. Previewing never writes the device draft. |
+| `/builds/[id]` | Immutable published build, author, parts and recording provenance, and Customize / Favorite actions. A drop adds its title, short note and publication date. Previewing never writes the device draft. |
 | `/account` | Protected page with My builds, Favorites and Proposals. Show whether each build is private or published. Save, reopen, publish and create a proposal from a saved revision. |
 | `/p/[token]` | A preconfigured proposal with the creator's brief, version, and visible notice that anyone with the link can view it. Customize opens a separate proposal draft. Submit changes sends that draft and an optional note after sign-in. |
 | `/account/proposals/[id]` | Creator sees the original and submitted revisions, a concise field/part comparison, feedback author and time. Open a submitted version or create a revised proposal. No silent merge into the creator's build. |
@@ -71,22 +71,23 @@ Keep private save/create operations idempotent with a per-account operation key 
 
 ## Records and invariants
 
-Define the schema in `db/schema.ts`; add generated, inspected, schema-only Drizzle migrations. Runtime queries belong in `db/community.ts`, using prepared statements and bounded D1 batches. Do not change deployed catalog migrations or create tables during requests.
+Define the schema in `db/schema.ts`; add generated, inspected, schema-only Drizzle migrations. Runtime queries belong in `db/community.ts`, `db/publications.ts` and `db/favorites.ts`, using prepared statements and bounded D1 batches. Do not change deployed catalog migrations or create tables during requests.
 
 | Record | Required fields and constraints |
 | --- | --- |
-| `community_account` | App ID primary key, unique private Sites subject, creation time. No public email field. |
-| `community_profile` | Account ID primary/foreign key, unique lowercase handle, display name, short bio, validated creator links, optional public-since time. Only the owner edits it. |
-| `community_build` | ID, owner account, document kind, latest revision number, created/updated times. Index owner and update time for My builds. |
-| `community_build_revision` | Composite primary key of build ID and revision number, validated document JSON, selected-part evidence JSON, schema version, created time. Immutable. |
-| `community_publication` | ID, owner, build ID and revision number, kind `build` or `drop`, title, note, optional creator-written availability and external enquiry/purchase URL, published time, optional withdrawn time. Index active publication time and owner. Each points to an owned immutable revision. |
-| `community_favorite` | Account ID and publication ID as composite primary key, creation time. Add account/time index only for the private favorite-list query. PUT/DELETE are idempotent. |
-| `community_proposal` | ID, owner, base build/revision, brief, unique token digest, created time, optional closed time. A proposal references the owner's revision. Index owner/time. |
-| `community_proposal_response` | ID, proposal ID, verified author account, validated submitted document JSON, note, created time, client operation ID unique within author/proposal. Append-only; no visitor mutation of the base build. Index proposal/time. |
+| `community_account` | Deployed: app ID primary key, unique private subject, creation time. No public email field. Future identity adapters must provide a verified provider-qualified subject. |
+| `community_profile` | Deployed: account primary/foreign key, unique handle, chosen display name, bio and validated links. Public profile visibility and its route remain unimplemented. Publications freeze chosen author details separately. |
+| `community_build` | Deployed: immutable keyboard snapshot ID, owner, operation ID, request digest, private name, payload, source evidence and creation time. Unique owner/operation index and owner/date/ID list index. Each save creates a snapshot; there is no mutable latest-revision pointer. |
+| `community_publication` | Deployed: ID, owner, owned snapshot ID, operation ID/digest, frozen release metadata and author, publication time and optional withdrawal time. Unique owner/operation and owner/date/ID indexes. |
+| `community_favorite` | Deployed: account and publication foreign keys with a unique pair index, creation time and owner/date/publication index. Repeatable add/remove; withdrawn entries return an unavailable marker. |
+| `community_proposal` | Planned: ID, owner, immutable base snapshot, brief, unique token digest, creation time and optional closure time. Index owner/time. |
+| `community_proposal_response` | Planned: ID, proposal ID, verified author, immutable submitted snapshot, note, creation time and operation ID unique within author/proposal. Index proposal/time. |
 
-Use foreign keys for account/build/revision relationships. Composite revision references keep the revision attached to its build. Enforce same-owner publication/proposal references with composite ownership keys or a guarded `INSERT ... SELECT`, not a prior unguarded existence check. Saving a new revision and advancing the latest pointer must be one atomic operation with an expected-revision condition. Reject stale versions with 409 and no orphan revision.
+There is no `community_build_revision` table. Keep the deployed immutable snapshot model for the first account UI: saving edits creates another snapshot, and publication references that exact owned snapshot. Do not invent revision numbers or stale-update behavior for a mutable record that does not exist. If a grouped version history is introduced later, specify its migration and concurrency contract before exposing it.
 
-The document envelope is either `{ kind: 'keyboard', build: Build }` or `{ kind: 'control-deck', build: DeckBuild }`. Parse unknown input once at the API boundary through the existing matching validator. Strip unselected imported parts when publishing/sharing and validate a second time after normalization. Limit request bytes before JSON parsing; an initial 128 KiB document cap, 80-character build title, 160-character profile bio and 2,000-character proposal note are concrete starting limits. Oversized drafts retain file export and a clear error.
+Publication ownership uses a guarded `INSERT ... SELECT` and guarded reads. Identical per-owner operation retries return the existing result; conflicting reuse returns 409. Keep these properties when exposing HTTP routes. Account build listing currently stops at 100; add pagination before promising a complete library. Publication and favorite lists already have bounded cursor pagination.
+
+Account snapshot storage currently accepts keyboards only. Control decks retain their separate local format and cannot be advertised as account-saveable. A future shared document envelope can discriminate keyboard and control-deck payloads once both storage and UI support it. Existing request validators bound input and strip unused imported parts. Oversized drafts must retain file export and a clear error.
 
 For keyboard revisions, derive the selected-part evidence and compatibility/recording disclosure on the server. Client text cannot promote an imported part's `unknown` evidence to approved compatibility. The existing export includes selected components, compatibility checks and recording context; extract that logic for reuse instead of creating competing claims. Preserve the source catalog version or digest with the revision. If a later catalog removes an ID, show the stored evidence and an unavailable-part warning; do not silently substitute parts. Restoring editable older records requires an explicit supported migration or repair step.
 
@@ -106,9 +107,9 @@ Ship one complete proposal loop on nightly before building a public feed:
 4. Customize the proposal in its isolated draft. Sign in as another user and submit the configuration plus a note once. A retry returns the existing response through its operation ID.
 5. The creator opens Proposals and reads the attributed response and changed parts/colors. Opening a response creates a local draft; it does not mutate the original. Closing the proposal prevents new reads/submissions through its token.
 
-This slice uses accounts, profiles, builds/revisions, proposals and responses. Do not add publication/favorite tables until the next working unit. Initially restrict account proposal creation to keyboards with an explicit UI explanation; existing control decks continue working locally. Add control-deck account serialization before exposing their account save action.
+This remains the target end-to-end proposal experience, but its original implementation order is superseded: immutable build, publication and favorite storage already exists, as does public release viewing. Reuse it; do not add duplicate tables. Initially restrict account proposal creation to keyboards with an explicit UI explanation; existing control decks continue working locally. Add control-deck account serialization before exposing their account save action.
 
-The next unit adds public profile publication, public build/drop detail and private favorites together. The public feed follows only when publishing, withdrawal and real empty states work. Public launch also needs an operator hide path and per-account write limits, with durable atomic counters or supported platform controls. The current backend has no global rate limiter; do not describe browser disabling or process memory as one.
+The next account-enabled unit connects profile editing, private saves, publication review/withdrawal and favorites to the existing storage and public viewer. The public feed follows only when publishing, withdrawal and real empty states work. Public launch also needs an operator hide path and per-account write limits, with durable atomic counters or supported platform controls. The current backend has no global rate limiter; do not describe browser disabling or process memory as one.
 
 Optional music belongs after the community loop. Keep it off by default with its own volume/mute state. A shared playback coordinator must mute music before keyboard recordings or reference videos start, and restore it gently only when those sources stop and the user still wants music. Page visibility and stale playback callbacks must not restart it. Reuse no track until its source and reuse terms are recorded. The later typed/voice companion must use explicit supported studio actions and permission/state for microphone use; neither feature is part of the first slice.
 
@@ -134,7 +135,7 @@ Authentication and storage decisions follow the installed Sites [authentication 
 
 `db/community.ts`, `lib/community.ts`, and migration `0001_panoramic_ken_ellis.sql` implement private account/profile/build storage. Eight real SQLite tests cover chosen normalized handles, owner-only reads, idempotent operations, conflict retries, source-evidence retention, invalid input, bounded request bodies and private error responses. The list returns the newest 100 snapshots using the owner/date index; pagination is still needed before promising an unlimited library.
 
-The unfinished ChatGPT-specific account page and API drafts were removed when Google was selected and setup deferred. No sign-in button, account page, or community API is being shipped with this storage foundation. The UI, hosted Google identity/session boundary, end-to-end account verification, favorites, public profiles and proposals remain pending.
+The unfinished ChatGPT-specific account page and API drafts were removed when Google was selected and setup deferred. No sign-in button, account page, or private community API is exposed. Public release viewing and favorite storage have since shipped. Hosted Google identity/session verification, account and favorite interfaces, public profile pages and proposals remain pending.
 
 ## Portable preview release
 
@@ -144,10 +145,7 @@ explicit customization. It creates no account or publication record and is not
 a revocable client proposal. A clean visitor receives no device draft until
 customizing. Existing `#build=` links retain direct-import compatibility.
 
-Next account-independent UI work is a single search entry across available
-parts and studio destinations. Show only implemented destinations and real
-product references. Creator search, favorites and attributed feedback remain
-dependent on the Google/account integration; do not fill them with fake users.
+Unified parts/studio search and portable copyable feedback have since shipped. Public release pages use `/builds/[id]` with frozen evidence and explicit customization. Creator search, account favorites and durable attributed feedback remain unfinished; do not populate them with invented users.
 
 ### Creator link storage
 
