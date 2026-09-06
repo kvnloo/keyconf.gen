@@ -507,7 +507,7 @@ function KeyboardStudio({
     audio.current?.setLevel(playbackEnabled, volume);
   }, [playbackEnabled, volume]);
 
-  function stopDemo() {
+  const stopDemo = useCallback(() => {
     audioAction.current.revision++;
     timers.current.forEach(clearTimeout);
     timers.current.clear();
@@ -516,22 +516,15 @@ function KeyboardStudio({
     window.dispatchEvent(
       new CustomEvent('keyconf-demo', { detail: { reset: true } }),
     );
-  }
+  }, []);
   useEffect(() => {
     const leave = () => {
-      audioAction.current.revision++;
-      timers.current.forEach(clearTimeout);
-      timers.current.clear();
-      audio.current?.stop();
-      setDemo(false);
+      stopDemo();
       setReference(null);
-      window.dispatchEvent(
-        new CustomEvent('keyconf-demo', { detail: { reset: true } }),
-      );
     };
     window.addEventListener('hashchange', leave);
     return () => window.removeEventListener('hashchange', leave);
-  }, []);
+  }, [stopDemo]);
   async function enableSound(action = audioAction.current.revision) {
     setReference(null);
     try {

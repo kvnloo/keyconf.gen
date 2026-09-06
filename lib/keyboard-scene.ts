@@ -655,12 +655,7 @@ export function createKeyboardScene(
   function projectMonitor() {
     const display = element.querySelector<HTMLElement>('.monitor-display');
     if (!display || options.environment !== 'typing') return;
-    const corners = [
-      [-9.56, 5.41],
-      [9.56, 5.41],
-      [9.56, -5.41],
-      [-9.56, -5.41],
-    ].map(([x, y]) => {
+    const project = (x: number, y: number): ScreenPoint => {
       const point = desk.screen
         .localToWorld(new THREE.Vector3(x, y, 0))
         .project(camera);
@@ -668,7 +663,13 @@ export function createKeyboardScene(
         x: ((point.x + 1) * element.clientWidth) / 2,
         y: ((1 - point.y) * element.clientHeight) / 2,
       };
-    }) as [ScreenPoint, ScreenPoint, ScreenPoint, ScreenPoint];
+    };
+    const corners: [ScreenPoint, ScreenPoint, ScreenPoint, ScreenPoint] = [
+      project(-9.56, 5.41),
+      project(9.56, 5.41),
+      project(9.56, -5.41),
+      project(-9.56, -5.41),
+    ];
     const width = Math.max(
       320,
       Math.round(

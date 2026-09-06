@@ -1,22 +1,19 @@
-export type StudyInput = { layout: '60' | '65' | '75'; palette: string };
+import { layouts, palettes, type Build } from './build.ts';
+
+const paletteNames = palettes.map((palette) => palette.name);
+export type StudyInput = { layout: Build['layout']; palette: string };
 export function parseStudy(input: unknown): StudyInput {
   if (
     typeof input !== 'object' ||
     input === null ||
     !('layout' in input) ||
-    !['60', '65', '75'].includes(String(input.layout)) ||
     !('palette' in input) ||
     typeof input.palette !== 'string'
   )
     throw new Error('Choose a supported layout and named palette.');
-  const layout = input.layout;
-  if (layout !== '60' && layout !== '65' && layout !== '75')
-    throw new Error('Unsupported layout.');
-  if (
-    !['Matcha & cream', 'Midnight', 'Porcelain', 'Botanical'].includes(
-      input.palette,
-    )
-  )
+  const layout = layouts.find((layout) => layout === input.layout);
+  if (!layout) throw new Error('Unsupported layout.');
+  if (!paletteNames.includes(input.palette))
     throw new Error('Unsupported palette.');
   return { layout, palette: input.palette };
 }
@@ -64,10 +61,10 @@ export function registerStudioTools(
       inputSchema: {
         type: 'object',
         properties: {
-          layout: { type: 'string', enum: ['60', '65', '75'] },
+          layout: { type: 'string', enum: layouts },
           palette: {
             type: 'string',
-            enum: ['Matcha & cream', 'Midnight', 'Porcelain', 'Botanical'],
+            enum: paletteNames,
           },
         },
         required: ['layout', 'palette'],

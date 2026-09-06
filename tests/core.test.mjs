@@ -154,4 +154,12 @@ test('Study tool validates layout and palette before mutating state', () => {
   });
   assert.throws(() => parseStudy({ layout: '99', palette: 'Porcelain' }));
   assert.throws(() => parseStudy({ layout: '60', palette: 'not a palette' }));
+  for (const input of [
+    null,
+    [],
+    {},
+    { layout: 60, palette: 'Porcelain' },
+    { layout: '60', palette: null },
+  ])
+    assert.throws(() => parseStudy(input));
 });
