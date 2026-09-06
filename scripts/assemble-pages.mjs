@@ -16,7 +16,10 @@ export async function assemblePages({
     throw new Error('Expected a full source commit');
   if (!Number.isSafeInteger(runNumber) || runNumber < 1)
     throw new Error('Invalid workflow run number');
-  if (!/^[\w.-]+\/[\w.-]+$/.test(repository))
+  if (
+    !/^[\w.-]+\/[\w.-]+$/.test(repository) ||
+    repository.split('/').some((part) => /^\.+$/.test(part))
+  )
     throw new Error('Invalid repository');
   const base = `/${repository.split('/')[1]}/${channel}/`;
   const html = await readFile(path.join(artifact, 'index.html'), 'utf8');
@@ -72,22 +75,60 @@ export async function assemblePages({
   return { published: true, release };
 }
 
+export async function assembleCandidates({
+  candidates,
+  artifacts,
+  destination,
+  repository,
+}) {
+  const results = {};
+  for (const channel of ['main', 'dev', 'nightly']) {
+    const candidate = candidates[channel];
+    if (!candidate) continue;
+    results[channel] = await assemblePages({
+      artifact: path.join(artifacts, channel),
+      destination,
+      repository,
+      channel,
+      sha: candidate.sha,
+      runNumber: candidate.runNumber,
+    });
+  }
+  return results;
+}
+
 if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
 ) {
-  const [artifact, destination, channel, sha, runNumber, repository] =
-    process.argv.slice(2);
-  console.log(
-    JSON.stringify(
-      await assemblePages({
-        artifact,
-        destination,
-        channel,
-        sha,
-        runNumber: Number(runNumber),
-        repository,
-      }),
-    ),
-  );
+  if (process.argv[2] === '--candidates') {
+    const [manifest, artifacts, destination, repository] =
+      process.argv.slice(3);
+    const candidates = JSON.parse(await readFile(manifest, 'utf8'));
+    console.log(
+      JSON.stringify(
+        await assembleCandidates({
+          candidates,
+          artifacts,
+          destination,
+          repository,
+        }),
+      ),
+    );
+  } else {
+    const [artifact, destination, channel, sha, runNumber, repository] =
+      process.argv.slice(2);
+    console.log(
+      JSON.stringify(
+        await assemblePages({
+          artifact,
+          destination,
+          channel,
+          sha,
+          runNumber: Number(runNumber),
+          repository,
+        }),
+      ),
+    );
+  }
 }

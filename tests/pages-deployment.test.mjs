@@ -3,7 +3,10 @@ import { test } from 'node:test';
 import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { assemblePages } from '../scripts/assemble-pages.mjs';
+import {
+  assemblePages,
+  assembleCandidates,
+} from '../scripts/assemble-pages.mjs';
 
 test('Publishing one channel preserves the other builds and refuses out-of-order releases', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'keyconf-pages-'));
@@ -88,6 +91,82 @@ test('Publishing one channel preserves the other builds and refuses out-of-order
     assert.deepEqual(
       await readFile(path.join(destination, 'main/index.html')),
       mainBefore,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('The next publisher recovers a canceled dev deployment while preserving newer main files', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'keyconf-pages-recovery-'));
+  try {
+    const destination = path.join(root, 'site');
+    const artifacts = path.join(root, 'artifacts');
+    const repository = 'kvnloo/keyconf.gen';
+    for (const channel of ['main', 'dev', 'nightly']) {
+      await mkdir(path.join(artifacts, channel), { recursive: true });
+      await writeFile(
+        path.join(artifacts, channel, 'index.html'),
+        `<base href="/keyconf.gen/${channel}/"><p>${channel}</p>`,
+      );
+    }
+    await assemblePages({
+      artifact: path.join(artifacts, 'main'),
+      destination,
+      repository,
+      channel: 'main',
+      sha: 'f'.repeat(40),
+      runNumber: 20,
+    });
+    await writeFile(
+      path.join(destination, 'main', 'keep.js'),
+      'previous main asset',
+    );
+    const candidates = {
+      main: { sha: 'a'.repeat(40), runNumber: 10 },
+      dev: { sha: 'b'.repeat(40), runNumber: 11 },
+      nightly: { sha: 'c'.repeat(40), runNumber: 12 },
+    };
+    const result = await assembleCandidates({
+      candidates,
+      artifacts,
+      destination,
+      repository,
+    });
+    assert.equal(result.main.published, false);
+    assert.equal(result.dev.published, true);
+    assert.equal(result.nightly.published, true);
+    assert.equal(
+      await readFile(path.join(destination, 'main/keep.js'), 'utf8'),
+      'previous main asset',
+    );
+    const releases = JSON.parse(
+      await readFile(path.join(destination, 'environments.json'), 'utf8'),
+    );
+    assert.equal(releases.main.sha, 'f'.repeat(40));
+    assert.equal(releases.dev.sha, candidates.dev.sha);
+    assert.equal(releases.nightly.sha, candidates.nightly.sha);
+    const repeat = await assembleCandidates({
+      candidates,
+      artifacts,
+      destination,
+      repository,
+    });
+    assert.ok(Object.values(repeat).every((entry) => !entry.published));
+    assert.deepEqual(
+      await assembleCandidates({
+        candidates: {},
+        artifacts,
+        destination,
+        repository,
+      }),
+      {},
+    );
+    assert.deepEqual(
+      JSON.parse(
+        await readFile(path.join(destination, 'environments.json'), 'utf8'),
+      ),
+      releases,
     );
   } finally {
     await rm(root, { recursive: true, force: true });

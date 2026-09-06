@@ -93,6 +93,7 @@ jobs:
       group: keyconf-pages-publish
       cancel-in-progress: false
     permissions:
+      actions: read
       contents: write
       pages: write
       id-token: write
@@ -106,16 +107,41 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - uses: actions/download-artifact@v4
+      - name: Find the latest checked build for every branch
+        id: candidates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/select-pages-candidates.mjs "$GITHUB_REPOSITORY" "$RUNNER_TEMP/pages-candidates.json"
+      - name: Download checked main
+        if: fromJSON(steps.candidates.outputs.candidates).main
+        uses: actions/download-artifact@v4
         with:
-          name: pages-candidate
-          path: ${{ runner.temp }}/pages-candidate
-      - name: Preserve other previews and update only this branch
+          artifact-ids: ${{ fromJSON(steps.candidates.outputs.candidates).main.artifactId }}
+          run-id: ${{ fromJSON(steps.candidates.outputs.candidates).main.runId }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/candidates/main
+          merge-multiple: true
+      - name: Download checked dev
+        if: fromJSON(steps.candidates.outputs.candidates).dev
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ fromJSON(steps.candidates.outputs.candidates).dev.artifactId }}
+          run-id: ${{ fromJSON(steps.candidates.outputs.candidates).dev.runId }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/candidates/dev
+          merge-multiple: true
+      - name: Download checked nightly
+        if: fromJSON(steps.candidates.outputs.candidates).nightly
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ fromJSON(steps.candidates.outputs.candidates).nightly.artifactId }}
+          run-id: ${{ fromJSON(steps.candidates.outputs.candidates).nightly.runId }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/candidates/nightly
+          merge-multiple: true
+      - name: Publish checked candidates and preserve other previews
         id: assembly
         env:
-          CHANNEL: ${{ github.ref_name }}
-          SOURCE_SHA: ${{ github.sha }}
-          RUN_NUMBER: ${{ github.run_number }}
           REPOSITORY: ${{ github.repository }}
         shell: bash
         run: |
@@ -128,12 +154,12 @@ jobs:
             git -C "$pages_tree" checkout --orphan gh-pages
             git -C "$pages_tree" rm -rf . > /dev/null
           fi
-          node scripts/assemble-pages.mjs "$RUNNER_TEMP/pages-candidate" "$pages_tree" "$CHANNEL" "$SOURCE_SHA" "$RUN_NUMBER" "$REPOSITORY"
+          node scripts/assemble-pages.mjs --candidates "$RUNNER_TEMP/pages-candidates.json" "$RUNNER_TEMP/candidates" "$pages_tree" "$REPOSITORY"
           git -C "$pages_tree" config user.name 'github-actions[bot]'
           git -C "$pages_tree" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git -C "$pages_tree" add --all
           if ! git -C "$pages_tree" diff --cached --quiet; then
-            git -C "$pages_tree" commit -m "Publish $CHANNEL from $SOURCE_SHA"
+            git -C "$pages_tree" commit -m 'Publish latest checked branch previews'
             git -C "$pages_tree" push origin HEAD:gh-pages
           fi
           mkdir "$RUNNER_TEMP/pages-site"
