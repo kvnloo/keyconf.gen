@@ -420,3 +420,14 @@ resume promise; it does not claim human listening or headphone verification.
 The preview browser check uses software rendering and reduced motion, as the
 existing accessory rendering check does. Screenshot capture follows a fresh
 preview load, separate from the delayed audio-resume test.
+
+### Release confirmation
+
+GitHub Actions run [34055025269](https://github.com/kvnloo/keyconf.gen/actions/runs/34055025269)
+passed all checks and deployment for `96775ffe4dc68e0ea4c86e18ea121deeb8f8d000`.
+The nightly Pages release marker confirms that revision, run 56, published at
+2026-09-06T19:34:57.884Z. The correction after the initial preview release only
+updates the imported-build browser journey to choose “Customize a copy.” The
+Sites nightly runtime remains the validated preview implementation from
+`d582c2386eb2a1a101a3e88d8784ef5763e9d76f`, version 6; its deployment and a
+fresh-visitor preview check succeeded. Main and dev were not promoted.

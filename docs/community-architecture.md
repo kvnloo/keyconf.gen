@@ -1,6 +1,6 @@
 # Community architecture
 
-Status: storage foundation implemented locally, September 6, 2026; Google setup explicitly deferred by the user. This document defines a buildable extension. It does not claim accounts, community publishing or client proposals are shipped.
+Status: private storage foundation deployed on nightly, September 6, 2026; Google setup explicitly deferred by the user. This document defines a buildable extension. It does not claim accounts, community publishing or client proposals are shipped.
 
 ## Product decision
 
@@ -135,3 +135,16 @@ Authentication and storage decisions follow the installed Sites [authentication 
 `db/community.ts`, `lib/community.ts`, and migration `0001_panoramic_ken_ellis.sql` implement private account/profile/build storage. Eight real SQLite tests cover chosen normalized handles, owner-only reads, idempotent operations, conflict retries, source-evidence retention, invalid input, bounded request bodies and private error responses. The list returns the newest 100 snapshots using the owner/date index; pagination is still needed before promising an unlimited library.
 
 The unfinished ChatGPT-specific account page and API drafts were removed when Google was selected and setup deferred. No sign-in button, account page, or community API is being shipped with this storage foundation. The UI, hosted Google identity/session boundary, end-to-end account verification, favorites, public profiles and proposals remain pending.
+
+## Portable preview release
+
+The `#preview=` flow shipped on nightly September 6, 2026. It reuses validated
+portable build data and provides independent geometry, audio, source links and
+explicit customization. It creates no account or publication record and is not
+a revocable client proposal. A clean visitor receives no device draft until
+customizing. Existing `#build=` links retain direct-import compatibility.
+
+Next account-independent UI work is a single search entry across available
+parts and studio destinations. Show only implemented destinations and real
+product references. Creator search, favorites and attributed feedback remain
+dependent on the Google/account integration; do not fill them with fake users.
