@@ -163,7 +163,7 @@ export function newAccessorySelection(productId: string): AccessorySelection {
   return { id: crypto.randomUUID(), productId, quantity: 1, location };
 }
 
-export function parseAccessories(value: unknown): AccessorySelection[] {
+export function parseAccessorySnapshot(value: unknown): AccessorySelection[] {
   if (value === undefined) return [];
   if (!Array.isArray(value) || value.length > 100)
     throw new Error('The accessory list is damaged or exceeds 100 selections.');
@@ -181,24 +181,33 @@ export function parseAccessories(value: unknown): AccessorySelection[] {
       throw new Error(
         'Each accessory needs a unique ID and a quantity from 1 to 100.',
       );
-    const product = accessoryCatalog.find(
-      (entry) => entry.id === item.productId,
-    );
-    if (!product)
-      throw new Error('This accessory is not in the product library.');
+    if (!identifier(item.productId))
+      throw new Error('Invalid saved accessory ID.');
     const location = parseLocation(item.location);
-    if (location.kind !== product.placement)
-      throw new Error('This accessory cannot use that type of placement.');
     if (location.kind === 'key' && item.quantity !== 1)
       throw new Error('Assign each artisan keycap to its own key.');
     ids.add(item.id);
     return {
       id: item.id,
-      productId: product.id,
+      productId: item.productId,
       quantity: item.quantity,
       location,
     };
   });
+}
+
+export function parseAccessories(value: unknown): AccessorySelection[] {
+  const selections = parseAccessorySnapshot(value);
+  for (const selection of selections) {
+    const product = accessoryCatalog.find(
+      (item) => item.id === selection.productId,
+    );
+    if (!product)
+      throw new Error('This accessory is not in the product library.');
+    if (selection.location.kind !== product.placement)
+      throw new Error('This accessory cannot use that type of placement.');
+  }
+  return selections;
 }
 
 export type AccessoryAspect =

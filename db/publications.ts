@@ -1,6 +1,6 @@
 import { parsePublicBuildEvidence } from '../lib/build-evidence.ts';
 import { CommunityError, parseCommunityProfile } from '../lib/community.ts';
-import { parseBuild, type Build } from '../lib/build.ts';
+import { parseBuild, parseBuildSnapshot, type Build } from '../lib/build.ts';
 import {
   parsePublicationRequest,
   type PublicationRequest,
@@ -25,7 +25,13 @@ const joins =
 function publication(row: Row) {
   const metadata = parsePublicationRequest(JSON.parse(row.metadata));
   const author = parseCommunityProfile(JSON.parse(row.author));
-  const { build, evidence } = restoreSnapshot(row);
+  const { build, evidence } = restoreSnapshot(row, true);
+  let customization: 'available' | 'unavailable' = 'available';
+  try {
+    parseBuild(build);
+  } catch {
+    customization = 'unavailable';
+  }
   const selected = new Set(Object.values(build.selection));
   return {
     id: row.id,
@@ -46,14 +52,20 @@ function publication(row: Row) {
       customParts: build.customParts.filter((part) => selected.has(part.id)),
     },
     evidence,
+    customization,
     publishedAt: row.publishedAt,
     withdrawnAt: row.withdrawnAt,
   };
 }
 
-function restoreSnapshot(row: Pick<Row, 'payload' | 'evidence'>) {
+function restoreSnapshot(
+  row: Pick<Row, 'payload' | 'evidence'>,
+  historical = false,
+) {
   try {
-    const build: Build = parseBuild(JSON.parse(row.payload));
+    const build: Build = historical
+      ? parseBuildSnapshot(JSON.parse(row.payload))
+      : parseBuild(JSON.parse(row.payload));
     const evidence = parsePublicBuildEvidence(JSON.parse(row.evidence), build);
     return { build, evidence };
   } catch {

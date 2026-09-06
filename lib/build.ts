@@ -9,6 +9,7 @@ import { soundPacks } from './sound-packs.ts';
 import { publicUrl } from './import-products.ts';
 import {
   parseAccessories,
+  parseAccessorySnapshot,
   type AccessorySelection,
 } from './build-accessories.ts';
 
@@ -158,7 +159,7 @@ export function parseCustomParts(value: unknown): Part[] {
   });
 }
 
-export function parseBuild(value: unknown): Build {
+export function parseBuildSnapshot(value: unknown): Build {
   if (!object(value) || value.version !== 1)
     throw new Error(
       'This build format is not supported. Open a current Keyconf build file or link.',
@@ -183,10 +184,7 @@ export function parseBuild(value: unknown): Build {
   if (
     !object(audio) ||
     typeof audio.source !== 'string' ||
-    !(
-      audio.source === 'synthesized' ||
-      soundPacks.some((p) => p.id === audio.source)
-    ) ||
+    !text(audio.source, 120) ||
     !(
       audio.character === 'linear' ||
       audio.character === 'tactile' ||
@@ -202,7 +200,6 @@ export function parseBuild(value: unknown): Build {
       'The saved audio settings are not supported. Open another build file or link.',
     );
   const customParts = parseCustomParts(value.customParts);
-  const parts = [...catalog, ...customParts];
   const selection = { ...initialSelection };
   if (!object(value.selection))
     throw new Error('The saved build is missing its component list.');
@@ -210,7 +207,11 @@ export function parseBuild(value: unknown): Build {
     const id = value.selection[category];
     if (
       typeof id !== 'string' ||
-      !parts.some((p) => p.id === id && p.category === category)
+      !text(id, 4000) ||
+      (id.startsWith('import:') &&
+        !customParts.some(
+          (part) => part.id === id && part.category === category,
+        ))
     ) {
       throw new Error(
         `The saved ${category} is missing from this build. Open a complete build file or link.`,
@@ -234,7 +235,7 @@ export function parseBuild(value: unknown): Build {
     profile,
     selection,
     customParts,
-    accessories: parseAccessories(value.accessories),
+    accessories: parseAccessorySnapshot(value.accessories),
     audio: {
       source: audio.source,
       character: audio.character,
@@ -242,6 +243,31 @@ export function parseBuild(value: unknown): Build {
       damping: audio.damping,
     },
   };
+}
+
+export function parseBuild(value: unknown): Build {
+  const build = parseBuildSnapshot(value);
+  const parts = [...catalog, ...build.customParts];
+  for (const category of categories) {
+    if (
+      !parts.some(
+        (part) =>
+          part.id === build.selection[category] && part.category === category,
+      )
+    )
+      throw new Error(
+        `The saved ${category} is missing from this build. Open a complete build file or link.`,
+      );
+  }
+  if (
+    build.audio.source !== 'synthesized' &&
+    !soundPacks.some((pack) => pack.id === build.audio.source)
+  )
+    throw new Error(
+      'The saved audio settings are not supported. Open another build file or link.',
+    );
+  parseAccessories(build.accessories);
+  return build;
 }
 
 export function readBuildFile(content: string): Build {

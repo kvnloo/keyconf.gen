@@ -951,3 +951,82 @@ test('publication evidence rejects malformed JSON values before writing and stri
   });
   assert.ok((await withdrawPublication(db, alice, published.id)).withdrawnAt);
 });
+
+test('published snapshots preserve retired component, accessory and recording evidence without enabling editor restoration', async (t) => {
+  const { catalog } = await import('../lib/catalog.ts');
+  const { soundPacks } = await import('../lib/sound-packs.ts');
+  const { parseBuild } = await import('../lib/build.ts');
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const accessory = accessoryCatalog.find((item) => item.kind === 'macropad');
+  const saved = await saveBuild(
+    db,
+    alice,
+    save({
+      ...defaultBuild,
+      accessories: [
+        {
+          id: 'historical-accessory',
+          productId: accessory.id,
+          quantity: 1,
+          location: { kind: 'external', position: 'right' },
+        },
+      ],
+    }),
+  );
+  const request = {
+    operationId: 'historical-evidence-release',
+    buildId: saved.id,
+    title: 'Historical build',
+    note: '',
+    kind: 'build',
+  };
+  const release = await publishBuild(db, alice, request);
+  assert.equal(release.customization, 'available');
+  const { parseBuildSnapshot } = await import('../lib/build.ts');
+  assert.throws(() =>
+    parseBuildSnapshot({
+      ...saved.build,
+      customParts: [],
+      selection: { ...saved.build.selection, switch: 'import:missing' },
+    }),
+  );
+
+  const removals = [
+    [catalog, saved.build.selection.case],
+    [accessoryCatalog, accessory.id],
+    [soundPacks, saved.build.audio.source],
+  ];
+  for (const [list, id] of removals) {
+    const index = list.findIndex((item) => item.id === id);
+    assert.ok(index >= 0);
+    const [removed] = list.splice(index, 1);
+    try {
+      const singleRetirement = await readPublicPublication(db, release.id);
+      assert.equal(singleRetirement.customization, 'unavailable');
+      assert.deepEqual(singleRetirement.evidence, release.evidence);
+      assert.throws(() => parseBuild(singleRetirement.build));
+    } finally {
+      list.splice(index, 0, removed);
+    }
+  }
+  for (const [list, id] of removals) {
+    const index = list.findIndex((item) => item.id === id);
+    const [removed] = list.splice(index, 1);
+    t.after(() => list.splice(index, 0, removed));
+  }
+  const historical = await readPublicPublication(db, release.id);
+  assert.equal(historical.customization, 'unavailable');
+  assert.deepEqual(historical.build, release.build);
+  assert.deepEqual(historical.evidence, release.evidence);
+  assert.throws(() => parseBuild(historical.build));
+  assert.deepEqual(await publishBuild(db, alice, request), historical);
+  await assert.rejects(
+    publishBuild(db, alice, {
+      ...request,
+      operationId: 'new-retired-evidence-release',
+    }),
+    { code: 'saved_build_unavailable' },
+  );
+  assert.ok((await withdrawPublication(db, alice, release.id)).withdrawnAt);
+});

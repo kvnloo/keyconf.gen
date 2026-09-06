@@ -223,3 +223,26 @@ location kind. A SQLite regression rejects a macropad rewritten as a key-mounted
 artisan while preserving normal publication reads. The reviewer found no other
 concrete blockers in the scoped parser. Nineteen community tests pass after the
 fix; final production checks are running.
+
+### Historical publication reads
+
+Snapshot parsing now validates saved structure separately from current editor
+catalog support. Public reads validate the historical snapshot against its
+frozen evidence and return `customization: available | unavailable`. They do
+not substitute current product descriptions or audio provenance. New releases
+still require the current editor parser; idempotent retries of an existing
+release retain historical data. Editor imports, links and private build reads
+continue through the strict current-catalog parser.
+
+A real SQLite regression removes the selected case, external accessory and
+recording from the runtime catalogs, then proves identical public build/evidence,
+unavailable customization, strict editor rejection, stable operation retries,
+rejection of a new release and successful withdrawal. Twenty community tests
+pass. This storage read capability still needs public-page UI integration.
+
+Independent review caught a missing-import distinction: a selected `import:` ID
+must still have its own stored custom part in the same category. The structural
+parser now requires that record, preventing missing import details from being
+misrepresented as documented historical catalog evidence. Retirement tests also
+remove case, accessory and recording independently, so strict editor rejection
+is proven for each path.
