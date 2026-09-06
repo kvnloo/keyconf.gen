@@ -313,3 +313,11 @@ The Q1 HE 8K reference now identifies its supplied keycaps as documented only wi
 Browser verification checks the factory relationship and its removal after choosing a different switch. The first broader browser run later failed at an unrelated audio readiness check: a JavaScript click followed visibility alone. A controlled delayed-sample experiment confirmed that a visible disabled play button does nothing when clicked through JavaScript. The verifier now waits for Playwright actionability before the in-page click. The original scheduled-voice and mute assertions and deadline remain intact; the full browser regression passes. Application playback code is unchanged.
 
 Strict types, lint, formatting and both builds pass. The production phone/share journey also passes with the supplied-keycap relationship. The preceding assembly release `bda3575` completed check and deploy in GitHub run `34044373374`; this keycap change is a later source checkpoint.
+
+## Selected-switch listening context
+
+The sound panel now names the selected hardware switch and explains that the chosen recording is independent of component changes. The reference library has an explicit Search selected switch action. It uses the selected name, clears a conflicting family filter and leaves native playback and the video player unchanged. It does not infer an acoustic match, automatically select a recording, or synthesize missing coverage.
+
+The browser regression searches Oil King after selecting a different family, finds its indexed reference, and confirms the native sound choice and unopened video player are unchanged. It retains the playback retry, cancellation and mute checks. A 320px journey searches Ultra-Fast Lime, verifies the honest no-results state, resets the search and checks overflow; the touch-sized action was visually inspected. No audio assets or processing changed. The full 75-test suite, types, lint and formatting pass; build/publication checkpoints follow after execution.
+
+Both builds and the production phone journey pass. The preceding supplied-keycap release `c5e35e3` passed check and deploy in run `34044756586`, and public nightly metadata confirms it. The listening-context update is a later source checkpoint awaiting its own publication.

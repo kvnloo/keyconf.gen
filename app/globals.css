@@ -1036,6 +1036,12 @@ button:disabled {
   font-size: 18px;
   margin: 0 0 8px;
 }
+.sound-library .selected-switch-search {
+  font-size: 14px;
+  margin-bottom: 16px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
 .sound-library > small {
   display: block;
   margin: 10px 0;

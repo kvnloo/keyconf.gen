@@ -167,7 +167,40 @@ try {
     else await route.continue();
   });
   await audioPage.goto(new URL('#studio', base).href);
+  await tab(audioPage, 'Components').click();
+  await audioPage.getByRole('combobox', { name: 'Starting assembly' }).click();
+  await audioPage
+    .getByRole('option', { name: '75% · Keychron Q1 Max', exact: true })
+    .click();
   await tab(audioPage, 'Sound').click();
+  await audioPage.getByText(/Your build uses Oil King/).waitFor();
+  const chosenSound = await audioPage
+    .getByRole('combobox', { name: 'Typing sound' })
+    .innerText();
+  await audioPage.getByRole('combobox', { name: 'Switch family' }).click();
+  await audioPage.getByRole('option', { name: 'Clicky', exact: true }).click();
+  await button(audioPage, 'Search selected switch: Oil King').click();
+  assert.equal(
+    await audioPage
+      .getByRole('searchbox', { name: 'Find a switch' })
+      .inputValue(),
+    'Oil King',
+  );
+  assert.equal(
+    await audioPage
+      .getByRole('combobox', { name: 'Switch family' })
+      .innerText(),
+    'All families',
+  );
+  await audioPage
+    .locator('.sound-results')
+    .getByRole('button', { name: /Gateron Oil King/ })
+    .waitFor();
+  assert.equal(
+    await audioPage.getByRole('combobox', { name: 'Typing sound' }).innerText(),
+    chosenSound,
+  );
+  assert.equal(await audioPage.locator('.reference-player iframe').count(), 0);
   await audioPage
     .getByRole('alert')
     .filter({ hasText: 'Recordings could not load' })

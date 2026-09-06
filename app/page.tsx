@@ -408,6 +408,7 @@ function KeyboardStudio({
     setNotice(featured.name + ' opened. Undo returns to your previous build.');
   }
   const parts = useMemo(() => [...catalog, ...imports], [imports]);
+  const selectedSwitch = parts.find((part) => part.id === selection.switch);
   const checks = useMemo(
     () => checkBuild(selection, parts, layout),
     [selection, parts, layout],
@@ -1278,9 +1279,10 @@ function KeyboardStudio({
                   </span>
                   <h3>Hear the switch.</h3>
                   <p className="muted">
-                    Type with a recorded switch, or explore original typing
-                    tests below. Each recording reflects the keyboard it was
-                    captured on.
+                    Your build uses{' '}
+                    {selectedSwitch?.name ?? 'an unverified switch'}. Typing
+                    audio uses the recording you choose here. Changing parts
+                    does not change that recording.
                   </p>
                 </div>
                 <label htmlFor="sound-pack">Typing sound</label>
@@ -1415,6 +1417,7 @@ function KeyboardStudio({
                   )}
                 </div>
                 <SoundReferences
+                  switchName={selectedSwitch?.name}
                   selected={reference}
                   onSelect={(record) => {
                     if (record) {

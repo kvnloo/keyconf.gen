@@ -8,9 +8,11 @@ export type SoundReference = (typeof catalog.records)[number];
 export default function SoundReferences({
   onSelect,
   selected,
+  switchName,
 }: {
   onSelect: (record: SoundReference | null) => void;
   selected: SoundReference | null;
+  switchName?: string;
 }) {
   const [query, setQuery] = useState('');
   const [family, setFamily] = useState('all');
@@ -28,6 +30,17 @@ export default function SoundReferences({
         {catalog.records.length} original sound tests by Click and Thock. Listen
         to the recorded build and compare switches.
       </p>
+      {switchName && (
+        <button
+          className="button secondary selected-switch-search"
+          onClick={() => {
+            setQuery(switchName);
+            setFamily('all');
+          }}
+        >
+          Search selected switch: {switchName}
+        </button>
+      )}
       <label htmlFor="sound-search">Find a switch</label>
       <input
         id="sound-search"
