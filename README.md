@@ -43,7 +43,7 @@ The model uses a 19.05 mm key pitch as a design unit. It is not dimensionally va
 
 ## Catalog and research
 
-See `docs/research.md` for source coverage and the database design. Imported product data is a review draft. Layout percentage, stem family, and "hot-swap" alone cannot prove compatibility. The current checker intentionally keeps incomplete matches unknown.
+See `docs/research.md` for source coverage and the database design. The nightly [SQLite observation collector](docs/catalog-observations.md) retains paginated source evidence with resumable runs; `npm run catalog:observe -- --help` shows its options. This local administrative catalog is separate from the reviewed builder parts and browser saves. Imported product data is a review draft. Layout percentage, stem family, and "hot-swap" alone cannot prove compatibility. The current checker intentionally keeps incomplete matches unknown.
 
 The bundled switch recordings come from kbsim via the audio-specific MIT-licensed packs in [Keyboard Sounds](https://github.com/nathan-fiscaletti/keyboardsounds). Each pack preserves its license notice and original bytes. These are recordings of switches in other builds; changing the visual case or keycaps does not transform their audio. Full capture details are unknown. YouTube references play in the original player; their audio is not extracted or redistributed.
 

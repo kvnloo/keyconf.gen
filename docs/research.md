@@ -92,3 +92,7 @@ Ingestion should run as `URL → source adapter → immutable response snapshot 
 SQLite is appropriate for this research catalog. [SQLite's deployment guidance](https://www.sqlite.org/whentouse.html) and [WAL documentation](https://www.sqlite.org/wal.html) distinguish read concurrency from the single-writer limit. PostgreSQL becomes useful for concurrent import/review workers and production accounts. [JSONB](https://www.postgresql.org/docs/current/datatype-json.html) can retain vendor payloads, while fit-critical fields remain typed and indexed.
 
 Next coverage priorities are manufacturer-authorized CAD/material scans, exact keycap inventories, revision-specific magnetic-switch compatibility, licensed standardized sound sessions, and contracted retail feeds. Further general searching will not replace those data agreements or measurements.
+
+## Retaining new observations
+
+The nightly [catalog collector](catalog-observations.md) now retains normalized public-product observations in a separate local SQLite database. It preserves per-page timestamps, decimal price strings, source/coverage, cursors and history through interrupted runs. These unreviewed observations are not added to the curated product counts or presented as verified compatibility. See the collector documentation for the tested live sample, replay semantics and remaining hosted-ingestion work.

@@ -43,4 +43,5 @@ next-env.d.ts
 *.blend1
 
 /data/*.sqlite
+/data/*.sqlite-*
 /docs/report-source.md

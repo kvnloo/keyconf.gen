@@ -21,7 +21,8 @@
     "verify:decks": "node scripts/verify_decks.mjs",
     "verify:typing": "node scripts/verify_typing.mjs",
     "verify:featured": "node --experimental-strip-types scripts/verify_featured.mjs",
-    "verify:room": "node scripts/verify_room.mjs"
+    "verify:room": "node scripts/verify_room.mjs",
+    "catalog:observe": "node --experimental-strip-types scripts/observe_catalog.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
