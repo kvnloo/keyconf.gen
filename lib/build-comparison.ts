@@ -27,6 +27,7 @@ function values(build: Build) {
       );
       return {
         label: category,
+        identity: build.selection[category],
         value: part
           ? `${part.brand} ${part.name} · ${part.source} · ${part.detail}`
           : build.selection[category],
@@ -40,9 +41,27 @@ function values(build: Build) {
       label: `${key} key color`,
       value: build.palette[key].toLowerCase(),
     })),
-    { label: 'Accessories', value: accessories.join('\n') || 'None' },
+    {
+      label: 'Accessories',
+      value: accessories.join('\n') || 'None',
+      identity: JSON.stringify(
+        build.accessories
+          .map((item) => [
+            item.productId,
+            item.quantity,
+            item.location.kind,
+            item.location.kind === 'key'
+              ? item.location.keyId
+              : item.location.kind === 'embedded'
+                ? item.location.slotId
+                : item.location.position,
+          ])
+          .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
+      ),
+    },
     {
       label: 'Sound reference',
+      identity: build.audio.source,
       value:
         soundPacks.find((pack) => pack.id === build.audio.source)?.name ??
         build.audio.source,
@@ -50,20 +69,31 @@ function values(build: Build) {
     { label: 'Synthesized switch character', value: build.audio.character },
     {
       label: 'Playback volume',
-      value: `${Math.round(build.audio.volume * 100)}%`,
+      value: `${(build.audio.volume * 100).toLocaleString('en-US', { maximumSignificantDigits: 15 })}%`,
+      identity: String(build.audio.volume),
     },
     { label: 'Sound damping', value: String(build.audio.damping) },
   ];
 }
 
 export function compareBuilds(original: Build, candidate: Build) {
-  const before = new Map(
-    values(original).map((item) => [item.label, item.value]),
-  );
+  const before = new Map(values(original).map((item) => [item.label, item]));
   return values(candidate).flatMap((item) => {
     const previous = before.get(item.label);
-    return previous !== undefined && previous !== item.value
-      ? [{ label: item.label, before: previous, after: item.value }]
-      : [];
+    if (
+      !previous ||
+      (previous.value === item.value && previous.identity === item.identity)
+    )
+      return [];
+    const sameLabel = previous.value === item.value;
+    return [
+      {
+        label: item.label,
+        before: sameLabel
+          ? `${previous.value} (${previous.identity})`
+          : previous.value,
+        after: sameLabel ? `${item.value} (${item.identity})` : item.value,
+      },
+    ];
   });
 }

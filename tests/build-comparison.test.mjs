@@ -80,3 +80,31 @@ test('selected imported part details are compared while unused parts are ignored
     /Revised dimensions/,
   );
 });
+
+test('distinct imported part identities and precise volume changes are not hidden by display labels', () => {
+  const part = {
+    id: 'import:first',
+    category: 'case',
+    name: 'Custom case',
+    brand: 'Maker',
+    detail: 'Case',
+    source: 'https://example.com/case',
+    family: 'unknown',
+    evidence: 'unknown',
+  };
+  const original = {
+    ...defaultBuild,
+    selection: { ...defaultBuild.selection, case: part.id },
+    customParts: [part],
+  };
+  const candidate = structuredClone(original);
+  candidate.customParts[0].id = 'import:second';
+  candidate.selection.case = 'import:second';
+  assert.equal(compareBuilds(original, candidate)[0]?.label, 'case');
+  const quiet = {
+    ...defaultBuild,
+    audio: { ...defaultBuild.audio, volume: 0.701 },
+  };
+  const louder = { ...quiet, audio: { ...quiet.audio, volume: 0.702 } };
+  assert.equal(compareBuilds(quiet, louder)[0]?.label, 'Playback volume');
+});

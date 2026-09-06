@@ -644,3 +644,11 @@ The browser check loads a revision with one layout change, verifies both values,
 rejects malformed JSON while preserving the previous comparison, checks local
 storage is unchanged, clears the result and runs mobile overflow/accessibility
 checks. All 144 unit tests, type checking, lint and the production build passed.
+
+Comparison review found that display labels alone could conceal different
+imported part IDs, and integer percentage formatting could conceal small saved
+volume changes. Comparison now also checks part, recording and accessory
+identity, and retains precise volume values. Identical labels include the
+underlying identity when it is the only difference. A regression test first
+reproduced the missed imported-part change, then passed after the correction;
+all four comparison tests, type checking and lint passed.
