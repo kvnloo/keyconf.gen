@@ -672,3 +672,18 @@ read-only review found no concrete blocker within this storage scope.
 No account endpoint or proposal page is exposed. Google integration, token
 rotation, owner lists, client response storage and the complete two-person
 proposal experience remain unfinished.
+
+
+## Creator proposal library storage
+
+Owner proposal lists now return 25-item pages containing only title, ID, creation
+time and closure time. The additive `0006_proposal_library.sql` migration adds
+the owner/date/ID index for this query. Closed proposals remain manageable, and
+listing does not depend on parsing the original snapshot. No token, brief,
+source evidence or full build payload is selected.
+
+All 26 community tests passed. The new SQLite check traverses 28 proposals
+across tied timestamps, verifies ownership and closed-item retention, rejects
+invalid cursors, and confirms index use after deliberately damaging the base
+snapshot. This is internal storage; the creator's account interface is still
+unimplemented.

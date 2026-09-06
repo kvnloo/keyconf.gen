@@ -135,5 +135,10 @@ export const communityProposals = sqliteTable(
       table.accountId,
       table.operationId,
     ),
+    index('community_proposal_account_created').on(
+      table.accountId,
+      table.createdAt,
+      table.id,
+    ),
   ],
 );

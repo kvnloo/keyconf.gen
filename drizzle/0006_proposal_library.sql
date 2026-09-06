@@ -1,0 +1,1 @@
+CREATE INDEX `community_proposal_account_created` ON `community_proposal` (`account_id`,`created_at`,`id`);

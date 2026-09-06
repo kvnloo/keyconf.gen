@@ -151,3 +151,43 @@ export async function closeProposal(db: Database, subject: string, id: string) {
   if (!row) throw unavailable();
   return row;
 }
+
+export async function listOwnedProposals(
+  db: Database,
+  subject: string,
+  cursor?: { createdAt: string; id: string },
+) {
+  if (
+    cursor &&
+    (!/^[a-zA-Z0-9_-]{16,100}$/.test(cursor.id) ||
+      !Number.isFinite(Date.parse(cursor.createdAt)) ||
+      new Date(cursor.createdAt).toISOString() !== cursor.createdAt)
+  )
+    throw new CommunityError(
+      'invalid_request',
+      'This proposal page cursor is invalid.',
+      400,
+    );
+  const where = cursor ? ' AND (created_at<? OR (created_at=? AND id<?))' : '';
+  const statement = db.prepare(
+    `SELECT id,title,created_at AS createdAt,closed_at AS closedAt FROM community_proposal WHERE account_id=(SELECT id FROM community_account WHERE subject=?)${where} ORDER BY created_at DESC,id DESC LIMIT 26`,
+  );
+  const query = cursor
+    ? statement.bind(subject, cursor.createdAt, cursor.createdAt, cursor.id)
+    : statement.bind(subject);
+  const { results } = await query.all<{
+    id: string;
+    title: string;
+    createdAt: string;
+    closedAt: string | null;
+  }>();
+  const items = results.slice(0, 25);
+  const last = items.at(-1);
+  return {
+    items,
+    next:
+      results.length > 25 && last
+        ? { createdAt: last.createdAt, id: last.id }
+        : null,
+  };
+}

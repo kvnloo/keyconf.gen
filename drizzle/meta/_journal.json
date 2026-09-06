@@ -43,6 +43,13 @@
       "when": 1788736440994,
       "tag": "0005_client_proposals",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1788737103058,
+      "tag": "0006_proposal_library",
+      "breakpoints": true
     }
   ]
 }

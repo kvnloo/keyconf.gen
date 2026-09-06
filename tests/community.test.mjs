@@ -1,5 +1,6 @@
 import {
   createProposal,
+  listOwnedProposals,
   readProposalPreview,
   closeProposal,
 } from '../db/proposals.ts';
@@ -1300,4 +1301,76 @@ test('conflicting concurrent proposals preserve one winner and retired catalog p
       row.detail.includes('community_proposal_token_digest_unique'),
     ),
   );
+});
+
+test('owner proposal pages retain closed items and traverse timestamp ties without reading private payloads or tokens', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const created = [];
+  for (let i = 0; i < 28; i++)
+    created.push(
+      await createProposal(db, alice, {
+        operationId: `proposal-list-operation-${i}`,
+        buildId: saved.id,
+        title: `Proposal ${i}`,
+        brief: 'Client-only brief.',
+      }),
+    );
+  db.sqlite
+    .prepare('UPDATE community_proposal SET created_at=?')
+    .run('2026-09-01T00:00:00.000Z');
+  const closed = await closeProposal(db, alice, created[0].id);
+  db.sqlite
+    .prepare('UPDATE community_build SET payload=? WHERE id=?')
+    .run('{}', saved.id);
+  const first = await listOwnedProposals(db, alice);
+  assert.equal(first.items.length, 25);
+  assert.ok(first.next);
+  const second = await listOwnedProposals(db, alice, first.next);
+  assert.equal(second.items.length, 3);
+  assert.equal(second.next, null);
+  const all = [...first.items, ...second.items];
+  assert.deepEqual(
+    all.map((item) => item.id),
+    created
+      .map((item) => item.id)
+      .sort()
+      .reverse(),
+  );
+  assert.equal(
+    all.find((item) => item.id === closed.id).closedAt,
+    closed.closedAt,
+  );
+  assert.deepEqual(await listOwnedProposals(db, bob, first.next), {
+    items: [],
+    next: null,
+  });
+  assert.deepEqual(Object.keys(all[0]).sort(), [
+    'closedAt',
+    'createdAt',
+    'id',
+    'title',
+  ]);
+  for (const cursor of [
+    { id: 'invalid', createdAt: first.next.createdAt },
+    { id: first.next.id, createdAt: 'invalid' },
+    { id: first.next.id, createdAt: '2026-09-01' },
+  ])
+    await assert.rejects(listOwnedProposals(db, alice, cursor), {
+      code: 'invalid_request',
+    });
+  const query = db.queries.find(
+    (sql) =>
+      sql.includes('FROM community_proposal WHERE account_id=') &&
+      sql.includes('LIMIT 26'),
+  );
+  assert.ok(query);
+  const plan = db.sqlite.prepare(`EXPLAIN QUERY PLAN ${query}`).all(alice);
+  assert.ok(
+    plan.some((row) =>
+      row.detail.includes('community_proposal_account_created'),
+    ),
+  );
+  assert.doesNotMatch(query, /token_digest|payload|evidence|brief/);
 });
