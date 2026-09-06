@@ -503,3 +503,11 @@ further specific accessory hosts and geometry; and broader licensed native
 sound coverage. Shared portable previews are available now, but do not supply
 verified creator identity or a feedback inbox. No complete-community claim is
 made by this release.
+
+Q1 release confirmation: GitHub run 34059354855 completed successfully for
+`c0ab9d29c72d3b9512b93d12b8b4866a23ed16d4`. The deployed Sites browser check
+passed, including real stock-slot dropdown changes from confirmed to unknown
+and back, assembled/exploded captures, shared preview, and usable customization
+with no horizontal overflow at 390 and 320 CSS pixels. This does not establish
+exact manufacturer enclosure fidelity, measured latency or human listening
+quality. The browser coverage is retained in `scripts/verify_q1.mjs`.

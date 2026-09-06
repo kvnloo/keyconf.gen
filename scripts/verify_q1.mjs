@@ -51,6 +51,27 @@ try {
     await page.locator('.accessory-fit').innerText(),
     /Fit confirmed/,
   );
+  const slot = page.getByRole('combobox', {
+    name: 'Board slot for Aluminum knob',
+  });
+  await slot.click();
+  await page
+    .getByRole('option', { name: 'Choose a slot', exact: true })
+    .click();
+  await page.waitForFunction(() =>
+    document
+      .querySelector('.accessory-fit')
+      ?.textContent?.includes('Fit unknown'),
+  );
+  await slot.click();
+  await page
+    .getByRole('option', { name: 'Stock knob cap', exact: true })
+    .click();
+  await page.waitForFunction(() =>
+    document
+      .querySelector('.accessory-fit')
+      ?.textContent?.includes('Fit confirmed'),
+  );
   console.log('Q1 Max rendered: 81 switches; stock cap fit confirmed.');
   await page.screenshot({
     path: 'outputs/q1-max-desktop.png',
@@ -82,6 +103,20 @@ try {
       .innerText(),
     /Placement: stock-knob\. Fit: confirmed/,
   );
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth + 1,
+      ),
+      true,
+      `Q1 preview overflows at ${width}px`,
+    );
+    assert.equal(
+      await page.getByRole('button', { name: /Customize a copy/ }).isVisible(),
+      true,
+    );
+  }
   assert.deepEqual(errors, []);
   console.log(
     'Q1 Max renders 81 switches and confirms the stock replacement cap.',
