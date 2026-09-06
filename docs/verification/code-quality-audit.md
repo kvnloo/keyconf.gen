@@ -22,7 +22,7 @@ A broader optional lint scan produced 730 diagnostics before changes. Most were 
 ## Verification
 
 - Clean dependency installation, strict types including unused checks, zero-warning lint, formatting and actionlint pass.
-- All 66 Node tests pass, including real SQLite transaction/resume checks and the four new streamed-request cases. The actual local import route also returned HTTP 413 with CORS headers for oversized UTF-8 input.
+- The initial audit passed all 66 Node tests, including real SQLite transaction/resume checks and the four new streamed-request cases. The actual local import route also returned HTTP 413 with CORS headers for oversized UTF-8 input.
 - Both the server build and the actual `/keyconf.gen/nightly/` Pages build pass.
 - Portable builds, file restore, import selection/pricing, paginated import retry, featured-build isolation/navigation, control-deck undo/save/share and five-width/200% zoom accessibility journeys pass.
 - The production preview-storage check and the real rendered typing journey pass, including recorded audio, key animation, mute, mobile settings, retry and Back.
@@ -44,9 +44,19 @@ Build notices about the large lazy Three.js chunk and Vinext's API classificatio
 | --- | --- | --- |
 | Desk and builder | Featured previews, explicit Customize/Resume, workshop, materials/colors, exploded view, breeze/steam, notebook/pencils, reduced motion and fallback | Manufacturer-exact models/material scans and wider physical-device performance measurements |
 | Typing and sound | Real self-hosted Monkeytype in the monitor, seven recorded packs, reference search, 0–200% volume, mute/retry and key response | More licensed recordings and measured complete-build acoustics; arbitrary combinations are not exact |
-| Product imports | Supported Shopify/structured-data preview, variant identity/pricing, local collection pagination and request bounds | Publish a separately selected backend release; Pages still calls stable Sites. Production queues/rate controls and an egress policy against DNS rebinding remain open |
-| Catalog | Curated parts, explicit compatibility evidence, research records and a resumable SQLite collector | The observation collector is local. Review workflow, hosted ingestion and expanded verified coverage are incomplete |
+| Product imports | Supported Shopify/structured-data preview, variant identity/pricing, local collection pagination and request bounds | Nightly now uses its separately deployed backend with pagination and bounded request/response handling. Production queues/rate controls and an egress policy against DNS rebinding remain open |
+| Catalog | 45 builder parts, six assemblies, explicit compatibility evidence, 128 browsable store observations and a resumable SQLite collector | The observation collector is local. Review workflow, hosted ingestion and expanded verified coverage are incomplete |
 | Persistence and release | Autosave/recovery, undo/redo, portable links/files, isolated preview saves and three public Pages channels | Deliberate promotion from nightly to dev/main; no automatic feature promotion |
 | Launch video | Verified 36-second revision with original cinematic scene and real UI/typing footage | Updating footage for later room/features is a new revision; subjective S+ quality is not established by technical checks |
 
 The main/dev/nightly split is complete. The broader product goal remains active; universal store import, every keyboard and exact sound simulation are not finished features.
+
+## Latest checkpoint
+
+The suite now contains 75 passing tests. Strict types, zero-warning lint and formatting pass again. The production dependency audit reports zero known advisories in this snapshot. Selected-switch reference search is committed at `d8642be`, but its GitHub run `34045112167` failed the production phone typing width assertion and skipped deployment. The last confirmed public nightly source is `c5e35e3`. Do not equate pushed source with a published release.
+
+The phone verifier waited for iframe readiness but, unlike the desktop path, did not wait for the 3D monitor projection. A controlled delayed-renderer experiment confirmed independent readiness: iframe content appeared while the renderer was loading, then the projected monitor measured 321.54px. That experiment did not reproduce the original sub-300px measurement. The verifier now waits for both renderer readiness and projection before measuring, retains the 300px requirement, and includes the actual width in a failure. This is a verification correction; the original CI failure remains inconclusive until subsequent evidence.
+
+The earlier application graph count describes the initial audit, before the observation modules were added. No claim of current exhaustive graph coverage or 100% test coverage follows from it. Hosted ingestion/review, wider licensed audio coverage, calibrated geometry/acoustics, physical-device performance and deliberate stable promotion remain unfinished.
+
+After the readiness correction, the complete production typing journey passes locally with headed software graphics, including desktop recording/mute, the 390px monitor/settings flow, and failed-frame recovery. The server build, actionlint, formatting and full dependency audit also pass. Public release metadata still reports `c5e35e3`; publication of this correction is a separate CI checkpoint.

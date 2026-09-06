@@ -220,6 +220,17 @@ try {
   const phoneFrame = phone.frameLocator('.typing-frame');
   await phoneFrame.locator('#words .word').first().waitFor();
   await phone.locator('.typing-load').waitFor({ state: 'hidden' });
+  await phone.waitForFunction(
+    () => {
+      const host = document.querySelector('.scene-host');
+      return (
+        host?.dataset.sceneStatus === 'ready' &&
+        host.dataset.monitor === 'projected'
+      );
+    },
+    null,
+    { timeout: 60000 },
+  );
   assert.ok(
     await phone.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -233,7 +244,7 @@ try {
   const phoneMonitor = await phone.locator('.monitor-display').boundingBox();
   assert.ok(
     phoneMonitor.width >= 300,
-    'Phone monitor must preserve readable text',
+    `Phone monitor must preserve readable text; measured ${phoneMonitor.width}px`,
   );
   await button(phoneFrame, 'test settings').tap();
   await phone.screenshot({
