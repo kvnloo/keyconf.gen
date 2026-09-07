@@ -173,18 +173,20 @@ export default function CommunityDiscovery() {
               ? 'No matching releases. Try another name or release type.'
               : 'No community builds published yet. Shared releases will appear here.'
             : state.kind === 'ready'
-              ? `${page?.items.length ?? 0} published builds shown.`
+              ? `${page?.items.length ?? 0} published ${page?.items.length === 1 ? 'build' : 'builds'} shown.`
               : ''}
       </output>
       {state.kind === 'error' && (
         <div className="community-error">
           <p role="alert">Published builds could not load.</p>
-          <button
-            className="button secondary"
-            onClick={() => load({ ...request })}
-          >
-            Try again
-          </button>
+          {!page?.next && (
+            <button
+              className="button secondary"
+              onClick={() => load({ ...request })}
+            >
+              Try again
+            </button>
+          )}
         </div>
       )}
       {!!page?.items.length && (
@@ -216,13 +218,16 @@ export default function CommunityDiscovery() {
           ))}
         </ul>
       )}
-      {state.kind !== 'error' && page?.next && (
+      {page?.next && (
         <button
           className="button secondary"
-          disabled={state.kind === 'loading'}
-          onClick={() => load({ ...request, cursor: page.next })}
+          aria-disabled={state.kind === 'loading'}
+          onClick={() => {
+            if (state.kind !== 'loading')
+              load({ ...request, cursor: page.next });
+          }}
         >
-          Load more builds
+          {state.kind === 'error' ? 'Retry loading more' : 'Load more builds'}
         </button>
       )}
     </section>

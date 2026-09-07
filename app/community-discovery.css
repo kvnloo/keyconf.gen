@@ -17,6 +17,7 @@
 }
 .community-search {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 0.7rem;
   margin: 1.5rem 0;
@@ -109,4 +110,15 @@
   .community-grid a {
     transition: none;
   }
+}
+
+.community-search .studio-select-trigger {
+  width: auto;
+  min-width: 160px;
+  flex: 0 1 180px;
+}
+
+.community-discovery button[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: wait;
 }

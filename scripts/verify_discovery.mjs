@@ -72,13 +72,21 @@ try {
     .fill('élodie');
   await gallery.getByRole('button', { name: 'Search', exact: true }).click();
   await expect(gallery.locator('.community-grid li')).toHaveCount(25);
-  await gallery.getByRole('button', { name: 'Load more builds' }).click();
+  await page.route('**/api/publications?*', (route) => route.abort(), {
+    times: 1,
+  });
+  await gallery.getByRole('button', { name: 'Load more builds' }).focus();
+  await page.keyboard.press('Enter');
+  const retryMore = gallery.getByRole('button', { name: 'Retry loading more' });
+  await expect(retryMore).toBeFocused();
+  await page.keyboard.press('Enter');
   await expect(gallery.locator('.community-grid li')).toHaveCount(27);
+  await expect(gallery.locator('.community-grid a').nth(25)).toBeFocused();
   await gallery
     .getByRole('searchbox', { name: 'Search community builds' })
-    .fill('Local');
+    .fill('Local active');
   await gallery.getByRole('button', { name: 'Search', exact: true }).click();
-  await expect(gallery.locator('.community-grid li')).toHaveCount(2);
+  await expect(gallery.locator('.community-grid li')).toHaveCount(1);
   assert.equal(
     await gallery.evaluate(
       (element) => element.scrollWidth > element.clientWidth + 1,
