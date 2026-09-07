@@ -2160,3 +2160,104 @@ test('imported accessory snapshots preserve variant evidence through retries and
     code: 'saved_build_unavailable',
   });
 });
+
+test('public discovery excludes private work and withdrawals, paginates ties and freezes attribution', async (t) => {
+  const { listPublicPublications } = await import('../db/publications.ts');
+  const { parseDiscoveryQuery } = await import('../lib/discovery.ts');
+  const db = database(t);
+  const query = parseDiscoveryQuery(new URLSearchParams());
+  await saveBuild(
+    db,
+    bob,
+    save({ ...defaultBuild, name: 'Secret client draft' }),
+  );
+  assert.deepEqual(await listPublicPublications(db, query), {
+    items: [],
+    next: null,
+  });
+  await saveProfile(db, alice, profile);
+  const saved = await saveBuild(db, alice, save());
+  const ids = [];
+  for (let index = 0; index < 27; index++) {
+    const released = await publishBuild(db, alice, {
+      operationId: `public-discovery-${index.toString().padStart(3, '0')}`,
+      buildId: saved.id,
+      title: `Keyboard ${index}`,
+      note: 'Public note',
+      kind: 'build',
+    });
+    ids.push(released.id);
+  }
+  db.sqlite.exec(
+    "UPDATE community_publication SET published_at='2026-09-06T00:00:00.000Z'",
+  );
+  await saveProfile(db, alice, {
+    ...profile,
+    handle: 'new_alice',
+    displayName: 'New name',
+  });
+  await saveProfile(db, bob, { ...profile, displayName: 'Other account' });
+  await withdrawPublication(db, alice, ids[0]);
+  const first = await listPublicPublications(db, query);
+  assert.equal(first.items.length, 25);
+  assert.ok(first.next);
+  const second = await listPublicPublications(db, {
+    ...query,
+    cursor: first.next,
+  });
+  assert.equal(second.items.length, 1);
+  assert.equal(second.next, null);
+  const items = [...first.items, ...second.items];
+  assert.equal(new Set(items.map((item) => item.id)).size, 26);
+  assert.ok(!items.some((item) => item.id === ids[0]));
+  for (const item of items) {
+    assert.deepEqual(Object.keys(item).sort(), [
+      'author',
+      'id',
+      'kind',
+      'publishedAt',
+      'title',
+    ]);
+    assert.deepEqual(item.author, {
+      handle: profile.handle,
+      displayName: profile.displayName,
+    });
+  }
+  for (const secret of [
+    alice,
+    bob,
+    saved.id,
+    'Secret client draft',
+    'operationId',
+    'Public note',
+    'Other account',
+  ])
+    assert.equal(JSON.stringify(items).includes(secret), false);
+  assert.equal(
+    (await listPublicPublications(db, { ...query, query: 'new_alice' })).items
+      .length,
+    0,
+  );
+  assert.equal(
+    (await listPublicPublications(db, { ...query, query: 'alice_keys' })).items
+      .length,
+    25,
+  );
+  assert.equal(
+    (await listPublicPublications(db, { ...query, query: '%' })).items.length,
+    0,
+  );
+  assert.equal(
+    (await listPublicPublications(db, { ...query, kind: 'drop' })).items.length,
+    0,
+  );
+  for (const value of [
+    'kind=private',
+    'q=' + 'a'.repeat(101),
+    'before=bad&id=valid-publication-id',
+    'id=valid-publication-id',
+  ])
+    assert.throws(() => parseDiscoveryQuery(new URLSearchParams(value)), {
+      code: 'invalid_request',
+    });
+});

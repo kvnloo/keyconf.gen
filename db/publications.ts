@@ -224,3 +224,56 @@ export async function listOwnedPublications(
         : null,
   };
 }
+
+export async function listPublicPublications(
+  db: Database,
+  input: import('../lib/discovery.ts').DiscoveryQuery,
+) {
+  const conditions = ['p.withdrawn_at IS NULL'];
+  const parameters: string[] = [];
+  if (input.kind !== 'all') {
+    conditions.push("json_extract(p.metadata,'$.kind')=?");
+    parameters.push(input.kind);
+  }
+  if (input.query) {
+    conditions.push(
+      "(instr(lower(json_extract(p.metadata,'$.title')),lower(?))>0 OR instr(lower(json_extract(p.author,'$.displayName')),lower(?))>0 OR instr(lower(json_extract(p.author,'$.handle')),lower(?))>0)",
+    );
+    parameters.push(input.query, input.query, input.query);
+  }
+  if (input.cursor) {
+    conditions.push('(p.published_at<? OR (p.published_at=? AND p.id<?))');
+    parameters.push(
+      input.cursor.publishedAt,
+      input.cursor.publishedAt,
+      input.cursor.id,
+    );
+  }
+  const { results } = await db
+    .prepare(
+      `SELECT ${projection} ${joins} WHERE ${conditions.join(' AND ')} ORDER BY p.published_at DESC,p.id DESC LIMIT 26`,
+    )
+    .bind(...parameters)
+    .all<Row>();
+  const items = results.slice(0, 25).map((row) => {
+    const value = publication(row);
+    return {
+      id: value.id,
+      title: value.title,
+      kind: value.release.kind,
+      author: {
+        handle: value.author.handle,
+        displayName: value.author.displayName,
+      },
+      publishedAt: value.publishedAt,
+    };
+  });
+  const last = items.at(-1);
+  return {
+    items,
+    next:
+      results.length > 25 && last
+        ? { publishedAt: last.publishedAt, id: last.id }
+        : null,
+  };
+}

@@ -64,6 +64,13 @@
       "when": 1788738284075,
       "tag": "0008_proposal_responses",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1788747995260,
+      "tag": "0009_faithful_maverick",
+      "breakpoints": true
     }
   ]
 }

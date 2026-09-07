@@ -26,3 +26,9 @@ Do not infer creator-profile visibility or ownership from a current handle. Prof
 Use real SQLite and Worker/browser fixtures. Verify anonymous gallery-to-release-to-customize, privacy exclusions, withdrawal, timestamp-tie pagination, frozen attribution after handle reassignment, original component/accessory source links, drop destination/availability, local-draft isolation and retired-part recovery. Check narrow layouts, keyboard navigation, empty and error recovery. Run types, unit tests, build and relevant publication verification. Update product status only from that evidence.
 
 Read-only high-effort review identified this gap in `db/publications.ts`, `app/page.tsx`, `db/schema.ts` and existing community/publication tests. No implementation or completion is claimed by this contract.
+
+## Storage checkpoint
+
+The public listing query, global recent-publication index and read-only API are implemented locally. The query returns only ID, title, release kind, frozen creator name/handle and publication time. It validates the underlying immutable snapshot before returning a summary. Search is literal over public title and frozen author fields; it does not search private notes or current profile records.
+
+All 37 community SQLite tests pass, including unpublished/withdrawn exclusions, timestamp-tie pagination, profile changes/handle reassignment, literal search and malformed cursor handling. Types, lint and formatting pass. The API has not yet been exercised against the compiled Worker. Client response parsing, gallery UI, static-host navigation and full browser coverage remain unfinished.

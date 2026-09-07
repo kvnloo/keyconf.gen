@@ -1,0 +1,1 @@
+CREATE INDEX `community_publication_public_recent` ON `community_publication` (`withdrawn_at`,`published_at`,`id`);

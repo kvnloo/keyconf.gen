@@ -85,6 +85,11 @@ export const communityPublications = sqliteTable(
       table.accountId,
       table.operationId,
     ),
+    index('community_publication_public_recent').on(
+      table.withdrawnAt,
+      table.publishedAt,
+      table.id,
+    ),
     index('community_publication_account_published').on(
       table.accountId,
       table.publishedAt,
