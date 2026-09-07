@@ -2095,3 +2095,68 @@ test('response lists paginate by owner or author and record the server-selected 
     1,
   );
 });
+
+test('imported accessory snapshots preserve variant evidence through retries and publication', async (t) => {
+  const { createImportedAccessory } =
+    await import('../lib/imported-accessories.ts');
+  const { newAccessorySelection } = await import('../lib/build-accessories.ts');
+  const db = database(t);
+  const legacy = await saveBuild(db, alice, save());
+  assert.deepEqual(
+    await saveBuild(
+      db,
+      alice,
+      save({ ...defaultBuild, customAccessories: [] }),
+    ),
+    legacy,
+  );
+  const product = await createImportedAccessory({
+    origin: 'import',
+    name: 'Client display',
+    brand: 'Maker',
+    detail: 'Unverified reference',
+    source: 'https://example.com/display?variant=amber',
+    sku: 'AMBER-42',
+    observedAt: '2026-09-06T00:00:00.000Z',
+    method: 'Pasted JSON-LD',
+    fit: 'unknown',
+    geometry: 'unavailable',
+    kind: 'screen',
+    placement: 'external',
+    sizeU: null,
+    stem: null,
+  });
+  const selected = newAccessorySelection(product.id, [product]);
+  const request = save(
+    { ...defaultBuild, customAccessories: [product], accessories: [selected] },
+    'imported-accessory-operation',
+  );
+  const saved = await saveBuild(db, alice, request);
+  assert.deepEqual(await saveBuild(db, alice, request), saved);
+  assert.deepEqual(
+    (await readBuild(db, alice, saved.id)).build.customAccessories,
+    [product],
+  );
+  await saveProfile(db, alice, profile);
+  const receipt = await publishBuild(db, alice, {
+    operationId: 'imported-accessory-publication',
+    buildId: saved.id,
+    title: 'Display study',
+    note: '',
+    kind: 'build',
+  });
+  const publication = await readPublicPublication(db, receipt.id);
+  assert.deepEqual(publication.evidence.accessoryReferences, [product]);
+  assert.equal(
+    publication.evidence.accessoryCompatibility[selected.id].status,
+    'unknown',
+  );
+  const forged = structuredClone(publication.evidence);
+  forged.accessoryReferences[0].source = 'https://example.com/substitution';
+  db.sqlite
+    .prepare('UPDATE community_build SET evidence=? WHERE id=?')
+    .run(JSON.stringify(forged), saved.id);
+  await assert.rejects(readPublicPublication(db, receipt.id), {
+    code: 'saved_build_unavailable',
+  });
+});
