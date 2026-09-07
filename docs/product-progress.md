@@ -903,3 +903,11 @@ The importer now accepts optional artisan width in key units and MX/Choc stem va
 Local verification passed at 320px: unknown defaults, invalid-width rejection/recovery, reviewed stem, matching key assignment and exported specification/source preservation. The real-GLB test confirms a reviewed 1u imported cap replaces only its target with neutral geometry and restores the original objects on removal. Types, all nine accessory-model tests, corrected lint and formatting passed. The browser check is included in CI. This increment has not been production-built or deployed yet.
 
 The prior gallery release remains saved as Sites version 36 from `3e983092b5e27c59f88a2f49106773370d3475d5`, awaiting GitHub run 34077882776. These artisan controls are separate from that prepared archive.
+
+## September 6, 2026: community discovery published
+
+Sites version 36 is live at https://keyconf-nightly.kvnloo.chatgpt.site from source `3e983092b5e27c59f88a2f49106773370d3475d5`. GitHub run 34077882776 passed. Deployment `appgdep_6a9e29d1a2a881919927a94d9c63c7a9` succeeded at 2026-09-07T03:05:07.897310+00:00 with the recent-publication and Unicode-search migrations.
+
+Live public API reads returned 200 for the gallery and an accented-name search, both with zero real publications and `Cache-Control: no-store`. An invalid private release filter returned 400. No test fixtures were published. The empty gallery is intentional until creators deliberately publish real releases. Google sign-in setup, authenticated profile/publishing/favorite/proposal controls and cross-account workflows remain unfinished.
+
+The browser handoff was skipped for this automatic background continuation, preserving the user's existing view. The optional artisan width/stem controls in b51431b are separate and not included in this release.
