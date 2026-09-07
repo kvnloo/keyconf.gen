@@ -43,6 +43,7 @@ jobs:
           fi
           npm run verify:browser
           npm run verify:imports
+          node scripts/verify_accessory_imports.mjs
           npm run verify:import-pages
           npm run verify:interface
           npm run verify:featured
@@ -78,6 +79,7 @@ jobs:
           xvfb-run -a npm run verify:typing
           xvfb-run -a npm run verify:room
           npm run verify:accessory-rendering
+          node --experimental-strip-types scripts/verify_imported_accessory_rendering.mjs
           xvfb-run -a npm run verify:q1
           npm run verify:shared-preview
           xvfb-run -a npm run verify:feedback
