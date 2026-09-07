@@ -873,3 +873,9 @@ Local evidence: 168 unit tests passed before the additional database regression;
 Source `eca693d75f1f03c977422e3b2b0328b422e52edb` is saved as Sites version 35 and awaits GitHub run 34075823394 before publication. The later `0c641b4` changes only database regression coverage. Version 34 remains public at this checkpoint. Do not report version 35 as deployed until its deployment succeeds.
 
 Remaining: hosted identity and account UI are deferred pending Google setup; creator publishing/proposal management, authenticated client feedback and account favorites are unfinished. Public discovery and creator/drop presentation still need implementation. Exact accessory geometry, embedded host support and broad catalog coverage remain incomplete.
+
+## September 6, 2026: accessory imports published
+
+Sites version 35 is now live at https://keyconf-nightly.kvnloo.chatgpt.site from source `eca693d75f1f03c977422e3b2b0328b422e52edb`. GitHub run 34075823394 completed successfully. Deployment `appgdep_6a9e212050bc8191abb13fe7ef0737dd` succeeded at 2026-09-07T02:28:03.705805+00:00. The public release includes reviewed accessory imports, source-preserving persistence/search/export and neutral geometry. The subsequent database test and discovery foundation are not part of that deployed version.
+
+Public discovery storage/query validation, index migration and anonymous read endpoint are committed as `7b989bd`. All 37 community tests and type/lint/format checks passed. Gallery UI, compiled Worker endpoint coverage and discovery publication remain pending. Browser handoff was skipped for this automatic background continuation; the existing user view was preserved.
