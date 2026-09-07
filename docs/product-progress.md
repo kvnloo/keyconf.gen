@@ -911,3 +911,9 @@ Sites version 36 is live at https://keyconf-nightly.kvnloo.chatgpt.site from sou
 Live public API reads returned 200 for the gallery and an accented-name search, both with zero real publications and `Cache-Control: no-store`. An invalid private release filter returned 400. No test fixtures were published. The empty gallery is intentional until creators deliberately publish real releases. Google sign-in setup, authenticated profile/publishing/favorite/proposal controls and cross-account workflows remain unfinished.
 
 The browser handoff was skipped for this automatic background continuation, preserving the user's existing view. The optional artisan width/stem controls in b51431b are separate and not included in this release.
+
+## September 6, 2026: artisan production verification
+
+The production build completed successfully. The compiled Worker browser journey passed at 320px, including invalid-width recovery, user-entered width/stem preservation, assignment to KeyA, export, reload and a clean-browser shared preview with the original maker link and unavailable-geometry notice. The same journey now runs in the default Worker verification suite; a focused `--artisan-imports` option supports local iteration. Lint and formatting checks passed.
+
+These controls remain unpublished at this checkpoint. Nightly is still version 36 while the new release's GitHub checks run. Known width enables a neutral placement marker; it does not establish physical fit or provide the maker's sculpt geometry.

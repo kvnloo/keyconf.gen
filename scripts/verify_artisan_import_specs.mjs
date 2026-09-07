@@ -77,9 +77,34 @@ try {
   assert.equal(product.source, source);
   assert.match(product.detail, /entered by user/);
   assert.equal(exported.build.accessories[0].location.keyId, 'KeyA');
+  await page.reload();
+  await page.getByRole('tab', { name: 'Components', exact: true }).click();
+  await page
+    .getByText('Accessories & artisan caps', { exact: false })
+    .first()
+    .click();
+  await expect(
+    page.getByRole('combobox', { name: 'Target key for Maker artisan' }),
+  ).toContainText('KeyA');
+  await page.getByRole('button', { name: 'Share build', exact: true }).click();
+  const link = await page
+    .getByRole('textbox', { name: 'Build link' })
+    .inputValue();
+  const friend = await browser.newPage();
+  friend.on('pageerror', (error) => errors.push(error.message));
+  await friend.goto(link);
+  await expect(
+    friend.getByRole('link', { name: 'Maker artisan', exact: true }),
+  ).toHaveAttribute('href', source);
+  await expect(
+    friend.getByText(
+      'Assigned to the visual key. Product geometry is unavailable;',
+      { exact: false },
+    ),
+  ).toBeVisible();
   assert.deepEqual(errors, []);
   console.log(
-    'Reviewed artisan width/stem, invalid-width recovery, key assignment and export passed at 320px.',
+    'Reviewed artisan width/stem, invalid-width recovery, key assignment export, reload and clean-browser preview passed at 320px.',
   );
 } finally {
   await browser.close();
