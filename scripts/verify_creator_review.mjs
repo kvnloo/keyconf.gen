@@ -1,5 +1,6 @@
 import { chromium, expect } from 'playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { mkdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { accountFixture } from './account-fixture/server.mjs';
 import { saveBuild, saveProfile } from '../db/community.ts';
@@ -68,6 +69,15 @@ try {
   await page
     .getByLabel('Device build name', { exact: true })
     .fill('Unrelated device edit');
+  await mkdir('outputs', { recursive: true });
+  await page
+    .locator('.publication-review')
+    .screenshot({ path: 'outputs/creator-review-mobile.png' });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page
+    .locator('.publication-review')
+    .screenshot({ path: 'outputs/creator-review-desktop.png' });
+  await page.setViewportSize({ width: 320, height: 844 });
   fixture.losePublicationResponse();
   await page
     .getByRole('button', { name: 'Publish build', exact: true })

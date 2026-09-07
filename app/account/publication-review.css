@@ -94,3 +94,12 @@
     width: 100%;
   }
 }
+
+.publication-review .build-thumbnail {
+  max-width: 440px;
+  margin-inline: auto;
+}
+.publication-review button.publication-secondary {
+  color: #deebd3;
+  background: transparent;
+}

@@ -462,6 +462,7 @@ function Review({
                         : 'Publish build'}
                 </button>
                 <button
+                  className="publication-secondary"
                   disabled={decision.kind === 'publishing'}
                   onClick={() => {
                     setError('');
@@ -512,7 +513,11 @@ function Review({
         </div>
       )}
       <div className="publication-actions">
-        <button disabled={decision.kind === 'publishing'} onClick={onCancel}>
+        <button
+          className="publication-secondary"
+          disabled={decision.kind === 'publishing'}
+          onClick={onCancel}
+        >
           {decision.kind === 'complete'
             ? 'Back to your builds'
             : 'Cancel publication'}
