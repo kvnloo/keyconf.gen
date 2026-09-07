@@ -31,7 +31,12 @@ try {
     { name: 'fixture_session', value: fixture.alice, url: fixture.url },
   ]);
   const page = await context.newPage();
-  await page.goto(fixture.url + '?review=' + saved.id);
+  await page.goto(fixture.url);
+  const prepare = page.getByRole('button', {
+    name: 'Prepare publication for Frozen forest',
+    exact: true,
+  });
+  await prepare.click();
   await expect(
     page.getByRole('heading', { name: 'Prepare publication' }),
   ).toBeVisible();
@@ -44,7 +49,8 @@ try {
       .get().n,
     0,
   );
-  await page.reload();
+  await expect(prepare).toBeFocused();
+  await prepare.click();
   await page
     .getByLabel('Publication title', { exact: true })
     .fill('Forest client release');
@@ -116,6 +122,7 @@ try {
     false,
   );
   await page.reload();
+  await prepare.click();
   await page.getByRole('radio', { name: 'Creator drop', exact: true }).check();
   await page
     .getByLabel('Publication title', { exact: true })

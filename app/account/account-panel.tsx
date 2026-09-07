@@ -1,6 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import type { Build } from '../../lib/build';
 import type { CommunityProfile, SaveBuildRequest } from '../../lib/community';
 import {
@@ -10,6 +17,7 @@ import {
 } from '../../lib/community-client';
 import './account-panel.css';
 
+const PublicationReview = lazy(() => import('./publication-review'));
 const client = createCommunityClient();
 const emptyProfile: CommunityProfile = {
   handle: '',
@@ -41,6 +49,7 @@ export default function AccountPanel({
   const [moreBusy, setMoreBusy] = useState(false);
   const [opening, setOpening] = useState<string | null>(null);
   const [notice, setNotice] = useState('');
+  const [reviewId, setReviewId] = useState<string | null>(null);
   const lifetime = useRef<AbortController | null>(null);
   const pendingSave = useRef<SaveBuildRequest | null>(null);
   const nextFocus = useRef<string | null>(null);
@@ -302,6 +311,14 @@ export default function AccountPanel({
                   >
                     {opening === item.id ? 'Opening…' : 'Open in studio'}
                   </button>
+                  <button
+                    id={`account-publish-${item.id}`}
+                    disabled={reviewId !== null}
+                    onClick={() => setReviewId(item.id)}
+                    aria-label={`Prepare publication for ${item.name}`}
+                  >
+                    Prepare publication
+                  </button>
                 </li>
               ))}
             </ul>
@@ -312,6 +329,20 @@ export default function AccountPanel({
             )}
             <output>{notice}</output>
           </section>
+          {reviewId && (
+            <Suspense fallback={<output>Loading publication review…</output>}>
+              <PublicationReview
+                savedBuildId={reviewId}
+                onCancel={() => {
+                  const button = document.getElementById(
+                    `account-publish-${reviewId}`,
+                  );
+                  setReviewId(null);
+                  requestAnimationFrame(() => button?.focus());
+                }}
+              />
+            </Suspense>
+          )}
           <details id="account-profile" className="account-profile">
             <summary>Your creator profile</summary>
             <p>
