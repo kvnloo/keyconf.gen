@@ -995,3 +995,9 @@ The production build for f500fec completed successfully. GitHub run 34083815159 
 ## September 6, 2026: typing performance update published
 
 GitHub run 34084317722 succeeded, including the complete rendered-production journey and Pages deployment. Sites version 39 is live at https://keyconf-nightly.kvnloo.chatgpt.site from source `f2d2058270babb8df1468a54bb1ba281a370f1ba`. Deployment `appgdep_6a9e43492d8c81918ac2ea300895fe8d` succeeded at 2026-09-07T04:53:45.928431+00:00. This publishes isolated last-key rendering without weakening Monkeytype result checks. The later publication-date boundary fix is not included in this saved release. Account and creator controls remain unexposed pending hosted identity. The user's existing browser view was preserved during the background deployment.
+
+## September 6, 2026: creator client and HTTP integration
+
+Added validated creator list/publish/withdraw client methods and seven client tests; all 20 client tests pass. Typecheck and focused lint/format pass. The isolated HTTP fixture now exposes the real creator handlers; publish/retry/list/withdraw passed against SQLite and runs in CI through `verify:creator`. Fixture routing uses explicit collection/record mappings rather than a growing nested conditional.
+
+Publishing receipts currently validate metadata and snapshot evidence but do not echo operation/build IDs, so client receipt matching does not prove the saved-revision identity. Resolve that protocol gap before relying on receipts in the review screen. The creator UI and hosted identity remain unfinished; no public route is activated.

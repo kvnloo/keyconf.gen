@@ -1,9 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultBuild } from '../lib/build.ts';
+import { snapshotEvidence } from '../db/build-snapshot.ts';
 import {
   CommunityClientError,
   createCommunityClient,
+  parseOwnedPublicationPage,
   parseSavedBuildPage,
 } from '../lib/community-client.ts';
 
@@ -24,6 +26,41 @@ const summary = (id = saved.id) => ({
   name: saved.name,
   createdAt: saved.createdAt,
 });
+const publicationRequest = {
+  operationId: 'creator-OPERATION_00001',
+  buildId: saved.id,
+  title: 'Forest keyboard',
+  note: 'My saved revision.',
+  kind: 'build',
+};
+const published = {
+  id: 'publication-000001',
+  title: publicationRequest.title,
+  note: publicationRequest.note,
+  release: { kind: 'build' },
+  author: profile,
+  build: { ...saved.build, name: publicationRequest.title },
+  evidence: JSON.parse(await snapshotEvidence(saved.build)),
+  customization: 'available',
+  publishedAt: saved.createdAt,
+  withdrawnAt: null,
+};
+const publicationSummary = (id = published.id) => ({
+  id,
+  title: published.title,
+  kind: published.release.kind,
+  publishedAt: published.publishedAt,
+  withdrawnAt: null,
+});
+const publishedReceipt = {
+  status: 'published',
+  id: published.id,
+  title: published.title,
+  note: published.note,
+  release: published.release,
+  author: published.author,
+  publishedAt: published.publishedAt,
+};
 
 function queued(...responses) {
   const calls = [];
@@ -444,4 +481,256 @@ test('favorites pagination rejects a repeated page and sends the validated curso
     new URL(requested, 'https://keyconf.example').searchParams.get('id'),
     item.publicationId,
   );
+});
+
+test('creator operations validate public receipts and discard snapshots and private fields', async () => {
+  const page = { items: [publicationSummary()], next: null };
+  const withdrawal = {
+    id: published.id,
+    withdrawnAt: '2026-09-06T01:00:00.000Z',
+  };
+  const { client, calls } = queued(
+    Response.json(page),
+    Response.json({
+      ...published,
+      accountId: 'private-account',
+      author: { ...profile, email: 'private@example.com' },
+    }),
+    Response.json({ ...withdrawal, build: saved.build }),
+    Response.json(withdrawal),
+    Response.json(withdrawal),
+  );
+  assert.deepEqual(await client.listOwnedPublications(), page);
+  assert.deepEqual(
+    await client.publishBuild(publicationRequest),
+    publishedReceipt,
+  );
+  assert.deepEqual(await client.withdrawPublication(published.id), withdrawal);
+  assert.deepEqual(await client.withdrawPublication(published.id), withdrawal);
+  assert.deepEqual(await client.publishBuild(publicationRequest), {
+    status: 'withdrawn',
+    ...withdrawal,
+  });
+  assert.deepEqual(
+    calls.map(({ url, method }) => [url, method]),
+    [
+      ['/api/community/publications', 'GET'],
+      ['/api/community/publications', 'POST'],
+      ['/api/community/publications/' + published.id, 'DELETE'],
+      ['/api/community/publications/' + published.id, 'DELETE'],
+      ['/api/community/publications', 'POST'],
+    ],
+  );
+  assert.deepEqual(JSON.parse(calls[1].body), publicationRequest);
+  for (const call of calls) {
+    assert.equal(call.credentials, 'same-origin');
+    assert.equal(call.cache, 'no-store');
+    assert.equal(call.redirect, 'error');
+    assert.ok(call.signal instanceof AbortSignal);
+    if (call.method === 'DELETE') assert.equal(call.body, '{}');
+  }
+});
+
+test('creator drops match the acknowledged release metadata and validate request links', async () => {
+  const request = {
+    ...publicationRequest,
+    kind: 'drop',
+    availability: 'Enquire with the maker',
+    externalUrl: 'https://maker.example/enquire',
+  };
+  const release = {
+    kind: request.kind,
+    availability: request.availability,
+    externalUrl: request.externalUrl,
+  };
+  const { client, calls } = queued(Response.json({ ...published, release }));
+  assert.deepEqual(await client.publishBuild(request), {
+    ...publishedReceipt,
+    release,
+  });
+  assert.deepEqual(JSON.parse(calls[0].body), request);
+  for (const changed of [
+    { ...release, kind: 'build' },
+    { ...release, availability: 'In stock' },
+    { ...release, externalUrl: 'https://other.example/' },
+  ]) {
+    const mismatch = queued(
+      Response.json({ ...published, release: changed }),
+    ).client;
+    await assert.rejects(
+      mismatch.publishBuild(request),
+      errorCode('invalid_response'),
+    );
+  }
+  assert.throws(
+    () =>
+      client.publishBuild({ ...request, externalUrl: 'javascript:alert(1)' }),
+    errorCode('invalid_request'),
+  );
+  assert.equal(calls.length, 1);
+});
+
+test('creator receipts reject wrong withdrawal IDs, mismatched metadata and malformed snapshots', async () => {
+  for (const value of [
+    null,
+    {},
+    { ...published, id: '../private' },
+    { ...published, title: 'Another publication' },
+    { ...published, note: 'Another revision' },
+    { ...published, release: { kind: 'drop' } },
+    { ...published, author: { ...profile, handle: 'admin' } },
+    { ...published, publishedAt: '2026-02-30T00:00:00.000Z' },
+    { ...published, withdrawnAt: 'yesterday' },
+    { ...published, customization: 'unknown' },
+    { ...published, build: {} },
+    { ...published, build: saved.build },
+    { ...published, evidence: {} },
+    { id: published.id, withdrawnAt: null },
+  ]) {
+    const { client } = queued(Response.json(value));
+    await assert.rejects(
+      client.publishBuild(publicationRequest),
+      errorCode('invalid_response'),
+    );
+  }
+  for (const value of [
+    { id: 'publication-000002', withdrawnAt: published.publishedAt },
+    { id: published.id, withdrawnAt: null },
+    { id: published.id, withdrawnAt: '2026-02-30T00:00:00.000Z' },
+    { id: published.id, removed: true },
+  ]) {
+    const { client } = queued(Response.json(value));
+    await assert.rejects(
+      client.withdrawPublication(published.id),
+      errorCode('invalid_response'),
+    );
+  }
+});
+
+test('publication retries preserve the entire validated operation without automatic retries', async () => {
+  const calls = [];
+  const client = createCommunityClient({
+    fetch: async (_url, init) => {
+      calls.push(init.body);
+      if (calls.length === 1)
+        throw new Error('Lost successful publication response');
+      return Response.json(published);
+    },
+  });
+  const request = structuredClone(publicationRequest);
+  await assert.rejects(
+    client.publishBuild(request),
+    errorCode('network_error'),
+  );
+  assert.equal(calls.length, 1);
+  assert.deepEqual(await client.publishBuild(request), publishedReceipt);
+  assert.equal(calls[0], calls[1]);
+  assert.deepEqual(JSON.parse(calls[0]), publicationRequest);
+  assert.deepEqual(request, publicationRequest);
+});
+
+test('owned publication pages validate descending dates and IDs including withdrawn entries', () => {
+  const first = publicationSummary('publication-000003');
+  const second = {
+    ...publicationSummary('publication-000002'),
+    withdrawnAt: '2026-09-06T01:00:00.000Z',
+  };
+  const third = {
+    ...publicationSummary('publication-000004'),
+    publishedAt: '2026-09-05T00:00:00.000Z',
+  };
+  const next = { id: third.id, publishedAt: third.publishedAt };
+  assert.deepEqual(
+    parseOwnedPublicationPage({
+      items: [
+        { ...first, accountId: 'private', build: saved.build },
+        second,
+        third,
+      ],
+      next,
+    }),
+    { items: [first, second, third], next },
+  );
+  for (const value of [
+    { items: [], next },
+    { items: [first] },
+    { items: [first, first], next: null },
+    { items: [second, first], next: null },
+    { items: [third, first], next: null },
+    { items: [first, { ...third, id: first.id }], next: null },
+    { items: [first], next },
+    { items: [first], next: { id: first.id, publishedAt: third.publishedAt } },
+    { items: Array.from({ length: 26 }, () => first), next: null },
+    ...[
+      { title: '' },
+      { title: 'hidden\nline' },
+      { kind: 'unknown' },
+      { publishedAt: '2026-02-30T00:00:00.000Z' },
+      { id: '../private' },
+      { withdrawnAt: undefined },
+      { withdrawnAt: 'yesterday' },
+    ].map((change) => ({ items: [{ ...first, ...change }], next: null })),
+  ])
+    assert.throws(
+      () => parseOwnedPublicationPage(value),
+      errorCode('invalid_response'),
+    );
+});
+
+test('owned publication pagination rejects repeated or newer page boundaries', async () => {
+  const before = {
+    id: 'publication-000003',
+    publishedAt: published.publishedAt,
+  };
+  const page = {
+    items: [publicationSummary('publication-000002')],
+    next: null,
+  };
+  const { client, calls } = queued(
+    Response.json(page),
+    Response.json({ items: [publicationSummary(before.id)], next: null }),
+    Response.json({
+      items: [publicationSummary('publication-000004')],
+      next: null,
+    }),
+    Response.json({
+      items: [
+        { ...publicationSummary(), publishedAt: '2026-09-07T00:00:00.000Z' },
+      ],
+      next: null,
+    }),
+  );
+  assert.deepEqual(await client.listOwnedPublications(before), page);
+  const url = new URL(calls[0].url, 'https://keyconf.example');
+  assert.equal(url.searchParams.get('before'), before.publishedAt);
+  assert.equal(url.searchParams.get('id'), before.id);
+  for (let index = 0; index < 3; index++)
+    await assert.rejects(
+      client.listOwnedPublications(before),
+      errorCode('invalid_response'),
+    );
+});
+
+test('invalid creator requests do not reach the transport', () => {
+  const { client, calls } = queued();
+  for (const action of [
+    () =>
+      client.publishBuild({ ...publicationRequest, operationId: undefined }),
+    () =>
+      client.publishBuild({
+        ...publicationRequest,
+        operationId: ' trimmed-operation-id ',
+      }),
+    () => client.publishBuild({ ...publicationRequest, buildId: '../private' }),
+    () => client.publishBuild({ ...publicationRequest, title: '' }),
+    () => client.withdrawPublication('../profile'),
+    () => client.withdrawPublication(1234567890123456),
+    () =>
+      client.listOwnedPublications({
+        id: published.id,
+        publishedAt: 'yesterday',
+      }),
+  ])
+    assert.throws(action, errorCode('invalid_request'));
+  assert.equal(calls.length, 0);
 });

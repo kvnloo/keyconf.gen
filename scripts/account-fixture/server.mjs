@@ -103,24 +103,41 @@ export async function accountFixture() {
                 },
               );
               const pathname = new URL(request.url).pathname;
-              const response =
-                pathname === '/api/community/profile'
-                  ? await api.profile(request)
-                  : pathname === '/api/community/favorites'
-                    ? await api.favorites(request)
-                    : pathname.startsWith('/api/community/favorites/')
-                      ? await api.favorite(
-                          request,
-                          pathname.slice('/api/community/favorites/'.length),
-                        )
-                      : pathname === '/api/community/builds'
-                        ? await api.builds(request)
-                        : pathname.startsWith('/api/community/builds/')
-                          ? await api.build(
-                              request,
-                              pathname.slice('/api/community/builds/'.length),
-                            )
-                          : new Response('Not found', { status: 404 });
+              const collections = new Map([
+                ['/api/community/profile', (request) => api.profile(request)],
+                ['/api/community/builds', (request) => api.builds(request)],
+                [
+                  '/api/community/favorites',
+                  (request) => api.favorites(request),
+                ],
+                [
+                  '/api/community/publications',
+                  (request) => api.publications(request),
+                ],
+              ]);
+              const records = new Map([
+                [
+                  '/api/community/builds/',
+                  (request, id) => api.build(request, id),
+                ],
+                [
+                  '/api/community/favorites/',
+                  (request, id) => api.favorite(request, id),
+                ],
+                [
+                  '/api/community/publications/',
+                  (request, id) => api.publication(request, id),
+                ],
+              ]);
+              const collection = collections.get(pathname);
+              const record = [...records].find(([prefix]) =>
+                pathname.startsWith(prefix),
+              );
+              const response = collection
+                ? await collection(request)
+                : record
+                  ? await record[1](request, pathname.slice(record[0].length))
+                  : new Response('Not found', { status: 404 });
               const holdIndex = holds.findIndex(
                 (hold) =>
                   hold.path === pathname && hold.method === request.method,

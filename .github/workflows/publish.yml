@@ -31,6 +31,8 @@ jobs:
         run: npm run verify:account
       - name: Verify favorites
         run: npm run verify:favorites
+      - name: Verify creator transport
+        run: npm run verify:creator
       - name: Verify browser journeys and accessibility
         shell: bash
         run: |

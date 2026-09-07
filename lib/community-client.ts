@@ -10,6 +10,13 @@ import {
   type SavedBuildSummary,
 } from './community.ts';
 import { requestText } from './request-text.ts';
+import { parseBuildSnapshot } from './build.ts';
+import { parsePublicBuildEvidence } from './build-evidence.ts';
+import {
+  parsePublicationRequest,
+  type PublicationRequest,
+} from './publication.ts';
+import type { PublicPublication } from '../db/publications.ts';
 
 export type SavedBuildCursor = Pick<SavedBuildSummary, 'createdAt' | 'id'>;
 export type SavedBuildPage = {
@@ -180,6 +187,116 @@ export function parseFavoritePage(value: unknown): FavoritePage {
   return { items, next };
 }
 
+export type PublicationCursor = Pick<PublicPublication, 'id' | 'publishedAt'>;
+export type OwnedPublicationSummary = PublicationCursor &
+  Pick<PublicPublication, 'title' | 'withdrawnAt'> & {
+    kind: PublicationRequest['kind'];
+  };
+export type OwnedPublicationPage = {
+  items: OwnedPublicationSummary[];
+  next: PublicationCursor | null;
+};
+export type PublicationWithdrawal = { id: string; withdrawnAt: string };
+export type PublicationReceipt =
+  | ({ status: 'published' } & Pick<
+      PublicPublication,
+      'id' | 'publishedAt' | 'title' | 'note' | 'release' | 'author'
+    >)
+  | ({ status: 'withdrawn' } & PublicationWithdrawal);
+
+function publicationCursor(value: unknown): PublicationCursor {
+  if (!object(value)) throw unreadable();
+  const parsed = cursor({ id: value.id, createdAt: value.publishedAt });
+  return { id: parsed.id, publishedAt: parsed.createdAt };
+}
+function olderPublication(left: PublicationCursor, right: PublicationCursor) {
+  return older(
+    { id: left.id, createdAt: left.publishedAt },
+    { id: right.id, createdAt: right.publishedAt },
+  );
+}
+function publicationWithdrawal(value: unknown): PublicationWithdrawal {
+  if (!object(value)) throw unreadable();
+  const parsed = cursor({ id: value.id, createdAt: value.withdrawnAt });
+  return { id: parsed.id, withdrawnAt: parsed.createdAt };
+}
+export function parseOwnedPublicationPage(
+  value: unknown,
+): OwnedPublicationPage {
+  if (!object(value) || !Array.isArray(value.items) || value.items.length > 25)
+    throw unreadable();
+  const items = value.items.map((item): OwnedPublicationSummary => {
+    const key = publicationCursor(item);
+    if (
+      !object(item) ||
+      typeof item.title !== 'string' ||
+      !item.title.trim() ||
+      item.title.length > 80 ||
+      /\p{Cc}/u.test(item.title) ||
+      (item.kind !== 'build' && item.kind !== 'drop')
+    )
+      throw unreadable();
+    const withdrawnAt =
+      item.withdrawnAt === null
+        ? null
+        : publicationWithdrawal(item).withdrawnAt;
+    return { ...key, title: item.title, kind: item.kind, withdrawnAt };
+  });
+  for (const [index, item] of items.entries())
+    if (index > 0 && !olderPublication(item, items[index - 1]))
+      throw unreadable();
+  if (new Set(items.map((item) => item.id)).size !== items.length)
+    throw unreadable();
+  const next = value.next === null ? null : publicationCursor(value.next);
+  const last = items.at(-1);
+  if (
+    next &&
+    (!last || next.id !== last.id || next.publishedAt !== last.publishedAt)
+  )
+    throw unreadable();
+  return { items, next };
+}
+
+function publicationReceipt(
+  value: unknown,
+  request: PublicationRequest,
+): PublicationReceipt {
+  if (!object(value)) throw unreadable();
+  if (value.withdrawnAt !== null)
+    return { status: 'withdrawn', ...publicationWithdrawal(value) };
+  const key = publicationCursor(value);
+  if (
+    value.title !== request.title ||
+    value.note !== request.note ||
+    !object(value.release) ||
+    value.release.kind !== request.kind ||
+    (request.kind === 'drop' &&
+      (value.release.availability !== request.availability ||
+        value.release.externalUrl !== request.externalUrl)) ||
+    (value.customization !== 'available' &&
+      value.customization !== 'unavailable')
+  )
+    throw unreadable();
+  const build = parseBuildSnapshot(value.build);
+  if (build.name !== request.title) throw unreadable();
+  parsePublicBuildEvidence(value.evidence, build);
+  return {
+    status: 'published',
+    ...key,
+    title: request.title,
+    note: request.note,
+    release:
+      request.kind === 'build'
+        ? { kind: 'build' }
+        : {
+            kind: 'drop',
+            availability: request.availability,
+            externalUrl: request.externalUrl,
+          },
+    author: parseCommunityProfile(value.author),
+  };
+}
+
 function profileResponse(value: unknown) {
   if (!object(value) || !('profile' in value)) throw unreadable();
   return value.profile === null ? null : parseCommunityProfile(value.profile);
@@ -292,6 +409,67 @@ export function createCommunityClient({
   }
 
   return {
+    listOwnedPublications(
+      before: PublicationCursor | null = null,
+      options: CommunityRequestOptions = {},
+    ) {
+      const validated =
+        before === null ? null : input(() => publicationCursor(before));
+      const query = validated
+        ? '?' +
+          new URLSearchParams({
+            before: validated.publishedAt,
+            id: validated.id,
+          })
+        : '';
+      return send(
+        '/api/community/publications' + query,
+        'GET',
+        (value) => {
+          const page = parseOwnedPublicationPage(value);
+          if (
+            validated &&
+            page.items[0] &&
+            !olderPublication(page.items[0], validated)
+          )
+            throw unreadable();
+          return page;
+        },
+        options,
+      );
+    },
+    publishBuild(
+      request: PublicationRequest,
+      options: CommunityRequestOptions = {},
+    ) {
+      const validated = input(() => parsePublicationRequest(request));
+      return send(
+        '/api/community/publications',
+        'POST',
+        (value) => publicationReceipt(value, validated),
+        options,
+        validated,
+      );
+    },
+    withdrawPublication(id: string, options: CommunityRequestOptions = {}) {
+      if (typeof id !== 'string' || !/^[a-zA-Z0-9_-]{16,100}$/.test(id))
+        throw new CommunityClientError(
+          'invalid_request',
+          'This publication identifier is invalid.',
+          400,
+        );
+      return send(
+        '/api/community/publications/' + encodeURIComponent(id),
+        'DELETE',
+        (value) => {
+          const receipt = publicationWithdrawal(value);
+          if (receipt.id !== id) throw unreadable();
+          return receipt;
+        },
+        options,
+        {},
+      );
+    },
     listFavorites(
       before: FavoriteCursor | null = null,
       options: CommunityRequestOptions = {},
