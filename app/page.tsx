@@ -489,6 +489,7 @@ function KeyboardStudio({
       },
       switchId: visibleBuild.selection.switch,
       accessories: visibleBuild.accessories,
+      customAccessories: visibleBuild.customAccessories,
       exploded: experience === 'typing' ? false : exploded,
       view,
       finish: visibleBuild.finish,

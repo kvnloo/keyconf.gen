@@ -232,3 +232,69 @@ test('embedded electronics remain unmounted outside keyboard bounds with capped 
   preview.dispose();
   assert.equal(preview.group.parent, null);
 });
+
+test('imported products use neutral markers and never inherit built-in product geometry', async () => {
+  const { createImportedAccessory } =
+    await import('../lib/imported-accessories.ts');
+  const { newAccessorySelection } = await import('../lib/build-accessories.ts');
+  const model = await keyboard();
+  const variants = [
+    { kind: 'macropad', placement: 'external' },
+    { kind: 'screen', placement: 'external' },
+    { kind: 'buttons', placement: 'embedded' },
+    { kind: 'knob', placement: 'embedded' },
+    { kind: 'artisan', placement: 'key' },
+  ];
+  const customAccessories = await Promise.all(
+    variants.map((variant) =>
+      createImportedAccessory({
+        ...variant,
+        origin: 'import',
+        name: `Unknown ${variant.kind}`,
+        brand: 'Maker',
+        detail: 'Imported reference',
+        source: 'https://example.com/part',
+        sku: null,
+        observedAt: '2026-09-06T00:00:00.000Z',
+        method: 'Structured data',
+        fit: 'unknown',
+        geometry: 'unavailable',
+        sizeU: null,
+        stem: null,
+      }),
+    ),
+  );
+  const selections = customAccessories.map((product) =>
+    newAccessorySelection(product.id, customAccessories),
+  );
+  const preview = createAccessoryPreview({
+    ...model,
+    customAccessories,
+    selections,
+  });
+  assert.deepEqual(preview.counts, {
+    artisan: 0,
+    external: 2,
+    planned: 2,
+    omitted: 1,
+  });
+  assert.equal(preview.group.children.length, 4);
+  for (const marker of preview.group.children) {
+    assert.equal(marker.name, 'unavailable-product-geometry');
+    assert.equal(marker.userData.geometry, 'unavailable');
+    assert.equal(marker.children.length, 2);
+    assert.ok(marker.userData.selectionId);
+  }
+  const disposed = new Set();
+  preview.group.traverse((object) => {
+    if (object instanceof THREE.Mesh) {
+      object.geometry.addEventListener('dispose', () =>
+        disposed.add(object.geometry),
+      );
+    }
+  });
+  preview.dispose();
+  assert.equal(disposed.size, 8);
+  preview.dispose();
+  assert.equal(disposed.size, 8);
+});

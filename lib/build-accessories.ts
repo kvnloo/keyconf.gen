@@ -434,13 +434,19 @@ export function unmountedPreviewNote(
       products.some(
         (product) =>
           product.id === selection.productId &&
-          (product.kind === 'screen' ||
+          (product.id.startsWith('import-accessory:') ||
+            product.kind === 'screen' ||
             product.kind === 'buttons' ||
             product.kind === 'encoder'),
       ),
   );
   const index = planned.findIndex((selection) => selection.id === id);
   if (index < 0) return null;
+  if (
+    index < MAX_UNMOUNTED_PREVIEWS &&
+    planned[index].productId.startsWith('import-accessory:')
+  )
+    return 'Unmounted reference marker: product geometry is unavailable. Not installed or powered; wiring and firmware are not configured.';
   return index < MAX_UNMOUNTED_PREVIEWS
     ? 'Unmounted parts tray: one illustrative module per selection. Not installed or powered; wiring and firmware are not configured.'
     : 'Not shown: the unmounted parts tray displays the first six module selections. This part remains in your build plan.';

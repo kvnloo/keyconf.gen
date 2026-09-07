@@ -79,6 +79,13 @@ export default function BuildAccessories({
               <p>
                 {product.brand} · {product.kind} · Quantity {item.quantity}
               </p>
+              {product.id.startsWith('import-accessory:') && (
+                <p>
+                  Imported reference. Product geometry is unavailable; neutral
+                  markers indicate placement only, not dimensions or physical
+                  fit.
+                </p>
+              )}
               {product.kind === 'artisan' && (
                 <>
                   <p>

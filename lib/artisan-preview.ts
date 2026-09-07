@@ -37,5 +37,7 @@ export function artisanPreviewNote(
     )
   )
     return 'Not shown: multiple artisan selections target this key. Move or remove one selection.';
+  if (product.id.startsWith('import-accessory:'))
+    return 'Assigned to the visual key. Product geometry is unavailable; the flat marker only indicates placement. Physical fit still needs verification.';
   return 'Assigned to the visual key. The preview is an illustrative sculpt; stem, profile and physical clearance still need verification.';
 }

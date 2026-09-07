@@ -1,23 +1,30 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {
-  accessoryCatalog,
   MAX_UNMOUNTED_PREVIEWS,
   type AccessorySelection,
 } from './build-accessories.ts';
+
+import {
+  resolveAccessoryProducts,
+  type ImportedAccessory,
+} from './imported-accessories.ts';
 
 const MAX_DESK_PREVIEWS = 6;
 
 // These original studies communicate placement, not manufacturer dimensions or fit.
 export function createAccessoryPreview({
   selections,
+  customAccessories,
   keys,
   bounds,
 }: {
   selections: readonly AccessorySelection[];
+  customAccessories?: readonly ImportedAccessory[];
   keys: ReadonlyMap<string, THREE.Object3D>;
   bounds: THREE.Box3;
 }) {
+  const products = resolveAccessoryProducts(customAccessories);
   const group = new THREE.Group();
   group.name = 'accessory-previews';
   const geometries = new Set<THREE.BufferGeometry>();
@@ -205,6 +212,20 @@ export function createAccessoryPreview({
     }
     return part;
   }
+  function referenceObject(width = 2.8, depth = 1.8) {
+    const reference = new THREE.Group();
+    reference.name = 'unavailable-product-geometry';
+    reference.userData.geometry = 'unavailable';
+    mesh(reference, box(width, 0.1, depth), material('#717b74', 0.8), 0, 0.05);
+    mesh(
+      reference,
+      box(width * 0.55, 0.02, 0.035, 0.01),
+      material('#c7cec4'),
+      0,
+      0.11,
+    );
+    return reference;
+  }
   const assigned = new Map<string, number>();
   for (const selection of selections) {
     if (selection.location.kind === 'key')
@@ -219,8 +240,11 @@ export function createAccessoryPreview({
   for (const selection of selections) {
     if (
       selection.location.kind === 'external' &&
-      accessoryCatalog.find((item) => item.id === selection.productId)?.kind ===
-        'macropad' &&
+      products.some(
+        (item) =>
+          item.id === selection.productId &&
+          (item.kind === 'macropad' || item.id.startsWith('import-accessory:')),
+      ) &&
       planned < MAX_DESK_PREVIEWS
     ) {
       totals[selection.location.position]++;
@@ -228,9 +252,7 @@ export function createAccessoryPreview({
     }
   }
   for (const selection of selections) {
-    const product = accessoryCatalog.find(
-      (item) => item.id === selection.productId,
-    );
+    const product = products.find((item) => item.id === selection.productId);
     const location = selection.location;
     if (product?.kind === 'artisan' && location.kind === 'key') {
       const key = keys.get(location.keyId);
@@ -261,12 +283,19 @@ export function createAccessoryPreview({
       originals.forEach(({ object }) => {
         object.visible = false;
       });
-      const cap = artisan(product.sizeU);
+      const cap = product.id.startsWith('import-accessory:')
+        ? referenceObject(product.sizeU - 0.08, 0.92)
+        : artisan(product.sizeU);
       cap.userData.selectionId = selection.id;
       key.add(cap);
       replacements.push({ group: cap, originals });
       counts.artisan++;
-    } else if (product?.kind === 'macropad' && location.kind === 'external') {
+    } else if (
+      product &&
+      location.kind === 'external' &&
+      (product.kind === 'macropad' ||
+        product.id.startsWith('import-accessory:'))
+    ) {
       if (counts.external >= MAX_DESK_PREVIEWS || bounds.isEmpty()) {
         counts.omitted++;
         continue;
@@ -275,7 +304,9 @@ export function createAccessoryPreview({
       const row = index % 3;
       const column = Math.floor(index / 3);
       const centered = row - (Math.min(totals[location.position], 3) - 1) / 2;
-      const pad = macropad();
+      const pad = product.id.startsWith('import-accessory:')
+        ? referenceObject()
+        : macropad();
       pad.userData.selectionId = selection.id;
       const gap = 0.6;
       pad.position.set(
@@ -293,7 +324,9 @@ export function createAccessoryPreview({
       counts.external++;
     } else if (
       location.kind === 'embedded' &&
-      (product?.kind === 'screen' ||
+      product &&
+      (product.id.startsWith('import-accessory:') ||
+        product.kind === 'screen' ||
         product?.kind === 'buttons' ||
         product?.kind === 'encoder')
     ) {
@@ -301,7 +334,13 @@ export function createAccessoryPreview({
         counts.omitted++;
         continue;
       }
-      const part = unmounted(product.kind);
+      const part = product.id.startsWith('import-accessory:')
+        ? referenceObject()
+        : product.kind === 'screen' ||
+            product.kind === 'buttons' ||
+            product.kind === 'encoder'
+          ? unmounted(product.kind)
+          : referenceObject();
       part.userData.selectionId = selection.id;
       part.userData.installation = 'unmounted';
       part.position.set(

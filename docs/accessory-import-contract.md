@@ -39,3 +39,11 @@ Current macropad, button-board and encoder studies describe known catalog produc
 - Unknown dimensions do not acquire fabricated widths/stems or branded geometry. Desktop/mobile rendering, removed selections, preview limits and resource disposal are verified.
 
 Do not expose the import choice until this complete path works. The account UI and Google setup remain separate unfinished work; accessory imports must also function in the current public studio.
+
+## Implementation checkpoint, September 6
+
+Reference parsing, build serialization/pruning, snapshot evidence validation and editor/shared-review resolution are implemented. Imported selections now reach scene options and invalidate previews when references change. The renderer uses neutral placement markers instead of the built-in product studies, including external screens and unmounted knobs; unknown-width artisans remain omitted. UI copy identifies unavailable geometry.
+
+Verification: 167 tests and type/lint/format checks passed for the persistence/UI commit `ba8953e`. The subsequent renderer change passed all nine real-GLB accessory model tests, including imported-product geometry isolation and disposal. `scripts/verify_imported_accessory_rendering.mjs` passed against the local app at desktop/mobile widths, and both screenshots were inspected. Type/lint/format checks also passed for that change.
+
+Still unfinished: reviewed import controls and atomic addition, search/export lookup migration, broader round-trip/browser coverage, and deployment. These checkpoints do not satisfy the complete import contract or authorize calling PART-6 finished.

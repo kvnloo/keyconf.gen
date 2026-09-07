@@ -43,6 +43,7 @@ export type SceneOptions = Pick<Build, 'caseColor' | 'finish' | 'profile'> &
     environment: 'desk' | 'studio' | 'typing';
     roomMotion?: boolean;
     accessories?: readonly AccessorySelection[];
+    customAccessories?: Build['customAccessories'];
   };
 export type SceneStatus =
   | { kind: 'loading' | 'ready' }
@@ -394,6 +395,7 @@ export function createKeyboardScene(
     if (model && options.device.kind === 'keyboard') {
       accessories = createAccessoryPreview({
         selections: options.accessories ?? [],
+        customAccessories: options.customAccessories,
         keys,
         bounds: new THREE.Box3().setFromObject(model),
       });
@@ -932,7 +934,9 @@ export function createKeyboardScene(
       const assemblyChanged = next.exploded !== options.exploded;
       const accessoriesChanged =
         JSON.stringify(next.accessories) !==
-        JSON.stringify(options.accessories);
+          JSON.stringify(options.accessories) ||
+        JSON.stringify(next.customAccessories) !==
+          JSON.stringify(options.customAccessories);
       const changed = JSON.stringify(options) !== JSON.stringify(next);
       options = next;
       if (modelChanged) void loadModel(next.device);

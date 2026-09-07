@@ -106,6 +106,7 @@ export default function SharedBuildPreview({
       },
       switchId: build.selection.switch,
       accessories: build.accessories,
+      customAccessories: build.customAccessories,
       exploded,
       view,
       environment: 'studio',
@@ -378,6 +379,13 @@ export default function SharedBuildPreview({
                         <span>{part.name}</span>
                         <ArrowUpRight size={15} />
                       </a>
+                      {part.id.startsWith('import-accessory:') && (
+                        <small>
+                          Imported reference. Product geometry is unavailable;
+                          neutral markers indicate placement only, not
+                          dimensions or physical fit.
+                        </small>
+                      )}
                       {artisanPreviewNote(build, selection.id) && (
                         <small>{artisanPreviewNote(build, selection.id)}</small>
                       )}
