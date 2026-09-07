@@ -348,3 +348,100 @@ test('request timeouts abort fetch and return a typed retryable error', async ()
   await assert.rejects(client.listBuilds(), errorCode('timeout'));
   assert.equal(aborted, true);
 });
+
+test('favorite pages validate ordering and discard withdrawn and private fields', async () => {
+  const { parseFavoritePage } = await import('../lib/community-client.ts');
+  const first = {
+    publicationId: 'publication-000002',
+    createdAt: saved.createdAt,
+    status: 'available',
+    title: 'Forest',
+    kind: 'build',
+    secret: 'private',
+  };
+  const last = {
+    publicationId: 'publication-000001',
+    createdAt: saved.createdAt,
+    status: 'unavailable',
+    title: 'Withdrawn secret',
+  };
+  const page = parseFavoritePage({ items: [first, last], next: null });
+  assert.equal(JSON.stringify(page).includes('secret'), false);
+  assert.deepEqual(page.items[1], {
+    publicationId: last.publicationId,
+    createdAt: last.createdAt,
+    status: 'unavailable',
+  });
+  for (const value of [
+    { items: [last, first], next: null },
+    { items: [first, first], next: null },
+    { items: [first], next: last },
+    { items: [{ ...first, kind: 'unknown' }], next: null },
+    { items: [{ ...first, createdAt: 'yesterday' }], next: null },
+    { items: [], next: first },
+  ])
+    assert.throws(() => parseFavoritePage(value), { code: 'invalid_response' });
+});
+
+test('favorite client uses explicit repeatable state and checks acknowledgement identity', async () => {
+  const publicationId = 'publication-000001';
+  const responses = [
+    { publicationId, createdAt: saved.createdAt },
+    { publicationId, createdAt: saved.createdAt },
+    { publicationId, removed: true },
+    { publicationId: 'publication-000002', removed: true },
+  ];
+  const calls = [];
+  const client = createCommunityClient({
+    fetch: async (url, init) => {
+      calls.push({ url, ...init });
+      return Response.json(responses.shift());
+    },
+  });
+  assert.deepEqual(await client.setFavorite(publicationId, true), {
+    publicationId,
+    favorite: true,
+  });
+  await client.setFavorite(publicationId, true);
+  assert.deepEqual(await client.setFavorite(publicationId, false), {
+    publicationId,
+    favorite: false,
+  });
+  await assert.rejects(client.setFavorite(publicationId, false), {
+    code: 'invalid_response',
+  });
+  assert.deepEqual(
+    calls.map((call) => call.method),
+    ['PUT', 'PUT', 'DELETE', 'DELETE'],
+  );
+  for (const call of calls) {
+    assert.equal(call.url, '/api/community/favorites/' + publicationId);
+    assert.equal(call.credentials, 'same-origin');
+    assert.equal(call.body, '{}');
+  }
+  assert.throws(() => client.setFavorite('../bad', true), {
+    code: 'invalid_request',
+  });
+});
+
+test('favorites pagination rejects a repeated page and sends the validated cursor', async () => {
+  const item = {
+    publicationId: 'publication-000001',
+    createdAt: saved.createdAt,
+    status: 'unavailable',
+  };
+  let requested;
+  const client = createCommunityClient({
+    fetch: async (url) => {
+      requested = url;
+      return Response.json({ items: [item], next: null });
+    },
+  });
+  await assert.rejects(client.listFavorites(item), {
+    code: 'invalid_response',
+  });
+  assert.equal(
+    new URL(requested, 'https://keyconf.example').searchParams.get('id'),
+    item.publicationId,
+  );
+});

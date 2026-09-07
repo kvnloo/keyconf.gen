@@ -122,6 +122,64 @@ export function parseSavedBuildPage(value: unknown): SavedBuildPage {
   }
 }
 
+export type FavoriteCursor = { publicationId: string; createdAt: string };
+export type FavoriteItem = FavoriteCursor &
+  (
+    | { status: 'unavailable' }
+    | { status: 'available'; title: string; kind: 'build' | 'drop' }
+  );
+export type FavoritePage = {
+  items: FavoriteItem[];
+  next: FavoriteCursor | null;
+};
+
+function favoriteCursor(value: unknown): FavoriteCursor {
+  if (!object(value)) throw unreadable();
+  const parsed = cursor({
+    id: value.publicationId,
+    createdAt: value.createdAt,
+  });
+  return { publicationId: parsed.id, createdAt: parsed.createdAt };
+}
+function olderFavorite(left: FavoriteCursor, right: FavoriteCursor) {
+  return older(
+    { id: left.publicationId, createdAt: left.createdAt },
+    { id: right.publicationId, createdAt: right.createdAt },
+  );
+}
+export function parseFavoritePage(value: unknown): FavoritePage {
+  if (!object(value) || !Array.isArray(value.items) || value.items.length > 25)
+    throw unreadable();
+  const items = value.items.map((item): FavoriteItem => {
+    const key = favoriteCursor(item);
+    if (!object(item)) throw unreadable();
+    if (item.status === 'unavailable') return { ...key, status: 'unavailable' };
+    if (
+      item.status !== 'available' ||
+      typeof item.title !== 'string' ||
+      !item.title.trim() ||
+      item.title.length > 80 ||
+      (item.kind !== 'build' && item.kind !== 'drop')
+    )
+      throw unreadable();
+    return { ...key, status: 'available', title: item.title, kind: item.kind };
+  });
+  for (const [index, item] of items.entries())
+    if (index > 0 && !olderFavorite(item, items[index - 1])) throw unreadable();
+  if (new Set(items.map((item) => item.publicationId)).size !== items.length)
+    throw unreadable();
+  const next = value.next === null ? null : favoriteCursor(value.next);
+  const last = items.at(-1);
+  if (
+    next &&
+    (!last ||
+      next.publicationId !== last.publicationId ||
+      next.createdAt !== last.createdAt)
+  )
+    throw unreadable();
+  return { items, next };
+}
+
 function profileResponse(value: unknown) {
   if (!object(value) || !('profile' in value)) throw unreadable();
   return value.profile === null ? null : parseCommunityProfile(value.profile);
@@ -155,7 +213,7 @@ export function createCommunityClient({
 
   async function send<T>(
     path: string,
-    method: 'GET' | 'PATCH' | 'POST',
+    method: 'GET' | 'PATCH' | 'POST' | 'PUT' | 'DELETE',
     parse: (value: unknown) => T,
     options: CommunityRequestOptions,
     body?: unknown,
@@ -234,6 +292,65 @@ export function createCommunityClient({
   }
 
   return {
+    listFavorites(
+      before: FavoriteCursor | null = null,
+      options: CommunityRequestOptions = {},
+    ) {
+      const validated =
+        before === null ? null : input(() => favoriteCursor(before));
+      const query = validated
+        ? '?' +
+          new URLSearchParams({
+            before: validated.createdAt,
+            id: validated.publicationId,
+          })
+        : '';
+      return send(
+        '/api/community/favorites' + query,
+        'GET',
+        (value) => {
+          const page = parseFavoritePage(value);
+          if (
+            validated &&
+            page.items[0] &&
+            !olderFavorite(page.items[0], validated)
+          )
+            throw unreadable();
+          return page;
+        },
+        options,
+      );
+    },
+    setFavorite(
+      publicationId: string,
+      favorite: boolean,
+      options: CommunityRequestOptions = {},
+    ) {
+      if (!/^[a-zA-Z0-9_-]{16,100}$/.test(publicationId))
+        throw new CommunityClientError(
+          'invalid_request',
+          'This published-build identifier is invalid.',
+          400,
+        );
+      return send(
+        '/api/community/favorites/' + encodeURIComponent(publicationId),
+        favorite ? 'PUT' : 'DELETE',
+        (value) => {
+          if (favorite) {
+            const receipt = favoriteCursor(value);
+            if (receipt.publicationId !== publicationId) throw unreadable();
+          } else if (
+            !object(value) ||
+            value.publicationId !== publicationId ||
+            value.removed !== true
+          )
+            throw unreadable();
+          return { publicationId, favorite };
+        },
+        options,
+        {},
+      );
+    },
     readProfile(options: CommunityRequestOptions = {}) {
       return send('/api/community/profile', 'GET', profileResponse, options);
     },

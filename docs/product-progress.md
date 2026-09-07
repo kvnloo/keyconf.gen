@@ -953,3 +953,7 @@ Sites version 38 is live at https://keyconf-nightly.kvnloo.chatgpt.site from sou
 ## September 6, 2026: favorites request handlers
 
 Added private favorites list/add/remove methods to the provider-neutral account API factory. Real-SQLite integration checks prove verified ownership, repeat-add receipts, isolated removal, withdrawn-title redaction, anonymous rejection, cross-origin rejection and malformed cursor/identifier rejection. All nine account API tests pass, and typecheck passes. The factory remains unexposed in production; favorite controls and client integration remain unfinished, and Google setup is deferred.
+
+## September 6, 2026: favorites client preparation
+
+The account client now lists favorites with validated pagination and sends explicit PUT/DELETE state changes. It verifies acknowledgement identity, rejects repeated or malformed pages, and projects unavailable entries without old titles or extra fields. Three new client tests pass alongside the ten existing client tests. Typecheck, lint and targeted formatting pass. This is not yet a user-facing favorites workflow: the account component, fixture routing and browser journey still need integration, and hosted identity remains deferred.
