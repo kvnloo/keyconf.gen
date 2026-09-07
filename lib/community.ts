@@ -1,4 +1,8 @@
 import { pruneBuildImports, parseBuild, type Build } from './build.ts';
+import {
+  parsePublicBuildEvidence,
+  type PublicBuildEvidence,
+} from './build-evidence.ts';
 import { requestText } from './request-text.ts';
 
 export type CommunityProfile = {
@@ -8,7 +12,10 @@ export type CommunityProfile = {
   links: { label: string; url: string }[];
 };
 export type SavedBuildSummary = { id: string; name: string; createdAt: string };
-export type SavedBuild = SavedBuildSummary & { build: Build };
+export type SavedBuild = SavedBuildSummary & {
+  build: Build;
+  evidence?: PublicBuildEvidence;
+};
 export type SaveBuildRequest = { operationId: string; build: Build };
 export type CommunityErrorCode =
   | 'authentication_required'
@@ -227,7 +234,14 @@ export function parseSavedBuild(value: unknown): SavedBuild {
   const summary = parseSavedBuildSummary(value);
   if (!object(value))
     throw new Error('The saved build response could not be read.');
-  return { ...summary, build: parseBuild(value.build) };
+  const build = parseBuild(value.build);
+  return {
+    ...summary,
+    build,
+    ...(value.evidence === undefined
+      ? {}
+      : { evidence: parsePublicBuildEvidence(value.evidence, build) }),
+  };
 }
 
 export function parseSavedBuildSummaries(value: unknown): SavedBuildSummary[] {

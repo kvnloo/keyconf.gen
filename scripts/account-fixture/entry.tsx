@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import FavoritesPanel, {
   FavoriteButton,
 } from '../../app/account/favorites-panel';
+import PublicationReview from '../../app/account/publication-review';
 import AccountPanel from '../../app/account/account-panel';
 import { useBuild } from '../../app/use-build';
 import '../../app/globals.css';
@@ -11,6 +12,9 @@ function Fixture() {
   const [favoriteRevision, setFavoriteRevision] = useState(0);
   const candidate = new URL(window.location.href).searchParams.get(
     'publication',
+  );
+  const [reviewId, setReviewId] = useState(() =>
+    new URL(window.location.href).searchParams.get('review'),
   );
   const [notice, setNotice] = useState('');
   const notify = useCallback((message: string) => setNotice(message), []);
@@ -33,6 +37,12 @@ function Fixture() {
         </button>
         <output>{notice}</output>
       </section>
+      {ready && reviewId && (
+        <PublicationReview
+          savedBuildId={reviewId}
+          onCancel={() => setReviewId(null)}
+        />
+      )}
       {ready && <AccountPanel draft={build} onOpen={(saved) => edit(saved)} />}
       {ready && (
         <>

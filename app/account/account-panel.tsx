@@ -312,7 +312,7 @@ export default function AccountPanel({
             )}
             <output>{notice}</output>
           </section>
-          <details className="account-profile">
+          <details id="account-profile" className="account-profile">
             <summary>Your creator profile</summary>
             <p>
               Choose the identity you want to share. Saving this profile does

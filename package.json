@@ -41,7 +41,8 @@
     "verify:worker": "node --experimental-strip-types scripts/verify_worker.mjs",
     "verify:account": "node --experimental-strip-types scripts/verify_account.mjs",
     "verify:favorites": "node --experimental-strip-types scripts/verify_favorites.mjs",
-    "verify:creator": "node --experimental-strip-types scripts/verify_creator.mjs"
+    "verify:creator": "node --experimental-strip-types scripts/verify_creator.mjs",
+    "verify:creator-review": "node --experimental-strip-types scripts/verify_creator_review.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

@@ -258,6 +258,7 @@ test('private builds are owner-only immutable snapshots with idempotent retries'
   assert.deepEqual(Object.keys(first).sort(), [
     'build',
     'createdAt',
+    'evidence',
     'id',
     'name',
   ]);
@@ -266,6 +267,99 @@ test('private builds are owner-only immutable snapshots with idempotent retries'
       .count,
     3,
   );
+});
+
+test('owned saved-build evidence preserves retired source metadata across reads and retries', async (t) => {
+  const { catalog } = await import('../lib/catalog.ts');
+  const { soundPacks } = await import('../lib/sound-packs.ts');
+  const db = database(t);
+  const accessory = accessoryCatalog.find((item) => item.kind === 'macropad');
+  assert.ok(accessory);
+  const request = save({
+    ...defaultBuild,
+    accessories: [
+      {
+        id: 'saved-evidence-accessory',
+        productId: accessory.id,
+        quantity: 1,
+        location: { kind: 'external', position: 'right' },
+      },
+    ],
+  });
+  const saved = await saveBuild(db, alice, request);
+  assert.ok(saved.evidence);
+  assert.equal(saved.evidence.sound.recording.groups, undefined);
+  const metadata = [
+    catalog.find((part) => part.id === saved.build.selection.case),
+    accessory,
+    soundPacks.find((pack) => pack.id === saved.build.audio.source),
+  ];
+  for (const reference of metadata) {
+    assert.ok(reference);
+    const original = { name: reference.name, source: reference.source };
+    reference.name = 'Replacement catalog metadata';
+    reference.source = 'https://example.com/replacement-source';
+    t.after(() => Object.assign(reference, original));
+  }
+  assert.deepEqual(await readBuild(db, alice, saved.id), saved);
+  assert.deepEqual(await saveBuild(db, alice, request), saved);
+  assert.deepEqual(parseSavedBuild(saved), saved);
+  assert.equal(
+    JSON.stringify(saved.evidence).includes('replacement-source'),
+    false,
+  );
+  await assert.rejects(readBuild(db, bob, saved.id), {
+    code: 'build_not_found',
+    status: 404,
+  });
+});
+
+test('owned saved-build evidence rejects corruption and strips private fields at both boundaries', async (t) => {
+  const db = database(t);
+  const saved = await saveBuild(db, alice, save());
+  const evidence = JSON.parse(
+    db.sqlite
+      .prepare('SELECT evidence FROM community_build WHERE id=?')
+      .get(saved.id).evidence,
+  );
+  const invalid = [null, {}, { ...evidence, components: [] }];
+  const unsafe = structuredClone(evidence);
+  unsafe.sound.recording.source = 'javascript:alert(1)';
+  invalid.push(unsafe);
+  const mismatch = structuredClone(evidence);
+  mismatch.components[0].id = 'wrong-component';
+  invalid.push(mismatch);
+  for (const value of invalid) {
+    assert.throws(() => parseSavedBuild({ ...saved, evidence: value }));
+    db.sqlite
+      .prepare('UPDATE community_build SET evidence=? WHERE id=?')
+      .run(JSON.stringify(value), saved.id);
+    await assert.rejects(readBuild(db, alice, saved.id), {
+      code: 'saved_build_unavailable',
+      status: 422,
+    });
+    await assert.rejects(readBuild(db, bob, saved.id), {
+      code: 'build_not_found',
+      status: 404,
+    });
+  }
+  db.sqlite
+    .prepare('UPDATE community_build SET evidence=? WHERE id=?')
+    .run('{broken', saved.id);
+  await assert.rejects(readBuild(db, alice, saved.id), {
+    code: 'saved_build_unavailable',
+  });
+  evidence.privateNote = alice;
+  evidence.components[0].internal = alice;
+  evidence.sound.recording.internal = alice;
+  db.sqlite
+    .prepare('UPDATE community_build SET evidence=? WHERE id=?')
+    .run(JSON.stringify(evidence), saved.id);
+  assert.deepEqual(await readBuild(db, alice, saved.id), saved);
+  assert.deepEqual(parseSavedBuild({ ...saved, evidence }), saved);
+  const { evidence: omitted, ...legacy } = saved;
+  assert.ok(omitted);
+  assert.deepEqual(parseSavedBuild(legacy), legacy);
 });
 
 test('account saves strip unselected imports and retain selected sources and accessory evidence', async (t) => {

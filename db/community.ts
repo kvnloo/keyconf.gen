@@ -1,4 +1,5 @@
 import { parseBuild } from '../lib/build.ts';
+import { parsePublicBuildEvidence } from '../lib/build-evidence.ts';
 import { snapshotEvidence } from './build-snapshot.ts';
 import { digestText as digest } from '../lib/content-digest.ts';
 import {
@@ -115,15 +116,17 @@ export async function listBuilds(
   };
 }
 
-type StoredBuild = SavedBuildSummary & { payload: string };
+type StoredBuild = SavedBuildSummary & { payload: string; evidence: string };
 
 function savedBuild(row: StoredBuild): SavedBuild {
   try {
+    const build = parseBuild(JSON.parse(row.payload));
     return {
       id: row.id,
       name: row.name,
       createdAt: row.createdAt,
-      build: parseBuild(JSON.parse(row.payload)),
+      build,
+      evidence: parsePublicBuildEvidence(JSON.parse(row.evidence), build),
     };
   } catch {
     throw new CommunityError(
@@ -141,7 +144,7 @@ export async function readBuild(
 ): Promise<SavedBuild> {
   const row = await db
     .prepare(
-      'SELECT b.id, b.name, b.payload, b.created_at AS createdAt FROM community_build b JOIN community_account a ON a.id=b.account_id WHERE b.id=? AND a.subject=?',
+      'SELECT b.id, b.name, b.payload, b.evidence, b.created_at AS createdAt FROM community_build b JOIN community_account a ON a.id=b.account_id WHERE b.id=? AND a.subject=?',
     )
     .bind(id, subject)
     .first<StoredBuild>();
@@ -181,7 +184,7 @@ export async function saveBuild(
     .run();
   const row = await db
     .prepare(
-      'SELECT id, name, payload, request_digest AS requestDigest, created_at AS createdAt FROM community_build WHERE account_id=? AND operation_id=?',
+      'SELECT id, name, payload, evidence, request_digest AS requestDigest, created_at AS createdAt FROM community_build WHERE account_id=? AND operation_id=?',
     )
     .bind(owner, operationId)
     .first<StoredBuild & { requestDigest: string }>();

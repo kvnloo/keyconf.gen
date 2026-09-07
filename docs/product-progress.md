@@ -1005,3 +1005,9 @@ Publishing receipts currently validate metadata and snapshot evidence but do not
 ## September 6, 2026: publication receipt identity
 
 Private publishing responses now include the validated operation ID and saved-build ID after the owned storage operation succeeds. The client requires both to match the original request, including replay after withdrawal, and still returns only its minimal receipt. Public publication reads are unchanged. This closes the receipt-identity gap recorded above. All 33 client/API tests, real HTTP creator verification, typecheck and focused lint/format pass. The review screen and hosted identity remain unfinished.
+
+## September 7, 2026: creator review and saved evidence
+
+The isolated creator review now loads an owned saved revision/profile, shows saved parts/source/compatibility/recording evidence, supports build/drop details and an explicit review/publish decision. An uncertain response retains the exact publication request for retry. Saved-build responses now include validated persisted evidence; legacy responses remain readable, but the review will not publish without that evidence. Current catalog metadata is not substituted.
+
+The real browser/SQLite journey passes cancellation without publication, historical evidence display, lost-acknowledgement retry producing one release, unchanged device draft, creator-drop link/availability preservation, 320px overflow and accessibility checks. Seventy-four related database/API/client tests, types and scoped lint pass. The review journey is included in CI. Profile changes between review and publication are not yet bound atomically, visual screenshot review remains outstanding, and hosted identity/public activation remain unfinished.

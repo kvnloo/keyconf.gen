@@ -59,10 +59,12 @@ export async function accountFixture() {
     },
   });
   let loseNextSaveResponse = false;
+  let loseNextPublicationResponse = false;
   const holds = [];
   const releases = new Set();
   const server = await createServer({
     configFile: false,
+    publicDir: false,
     cacheDir: join(directory, 'vite'),
     optimizeDeps: { entries: ['scripts/account-fixture/entry.tsx'] },
     plugins: [
@@ -159,6 +161,18 @@ export async function accountFixture() {
                 outgoing.end('The save acknowledgement was lost.');
                 return;
               }
+              if (
+                loseNextPublicationResponse &&
+                pathname === '/api/community/publications' &&
+                request.method === 'POST' &&
+                response.ok
+              ) {
+                loseNextPublicationResponse = false;
+                outgoing.statusCode = 502;
+                outgoing.setHeader('Content-Type', 'text/plain');
+                outgoing.end('The publication acknowledgement was lost.');
+                return;
+              }
               outgoing.statusCode = response.status;
               for (const [name, value] of response.headers)
                 outgoing.setHeader(name, value);
@@ -183,6 +197,9 @@ export async function accountFixture() {
     sessions,
     alice,
     bob,
+    losePublicationResponse() {
+      loseNextPublicationResponse = true;
+    },
     loseSaveResponse() {
       loseNextSaveResponse = true;
     },
