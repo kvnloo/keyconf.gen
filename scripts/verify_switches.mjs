@@ -160,6 +160,27 @@ try {
   await page.waitForFunction(
     () => document.querySelector('.scene-host')?.dataset.renderState === 'idle',
   );
+  for (const label of ['Keycaps', 'Plate', 'PCB', 'Case']) {
+    const trigger = page
+      .getByRole('navigation', { name: 'Exploded keyboard layers' })
+      .getByRole('button', { name: label, exact: true });
+    await trigger.click();
+    const dialog = page.getByRole('dialog');
+    await dialog.waitFor();
+    assert.equal(
+      await dialog.getByRole('link', { name: 'Visit original source' }).count(),
+      1,
+    );
+    await page.keyboard.press('Escape');
+    assert.equal(
+      await trigger.evaluate((element) => element === document.activeElement),
+      true,
+    );
+    assert.equal(await selection(), 'oil-king');
+  }
+  report.flows.push(
+    'all exploded layers open source details, Escape returns focus, and inspection preserves selection',
+  );
   const count = Number(
     await page.locator('.scene-host').getAttribute('data-switch-count'),
   );

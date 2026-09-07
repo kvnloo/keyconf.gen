@@ -62,6 +62,7 @@ import type { SamplePreview } from '../lib/audio-preview';
 import SampleWaveform from './sample-waveform';
 import ComponentsPanel from './components-panel';
 import SwitchDetail from './switch-detail';
+import LayerInspector from './layer-inspector';
 import BuildAccessories from './build-accessories';
 import { newAccessorySelection } from '../lib/build-accessories';
 import {
@@ -1116,15 +1117,43 @@ function KeyboardStudio({
                   className="exploded-layer-guide"
                   aria-label="Exploded keyboard layers"
                 >
-                  <span>Keycaps</span>
+                  <LayerInspector
+                    label="Keycaps"
+                    part={parts.find(
+                      (part) =>
+                        part.category === 'keycaps' &&
+                        part.id === visibleBuild.selection.keycaps,
+                    )}
+                  />
                   <a
                     href={`#switch=${encodeURIComponent(visibleBuild.selection.switch)}`}
                   >
                     Switches <ArrowUpRight size={13} />
                   </a>
-                  <span>Plate</span>
-                  <span>PCB</span>
-                  <span>Case</span>
+                  <LayerInspector
+                    label="Plate"
+                    part={parts.find(
+                      (part) =>
+                        part.category === 'plate' &&
+                        part.id === visibleBuild.selection.plate,
+                    )}
+                  />
+                  <LayerInspector
+                    label="PCB"
+                    part={parts.find(
+                      (part) =>
+                        part.category === 'pcb' &&
+                        part.id === visibleBuild.selection.pcb,
+                    )}
+                  />
+                  <LayerInspector
+                    label="Case"
+                    part={parts.find(
+                      (part) =>
+                        part.category === 'case' &&
+                        part.id === visibleBuild.selection.case,
+                    )}
+                  />
                 </nav>
               )}
             {!landing && (
