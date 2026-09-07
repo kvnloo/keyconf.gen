@@ -37,8 +37,8 @@ try {
     )
   ).json();
   const all = [...data.items, ...next.items];
-  assert.equal(all.length, 29);
-  assert.equal(new Set(all.map((item) => item.id)).size, 29);
+  assert.equal(all.length, 32);
+  assert.equal(new Set(all.map((item) => item.id)).size, 32);
   assert.ok(all.some((item) => item.id === ids.active));
   assert.ok(all.some((item) => item.id === ids.retired));
   for (const secret of [
@@ -46,6 +46,8 @@ try {
     'operationId',
     'proposal_',
     ids.withdrawn,
+    'Private palette name',
+    'Private thumbnail',
   ])
     assert.equal(JSON.stringify(all).includes(secret), false);
   assert.equal(
@@ -58,15 +60,85 @@ try {
   );
   await page.goto(new URL('#discover', base).href);
   const gallery = page.getByRole('region', { name: 'Built to be shared.' });
+  const skip = page.getByRole('link', {
+    name: 'Skip to community builds',
+    exact: true,
+  });
+  await skip.focus();
+  assert.deepEqual(
+    (await new AxeBuilder({ page }).include('.skip-link').analyze()).violations,
+    [],
+  );
+  await skip.focus();
+  await page.keyboard.press('Enter');
+  await expect(
+    gallery.getByRole('heading', { name: 'Built to be shared.', exact: true }),
+  ).toBeFocused();
+  assert.equal(new URL(page.url()).hash, '#discover');
   await expect(gallery.locator('.community-grid li')).toHaveCount(25);
   const more = gallery.getByRole('button', { name: 'Load more builds' });
   await more.focus();
   await page.keyboard.press('Enter');
-  await expect(gallery.locator('.community-grid li')).toHaveCount(29);
+  await expect(gallery.locator('.community-grid li')).toHaveCount(32);
   await expect(gallery.locator('.community-grid a').nth(25)).toBeFocused();
   await expect(gallery.locator('output')).toHaveText(
-    '29 published builds shown.',
+    '32 published builds shown.',
   );
+  await expect(gallery.locator('canvas')).toHaveCount(0);
+  const keyCounts = {
+    'generic-60': 61,
+    'generic-65': 67,
+    'generic-75': 83,
+    'q1-max-ansi': 81,
+  };
+  for (const geometry of Object.keys(keyCounts)) {
+    const thumbnail = gallery
+      .locator(`.build-thumbnail[data-geometry="${geometry}"]`)
+      .first();
+    await expect(thumbnail).toBeVisible();
+    await expect(thumbnail.locator('[data-key]')).toHaveCount(
+      keyCounts[geometry],
+    );
+    await expect(thumbnail.locator('[data-part="encoder"]')).toHaveCount(
+      geometry === 'q1-max-ansi' ? 1 : 0,
+    );
+    if (geometry === 'q1-max-ansi')
+      await expect(
+        thumbnail.locator('[data-part="encoder"] circle').first(),
+      ).toHaveAttribute('fill', '#858887');
+  }
+  for (const item of all) {
+    assert.ok(item.thumbnail);
+    const thumbnail = gallery.locator(
+      `#publication-${item.id} .build-thumbnail`,
+    );
+    await expect(thumbnail.locator('[data-part="case"]')).toHaveAttribute(
+      'fill',
+      item.thumbnail.caseColor,
+    );
+    await expect(
+      thumbnail.locator('[data-key="KeyA"] > rect').first(),
+    ).toHaveAttribute('fill', item.thumbnail.colors.alpha);
+    await expect(
+      thumbnail.locator('[data-key="Enter"] > rect').first(),
+    ).toHaveAttribute('fill', item.thumbnail.colors.accent);
+    await expect(
+      thumbnail.locator('[data-key="Space"] > rect').first(),
+    ).toHaveAttribute('fill', item.thumbnail.colors.space);
+  }
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await gallery
+    .getByRole('searchbox', { name: 'Search community builds' })
+    .fill('Thumbnail');
+  await gallery.getByRole('button', { name: 'Search', exact: true }).click();
+  await expect(gallery.locator('.community-grid li')).toHaveCount(3);
+  await gallery.screenshot({
+    path: 'outputs/community-thumbnail-variants-desktop.png',
+  });
+  await page.setViewportSize({ width: 320, height: 844 });
+  await gallery
+    .locator('.build-thumbnail[data-geometry="q1-max-ansi"]')
+    .screenshot({ path: 'outputs/community-thumbnail-q1-mobile.png' });
   await gallery
     .getByRole('searchbox', { name: 'Search community builds' })
     .fill('élodie');
@@ -99,6 +171,16 @@ try {
   assert.deepEqual(
     accessibility.violations.map((entry) => entry.id),
     [],
+  );
+  await gallery.getByRole('button', { name: 'Search', exact: true }).focus();
+  const filterBounds = await gallery.getByRole('combobox').boundingBox();
+  const searchBounds = await gallery
+    .getByRole('button', { name: 'Search', exact: true })
+    .boundingBox();
+  assert.ok(
+    filterBounds &&
+      searchBounds &&
+      Math.abs(filterBounds.y - searchBounds.y) < 10,
   );
   await gallery.screenshot({ path: 'outputs/community-discovery-mobile.png' });
   await gallery

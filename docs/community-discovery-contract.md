@@ -1,6 +1,6 @@
 # Public build discovery
 
-Next community increment after the accessory import release. Google setup remains deferred. This feature is anonymous discovery of deliberately published releases, not an alternative account system.
+Public discovery is live on nightly. Google setup remains deferred. Visitors can browse deliberately published releases without an account. Creator publishing controls and sign-in are separate unfinished workflows.
 
 ## User journey
 
@@ -25,13 +25,15 @@ Do not infer creator-profile visibility or ownership from a current handle. Prof
 
 Use real SQLite and Worker/browser fixtures. Verify anonymous gallery-to-release-to-customize, privacy exclusions, withdrawal, timestamp-tie pagination, frozen attribution after handle reassignment, original component/accessory source links, drop destination/availability, local-draft isolation and retired-part recovery. Check narrow layouts, keyboard navigation, empty and error recovery. Run types, unit tests, build and relevant publication verification. Update product status only from that evidence.
 
-Read-only high-effort review identified this gap in `db/publications.ts`, `app/page.tsx`, `db/schema.ts` and existing community/publication tests. No implementation or completion is claimed by this contract.
+## Visual preview contract
 
-## Storage checkpoint
+The public summary adds a small thumbnail recipe after validating the frozen publication snapshot: geometry ID, case color and four key colors. It excludes private build names, palette names, component selections, imported reference libraries, audio settings and account fields. No database migration or remote image service is required. Older API responses without a recipe render an explicit unavailable preview; malformed supplied recipes reject.
 
-The public listing query, global recent-publication index and read-only API are implemented locally. The query returns only ID, title, release kind, frozen creator name/handle and publication time. It validates the underlying immutable snapshot before returning a summary. Search is literal over public title and frozen author fields; it does not search private notes or current profile records.
+Inline SVG cards use the bundled 60/65/75 study coordinates or the documented Q1 Max ANSI positions. The Q1 variant requires its matching case/PCB/plate assembly, not merely a 75% layout choice. Key-color roles match the studio, and both views share the stock Q1 encoder color. Card illustrations show layout and saved colors, not exact enclosure materials, artisan sculpts or accessory geometry. Captions state the geometry scope; the full build retains original part links and detailed preview limits.
 
-All 37 community SQLite tests pass, including unpublished/withdrawn exclusions, timestamp-tie pagination, profile changes/handle reassignment, literal search and malformed cursor handling. Types, lint and formatting pass. The API has not yet been exercised against the compiled Worker. Client response parsing, gallery UI, static-host navigation and full browser coverage remain unfinished.
+Retired snapshots retain their saved layout and colors rather than substituting current catalog choices. The gallery uses no thumbnail canvases or per-card media requests. The recipe parser bounds geometry choices and accepts only six-digit hex colors.
+
+The release progress record contains the current verification and deployment state. Tests cover frozen appearance, Q1 detection, legacy responses, malformed recipes and privacy exclusions. Compiled-Worker browser coverage includes all four geometry variants and preserved retired snapshots alongside existing pagination, search, error recovery and accessibility checks.
 
 ## Search semantics and operations
 
@@ -41,4 +43,4 @@ The index is derived: it contains no unique source data, private draft text, pro
 
 SQL-export maintenance requires pausing writes, removing the three `community_publication_search_*` triggers and the derived virtual table, exporting the canonical database, then recreating/backfilling the index with migration 0010 before resuming writes. Do not run this maintenance automatically or against the live site as part of feature verification. The index must also be recreated after restoring such an export. This operational limitation is accepted for the Unicode-aware SQL search implementation and must remain documented.
 
-The gallery implementation is local and unpublished. The independent review found pagination-focus loss and ASCII-only creator search; code changes address both, with production browser validation still pending. The SQLite Unicode/backfill/withdrawal test passes; all 38 community tests pass.
+The original gallery release passed compiled-Worker browser checks for pagination focus, Unicode search, retry and mobile accessibility before publication. Later changes must retain those checks. See `docs/product-progress.md` for exact release evidence.

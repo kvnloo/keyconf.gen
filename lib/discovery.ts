@@ -1,4 +1,5 @@
 import { CommunityError } from './community.ts';
+import { parseBuildThumbnail, type BuildThumbnail } from './build-thumbnail.ts';
 
 export type DiscoveryQuery = {
   query: string;
@@ -47,6 +48,7 @@ export type DiscoveryPage = {
     kind: 'build' | 'drop';
     author: { handle: string; displayName: string };
     publishedAt: string;
+    thumbnail: BuildThumbnail | null;
   }[];
   next: DiscoveryQuery['cursor'];
 };
@@ -79,6 +81,7 @@ export function parseDiscoveryPage(value: unknown): DiscoveryPage {
     return {
       id,
       publishedAt,
+      thumbnail: parseBuildThumbnail(item.thumbnail),
       kind: item.kind,
       title: text(item.title, 80),
       author: {

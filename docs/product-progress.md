@@ -939,3 +939,9 @@ The account fixture does not prove Google sign-in, hosted identity, cross-device
 ## September 6, 2026: account retry ordering
 
 Confirming an older save now keeps account snapshots in creation order instead of moving that snapshot above newer builds. The browser fixture creates a newer snapshot from another device while an earlier acknowledgement is interrupted, then verifies that retrying the earlier save does not reorder it. The account browser journey, types, lint and formatting pass. GitHub run 34080633952 for the account interface remains in progress at this checkpoint; the account UI is still not exposed publicly.
+
+## September 6, 2026: community build illustrations verified
+
+Community cards now illustrate frozen published layouts and colors using lightweight SVGs. Generic 60/65/75 layouts and the matching Q1 Max ANSI assembly have separate geometry; the Q1 stock encoder shares its color constant with the studio model. Cards explicitly describe illustration limits and omit accessories. Older API responses show an unavailable preview instead of inventing appearance. Public summaries exclude private snapshot names and palette labels.
+
+Discover's skip link now focuses the community heading without leaving Discover. Its text contrast is corrected, and the filter and Search button share a row at 320px. The compiled Worker browser journey passed recipe/color checks, all four layouts, privacy exclusions, search, pagination, retries, keyboard navigation, mobile accessibility and publication navigation. The phone screenshot was inspected. All 195 unit tests passed; production build, types, lint and formatting passed. These changes are committed for release but are not yet deployed at this checkpoint; public nightly remains version 37. Google setup and account activation remain deferred.

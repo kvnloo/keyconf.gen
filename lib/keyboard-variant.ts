@@ -1,3 +1,5 @@
+export const q1StockEncoderColor = '#858887';
+
 export function isQ1MaxAssembly(build: {
   layout: string;
   selection: { case: string; pcb: string; plate: string };

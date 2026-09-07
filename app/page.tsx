@@ -840,6 +840,12 @@ function KeyboardStudio({
     URL.revokeObjectURL(url);
     setNotice('Build exported with sources and compatibility notes.');
   }
+  const skipTarget =
+    screen === 'switch'
+      ? 'switch-information'
+      : screen === 'discover'
+        ? 'community-heading'
+        : 'build-settings';
   return (
     <main
       className={
@@ -850,12 +856,12 @@ function KeyboardStudio({
     >
       <a
         className="skip-link"
-        href={screen === 'switch' ? '#switch-information' : '#build-settings'}
+        href={`#${skipTarget}`}
         onClick={
-          screen === 'switch'
+          screen === 'switch' || screen === 'discover'
             ? (event) => {
                 event.preventDefault();
-                const target = document.getElementById('switch-information');
+                const target = document.getElementById(skipTarget);
                 target?.scrollIntoView();
                 target?.focus();
               }
@@ -864,7 +870,9 @@ function KeyboardStudio({
       >
         {screen === 'switch'
           ? 'Skip to switch information'
-          : 'Skip to build settings'}
+          : screen === 'discover'
+            ? 'Skip to community builds'
+            : 'Skip to build settings'}
       </a>
       <header className="header studio-header">
         <a className="brand" href="#home">

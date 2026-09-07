@@ -9,6 +9,7 @@ import {
 import { importEndpoint } from '../lib/import-endpoint';
 import { requestText } from '../lib/request-text';
 import StudioSelect from './studio-select';
+import BuildThumbnail from './build-thumbnail';
 import './community-discovery.css';
 
 type State =
@@ -124,7 +125,9 @@ export default function CommunityDiscovery() {
     >
       <div>
         <span className="eyebrow">FROM THE COMMUNITY</span>
-        <h2 id="community-heading">Built to be shared.</h2>
+        <h2 id="community-heading" tabIndex={-1}>
+          Built to be shared.
+        </h2>
         <p>
           Explore published builds and creator drops. Open one to hear it,
           inspect its parts, or make a copy.
@@ -190,6 +193,12 @@ export default function CommunityDiscovery() {
         </div>
       )}
       {!!page?.items.length && (
+        <p className="community-preview-note">
+          Card illustrations show saved layouts and colors. Open a build for its
+          parts, accessories and preview limits.
+        </p>
+      )}
+      {!!page?.items.length && (
         <ul className="community-grid">
           {page.items.map((item) => (
             <li key={item.id}>
@@ -197,6 +206,7 @@ export default function CommunityDiscovery() {
                 id={`publication-${item.id}`}
                 href={`${origin}/builds/${encodeURIComponent(item.id)}`}
               >
+                <BuildThumbnail thumbnail={item.thumbnail} />
                 <span className="eyebrow">
                   {item.kind === 'drop' ? 'CREATOR DROP' : 'COMMUNITY BUILD'}
                 </span>
@@ -204,7 +214,7 @@ export default function CommunityDiscovery() {
                 <p>
                   {item.author.displayName} <span>@{item.author.handle}</span>
                 </p>
-                <div>
+                <div className="community-card-footer">
                   <time dateTime={item.publishedAt}>
                     {new Date(item.publishedAt).toLocaleDateString()}
                   </time>

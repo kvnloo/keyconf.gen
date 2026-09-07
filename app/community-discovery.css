@@ -93,7 +93,7 @@
   display: block;
   font-size: 0.8rem;
 }
-.community-grid a > div {
+.community-card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -101,10 +101,18 @@
   margin-top: auto;
   font-size: 0.8rem;
 }
-.community-grid a > div span {
+.community-card-footer span {
   display: flex;
   align-items: center;
   gap: 0.3rem;
+}
+.community-preview-note {
+  font-size: 0.85rem;
+  max-width: 62ch;
+}
+.community-discovery h2:focus-visible {
+  outline: 2px solid #bed3b5;
+  outline-offset: 5px;
 }
 @media (prefers-reduced-motion: reduce) {
   .community-grid a {
@@ -121,4 +129,11 @@
 .community-discovery button[aria-disabled='true'] {
   opacity: 0.6;
   cursor: wait;
+}
+
+@media (max-width: 480px) {
+  .community-search .studio-select-trigger {
+    min-width: 0;
+    flex: 1 1 130px;
+  }
 }

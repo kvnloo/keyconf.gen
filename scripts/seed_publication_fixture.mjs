@@ -128,6 +128,47 @@ for (const kind of ['active', 'retired', 'withdrawn']) {
       .run(JSON.stringify(payload), JSON.stringify(evidence), saved.id);
   }
 }
+ids.thumbnails = [];
+for (const [index, geometry] of [
+  'generic-65',
+  'generic-75',
+  'q1-max-ansi',
+].entries()) {
+  const layout = geometry === 'generic-65' ? '65' : '75';
+  const saved = await saveBuild(db, 'local-test-subject', {
+    operationId: `thumbnail-fixture-save-${index}`,
+    build: {
+      ...defaultBuild,
+      name: `Private thumbnail ${index}`,
+      layout,
+      caseColor: ['#304239', '#463545', '#b8ad97'][index],
+      palette: {
+        name: 'Private palette name',
+        alpha: '#eee5d0',
+        mod: '#486457',
+        accent: '#cc754a',
+        space: '#99b6a0',
+      },
+      selection:
+        geometry === 'q1-max-ansi'
+          ? {
+              ...defaultBuild.selection,
+              case: 'q1-max-case',
+              pcb: 'q1-max-pcb',
+              plate: 'q1-max-plate',
+            }
+          : defaultBuild.selection,
+    },
+  });
+  const publication = await publishBuild(db, 'local-test-subject', {
+    operationId: `thumbnail-fixture-publish-${index}`,
+    buildId: saved.id,
+    title: `Thumbnail ${geometry}`,
+    note: 'Local layout and color verification only.',
+    kind: 'build',
+  });
+  ids.thumbnails.push({ id: publication.id, geometry });
+}
 const quote = (value) =>
   value === null ? 'NULL' : "'" + String(value).replaceAll("'", "''") + "'";
 let sql = migrations + '\n';

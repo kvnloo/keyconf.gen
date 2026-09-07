@@ -18,6 +18,7 @@ import {
 } from '../lib/proposal.ts';
 import {
   listOwnedPublications,
+  listPublicPublications,
   publishBuild,
   readPublicPublication,
   withdrawPublication,
@@ -1085,6 +1086,21 @@ test('published snapshots preserve retired component, accessory and recording ev
   assert.equal(historical.customization, 'unavailable');
   assert.deepEqual(historical.build, release.build);
   assert.deepEqual(historical.evidence, release.evidence);
+  const discovery = await listPublicPublications(db, {
+    query: '',
+    kind: 'all',
+    cursor: null,
+  });
+  assert.deepEqual(discovery.items[0].thumbnail, {
+    geometry: 'generic-60',
+    caseColor: saved.build.caseColor,
+    colors: {
+      alpha: saved.build.palette.alpha,
+      mod: saved.build.palette.mod,
+      accent: saved.build.palette.accent,
+      space: saved.build.palette.space,
+    },
+  });
   assert.throws(() => parseBuild(historical.build));
   assert.deepEqual(await publishBuild(db, alice, request), historical);
   await assert.rejects(
@@ -2216,6 +2232,7 @@ test('public discovery excludes private work and withdrawals, paginates ties and
       'id',
       'kind',
       'publishedAt',
+      'thumbnail',
       'title',
     ]);
     assert.deepEqual(item.author, {
@@ -2260,6 +2277,104 @@ test('public discovery excludes private work and withdrawals, paginates ties and
     assert.throws(() => parseDiscoveryQuery(new URLSearchParams(value)), {
       code: 'invalid_request',
     });
+});
+
+test('discovery thumbnail recipes retain published colors and select Q1 geometry without private fields', async (t) => {
+  const db = database(t);
+  await saveProfile(db, alice, profile);
+  const snapshot = {
+    ...defaultBuild,
+    name: 'private-thumbnail-build-name',
+    caseColor: '#123456',
+    palette: {
+      name: 'private-thumbnail-palette-name',
+      alpha: '#654321',
+      mod: '#abcdef',
+      accent: '#fedcba',
+      space: '#102030',
+    },
+  };
+  const saved = await saveBuild(
+    db,
+    alice,
+    save(snapshot, 'thumbnail-initial-save'),
+  );
+  const release = await publishBuild(db, alice, {
+    operationId: 'thumbnail-first-release',
+    buildId: saved.id,
+    title: 'Shared colors',
+    note: '',
+    kind: 'build',
+  });
+  await saveBuild(
+    db,
+    alice,
+    save(
+      {
+        ...snapshot,
+        caseColor: '#ffffff',
+        palette: { ...snapshot.palette, alpha: '#000000' },
+      },
+      'thumbnail-later-save',
+    ),
+  );
+  const q1 = await saveBuild(
+    db,
+    alice,
+    save(
+      {
+        ...snapshot,
+        layout: '75',
+        selection: {
+          ...snapshot.selection,
+          case: 'q1-max-case',
+          pcb: 'q1-max-pcb',
+          plate: 'q1-max-plate',
+        },
+      },
+      'thumbnail-q1-save',
+    ),
+  );
+  const q1Release = await publishBuild(db, alice, {
+    operationId: 'thumbnail-q1-release',
+    buildId: q1.id,
+    title: 'Q1 shared colors',
+    note: '',
+    kind: 'build',
+  });
+  const result = await listPublicPublications(db, {
+    query: '',
+    kind: 'all',
+    cursor: null,
+  });
+  assert.deepEqual(
+    result.items.find((item) => item.id === release.id).thumbnail,
+    {
+      geometry: 'generic-60',
+      caseColor: '#123456',
+      colors: {
+        alpha: '#654321',
+        mod: '#abcdef',
+        accent: '#fedcba',
+        space: '#102030',
+      },
+    },
+  );
+  assert.equal(
+    result.items.find((item) => item.id === q1Release.id).thumbnail.geometry,
+    'q1-max-ansi',
+  );
+  for (const privateValue of [
+    snapshot.name,
+    snapshot.palette.name,
+    saved.id,
+    q1.id,
+    alice,
+    'selection',
+    'customParts',
+    'audio',
+  ])
+    assert.equal(JSON.stringify(result).includes(privateValue), false);
 });
 
 test('publication search backfills Unicode names and maintains the derived index on withdrawal', async (t) => {

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { q1StockEncoderColor } from './keyboard-variant.ts';
 import layout from '../docs/reference-assets/keychron-q1-max-layout.json' with { type: 'json' };
 import genericLayouts from '../public/models/layouts.json' with { type: 'json' };
 
@@ -57,7 +58,7 @@ export function adaptQ1MaxModel(model: THREE.Group): void {
   const knob = new THREE.Mesh(
     new THREE.CylinderGeometry(radius, radius, height, 64),
     new THREE.MeshStandardMaterial({
-      color: '#858887',
+      color: q1StockEncoderColor,
       metalness: 0.85,
       roughness: 0.3,
     }),

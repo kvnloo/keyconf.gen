@@ -1,6 +1,7 @@
 import { restoreBuildSnapshot } from './build-snapshot.ts';
 import { CommunityError, parseCommunityProfile } from '../lib/community.ts';
 import { parseBuild } from '../lib/build.ts';
+import { createBuildThumbnail } from '../lib/build-thumbnail.ts';
 import {
   parsePublicationRequest,
   type PublicationRequest,
@@ -266,6 +267,7 @@ export async function listPublicPublications(
         displayName: value.author.displayName,
       },
       publishedAt: value.publishedAt,
+      thumbnail: createBuildThumbnail(value.build),
     };
   });
   const last = items.at(-1);
