@@ -130,6 +130,24 @@ function FavoritesList() {
   const removed = useRef(new Set<string>());
   const heading = useRef<HTMLHeadingElement | null>(null);
   const headingId = useId();
+  const region = useRef<HTMLElement | null>(null);
+  const retry = useRef<HTMLButtonElement | null>(null);
+  const interacted = useRef(false);
+  const nextFocus = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!interacted.current) return;
+    if (state.kind === 'error') retry.current?.focus();
+    if (state.kind === 'ready') {
+      const row = Array.from(
+        region.current?.querySelectorAll<HTMLElement>('[data-publication]') ??
+          [],
+      ).find((element) => element.dataset.publication === nextFocus.current);
+      (row ?? heading.current)?.focus();
+      nextFocus.current = null;
+      interacted.current = false;
+    }
+  }, [state]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -139,6 +157,9 @@ function FavoritesList() {
       .then(
         (page) => {
           if (controller.signal.aborted) return;
+          nextFocus.current =
+            page.items.find((item) => !removed.current.has(item.publicationId))
+              ?.publicationId ?? null;
           setState((current) => {
             const earlier = request.cursor ? (current.page?.items ?? []) : [];
             const items = Array.from(
@@ -164,6 +185,7 @@ function FavoritesList() {
   }, [request]);
 
   function load(cursor: FavoriteCursor | null) {
+    interacted.current = true;
     pending.current?.abort();
     setNotice('');
     setState((current) => ({ kind: 'loading', page: current.page }));
@@ -191,7 +213,11 @@ function FavoritesList() {
 
   const page = state.page;
   return (
-    <section className="favorites-panel" aria-labelledby={headingId}>
+    <section
+      ref={region}
+      className="favorites-panel"
+      aria-labelledby={headingId}
+    >
       <header>
         <span className="favorites-eyebrow">
           <LockKeyhole size={13} aria-hidden="true" /> ONLY YOU
@@ -218,6 +244,7 @@ function FavoritesList() {
           <button
             type="button"
             className="favorite-button"
+            ref={retry}
             onClick={() => load(request.cursor)}
           >
             Try again
@@ -240,7 +267,11 @@ function FavoritesList() {
       {!!page?.items.length && (
         <ul className="favorites-list">
           {page.items.map((item) => (
-            <li key={item.publicationId}>
+            <li
+              key={item.publicationId}
+              data-publication={item.publicationId}
+              tabIndex={-1}
+            >
               <div className="favorite-details">
                 <span className="favorites-eyebrow">
                   {item.status === 'unavailable'

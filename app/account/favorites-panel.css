@@ -131,3 +131,8 @@
     width: 100%;
   }
 }
+
+.favorites-list li:focus-visible {
+  outline: 2px solid #bed3b5;
+  outline-offset: 4px;
+}

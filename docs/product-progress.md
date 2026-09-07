@@ -963,3 +963,7 @@ The account client now lists favorites with validated pagination and sends expli
 Added a private favorites panel and reusable add/remove control, still isolated from public navigation. Confirmed mutations update the list; unavailable publications retain a removable entry without their former title. Requests abort on unmount or refresh, and completed removals are filtered from overlapping page responses.
 
 The browser fixture now routes favorites through the actual account handlers and SQLite. Its dedicated journey passes add/remove, repeated mutations, withdrawal redaction, 27-item pagination, account isolation, 320px overflow and accessibility checks. The mobile list screenshot was inspected. The existing account browser regression also passes, including interrupted saves and pagination races. Favorites verification is now included in CI. Public Google authentication and discovery-page favorite integration remain unfinished. The deployed gallery release's GitHub run 34082155164 succeeded.
+
+## September 6, 2026: favorites keyboard pagination recovery
+
+Favorites pagination now transfers focus to the first newly loaded row, including when the final Load more button disappears. Failed pagination focuses Try again. A keyboard-only failed-request/retry browser regression passes alongside the existing favorites checks. Typecheck and focused formatting pass. The verifier now explicitly selects PUT or DELETE for mutation fetches to satisfy the fetch-options lint rule.

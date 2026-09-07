@@ -56,7 +56,7 @@ try {
     page.evaluate(
       async ({ path, method }) => {
         const response = await fetch(path, {
-          method,
+          method: method === 'PUT' ? 'PUT' : 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: '{}',
         });
@@ -103,8 +103,17 @@ try {
   }
   await page.reload();
   await expect(favorites.locator('li')).toHaveCount(25);
-  await favorites.getByRole('button', { name: 'Load more favorites' }).click();
+  await page.route('**/api/community/favorites?*', (route) => route.abort(), {
+    times: 1,
+  });
+  await favorites.getByRole('button', { name: 'Load more favorites' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(
+    favorites.getByRole('button', { name: 'Try again' }),
+  ).toBeFocused();
+  await page.keyboard.press('Enter');
   await expect(favorites.locator('li')).toHaveCount(27);
+  await expect(favorites.locator('li').nth(25)).toBeFocused();
   assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth > innerWidth,
