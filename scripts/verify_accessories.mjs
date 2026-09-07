@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
-import { decodeBuild } from '../lib/build.ts';
+import { decodeBuild, encodeBuild } from '../lib/build.ts';
 import { accessoryCatalog } from '../lib/build-accessories.ts';
 
 const browser = await chromium.launch({ args: ['--disable-webgl'] });
@@ -143,6 +143,50 @@ try {
     3,
   );
   await page.getByRole('button', { name: 'Close dialog' }).click();
+  const repair = await context.newPage();
+  const broken = decodeBuild(new URL(artisanLink).hash.slice(9));
+  broken.accessories[0].location = { kind: 'key', keyId: 'Space' };
+  await repair.goto(
+    new URL(
+      '#build=' + encodeBuild(broken),
+      process.env.KEYCONF_BASE_URL ?? 'http://localhost:3000/',
+    ).href,
+  );
+  await repair.getByRole('tab', { name: 'Components', exact: true }).click();
+  await repair.locator('.build-accessories > summary').click();
+  await repair
+    .getByText(
+      'Not shown: this 1u cap is assigned to a 6.25u key. Choose a matching-width key.',
+      { exact: true },
+    )
+    .waitFor();
+  await repair
+    .getByRole('combobox', {
+      name: 'Target key for Zen Pond V · 1u',
+      exact: true,
+    })
+    .click();
+  await repair
+    .getByRole('option', { name: 'Esc · Escape · 1u', exact: true })
+    .click();
+  await repair
+    .getByText(
+      'Assigned to the visual key. The preview is an illustrative sculpt; stem, profile and physical clearance still need verification.',
+      { exact: true },
+    )
+    .waitFor();
+  await repair
+    .getByRole('button', { name: 'Share build', exact: true })
+    .click();
+  const repairedLink = await repair
+    .getByRole('textbox', { name: 'Build link' })
+    .inputValue();
+  assert.equal(
+    decodeBuild(new URL(repairedLink).hash.slice(9)).accessories[0].location
+      .keyId,
+    'Escape',
+  );
+  await repair.close();
   console.log(
     'Accessory add, placement validation, share, reload, remove, artisan key selection and three-width checks passed.',
   );

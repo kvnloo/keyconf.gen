@@ -1,5 +1,6 @@
 'use client';
 
+import { artisanPreviewNote } from '../lib/artisan-preview';
 import { accessoryHost, documentedKeys } from '../lib/accessory-hosts';
 import { useState } from 'react';
 import {
@@ -77,6 +78,16 @@ export default function BuildAccessories({
               <p>
                 {product.brand} · {product.kind} · Quantity {item.quantity}
               </p>
+              {product.kind === 'artisan' && (
+                <>
+                  <p>
+                    {artisanPreviewNote(
+                      { layout, selection, accessories: selections },
+                      item.id,
+                    )}
+                  </p>
+                </>
+              )}
               {product.kind !== 'artisan' && (
                 <label>
                   Quantity

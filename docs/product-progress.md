@@ -841,3 +841,14 @@ Non-artisan accessory cards now expose quantities from 1 to 100. Enter or leavin
 The local browser journey passed: edit to three, reject 101 and blank, cancel eight, share-link quantity, reload persistence, source/placement checks and three viewport widths. Types, lint and formatting passed. This increment has not yet been published.
 
 The parts-tray release is live as Sites version 32 from 7834a3a; deployment appgdep_6a9e143e5c608191b613d29d557b6326 succeeded.
+
+
+## September 6, 2026: actionable artisan preview placement
+
+Studio and shared-build parts now explain when an artisan cannot be shown because its target is unassigned, absent, the wrong width, or occupied by another artisan selection. Matching visual placement remains explicitly separate from verified stem/profile/clearance. No new fit claims were added.
+
+The existing parser already rejects multiple artisan units on one key. An initially proposed repair for that impossible UI state was removed after a real browser restore rejected the test input. Recovery coverage instead uses a valid saved 1u cap assigned to the spacebar: the editor explains the mismatch, the user selects Escape, and the shared link retains the corrected key.
+
+Validation: the full suite passed at 163 tests during implementation; the final focused placement test, strict types, lint, formatting and complete accessory browser journey passed after removing the unreachable quantity branch. Browser coverage includes the wrong-width repair and existing quantity, source, share, reload, removal and responsive paths. This increment is not deployed yet.
+
+Quantity controls are live as Sites version 33, source a65776c. Deployment appgdep_6a9e157468f48191b2e65cd4497f2fed succeeded. The preceding tray release CI 34073198794 passed.

@@ -1,4 +1,5 @@
 'use client';
+import { artisanPreviewNote } from '../lib/artisan-preview';
 import { unmountedPreviewNote } from '../lib/build-accessories';
 import AccessoryFitNotes from './accessory-fit-notes';
 import { accessoryHost } from '../lib/accessory-hosts.ts';
@@ -369,6 +370,9 @@ export default function SharedBuildPreview({
                         <span>{part.name}</span>
                         <ArrowUpRight size={15} />
                       </a>
+                      {artisanPreviewNote(build, selection.id) && (
+                        <small>{artisanPreviewNote(build, selection.id)}</small>
+                      )}
                       {unmountedPreviewNote(
                         build.accessories,
                         selection.id,
