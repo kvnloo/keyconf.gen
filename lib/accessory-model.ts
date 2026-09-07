@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {
   accessoryCatalog,
+  MAX_UNMOUNTED_PREVIEWS,
   type AccessorySelection,
 } from './build-accessories.ts';
 
@@ -26,7 +27,7 @@ export function createAccessoryPreview({
     group: THREE.Group;
     originals: { object: THREE.Object3D; visible: boolean }[];
   }[] = [];
-  const counts = { artisan: 0, external: 0, omitted: 0 };
+  const counts = { artisan: 0, external: 0, planned: 0, omitted: 0 };
   let disposed = false;
   function material(color: string, roughness = 0.4, metalness = 0) {
     const value = new THREE.MeshStandardMaterial({
@@ -141,6 +142,69 @@ export function createAccessoryPreview({
     mesh(pad, box(0.4, 0.15, 0.14, 0.02), dark, -0.9, 0.17, -2.91);
     return pad;
   }
+  function unmounted(kind: 'screen' | 'buttons' | 'encoder') {
+    const part = new THREE.Group();
+    part.name = `unmounted-${kind}`;
+    const tray = material('#333a34', 0.8);
+    const pcb = material('#176c58', 0.65);
+    const metal = material('#b7b6ab', 0.3, 0.8);
+    const black = material('#171c1b', 0.4);
+    mesh(part, box(3.8, 0.12, 2.5), tray, 0, 0.06);
+    if (kind === 'encoder') {
+      mesh(part, box(0.85, 0.55, 0.8), metal, -0.65, 0.4);
+      mesh(
+        part,
+        new THREE.CylinderGeometry(0.16, 0.16, 0.6, 16),
+        metal,
+        -0.65,
+        0.95,
+      );
+      mesh(
+        part,
+        new THREE.CylinderGeometry(0.45, 0.45, 0.55, 24),
+        black,
+        0.75,
+        0.4,
+      );
+      for (let i = 0; i < 3; i++)
+        mesh(
+          part,
+          box(0.07, 0.07, 0.5, 0.01),
+          metal,
+          -0.9 + i * 0.25,
+          0.2,
+          0.55,
+        );
+    } else if (kind === 'screen') {
+      mesh(part, box(2.1, 0.1, 1.85), pcb, 0, 0.22);
+      mesh(part, box(1.8, 0.06, 1.1), black, 0, 0.31, -0.1);
+      for (let i = 0; i < 4; i++)
+        mesh(
+          part,
+          box(0.09, 0.22, 0.09, 0.01),
+          metal,
+          -0.4 + i * 0.27,
+          0.4,
+          0.7,
+        );
+    } else {
+      mesh(part, box(3.2, 0.1, 1.1), pcb, 0, 0.22);
+      for (let i = 0; i < 4; i++) {
+        const x = -1.2 + i * 0.8;
+        mesh(part, box(0.52, 0.02, 0.52, 0.01), black, x, 0.28);
+        for (const z of [-0.35, 0.35])
+          mesh(
+            part,
+            new THREE.CylinderGeometry(0.055, 0.055, 0.025, 8),
+            metal,
+            x,
+            0.28,
+            z,
+          );
+      }
+    }
+    return part;
+  }
   const assigned = new Map<string, number>();
   for (const selection of selections) {
     if (selection.location.kind === 'key')
@@ -226,6 +290,26 @@ export function createAccessoryPreview({
       );
       group.add(pad);
       counts.external++;
+    } else if (
+      location.kind === 'embedded' &&
+      (product?.kind === 'screen' ||
+        product?.kind === 'buttons' ||
+        product?.kind === 'encoder')
+    ) {
+      if (counts.planned >= MAX_UNMOUNTED_PREVIEWS || bounds.isEmpty()) {
+        counts.omitted++;
+        continue;
+      }
+      const part = unmounted(product.kind);
+      part.userData.selectionId = selection.id;
+      part.userData.installation = 'unmounted';
+      part.position.set(
+        ((counts.planned % 3) - 1) * 4.1,
+        -0.2,
+        bounds.max.z + 1.9 + Math.floor(counts.planned / 3) * 2.8,
+      );
+      group.add(part);
+      counts.planned++;
     } else counts.omitted++;
   }
   return {

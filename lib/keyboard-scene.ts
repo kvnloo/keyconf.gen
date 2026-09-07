@@ -344,7 +344,8 @@ export function createKeyboardScene(
     wake();
   }
   function accessoryCorners() {
-    if (!accessories?.counts.external) return [];
+    if (!(accessories?.counts.external || accessories?.counts.planned))
+      return [];
     const bounds = new THREE.Box3().setFromObject(accessories.group);
     if (model) bounds.union(new THREE.Box3().setFromObject(model));
     return [bounds.min.x, bounds.max.x].flatMap((x) =>
@@ -385,7 +386,9 @@ export function createKeyboardScene(
       : device.model;
   }
   function updateAccessories() {
-    const hadExternal = !!accessories?.counts.external;
+    const hadExternal = !!(
+      accessories?.counts.external || accessories?.counts.planned
+    );
     accessories?.dispose();
     accessories = null;
     if (model && options.device.kind === 'keyboard') {
@@ -402,11 +405,19 @@ export function createKeyboardScene(
     element.dataset.accessoryExternalCount = String(
       accessories?.counts.external ?? 0,
     );
+    element.dataset.accessoryPlannedCount = String(
+      accessories?.counts.planned ?? 0,
+    );
     element.dataset.accessoryOmittedCount = String(
       accessories?.counts.omitted ?? 0,
     );
     deskCacheDirty = true;
-    if (hadExternal || accessories?.counts.external) setView();
+    if (
+      hadExternal ||
+      accessories?.counts.external ||
+      accessories?.counts.planned
+    )
+      setView();
     wake();
   }
   async function loadModel(device: SceneOptions['device']) {
@@ -834,7 +845,7 @@ export function createKeyboardScene(
       cameraTarget = null;
     } else {
       camera.updateProjectionMatrix();
-      if (accessories?.counts.external) {
+      if (accessories?.counts.external || accessories?.counts.planned) {
         cameraTarget ??= camera.position.clone();
         fitAccessories();
       }

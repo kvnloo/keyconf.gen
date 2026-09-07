@@ -1,4 +1,5 @@
 'use client';
+import { unmountedPreviewNote } from '../lib/build-accessories';
 import AccessoryFitNotes from './accessory-fit-notes';
 import { accessoryHost } from '../lib/accessory-hosts.ts';
 import { isQ1MaxAssembly } from '../lib/keyboard-variant';
@@ -368,6 +369,17 @@ export default function SharedBuildPreview({
                         <span>{part.name}</span>
                         <ArrowUpRight size={15} />
                       </a>
+                      {unmountedPreviewNote(
+                        build.accessories,
+                        selection.id,
+                      ) && (
+                        <small>
+                          {unmountedPreviewNote(
+                            build.accessories,
+                            selection.id,
+                          )}
+                        </small>
+                      )}
                       <small>
                         Placement:{' '}
                         {selection.location.kind === 'key'

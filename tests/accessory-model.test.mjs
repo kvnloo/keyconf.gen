@@ -45,7 +45,12 @@ for (const layout of [60, 65, 75]) {
       artisan('Space', 6.25),
     ];
     const preview = createAccessoryPreview({ ...model, selections });
-    assert.deepEqual(preview.counts, { artisan: 3, external: 0, omitted: 0 });
+    assert.deepEqual(preview.counts, {
+      artisan: 3,
+      external: 0,
+      planned: 0,
+      omitted: 0,
+    });
     for (const selection of selections) {
       const key = model.keys.get(selection.location.keyId);
       const cap = key.getObjectByName('illustrative-artisan');
@@ -82,7 +87,12 @@ test('missing, unassigned, wrong-width, duplicate and multiple-quantity caps are
       { ...artisan('KeyB'), quantity: 2 },
     ],
   });
-  assert.deepEqual(preview.counts, { artisan: 0, external: 0, omitted: 6 });
+  assert.deepEqual(preview.counts, {
+    artisan: 0,
+    external: 0,
+    planned: 0,
+    omitted: 6,
+  });
   assert.ok(
     [...model.keys.values()].every((key) =>
       key.children.every((child) => child.visible),
@@ -97,7 +107,12 @@ test('desk modules clear each selected keyboard edge and use one twelve-key illu
     ...model,
     selections: [external('left'), external('right'), external('above')],
   });
-  assert.deepEqual(preview.counts, { artisan: 0, external: 3, omitted: 0 });
+  assert.deepEqual(preview.counts, {
+    artisan: 0,
+    external: 3,
+    planned: 0,
+    omitted: 0,
+  });
   const [left, right, above] = preview.group.children.map((child) =>
     new THREE.Box3().setFromObject(child),
   );
@@ -121,7 +136,12 @@ test('preview cap bounds and every owned GPU resource are disposed once without 
       ...Array.from({ length: 10 }, (_, i) => external('right', String(i))),
     ],
   });
-  assert.deepEqual(preview.counts, { artisan: 1, external: 6, omitted: 4 });
+  assert.deepEqual(preview.counts, {
+    artisan: 1,
+    external: 6,
+    planned: 0,
+    omitted: 4,
+  });
   const resources = new Set();
   for (const group of [
     preview.group,
@@ -166,4 +186,49 @@ test('disposal restores an originally hidden key component to its previous visib
   });
   preview.dispose();
   assert.equal(legend.visible, false);
+});
+
+test('embedded electronics remain unmounted outside keyboard bounds with capped representative previews', async () => {
+  const model = await keyboard();
+  const ids = [
+    'adafruit-326-oled',
+    'adafruit-4980-neokey',
+    'adafruit-377-encoder',
+  ];
+  const selections = Array.from({ length: 7 }, (_, i) => ({
+    id: String(i),
+    productId: ids[i % 3],
+    quantity: 20,
+    location: { kind: 'embedded', slotId: 'unassigned' },
+  }));
+  const preview = createAccessoryPreview({
+    ...model,
+    selections: [
+      ...selections,
+      external('left'),
+      external('right'),
+      external('above'),
+    ],
+  });
+  assert.equal(preview.counts.planned, 6);
+  assert.equal(preview.counts.omitted, 1);
+  const boxes = preview.group.children.map((part) =>
+    new THREE.Box3().setFromObject(part),
+  );
+  for (const [i, part] of preview.group.children
+    .filter((child) => child.name.startsWith('unmounted-'))
+    .entries()) {
+    assert.equal(part.userData.installation, 'unmounted');
+    assert.equal(part.userData.selectionId, String(i));
+    assert.ok(boxes[i].min.z > model.bounds.max.z);
+    for (let j = i + 1; j < boxes.length; j++)
+      assert.equal(boxes[i].intersectsBox(boxes[j]), false);
+  }
+  assert.equal(
+    preview.group.children.filter((part) => part.name === 'unmounted-screen')
+      .length,
+    2,
+  );
+  preview.dispose();
+  assert.equal(preview.group.parent, null);
 });

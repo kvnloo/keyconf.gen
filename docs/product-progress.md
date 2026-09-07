@@ -821,3 +821,14 @@ Try changes now includes a collapsed review with original and variation values, 
 The full local feedback/browser journey passed with the review expanded: changed switch values, original and replacement source links, mobile overflow, reset, feedback copying, storage isolation and accessibility. Types, lint and formatting passed. A targeted visual check covers the later-added color swatches. The production build completed before that final swatch polish and must be rebuilt before publication.
 
 The compatibility-control update is live as Sites version 30, source eec87c1; deployment appgdep_6a9e0f9d1e288191b3958b813476902b succeeded. Full creator account and response submission controls remain unfinished; Google setup is still deferred.
+
+
+## September 6, 2026: visible unmounted electronics
+
+Selected embedded OLED, NeoKey button PCB and encoder modules now appear on separate parts trays beside the keyboard. The encoder study includes a separate cap; the NeoKey is a bare board rather than an assembled controller, and the screen is unpowered. One illustrative module is shown per selection, capped at six; quantities and all selections remain in the plan. No mounting, wiring, firmware or physical-fit claims were added.
+
+Studio and shared-build parts explain unmounted scope and identify selections beyond the tray limit. Camera framing and resize include the new geometry. The same geometry/material disposal mechanism owns all new objects.
+
+Validation: 162 unit tests passed, strict types, lint and formatting passed. The browser accessory journey passed with desktop and 390px shared tray screenshots, exploded view, source notes, removal and no horizontal overflow. Both screenshots were visually inspected. A separate high-effort read-only reviewer found no blocker and verified trays clear macropads at left/right/above across the actual 60/65/75% GLBs. Product dimensions and integrated host fit remain unverified. This increment is not yet deployed.
+
+The before/after review release is live as Sites version 31, source 3b7bf5f. Deployment appgdep_6a9e1176ed60819191f84134dd4457e7 succeeded and GitHub run 34072579000 passed.

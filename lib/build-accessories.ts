@@ -411,3 +411,27 @@ export function assessAccessories(
   }
   return results;
 }
+
+export const MAX_UNMOUNTED_PREVIEWS = 6;
+
+export function unmountedPreviewNote(
+  selections: readonly AccessorySelection[],
+  id: string,
+): string | null {
+  const planned = selections.filter(
+    (selection) =>
+      selection.location.kind === 'embedded' &&
+      accessoryCatalog.some(
+        (product) =>
+          product.id === selection.productId &&
+          (product.kind === 'screen' ||
+            product.kind === 'buttons' ||
+            product.kind === 'encoder'),
+      ),
+  );
+  const index = planned.findIndex((selection) => selection.id === id);
+  if (index < 0) return null;
+  return index < MAX_UNMOUNTED_PREVIEWS
+    ? 'Unmounted parts tray: one illustrative module per selection. Not installed or powered; wiring and firmware are not configured.'
+    : 'Not shown: the unmounted parts tray displays the first six module selections. This part remains in your build plan.';
+}

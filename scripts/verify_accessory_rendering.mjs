@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
+import { previewLink } from '../lib/shared-preview.ts';
 import { defaultBuild, encodeBuild } from '../lib/build.ts';
 import { newAccessorySelection } from '../lib/build-accessories.ts';
 
@@ -94,8 +95,46 @@ try {
     await open([artisan, { ...pad, location: { kind: 'external', position } }]);
     await counts(1, 1);
   }
+  const modules = [
+    'adafruit-326-oled',
+    'adafruit-4980-neokey',
+    'adafruit-377-encoder',
+  ].map(newAccessorySelection);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto(
+    previewLink({ ...defaultBuild, accessories: [...modules, pad] }, base),
+  );
+  await page.waitForFunction(
+    () =>
+      document.querySelector('[data-accessory-planned-count]')?.dataset
+        .accessoryPlannedCount === '3',
+  );
+  assert.equal(
+    await page
+      .getByText(
+        'Unmounted parts tray: one illustrative module per selection. Not installed or powered; wiring and firmware are not configured.',
+        { exact: true },
+      )
+      .count(),
+    3,
+  );
+  await page.screenshot({ path: 'outputs/unmounted-parts-desktop.png' });
+  await page.getByRole('button', { name: 'Explode', exact: true }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: 'outputs/unmounted-parts-mobile.png' });
+  assert.equal(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > innerWidth,
+    ),
+    false,
+  );
   await open([]);
   await counts(0, 0);
+  await page.waitForFunction(
+    () =>
+      document.querySelector('[data-accessory-planned-count]')?.dataset
+        .accessoryPlannedCount === '0',
+  );
   assert.deepEqual(errors, []);
   console.log(
     'Rendered artisan/macropad, explosion, invalid width, duplicate placement, layout change, mobile and removal checks passed.',

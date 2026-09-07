@@ -4,6 +4,7 @@ import { accessoryHost, documentedKeys } from '../lib/accessory-hosts';
 import { useState } from 'react';
 import {
   accessoryCatalog,
+  unmountedPreviewNote,
   assessAccessories,
   parseAccessories,
   newAccessorySelection,
@@ -43,9 +44,10 @@ export default function BuildAccessories({
         or exact product dimensions.
       </p>
       <p>
-        Up to six external module previews are shown, one per selection.
-        Embedded electronics remain a build plan until board support is
-        documented. Fit needs checking against your exact board. A replacement
+        Up to six external module previews are shown, one per selection. Up to
+        six unmounted electronics selections appear on parts trays. These
+        modules are not installed or powered; wiring and firmware are not
+        configured. Fit needs checking against your exact board. A replacement
         knob does not add an encoder or firmware support.
       </p>
       <div className="accessory-selections">
@@ -73,8 +75,11 @@ export default function BuildAccessories({
                 </button>
               </div>
               <p>
-                {product.brand} · {product.kind}
+                {product.brand} · {product.kind} · Quantity {item.quantity}
               </p>
+              {unmountedPreviewNote(selections, item.id) && (
+                <p>{unmountedPreviewNote(selections, item.id)}</p>
+              )}
               {location.kind === 'external' ? (
                 <StudioSelect
                   aria-label={`Position for ${product.name}`}
