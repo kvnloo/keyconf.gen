@@ -13,6 +13,8 @@ export function artisanPreviewNote(
   );
   if (!item || item.location.kind !== 'key' || product?.kind !== 'artisan')
     return null;
+  if (product.sizeU === null)
+    return 'Not shown: the artisan width is unknown. Confirm its size with the maker before choosing a target key.';
   const keyId = item.location.keyId;
   if (keyId === 'unassigned')
     return 'Not shown yet: choose a target key for this artisan.';

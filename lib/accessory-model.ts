@@ -244,6 +244,7 @@ export function createAccessoryPreview({
           ? originalCap.geometry.boundingBox?.getSize(new THREE.Vector3()).x
           : undefined;
       if (
+        product.sizeU === null ||
         !key ||
         capWidth === undefined ||
         Math.abs(capWidth + 0.08 - product.sizeU) > 0.03 ||

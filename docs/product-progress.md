@@ -852,3 +852,14 @@ The existing parser already rejects multiple artisan units on one key. An initia
 Validation: the full suite passed at 163 tests during implementation; the final focused placement test, strict types, lint, formatting and complete accessory browser journey passed after removing the unreachable quantity branch. Browser coverage includes the wrong-width repair and existing quantity, source, share, reload, removal and responsive paths. This increment is not deployed yet.
 
 Quantity controls are live as Sites version 33, source a65776c. Deployment appgdep_6a9e157468f48191b2e65cd4497f2fed succeeded. The preceding tray release CI 34073198794 passed.
+
+
+## September 6, 2026: imported accessory reference boundary
+
+Implemented the first internal PART-6 layer in `lib/imported-accessories.ts`: allowlisted source/variant metadata, canonical public URLs, bounded text and timestamps, deterministic short variant IDs, duplicate rejection, and explicit unknown fit/unavailable geometry. Imported IDs cannot shadow built-in identities. Caller-supplied compatibility claims are discarded and fit escalation is rejected. A shared catalog-plus-custom resolver is available for the next integration step.
+
+Artisan width now supports an explicit unknown value. Unknown width cannot replace a rendered key or become a width mismatch; the preview explains that dimensions must be confirmed first. Existing built-in widths are unchanged.
+
+Validation: 165 unit tests, strict types, lint and formatting passed. New tests cover deterministic identity, variant changes, original source retention, malformed/unsafe data, unknown dimensions, duplicate identities and fake fit. The deployed artisan-placement release CI 34073993001 is green.
+
+This boundary is not exposed in the importer and is not a complete accessory-import feature. Build-owned persistence, canonical serialization/pruning, server evidence checks, safe geometry fallback and reviewed atomic addition are still required by the accessory import contract. Do not publish an accessory import control until those paths are verified together.

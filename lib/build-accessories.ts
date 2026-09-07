@@ -22,7 +22,7 @@ export type AccessoryProduct = ProductInfo &
     | {
         kind: 'artisan';
         placement: 'key';
-        sizeU: number;
+        sizeU: number | null;
         stem: 'mx' | 'choc' | null;
       }
     | {
@@ -324,7 +324,7 @@ export function assessAccessoryCompatibility(
       if (!key)
         conflicts.push('This key is absent from the documented layout.');
       else if (product.kind === 'artisan') {
-        if (key.sizeU !== null) {
+        if (key.sizeU !== null && product.sizeU !== null) {
           covered.add('size');
           if (key.sizeU !== product.sizeU)
             conflicts.push(
