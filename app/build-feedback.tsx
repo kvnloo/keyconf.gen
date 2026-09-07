@@ -12,10 +12,22 @@ export default function BuildFeedback({
   linkMode?: 'preview' | 'publication' | 'root-preview' | 'file';
 }) {
   const [note, setNote] = useState('');
-  const [receipt, setReceipt] = useState('');
-  const [manualCopy, setManualCopy] = useState('');
+  const [result, setResult] = useState<{
+    key: string;
+    receipt: string;
+    manualCopy: string;
+  } | null>(null);
+  const request = useRef(0);
+  const key = JSON.stringify([build, note, linkMode]);
+  const receipt = result?.key === key ? result.receipt : '';
+  const manualCopy = result?.key === key ? result.manualCopy : '';
   const fallback = useRef<HTMLTextAreaElement | null>(null);
   async function copy() {
+    const attempt = ++request.current;
+    setResult(null);
+    function finish(receipt: string, manualCopy = '') {
+      if (request.current === attempt) setResult({ key, receipt, manualCopy });
+    }
     let link: string;
     try {
       link =
@@ -30,20 +42,21 @@ export default function BuildFeedback({
                   : window.location.href,
               );
     } catch {
-      setReceipt(
+      finish(
         'This build is too large for a link. Download your variation and share the file with your notes.',
+        note.trim(),
       );
-      setManualCopy(note.trim());
       return;
     }
     const message = `Feedback on ${build.name}\n\n${note.trim()}\n\n${linkMode === 'file' ? 'Attach the downloaded build file to this message.' : `Build preview: ${link}`}`;
-    setManualCopy('');
     try {
       await navigator.clipboard.writeText(message);
-      setReceipt('Copied. Paste it into your conversation with the builder.');
+      finish('Copied. Paste it into your conversation with the builder.');
     } catch {
-      setManualCopy(message);
-      setReceipt('Select and copy the message below with your browser menu.');
+      finish(
+        'Select and copy the message below with your browser menu.',
+        message,
+      );
     }
   }
   return (
@@ -64,8 +77,8 @@ export default function BuildFeedback({
         placeholder="I love the green accents. Could we try a quieter switch?"
         onChange={(event) => {
           setNote(event.target.value);
-          setReceipt('');
-          setManualCopy('');
+          request.current++;
+          setResult(null);
         }}
       />
       <p className="preview-tip">

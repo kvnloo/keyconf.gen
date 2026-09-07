@@ -24,6 +24,10 @@ try {
     Object.defineProperty(navigator, 'clipboard', {
       value: {
         writeText: async (text) => {
+          if (window.delayCopy)
+            await new Promise((resolve) => {
+              window.finishCopy = resolve;
+            });
           if (window.denyCopy) throw new Error('Clipboard unavailable');
           window.copiedFeedback = text;
         },
@@ -216,6 +220,41 @@ try {
     sharedPreview(new URL(resetMessage.split('Build preview: ')[1]).hash).build,
     build,
   );
+  const feedbackReceipt = page
+    .locator('.preview-feedback')
+    .filter({ has: page.locator('#build-feedback-note') })
+    .locator('output');
+  await page.getByRole('button', { name: 'Midnight', exact: true }).click();
+  assert.equal(await feedbackReceipt.textContent(), '');
+  assert.equal(await notes.inputValue(), 'Please use this darker colorway.');
+  await page.evaluate(() => {
+    window.copiedFeedback = '';
+    window.delayCopy = true;
+  });
+  await copy.click();
+  await page.waitForFunction(() => typeof window.finishCopy === 'function');
+  await notes.fill('Updated notes while clipboard is pending.');
+  await page.evaluate(() => {
+    window.finishCopy();
+    window.delayCopy = false;
+  });
+  await page.waitForFunction(() =>
+    window.copiedFeedback.includes('Please use this darker colorway.'),
+  );
+  assert.equal(await feedbackReceipt.textContent(), '');
+  await page.evaluate(() => {
+    window.denyCopy = true;
+  });
+  await copy.click();
+  await fallback.waitFor();
+  await page
+    .getByRole('button', { name: 'Reset to original', exact: true })
+    .click();
+  assert.equal(await fallback.count(), 0);
+  assert.equal(await feedbackReceipt.textContent(), '');
+  await page.evaluate(() => {
+    window.denyCopy = false;
+  });
   await page.getByRole('button', { name: 'Porcelain', exact: true }).click();
   const editAccessibility = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])

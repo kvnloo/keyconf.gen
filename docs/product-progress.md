@@ -794,3 +794,12 @@ Shared publication and proposal comparisons now use the original saved product, 
 Validation: 161 unit tests passed, strict TypeScript, lint and formatting passed. The real local browser feedback journey passed, including two maker links for a changed case, mobile overflow, accessibility, unchanged local storage, malformed file recovery and sound/variation controls. GitHub run 34070756706 for the preceding version 27 release finished successfully. This comparison increment is not yet published to Sites.
 
 Still outstanding: clearer before/after review for inline changes, creator-facing proposal creation and authenticated client response submission. Google setup remains deferred by the user.
+
+
+## September 6, 2026: current-build feedback confirmations
+
+The comparison evidence release is live as Sites version 28, from 40a1482. Production build and the compiled Worker browser feedback journey passed before deployment; deployment appgdep_6a9e0c826c688191863f1431e33e23f0 succeeded. GitHub run 34071368689 completed its check job successfully; its Pages deploy job was still running when inspected.
+
+Feedback receipts and manual-copy messages now belong to the exact build, notes and link mode used by their copy operation. Editing notes invalidates pending copy results; newer copy requests supersede older ones. Changing keyboard settings hides obsolete confirmations and manual-copy text while preserving the notes. No clipboard content is changed automatically after a keyboard edit; users explicitly copy the new version.
+
+Local browser coverage exercises delayed clipboard completion after note edits, fallback-message removal after a build change, and preserved notes. The initial journey, type check, lint and formatting passed. The strengthened delayed-completion browser assertion and production build also passed. This feedback increment is committed for nightly but not yet deployed to Sites.
