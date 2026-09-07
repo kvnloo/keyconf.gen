@@ -16,7 +16,7 @@ function text(value: unknown, limit: number): string {
     typeof value !== 'string' ||
     !value.trim() ||
     value.length > limit ||
-    /[\u0000-\u001f\u007f]/.test(value)
+    /\p{Cc}/u.test(value)
   )
     throw new Error('Imported accessory text is missing or invalid.');
   return value.trim();
