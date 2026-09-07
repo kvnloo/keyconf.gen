@@ -34,6 +34,8 @@ const publicationRequest = {
   kind: 'build',
 };
 const published = {
+  operationId: publicationRequest.operationId,
+  buildId: publicationRequest.buildId,
   id: 'publication-000001',
   title: publicationRequest.title,
   note: publicationRequest.note,
@@ -498,7 +500,11 @@ test('creator operations validate public receipts and discard snapshots and priv
     }),
     Response.json({ ...withdrawal, build: saved.build }),
     Response.json(withdrawal),
-    Response.json(withdrawal),
+    Response.json({
+      ...withdrawal,
+      operationId: publicationRequest.operationId,
+      buildId: publicationRequest.buildId,
+    }),
   );
   assert.deepEqual(await client.listOwnedPublications(), page);
   assert.deepEqual(
@@ -733,4 +739,18 @@ test('invalid creator requests do not reach the transport', () => {
   ])
     assert.throws(action, errorCode('invalid_request'));
   assert.equal(calls.length, 0);
+});
+
+test('publish receipts must match the exact operation and saved revision', async () => {
+  for (const change of [
+    { operationId: 'different-operation-001' },
+    { buildId: 'different-saved-build-001' },
+    { operationId: undefined },
+    { buildId: undefined },
+  ]) {
+    const { client } = queued(Response.json({ ...published, ...change }));
+    await assert.rejects(client.publishBuild(publicationRequest), {
+      code: 'invalid_response',
+    });
+  }
 });

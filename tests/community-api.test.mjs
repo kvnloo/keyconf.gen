@@ -518,6 +518,8 @@ test('creator publication requests require deliberate owned snapshots and isolat
   const response = await publish();
   privateResponse(response);
   const released = await response.json();
+  assert.equal(released.operationId, input.operationId);
+  assert.equal(released.buildId, saved.id);
   assert.deepEqual(await (await publish()).json(), released);
   privateResponse(
     await owner.publications(

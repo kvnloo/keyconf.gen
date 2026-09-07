@@ -96,14 +96,17 @@ export function createCommunityApi({
     },
     publications(request: Request) {
       return authenticated(request, async (subject) => {
-        if (request.method === 'POST')
-          return communityResponse(
-            await publishBuild(
-              db,
-              subject,
-              parsePublicationRequest(await communityRequest(request)),
-            ),
+        if (request.method === 'POST') {
+          const input = parsePublicationRequest(
+            await communityRequest(request),
           );
+          const publication = await publishBuild(db, subject, input);
+          return communityResponse({
+            ...publication,
+            operationId: input.operationId,
+            buildId: input.buildId,
+          });
+        }
         if (request.method !== 'GET') return methodNotAllowed('GET, POST');
         const params = new URL(request.url).searchParams;
         const publishedAt = params.get('before');

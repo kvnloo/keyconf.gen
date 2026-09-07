@@ -1001,3 +1001,7 @@ GitHub run 34084317722 succeeded, including the complete rendered-production jou
 Added validated creator list/publish/withdraw client methods and seven client tests; all 20 client tests pass. Typecheck and focused lint/format pass. The isolated HTTP fixture now exposes the real creator handlers; publish/retry/list/withdraw passed against SQLite and runs in CI through `verify:creator`. Fixture routing uses explicit collection/record mappings rather than a growing nested conditional.
 
 Publishing receipts currently validate metadata and snapshot evidence but do not echo operation/build IDs, so client receipt matching does not prove the saved-revision identity. Resolve that protocol gap before relying on receipts in the review screen. The creator UI and hosted identity remain unfinished; no public route is activated.
+
+## September 6, 2026: publication receipt identity
+
+Private publishing responses now include the validated operation ID and saved-build ID after the owned storage operation succeeds. The client requires both to match the original request, including replay after withdrawal, and still returns only its minimal receipt. Public publication reads are unchanged. This closes the receipt-identity gap recorded above. All 33 client/API tests, real HTTP creator verification, typecheck and focused lint/format pass. The review screen and hosted identity remain unfinished.

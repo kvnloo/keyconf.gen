@@ -261,7 +261,12 @@ function publicationReceipt(
   value: unknown,
   request: PublicationRequest,
 ): PublicationReceipt {
-  if (!object(value)) throw unreadable();
+  if (
+    !object(value) ||
+    value.operationId !== request.operationId ||
+    value.buildId !== request.buildId
+  )
+    throw unreadable();
   if (value.withdrawnAt !== null)
     return { status: 'withdrawn', ...publicationWithdrawal(value) };
   const key = publicationCursor(value);
