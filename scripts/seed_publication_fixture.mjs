@@ -2,6 +2,11 @@ import { DatabaseSync } from 'node:sqlite';
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { saveProfile, saveBuild } from '../db/community.ts';
 import { publishBuild, withdrawPublication } from '../db/publications.ts';
+import {
+  createProposal,
+  closeProposal,
+  rotateProposalLink,
+} from '../db/proposals.ts';
 import { defaultBuild } from '../lib/build.ts';
 const root = new URL('../', import.meta.url).pathname;
 const sqlite = new DatabaseSync(':memory:');
@@ -12,12 +17,23 @@ const migrations = readdirSync(root + '/drizzle')
   .join('\n');
 sqlite.exec(migrations);
 const db = {
+  batch(statements) {
+    sqlite.exec('BEGIN');
+    try {
+      const results = statements.map((statement) => statement.run());
+      sqlite.exec('COMMIT');
+      return results;
+    } catch (error) {
+      sqlite.exec('ROLLBACK');
+      throw error;
+    }
+  },
   prepare(sql) {
     const statement = sqlite.prepare(sql);
     return {
       bind(...args) {
         return {
-          async run() {
+          run() {
             return statement.run(...args);
           },
           async first(column) {
@@ -67,6 +83,35 @@ for (const kind of ['active', 'retired', 'withdrawn']) {
     externalUrl: 'https://example.com/enquire',
   });
   ids[kind] = pub.id;
+  const proposal = await createProposal(db, 'local-test-subject', {
+    operationId: 'proposal-fixture-' + kind,
+    buildId: saved.id,
+    title: 'Local ' + kind + ' proposal',
+    brief:
+      'A quiet board for your desk. Try the colors and send me your notes.',
+  });
+  ids['proposal_' + kind] = proposal;
+  if (kind === 'withdrawn')
+    await closeProposal(db, 'local-test-subject', proposal.id);
+  if (kind === 'active') {
+    const replaced = await createProposal(db, 'local-test-subject', {
+      operationId: 'proposal-fixture-replaced',
+      buildId: saved.id,
+      title: 'Replacement proposal',
+      brief: 'This is the current invitation.',
+    });
+    ids.proposal_replaced = replaced;
+    ids.proposal_replacement = await rotateProposalLink(
+      db,
+      'local-test-subject',
+      {
+        proposalId: replaced.id,
+        operationId: 'proposal-fixture-rotation',
+        expectedVersion: 0,
+      },
+    );
+  }
+
   if (kind === 'withdrawn')
     await withdrawPublication(db, 'local-test-subject', pub.id);
   if (kind === 'retired') {
@@ -91,6 +136,8 @@ for (const table of [
   'community_profile',
   'community_build',
   'community_publication',
+  'community_proposal',
+  'community_proposal_rotation',
 ])
   for (const row of sqlite.prepare('SELECT * FROM ' + table).all())
     sql +=

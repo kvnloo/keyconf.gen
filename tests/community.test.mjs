@@ -14,6 +14,7 @@ import {
   parseProposalRequest,
   parseProposalRotation,
   parseProposalResponse,
+  parseProposalPreview,
 } from '../lib/proposal.ts';
 import {
   listOwnedPublications,
@@ -57,9 +58,11 @@ function database(t, migrationCount = Infinity) {
     );
   }
   t.after(() => sqlite.close());
+  /** @type {string[]} */
+  const queries = [];
   return {
     sqlite,
-    queries: [],
+    queries,
     batch(statements) {
       sqlite.exec('BEGIN');
       try {
@@ -72,7 +75,7 @@ function database(t, migrationCount = Infinity) {
       }
     },
     prepare(sql) {
-      this.queries.push(sql);
+      queries.push(sql);
       const statement = sqlite.prepare(sql);
       return {
         bind(...parameters) {
@@ -205,7 +208,8 @@ test('account list traverses all snapshots across timestamp ties using the owner
   assert.deepEqual(Object.keys(all[0]).sort(), ['createdAt', 'id', 'name']);
   assert.deepEqual(await listBuilds(db, bob), { items: [], next: null });
   const query = db.queries.find((sql) => sql.includes('LIMIT 26'));
-  assert.ok(query);
+  if (typeof query !== 'string')
+    throw new Error('Expected the indexed list query.');
   const plan = db.sqlite.prepare(`EXPLAIN QUERY PLAN ${query}`).all(alice);
   assert.ok(
     plan.some((row) => row.detail.includes('community_build_account_created')),
@@ -1114,6 +1118,32 @@ test('proposal links freeze chosen identity and snapshots, store only token hash
   const preview = await readProposalPreview(db, created.token);
   assert.equal(preview.build.name, request.title);
   assert.equal(preview.author.displayName, profile.displayName);
+  assert.equal(preview.customization, 'available');
+  assert.deepEqual(
+    parseProposalPreview({
+      ...preview,
+      token: created.token,
+      subject: alice,
+      customization: 'forged',
+    }),
+    preview,
+  );
+  for (const corrupt of [
+    { ...preview, createdAt: 'yesterday' },
+    { ...preview, title: 'Hidden\nline' },
+    { ...preview, brief: 'x'.repeat(2001) },
+    { ...preview, build: {} },
+    { ...preview, evidence: {} },
+    {
+      ...preview,
+      author: {
+        ...preview.author,
+        links: [{ label: 'Bad', url: 'javascript:alert(1)' }],
+      },
+    },
+  ])
+    assert.throws(() => parseProposalPreview(corrupt));
+
   assert.equal(
     JSON.stringify(preview).includes('Private commission notes'),
     false,
@@ -1291,7 +1321,10 @@ test('conflicting concurrent proposals preserve one winner and retired catalog p
   assert.ok(index >= 0);
   const [removed] = catalog.splice(index, 1);
   try {
-    assert.deepEqual(await readProposalPreview(db, created.token), preview);
+    assert.deepEqual(await readProposalPreview(db, created.token), {
+      ...preview,
+      customization: 'unavailable',
+    });
     assert.deepEqual(await createProposal(db, alice, winningRequest), {
       id: created.id,
       closedAt: null,
@@ -1388,7 +1421,8 @@ test('owner proposal pages retain closed items and traverse timestamp ties witho
       sql.includes('FROM community_proposal WHERE account_id=') &&
       sql.includes('LIMIT 26'),
   );
-  assert.ok(query);
+  if (typeof query !== 'string')
+    throw new Error('Expected the indexed list query.');
   const plan = db.sqlite.prepare(`EXPLAIN QUERY PLAN ${query}`).all(alice);
   assert.ok(
     plan.some((row) =>

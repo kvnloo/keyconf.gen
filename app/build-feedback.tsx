@@ -9,7 +9,7 @@ export default function BuildFeedback({
   linkMode = 'preview',
 }: {
   build: Build;
-  linkMode?: 'preview' | 'publication' | 'publication-variation';
+  linkMode?: 'preview' | 'publication' | 'root-preview' | 'file';
 }) {
   const [note, setNote] = useState('');
   const [receipt, setReceipt] = useState('');
@@ -19,14 +19,16 @@ export default function BuildFeedback({
     let link: string;
     try {
       link =
-        linkMode === 'publication'
-          ? window.location.href
-          : previewLink(
-              build,
-              linkMode === 'publication-variation'
-                ? new URL('/', window.location.href).href
-                : window.location.href,
-            );
+        linkMode === 'file'
+          ? ''
+          : linkMode === 'publication'
+            ? window.location.href
+            : previewLink(
+                build,
+                linkMode === 'root-preview'
+                  ? new URL('/', window.location.href).href
+                  : window.location.href,
+              );
     } catch {
       setReceipt(
         'This build is too large for a link. Download your variation and share the file with your notes.',
@@ -34,7 +36,7 @@ export default function BuildFeedback({
       setManualCopy(note.trim());
       return;
     }
-    const message = `Feedback on ${build.name}\n\n${note.trim()}\n\nBuild preview: ${link}`;
+    const message = `Feedback on ${build.name}\n\n${note.trim()}\n\n${linkMode === 'file' ? 'Attach the downloaded build file to this message.' : `Build preview: ${link}`}`;
     setManualCopy('');
     try {
       await navigator.clipboard.writeText(message);
@@ -48,8 +50,10 @@ export default function BuildFeedback({
     <details className="preview-feedback">
       <summary>Feedback for the builder</summary>
       <p>
-        What would you keep or change? Copy your notes with this build link and
-        share them in your conversation.
+        What would you keep or change?{' '}
+        {linkMode === 'file'
+          ? 'Copy your notes and attach the downloaded build file in your conversation.'
+          : 'Copy your notes with this build link and share them in your conversation.'}
       </p>
       <label htmlFor="build-feedback-note">Your notes</label>
       <textarea
@@ -73,7 +77,8 @@ export default function BuildFeedback({
         disabled={!note.trim()}
         onClick={copy}
       >
-        <Copy size={16} /> Copy notes & build link
+        <Copy size={16} />{' '}
+        {linkMode === 'file' ? 'Copy notes' : 'Copy notes & build link'}
       </button>
       <output aria-live="polite">{receipt}</output>
       {manualCopy && (

@@ -36,7 +36,9 @@
     "verify:search": "node scripts/verify_search.mjs",
     "verify:q1": "node --experimental-strip-types scripts/verify_q1.mjs",
     "verify:feedback": "node --experimental-strip-types scripts/verify_feedback.mjs",
-    "verify:publication": "node scripts/verify_publication.mjs"
+    "verify:publication": "node scripts/verify_publication.mjs",
+    "verify:proposal": "node --experimental-strip-types scripts/verify_proposal.mjs",
+    "verify:worker": "node --experimental-strip-types scripts/verify_worker.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

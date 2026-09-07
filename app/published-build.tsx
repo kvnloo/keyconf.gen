@@ -1,8 +1,5 @@
 'use client';
-import Link from 'next/link';
-import AccessoryFitNotes from './accessory-fit-notes';
-import BuildFeedback from './build-feedback';
-import BuildComparison from './build-comparison';
+import ArchivedBuild from './archived-build';
 import type { PublicPublication } from '../db/publications';
 import { encodeBuild } from '../lib/build';
 import SharedBuildPreview from './shared-build-preview';
@@ -13,7 +10,7 @@ export default function PublishedBuild({
 }: {
   publication: PublicPublication;
 }) {
-  const { author, release, evidence } = publication;
+  const { author, release } = publication;
   const creatorDetails = (
     <section className="publication-author" aria-label="Creator and release">
       <div>
@@ -65,68 +62,18 @@ export default function PublishedBuild({
       {publication.customization === 'available' ? (
         <SharedBuildPreview
           build={publication.build}
-          publication={publication}
+          record={{ kind: 'publication', value: publication }}
           creatorDetails={creatorDetails}
           onCustomize={(draft) => {
             window.location.href = `/#build=${encodeBuild(draft)}`;
           }}
         />
       ) : (
-        <main className="shared-preview publication-archive">
-          {creatorDetails}
-          <Link href="/#studio">Open your studio →</Link>
-          <h1>{publication.title}</h1>
-          <p>
-            Some parts or recordings are no longer supported in the studio. The
-            original parts and sources are preserved below.
-          </p>
-          <BuildFeedback build={publication.build} linkMode="publication" />
-          <BuildComparison build={publication.build} />
-          <h2>Original parts</h2>
-          <ul className="preview-parts">
-            {[...evidence.components, ...evidence.accessoryReferences].map(
-              (part) => (
-                <li key={part.id}>
-                  <a href={part.source} target="_blank" rel="noreferrer">
-                    {part.brand} {part.name} ↗
-                  </a>
-                  <p>{part.detail}</p>
-                </li>
-              ),
-            )}
-          </ul>
-          <h2>Compatibility at publication</h2>
-          {evidence.compatibility.map((check, index) => (
-            <section key={index}>
-              <h3>
-                {check.title} · {check.status}
-              </h3>
-              <p>{check.detail}</p>
-              {check.source && (
-                <a href={check.source} target="_blank" rel="noreferrer">
-                  Original source ↗
-                </a>
-              )}
-            </section>
-          ))}
-          <AccessoryFitNotes
-            selections={publication.build.accessories}
-            products={evidence.accessoryReferences}
-            checks={evidence.accessoryCompatibility}
-          />
-          <h2>Sound reference</h2>
-          <p>{evidence.sound.accuracy}</p>
-          {evidence.sound.recording && (
-            <a
-              href={evidence.sound.recording.source}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {evidence.sound.recording.name} ·{' '}
-              {evidence.sound.recording.creator} ↗
-            </a>
-          )}
-        </main>
+        <ArchivedBuild
+          snapshot={publication}
+          details={creatorDetails}
+          kind="publication"
+        />
       )}
     </>
   );

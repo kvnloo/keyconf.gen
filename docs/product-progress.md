@@ -753,3 +753,35 @@ withdrawn/missing pages, variation reset, recording changes, explicit studio
 handoff, local-storage isolation before handoff, clipboard fallback and expanded
 mobile controls with no WCAG A/AA violations detected. Independent review found
 three issues in the first implementation; all were corrected before publishing.
+
+## Proposal invitation viewer
+
+A read-only `/proposal#token=…` page now resolves a creator's invitation through
+`POST /api/proposal-preview`. It shows the chosen creator and brief with the
+existing keyboard, sound and isolated variation controls. Historical proposals
+retain their original parts, provenance and file export when the editor can no
+longer support them. Closed and replaced invitations show an unavailable page;
+load failures offer retry. Copied feedback uses a portable keyboard link or a
+build file and never includes the invitation bearer token.
+
+The page and endpoint send no-store, no-referrer and noindex headers. The POST
+requires the same origin and a bounded JSON body. Superseded reads are aborted
+and cannot populate a different invitation. These are read-only capabilities;
+creation, closure, rotation and response submission still await account UI and
+hosted Google identity. No public test proposals are seeded.
+
+Validation: 160 unit tests, strict types, lint, formatting and the production
+build passed. The compiled Worker/D1 rejection sequence and both publication and
+proposal browser suites passed. Coverage includes the real saved-draft key,
+explicit studio handoff and Undo, private-field/token exclusion, mobile
+accessibility, archived file feedback, superseded requests and source links.
+Independent review found no remaining application blocker.
+
+The known Wrangler front-proxy rejection crash recurred during verification.
+CI now uses Wrangler's installed createTestHarness API with fresh real D1 and the
+compiled production configuration. Rejection tests call the Worker directly;
+browser tests still use its served HTTP pages. No application assertion was
+removed. Hosted-gateway behavior is checked separately. Typed lint now recognizes
+only Node's test registrations as runner-managed promises in test files; other
+floating promises remain errors. The query recorder has an explicit string-array
+type so index checks retain precise SQL values.

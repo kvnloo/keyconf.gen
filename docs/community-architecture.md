@@ -135,7 +135,7 @@ Authentication and storage decisions follow the installed Sites [authentication 
 
 `db/community.ts`, `lib/community.ts`, and migration `0001_panoramic_ken_ellis.sql` implement private account/profile/build storage. Eight real SQLite tests cover chosen normalized handles, owner-only reads, idempotent operations, conflict retries, source-evidence retention, invalid input, bounded request bodies and private error responses. The list now traverses snapshots in pages of 25 using the owner/date/ID index. Real SQLite checks cover all 106 fixture snapshots across tied timestamps, owner isolation and invalid cursors.
 
-The unfinished ChatGPT-specific account page and API drafts were removed when Google was selected and setup deferred. No sign-in button, account page, or private community API is exposed. Public release viewing and favorite storage have since shipped. Hosted Google identity/session verification, account and favorite interfaces, public profile pages and proposals remain pending.
+The unfinished ChatGPT-specific account page and API drafts were removed when Google was selected and setup deferred. No sign-in button, account page, or private community API is exposed. Public release viewing and favorite storage have since shipped. Hosted Google identity/session verification, account and favorite interfaces, public profile pages, proposal creation controls and response submission/review remain pending. Bearer invitation preview reads now have a separate read-only route.
 
 ## Portable preview release
 
@@ -289,8 +289,7 @@ the npm wrapper, preventing earlier dev servers being left behind between steps.
 ## Proposal storage boundary
 
 `db/proposals.ts` implements create, bearer-token preview reads and owner-only
-closure. No HTTP route, proposal page or authenticated create control is exposed
-yet. Creation requires the existing private chosen profile, not a public profile
+closure. The read-only invitation page and endpoint are described below; authenticated create controls remain unexposed. Creation requires the existing private chosen profile, not a public profile
 page or publication. It freezes that chosen identity and references an owned
 immutable keyboard snapshot. Preview replaces the private snapshot name with the
 chosen proposal title and validates frozen source evidence.
@@ -301,11 +300,7 @@ Only SHA-256 token digests are stored. A successful winning create returns its
 tokens. Clients must not interpret a null token as a shareable link. Explicit token rotation is now implemented in storage; retries do not rotate
 or reopen proposals. Closing remains possible even after snapshot damage.
 
-The UI, route-level noindex/no-referrer/no-store handling, isolated client draft,
-rotation controls, response submission/review interfaces and change review remain required.
-Historical preview data is preserved, but its future UI must check current
-customization support before enabling the editor. No public test proposal is
-seeded by these storage tests.
+The invitation viewer checks current customization support and preserves historical parts and evidence when editing is unavailable. Creation and rotation controls, authenticated response submission and creator review remain required. No public test proposal is seeded.
 
 
 ## Proposal link replacement
@@ -354,5 +349,27 @@ resubmit with a new operation ID.
 
 Chosen author details and evidence stay frozen. Receipts omit account IDs,
 subjects, request digests and tokens. List pages omit payloads and notes. The
-account interface, hosted identity checks, isolated proposal draft, submission
-review and creator change-review interface remain unfinished.
+account interface, hosted identity checks, authenticated submission review and creator change-review interface remain unfinished. Invitation variations now use the isolated preview editor.
+
+
+## Read-only invitation previews
+
+`/proposal#token=<64 lowercase hexadecimal characters>` resolves through a
+bounded same-origin JSON POST to `/api/proposal-preview`. The fragment is never
+included in a request URL. The endpoint accepts at most 256 bytes, reads only an
+open proposal matching the stored token digest, and returns the chosen creator
+identity, title, brief and validated frozen keyboard evidence. Neither raw tokens
+nor account subjects appear in its projection or errors. Both routes send
+no-store, no-referrer and noindex headers; the page has neutral metadata.
+
+The client aborts superseded reads and parses the response before rendering.
+Current builds use the shared 3D/listening/variation controls; retired builds use
+the same preserved-parts archive as publications. Neither mounts the persistent
+studio editor until Customize a copy is selected. Proposal feedback always uses
+a token-free root portable preview, or notes plus a downloaded file for a retired
+build. It never copies the bearer invitation automatically.
+
+This is an invitation viewer, not the completed account workflow. Creation,
+rotation, closure and response writes still have no exposed account endpoints.
+The bearer warning is visible, and copied/downloaded feedback remains a manual
+conversation outside Keyconf. Google setup remains deferred.

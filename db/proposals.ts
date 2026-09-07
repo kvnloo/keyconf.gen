@@ -1,7 +1,8 @@
 import { digestText as digest } from '../lib/content-digest.ts';
-import { CommunityError, parseCommunityProfile } from '../lib/community.ts';
+import { CommunityError } from '../lib/community.ts';
 import {
   parseProposalRequest,
+  parseProposalPreview,
   parseProposalRotation,
   type ProposalRequest,
   type ProposalRotation,
@@ -116,21 +117,23 @@ export async function readProposalPreview(db: Database, token: string) {
       evidence: string;
     }>();
   if (!row) throw unavailable();
-  const { build, evidence } = restoreBuildSnapshot(row, true);
-  const selected = new Set(Object.values(build.selection));
-  return {
-    id: row.id,
-    title: row.title,
-    brief: row.brief,
-    author: parseCommunityProfile(JSON.parse(row.author)),
-    createdAt: row.createdAt,
-    build: {
-      ...build,
-      name: row.title,
-      customParts: build.customParts.filter((part) => selected.has(part.id)),
-    },
-    evidence,
-  };
+  try {
+    return parseProposalPreview({
+      id: row.id,
+      title: row.title,
+      brief: row.brief,
+      createdAt: row.createdAt,
+      author: JSON.parse(row.author),
+      build: JSON.parse(row.payload),
+      evidence: JSON.parse(row.evidence),
+    });
+  } catch {
+    throw new CommunityError(
+      'saved_build_unavailable',
+      'This saved proposal cannot currently be restored. Its snapshot is retained.',
+      422,
+    );
+  }
 }
 
 export async function closeProposal(db: Database, subject: string, id: string) {

@@ -1,5 +1,6 @@
-import { parseBuildSnapshot } from './build.ts';
-import { CommunityError } from './community.ts';
+import { parseBuild, parseBuildSnapshot } from './build.ts';
+import { parsePublicBuildEvidence } from './build-evidence.ts';
+import { CommunityError, parseCommunityProfile } from './community.ts';
 
 export function parseProposalRequest(value: unknown) {
   if (
@@ -128,3 +129,56 @@ export function parseProposalResponse(value: unknown) {
   }
 }
 export type ProposalResponseRequest = ReturnType<typeof parseProposalResponse>;
+
+export function parseProposalPreview(value: unknown) {
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    Array.isArray(value) ||
+    !('id' in value) ||
+    typeof value.id !== 'string' ||
+    !/^[a-zA-Z0-9_-]{16,100}$/.test(value.id) ||
+    !('title' in value) ||
+    typeof value.title !== 'string' ||
+    !value.title.trim() ||
+    value.title.length > 80 ||
+    forbiddenControl(value.title, false) ||
+    !('brief' in value) ||
+    typeof value.brief !== 'string' ||
+    value.brief.length > 2000 ||
+    forbiddenControl(value.brief, true) ||
+    !('createdAt' in value) ||
+    typeof value.createdAt !== 'string' ||
+    !Number.isFinite(Date.parse(value.createdAt)) ||
+    new Date(value.createdAt).toISOString() !== value.createdAt ||
+    !('author' in value) ||
+    !('build' in value) ||
+    !('evidence' in value)
+  ) {
+    throw new Error('This proposal preview could not be read.');
+  }
+  const build = parseBuildSnapshot(value.build);
+  const evidence = parsePublicBuildEvidence(value.evidence, build);
+  let customization: 'available' | 'unavailable' = 'available';
+  try {
+    parseBuild(build);
+  } catch {
+    customization = 'unavailable';
+  }
+  const selected = new Set(Object.values(build.selection));
+  return {
+    id: value.id,
+    title: value.title.trim(),
+    brief: value.brief,
+    createdAt: value.createdAt,
+    author: parseCommunityProfile(value.author),
+    build: {
+      ...build,
+      name: value.title.trim(),
+      customParts: build.customParts.filter((part) => selected.has(part.id)),
+    },
+    evidence,
+    customization,
+  };
+}
+export type ProposalPreview = ReturnType<typeof parseProposalPreview>;

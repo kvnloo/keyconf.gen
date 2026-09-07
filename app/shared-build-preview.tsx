@@ -12,6 +12,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import type { PublicPublication } from '../db/publications';
+import type { ProposalPreview } from '../lib/proposal';
 import type { Build } from '../lib/build';
 import PreviewAdjustments from './preview-adjustments';
 import { compareBuilds } from '../lib/build-comparison';
@@ -28,17 +29,20 @@ import './shared-build-preview.css';
 export default function SharedBuildPreview({
   build: original,
   onCustomize,
-  publication,
+  record,
   creatorDetails,
 }: {
   build: Build;
   onCustomize: (build: Build) => void;
-  publication?: PublicPublication;
+  record?:
+    | { kind: 'publication'; value: PublicPublication }
+    | { kind: 'proposal'; value: ProposalPreview };
   creatorDetails?: ReactNode;
 }) {
+  const frozen = record?.value;
   const [build, setBuild] = useState(original);
   const changed = compareBuilds(original, build).length > 0;
-  const snapshot = changed ? undefined : publication;
+  const snapshot = changed ? undefined : frozen;
   const [exploded, setExploded] = useState(false);
   const [view, setView] = useState('perspective');
   const [enabled, setEnabled] = useState(false);
@@ -156,20 +160,24 @@ export default function SharedBuildPreview({
   return (
     <main className="shared-preview">
       <header>
-        <a className="brand" href={publication ? '/#home' : '#home'}>
+        <a className="brand" href={frozen ? '/#home' : '#home'}>
           keyconf
         </a>
-        <a className="preview-back" href={publication ? '/#studio' : '#studio'}>
+        <a className="preview-back" href={frozen ? '/#studio' : '#studio'}>
           <ArrowLeft size={16} /> My studio
         </a>
       </header>
       <div className="preview-heading">
         <div>
-          <span className="preview-eyebrow">SHARED KEYBOARD</span>
+          <span className="preview-eyebrow">
+            {record?.kind === 'proposal'
+              ? 'PROPOSED KEYBOARD'
+              : 'SHARED KEYBOARD'}
+          </span>
           <h1>{build.name}</h1>
           <p>
-            {publication
-              ? `${changed ? 'Your variation · Original by' : 'By'} ${publication.author.displayName} · @${publication.author.handle}`
+            {frozen
+              ? `${changed ? 'Your variation · Original by' : 'By'} ${frozen.author.displayName} · @${frozen.author.handle}`
               : 'A snapshot to explore. Your saved build stays untouched.'}
           </p>
         </div>
@@ -242,11 +250,11 @@ export default function SharedBuildPreview({
           <BuildFeedback
             build={build}
             linkMode={
-              publication
-                ? changed
-                  ? 'publication-variation'
-                  : 'publication'
-                : 'preview'
+              record?.kind === 'publication' && !changed
+                ? 'publication'
+                : record
+                  ? 'root-preview'
+                  : 'preview'
             }
           />
           <BuildComparison build={build} />
