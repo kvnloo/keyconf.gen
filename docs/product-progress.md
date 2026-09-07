@@ -991,3 +991,7 @@ The last-key persistence regression is now part of the maintained typing verifie
 ## September 6, 2026: typing fix release build
 
 The production build for f500fec completed successfully. GitHub run 34083815159 for the preceding diagnostics commit succeeded; run 34084317722 containing the isolated last-key update is still in progress. Public nightly remains Sites version 38. The product checklist now reflects the locally verified favorites controls without claiming hosted account integration.
+
+## September 6, 2026: typing performance update published
+
+GitHub run 34084317722 succeeded, including the complete rendered-production journey and Pages deployment. Sites version 39 is live at https://keyconf-nightly.kvnloo.chatgpt.site from source `f2d2058270babb8df1468a54bb1ba281a370f1ba`. Deployment `appgdep_6a9e43492d8c81918ac2ea300895fe8d` succeeded at 2026-09-07T04:53:45.928431+00:00. This publishes isolated last-key rendering without weakening Monkeytype result checks. The later publication-date boundary fix is not included in this saved release. Account and creator controls remain unexposed pending hosted identity. The user's existing browser view was preserved during the background deployment.
