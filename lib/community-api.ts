@@ -1,3 +1,4 @@
+import { addFavorite, listFavorites, removeFavorite } from '../db/favorites.ts';
 import {
   listBuilds,
   readBuild,
@@ -85,6 +86,48 @@ export function createCommunityApi({
           return communityResponse(await saveBuild(db, subject, input));
         }
         return methodNotAllowed('GET, POST');
+      });
+    },
+    favorites(request: Request) {
+      return authenticated(request, async (subject) => {
+        if (request.method !== 'GET') return methodNotAllowed('GET');
+        const params = new URL(request.url).searchParams;
+        const createdAt = params.get('before');
+        const publicationId = params.get('id');
+        if ((createdAt === null) !== (publicationId === null))
+          throw new CommunityError(
+            'invalid_request',
+            'This favorites page cursor is invalid.',
+            400,
+          );
+        return communityResponse(
+          await listFavorites(
+            db,
+            subject,
+            createdAt !== null && publicationId !== null
+              ? { createdAt, publicationId }
+              : undefined,
+          ),
+        );
+      });
+    },
+    favorite(request: Request, publicationId: string) {
+      return authenticated(request, async (subject) => {
+        if (request.method !== 'PUT' && request.method !== 'DELETE')
+          return methodNotAllowed('PUT, DELETE');
+        if (!/^[a-zA-Z0-9_-]{16,100}$/.test(publicationId))
+          throw new CommunityError(
+            'invalid_request',
+            'This published-build identifier is invalid.',
+            400,
+          );
+        await communityRequest(request);
+        if (request.method === 'PUT')
+          return communityResponse(
+            await addFavorite(db, subject, publicationId),
+          );
+        await removeFavorite(db, subject, publicationId);
+        return communityResponse({ publicationId, removed: true });
       });
     },
     build(request: Request, id: string) {

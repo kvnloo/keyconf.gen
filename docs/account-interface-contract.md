@@ -45,3 +45,9 @@ Ten client tests cover response parsing, malformed cursors/pages, private reques
 - Implement account favorites, deliberate profile publication, creator publishing/drop controls and client proposal management/submission. Their internal storage is not a completed user workflow.
 
 Do not enable a fake Google button, expose fixture identity controls, or describe the account experience as live until these activation requirements are met.
+
+## Favorites request preparation
+
+The provider-neutral handler factory also lists private favorites and accepts idempotent PUT/DELETE operations on a publication ID. Both mutations require the existing same-origin JSON boundary, and identity is resolved before database access. Repeat adds preserve the original timestamp. Removing another account's favorite does not affect it. Withdrawn publications remain removable but expose only their identifier, saved time and unavailable status. No public routes or controls are activated by this increment.
+
+Two additional real-SQLite request tests cover these ownership, retry, withdrawal and request-boundary cases. Favorites client parsing, account controls, pagination browser verification and hosted identity remain required before describing favorites as a usable feature.

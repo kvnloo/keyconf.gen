@@ -949,3 +949,7 @@ Discover's skip link now focuses the community heading without leaving Discover.
 ## September 6, 2026: community illustrations published
 
 Sites version 38 is live at https://keyconf-nightly.kvnloo.chatgpt.site from source `67dd3c17a5aaf9f75b1bfd28b49ae10c1c99ce2e`. Deployment `appgdep_6a9e39ea2bb88191a7f8817082abb993` succeeded at 2026-09-07T04:13:48.861603+00:00. The live public publications endpoint returns an empty list successfully; no sample publications were inserted into production. Layout/color illustrations appear when actual publications exist. The user's browser view was preserved during this background deployment. GitHub run 34082155164 is still running at this checkpoint. The private account panel remains unexposed pending Google setup.
+
+## September 6, 2026: favorites request handlers
+
+Added private favorites list/add/remove methods to the provider-neutral account API factory. Real-SQLite integration checks prove verified ownership, repeat-add receipts, isolated removal, withdrawn-title redaction, anonymous rejection, cross-origin rejection and malformed cursor/identifier rejection. All nine account API tests pass, and typecheck passes. The factory remains unexposed in production; favorite controls and client integration remain unfinished, and Google setup is deferred.

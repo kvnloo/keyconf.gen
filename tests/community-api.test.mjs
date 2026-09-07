@@ -381,3 +381,113 @@ test('identity and database failures return private safe errors without internal
   assert.equal(failure.error.code, 'storage_unavailable');
   assert.equal(JSON.stringify(failure).includes('community_profile'), false);
 });
+
+test('favorite requests use verified ownership and redact withdrawn publication details', async (t) => {
+  const { publishBuild, withdrawPublication } =
+    await import('../db/publications.ts');
+  const db = database(t);
+  const owner = apiFor(db, alice);
+  const reader = apiFor(db, bob);
+  await owner.profile(request('/api/community/profile', 'PATCH', profile));
+  const saved = await save(owner, 'favorite-api-save-001');
+  const publication = await publishBuild(db, alice, {
+    operationId: 'favorite-api-publication-001',
+    buildId: saved.id,
+    title: 'Published favorite',
+    note: '',
+    kind: 'build',
+  });
+  const path = `/api/community/favorites/${publication.id}`;
+  const add = () =>
+    reader.favorite(request(path, 'PUT', { subject: alice }), publication.id);
+  const first = await add();
+  privateResponse(first);
+  const receipt = await first.json();
+  assert.deepEqual(await (await add()).json(), receipt);
+  assert.deepEqual(
+    await (await owner.favorites(request('/api/community/favorites'))).json(),
+    { items: [], next: null },
+  );
+  await owner.favorite(request(path, 'DELETE', {}), publication.id);
+  let page = await (
+    await reader.favorites(request('/api/community/favorites'))
+  ).json();
+  assert.equal(page.items.length, 1);
+  assert.equal(page.items[0].title, 'Published favorite');
+  await withdrawPublication(db, alice, publication.id);
+  page = await (
+    await reader.favorites(request('/api/community/favorites'))
+  ).json();
+  assert.deepEqual(page.items, [
+    {
+      publicationId: publication.id,
+      createdAt: receipt.createdAt,
+      status: 'unavailable',
+    },
+  ]);
+  privateResponse(await add(), 404);
+  for (let i = 0; i < 2; i++)
+    privateResponse(
+      await reader.favorite(request(path, 'DELETE', {}), publication.id),
+    );
+  assert.deepEqual(
+    await (await reader.favorites(request('/api/community/favorites'))).json(),
+    { items: [], next: null },
+  );
+});
+
+test('favorite request boundaries reject anonymous, cross-origin and malformed requests', async (t) => {
+  const db = database(t);
+  const anonymous = apiFor(db, null);
+  const id = 'publication-test-001';
+  privateResponse(
+    await anonymous.favorites(request('/api/community/favorites')),
+    401,
+  );
+  privateResponse(
+    await anonymous.favorite(
+      request('/api/community/favorites/x', 'PUT', { subject: alice }),
+      id,
+    ),
+    401,
+  );
+  assert.equal(db.queries.length, 0);
+  const api = apiFor(db, alice);
+  for (const method of ['PUT', 'DELETE']) {
+    privateResponse(
+      await api.favorite(
+        request(
+          '/api/community/favorites/x',
+          method,
+          {},
+          { Origin: 'https://attacker.example' },
+        ),
+        id,
+      ),
+      403,
+    );
+    privateResponse(
+      await api.favorite(
+        request('/api/community/favorites/x', method, {}),
+        '../invalid',
+      ),
+      400,
+    );
+  }
+  for (const suffix of [
+    '?before=2026-09-06T00:00:00.000Z',
+    '?id=publication-test-001',
+    '?before=bad&id=publication-test-001',
+  ])
+    privateResponse(
+      await api.favorites(request(`/api/community/favorites${suffix}`)),
+      400,
+    );
+  const unsupported = await api.favorite(
+    request('/api/community/favorites/x'),
+    id,
+  );
+  privateResponse(unsupported, 405);
+  assert.equal(unsupported.headers.get('Allow'), 'PUT, DELETE');
+  assert.equal(db.queries.length, 0);
+});
