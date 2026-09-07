@@ -44,6 +44,7 @@ jobs:
           npm run verify:browser
           npm run verify:imports
           node scripts/verify_accessory_imports.mjs
+          node scripts/verify_artisan_import_specs.mjs
           npm run verify:import-pages
           npm run verify:interface
           npm run verify:featured

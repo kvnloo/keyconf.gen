@@ -93,6 +93,10 @@ export default function ImportDialog({
     (typeof accessoryChoices)[number] | null
   >(null);
   const [adding, setAdding] = useState(false);
+  const [artisanWidth, setArtisanWidth] = useState('');
+  const [artisanStem, setArtisanStem] = useState<'unknown' | 'mx' | 'choc'>(
+    'unknown',
+  );
   const [raw, setRaw] = useState('');
   const [added, setAdded] = useState(false);
   const request = useRef<AbortController | null>(null);
@@ -104,7 +108,11 @@ export default function ImportDialog({
     request.current = controller;
     setBusy(true);
     setError(null);
-    if (!next) setResult(null);
+    if (!next) {
+      setResult(null);
+      setArtisanWidth('');
+      setArtisanStem('unknown');
+    }
     setAdded(false);
     try {
       const source = next ? next.source : publicUrl(url).href;
@@ -221,6 +229,10 @@ export default function ImportDialog({
                     product.sku,
                     formatProductPrice(product.pricing),
                     product.availability,
+                    accessoryChoice.kind === 'artisan' &&
+                    (artisanWidth.trim() || artisanStem !== 'unknown')
+                      ? 'Width/stem entered by user; verify against maker specifications'
+                      : '',
                   ]
                     .filter(Boolean)
                     .join(' · ') || 'Imported product reference',
@@ -232,8 +244,15 @@ export default function ImportDialog({
                 geometry: 'unavailable',
                 kind: accessoryChoice.kind,
                 placement: accessoryChoice.placement,
-                sizeU: null,
-                stem: null,
+                sizeU:
+                  accessoryChoice.kind === 'artisan' && artisanWidth.trim()
+                    ? Number(artisanWidth)
+                    : null,
+                stem:
+                  accessoryChoice.kind === 'artisan' &&
+                  artisanStem !== 'unknown'
+                    ? artisanStem
+                    : null,
               }),
             ),
         );
@@ -371,9 +390,54 @@ export default function ImportDialog({
             <p className="import-note">
               Review the product type and placement above. Selected accessories
               are added to this build with unknown fit and unavailable geometry.
-              Artisan width and stem remain unknown, so imported caps are not
-              placed on keys.
+              Geometry and physical fit remain unverified.
             </p>
+          )}
+          {accessoryChoice?.kind === 'artisan' && (
+            <fieldset className="artisan-import-specs">
+              <legend>Artisan specifications · optional</legend>
+              <p className="import-note">
+                Enter values from the maker&apos;s listing. These apply to every
+                selected cap. Leave unknown values blank; caps with unknown
+                width cannot be assigned a visual key.
+              </p>
+              <label htmlFor="artisan-import-width">
+                Width in key units (u)
+              </label>
+              <input
+                id="artisan-import-width"
+                type="number"
+                min="0.01"
+                max="10"
+                step="any"
+                placeholder="Unknown"
+                value={artisanWidth}
+                onChange={(event) => {
+                  setArtisanWidth(event.target.value);
+                  setAdded(false);
+                }}
+              />
+              <label htmlFor="artisan-import-stem">Stem interface</label>
+              <StudioSelect
+                id="artisan-import-stem"
+                value={artisanStem}
+                options={[
+                  { value: 'unknown', label: 'Unknown' },
+                  { value: 'mx', label: 'MX cross stem' },
+                  { value: 'choc', label: 'Choc' },
+                ]}
+                onValueChange={(value) => {
+                  if (
+                    value === 'unknown' ||
+                    value === 'mx' ||
+                    value === 'choc'
+                  ) {
+                    setArtisanStem(value);
+                    setAdded(false);
+                  }
+                }}
+              />
+            </fieldset>
           )}
           <div className="import-list">
             {result.products.map((p, i) => (

@@ -297,4 +297,31 @@ test('imported products use neutral markers and never inherit built-in product g
   assert.equal(disposed.size, 8);
   preview.dispose();
   assert.equal(disposed.size, 8);
+  const key = model.keys.get('KeyA');
+  const originals = key.children.map((object) => ({
+    object,
+    visible: object.visible,
+  }));
+  const reviewed = createAccessoryPreview({
+    ...model,
+    customAccessories: customAccessories.map((product) =>
+      product.kind === 'artisan'
+        ? { ...product, sizeU: 1, stem: 'mx' }
+        : product,
+    ),
+    selections: selections.map((selection) =>
+      selection.location.kind === 'key'
+        ? { ...selection, location: { kind: 'key', keyId: 'KeyA' } }
+        : selection,
+    ),
+  });
+  assert.equal(reviewed.counts.artisan, 1);
+  const marker = key.getObjectByName('unavailable-product-geometry');
+  assert.ok(marker);
+  assert.equal(marker.children.length, 2);
+  assert.ok(originals.every(({ object }) => !object.visible));
+  reviewed.dispose();
+  assert.ok(
+    originals.every(({ object, visible }) => object.visible === visible),
+  );
 });

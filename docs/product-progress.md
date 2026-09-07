@@ -895,3 +895,11 @@ The focused compiled-Worker gallery journey passes after correcting a fixture ex
 Further browser coverage verifies 29-release pagination, Unicode search across two pages, final-page focus, and focus through a failed page load and retry. Native `disabled` removed focus in Chrome; the pagination control now uses `aria-disabled` plus an action guard while loading. New searches still abort previous reads. Desktop search controls now share a row, mobile controls fit, and singular counts use “build”. Both final screenshots were inspected.
 
 Final type/lint/format checks and production build passed, followed by `verify:worker -- --discovery` against actual D1 fixtures. The preceding full Worker run passed proposal API, published-page and proposal-preview checks before reaching the obsolete gallery assertion; the focused final run covers the corrected gallery. CI and public gallery deployment remain pending. Nightly Sites remains version 35 with accessory imports.
+
+## September 6, 2026: reviewed imported-artisan specifications
+
+The importer now accepts optional artisan width in key units and MX/Choc stem values entered from the maker's listing. Unknown remains the default, and a new source preview resets these fields. The form explicitly applies the reviewed values to all selected caps and marks supplied dimensions as user-entered in the retained reference details. Fit remains unknown and geometry unavailable; a known matching width enables a neutral key-placement marker rather than a fabricated artisan sculpt.
+
+Local verification passed at 320px: unknown defaults, invalid-width rejection/recovery, reviewed stem, matching key assignment and exported specification/source preservation. The real-GLB test confirms a reviewed 1u imported cap replaces only its target with neutral geometry and restores the original objects on removal. Types, all nine accessory-model tests, corrected lint and formatting passed. The browser check is included in CI. This increment has not been production-built or deployed yet.
+
+The prior gallery release remains saved as Sites version 36 from `3e983092b5e27c59f88a2f49106773370d3475d5`, awaiting GitHub run 34077882776. These artisan controls are separate from that prepared archive.
