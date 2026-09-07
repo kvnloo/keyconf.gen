@@ -33,8 +33,8 @@ export const studioDestinations = [
   {
     id: 'discover',
     name: 'Discover',
-    detail: 'Research, technologies and sources',
-    keywords: 'learn gaming topre magnetic',
+    detail: 'Community builds, creator drops and research',
+    keywords: 'community creators drops releases learn gaming topre magnetic',
   },
 ] as const;
 export type StudioDestination = (typeof studioDestinations)[number]['id'];

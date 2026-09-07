@@ -18,14 +18,29 @@ try {
   const fixtures = JSON.parse(
     await readFile('/tmp/keyconf-publication-fixtures.json', 'utf8'),
   );
-  await verifyProposalApi(
-    (input, init) => worker.fetch(input, init),
-    url,
-    fixtures,
-  );
   process.env.KEYCONF_PUBLICATION_BASE_URL = url.href;
-  await import('./verify_publication.mjs');
-  await import('./verify_proposal.mjs');
+  if (!process.argv.includes('--discovery')) {
+    await verifyProposalApi(
+      (input, init) => worker.fetch(input, init),
+      url,
+      fixtures,
+    );
+    await import('./verify_publication.mjs');
+    await import('./verify_proposal.mjs');
+  }
+  for (let index = 0; index < 27; index++) {
+    await DB.prepare(`INSERT INTO community_publication(id,account_id,build_id,operation_id,request_digest,metadata,author,published_at)
+      SELECT ?,account_id,build_id,?,request_digest,json_set(metadata,'$.title',?),json_set(author,'$.displayName','Élodie'),? FROM community_publication WHERE id=?`)
+      .bind(
+        `discovery-page-fixture-${index.toString().padStart(3, '0')}`,
+        `discovery-operation-${index}`,
+        `Émeraude ${index}`,
+        new Date().toISOString(),
+        fixtures.active,
+      )
+      .run();
+  }
+  await import('./verify_discovery.mjs');
 } catch (error) {
   server.debug();
   throw error;

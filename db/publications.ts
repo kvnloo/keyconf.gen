@@ -237,9 +237,9 @@ export async function listPublicPublications(
   }
   if (input.query) {
     conditions.push(
-      "(instr(lower(json_extract(p.metadata,'$.title')),lower(?))>0 OR instr(lower(json_extract(p.author,'$.displayName')),lower(?))>0 OR instr(lower(json_extract(p.author,'$.handle')),lower(?))>0)",
+      'p.rowid IN (SELECT rowid FROM community_publication_search WHERE community_publication_search MATCH ?)',
     );
-    parameters.push(input.query, input.query, input.query);
+    parameters.push(`"${input.query.replaceAll('"', '""')}"*`);
   }
   if (input.cursor) {
     conditions.push('(p.published_at<? OR (p.published_at=? AND p.id<?))');

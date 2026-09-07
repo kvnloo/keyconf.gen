@@ -2261,3 +2261,54 @@ test('public discovery excludes private work and withdrawals, paginates ties and
       code: 'invalid_request',
     });
 });
+
+test('publication search backfills Unicode names and maintains the derived index on withdrawal', async (t) => {
+  const { listPublicPublications } = await import('../db/publications.ts');
+  const db = database(t, 10);
+  await saveProfile(db, alice, { ...profile, displayName: 'Élodie' });
+  const saved = await saveBuild(db, alice, save());
+  const receipt = await publishBuild(db, alice, {
+    operationId: 'unicode-search-publish',
+    buildId: saved.id,
+    title: 'Émeraude keyboard',
+    note: '',
+    kind: 'build',
+  });
+  db.sqlite.exec(
+    readFileSync(
+      new URL('../drizzle/0010_publication_search.sql', import.meta.url),
+      'utf8',
+    ),
+  );
+  for (const query of [
+    'élodie',
+    'ELODIE',
+    'élo',
+    'élodie',
+    'émeraude',
+    'émer',
+  ]) {
+    const result = await listPublicPublications(db, {
+      query,
+      kind: 'all',
+      cursor: null,
+    });
+    assert.deepEqual(
+      result.items.map((item) => item.id),
+      [receipt.id],
+    );
+  }
+  for (const query of ['%', '" OR "', 'élodie OR private'])
+    assert.equal(
+      (await listPublicPublications(db, { query, kind: 'all', cursor: null }))
+        .items.length,
+      0,
+    );
+  await withdrawPublication(db, alice, receipt.id);
+  assert.equal(
+    db.sqlite
+      .prepare('SELECT count(*) AS count FROM community_publication_search')
+      .get().count,
+    0,
+  );
+});

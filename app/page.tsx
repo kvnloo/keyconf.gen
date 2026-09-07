@@ -53,6 +53,7 @@ import { StudioMusic } from '../lib/music';
 import { FeaturedGallery, FeaturedInspector } from './featured-gallery';
 import { featuredBuilds, customizeFeatured } from '../lib/featured-builds';
 import { encodeDeck } from '../lib/control-deck';
+import CommunityDiscovery from './community-discovery';
 import TechnologyGuide from './technology-guide';
 import './studio.css';
 import SoundReferences, { type SoundReference } from './sound-references';
@@ -1741,12 +1742,13 @@ function KeyboardStudio({
             <div>
               <div className="eyebrow">KNOW WHAT GOES INTO IT</div>
               <h1>Find your next favorite.</h1>
-              <p>Parts, possibilities, and the sources behind them.</p>
+              <p>Builds, makers, and the parts behind them.</p>
             </div>
             <button className="button" onClick={() => setModal('import')}>
               <Plus size={16} /> Import a website
             </button>
           </div>
+          <CommunityDiscovery />
           <TechnologyGuide />
           <ResearchLibrary onReviewSwitch={reviewSwitch} />
         </section>
