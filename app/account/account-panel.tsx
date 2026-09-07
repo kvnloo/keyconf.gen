@@ -141,7 +141,11 @@ export default function AccountPanel({
             items: [
               saved,
               ...current.items.filter((item) => item.id !== saved.id),
-            ],
+            ].sort((left, right) => {
+              if (left.createdAt !== right.createdAt)
+                return left.createdAt > right.createdAt ? -1 : 1;
+              return left.id === right.id ? 0 : left.id > right.id ? -1 : 1;
+            }),
           },
       );
     } catch (cause) {

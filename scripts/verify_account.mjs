@@ -255,6 +255,10 @@ try {
     .getByRole('button', { name: 'Save current build', exact: true })
     .click();
   await waitForHeldResponse(saveHold);
+  await saveBuild(fixture.db, 'fixture:alice', {
+    operationId: 'fixture-newer-device-snapshot',
+    build: { ...defaultBuild, name: 'Newer snapshot from another device' },
+  });
   fixture.sessions.delete(fixture.alice);
   await page
     .getByRole('button', { name: 'Open Saved during pagination', exact: true })
@@ -278,7 +282,10 @@ try {
   ).toBeVisible();
   assert.equal(
     fixture.sqlite.prepare('SELECT count(*) AS n FROM community_build').get().n,
-    31,
+    32,
+  );
+  await expect(page.locator('.account-build-list h3').first()).toHaveText(
+    'Newer snapshot from another device',
   );
   await name.fill('X'.repeat(81));
   await page

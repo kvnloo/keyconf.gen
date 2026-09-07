@@ -935,3 +935,7 @@ The account panel and typed same-origin client now implement chosen profile edit
 Independent review found and corrected a pagination overwrite of newly saved rows, busy controls surviving reauthentication, a rejected-save recovery trap and focus loss during overlapping pagination/open requests. The final browser journey passes those timing cases, a lost acknowledgement after a successful database save, owner isolation, profile/source-link reload, corrected-draft recovery and mobile accessibility. Desktop and phone screenshots were inspected. The client adds ten unit tests; all 189 unit tests pass. Production build, typecheck, final lint and formatting passed.
 
 The account fixture does not prove Google sign-in, hosted identity, cross-device persistence or pending-operation recovery across a full sign-in redirect. These remain activation gates in [Account interface contract](account-interface-contract.md). The account browser check now runs in CI. No real users, profiles or publications were seeded.
+
+## September 6, 2026: account retry ordering
+
+Confirming an older save now keeps account snapshots in creation order instead of moving that snapshot above newer builds. The browser fixture creates a newer snapshot from another device while an earlier acknowledgement is interrupted, then verifies that retrying the earlier save does not reorder it. The account browser journey, types, lint and formatting pass. GitHub run 34080633952 for the account interface remains in progress at this checkpoint; the account UI is still not exposed publicly.
