@@ -31,6 +31,24 @@ try {
   }
   await add.click();
   assert.equal(await page.locator('.accessory-selections article').count(), 1);
+  const quantity = accessories.getByRole('spinbutton', {
+    name: 'Quantity for Aluminum knob',
+  });
+  await quantity.fill('3');
+  await quantity.press('Enter');
+  await accessories
+    .getByRole('status')
+    .filter({ hasText: 'quantity updated to 3' })
+    .waitFor();
+  await quantity.fill('101');
+  await quantity.press('Tab');
+  assert.equal(await quantity.inputValue(), '3');
+  await quantity.fill('');
+  await quantity.press('Tab');
+  assert.equal(await quantity.inputValue(), '3');
+  await quantity.fill('8');
+  await quantity.press('Escape');
+  assert.equal(await quantity.inputValue(), '3');
   const slot = accessories.getByRole('textbox').first();
   await slot.fill('upper-right');
   await slot.press('Tab');
@@ -49,6 +67,10 @@ try {
     decodeBuild(new URL(url).hash.slice(9)).accessories[0].location.slotId,
     'upper-right',
   );
+  assert.equal(
+    decodeBuild(new URL(url).hash.slice(9)).accessories[0].quantity,
+    3,
+  );
   await page.getByRole('button', { name: 'Close dialog' }).click();
   await page.reload();
   await page.getByRole('tab', { name: 'Components', exact: true }).click();
@@ -58,6 +80,7 @@ try {
     await accessories.getByRole('textbox').first().inputValue(),
     'upper-right',
   );
+  assert.equal(await quantity.inputValue(), '3');
   await page.getByRole('button', { name: 'Explode', exact: true }).click();
   for (const width of [320, 390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
@@ -114,6 +137,10 @@ try {
     decodeBuild(new URL(artisanLink).hash.slice(9)).accessories[0].location
       .keyId,
     'Escape',
+  );
+  assert.equal(
+    decodeBuild(new URL(url).hash.slice(9)).accessories[0].quantity,
+    3,
   );
   await page.getByRole('button', { name: 'Close dialog' }).click();
   console.log(

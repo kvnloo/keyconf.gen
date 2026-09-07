@@ -832,3 +832,12 @@ Studio and shared-build parts explain unmounted scope and identify selections be
 Validation: 162 unit tests passed, strict types, lint and formatting passed. The browser accessory journey passed with desktop and 390px shared tray screenshots, exploded view, source notes, removal and no horizontal overflow. Both screenshots were visually inspected. A separate high-effort read-only reviewer found no blocker and verified trays clear macropads at left/right/above across the actual 60/65/75% GLBs. Product dimensions and integrated host fit remain unverified. This increment is not yet deployed.
 
 The before/after review release is live as Sites version 31, source 3b7bf5f. Deployment appgdep_6a9e1176ed60819191f84134dd4457e7 succeeded and GitHub run 34072579000 passed.
+
+
+## September 6, 2026: editable accessory quantities
+
+Non-artisan accessory cards now expose quantities from 1 to 100. Enter or leaving the field commits a valid whole number. Invalid or blank values restore the previous quantity with an explanation; Escape cancels. A quantity edit uses the existing build history and persistence path. The scene remains one illustration per selection and never creates geometry proportional to quantity.
+
+The local browser journey passed: edit to three, reject 101 and blank, cancel eight, share-link quantity, reload persistence, source/placement checks and three viewport widths. Types, lint and formatting passed. This increment has not yet been published.
+
+The parts-tray release is live as Sites version 32 from 7834a3a; deployment appgdep_6a9e143e5c608191b613d29d557b6326 succeeded.

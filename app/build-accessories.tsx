@@ -77,6 +77,46 @@ export default function BuildAccessories({
               <p>
                 {product.brand} · {product.kind} · Quantity {item.quantity}
               </p>
+              {product.kind !== 'artisan' && (
+                <label>
+                  Quantity
+                  <input
+                    key={item.quantity}
+                    aria-label={`Quantity for ${product.name}`}
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={100}
+                    step={1}
+                    defaultValue={item.quantity}
+                    onBlur={(event) => {
+                      const quantity = event.currentTarget.valueAsNumber;
+                      if (
+                        !Number.isInteger(quantity) ||
+                        quantity < 1 ||
+                        quantity > 100
+                      ) {
+                        event.currentTarget.value = String(item.quantity);
+                        setNotice(
+                          'Enter a whole-number quantity from 1 to 100. Your previous quantity was kept.',
+                        );
+                      } else if (quantity !== item.quantity) {
+                        update({ ...item, quantity });
+                        setNotice(
+                          `${product.name} quantity updated to ${quantity}. The scene shows one illustration per selection.`,
+                        );
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Escape') {
+                        event.currentTarget.value = String(item.quantity);
+                        event.currentTarget.blur();
+                      } else if (event.key === 'Enter')
+                        event.currentTarget.blur();
+                    }}
+                  />
+                </label>
+              )}
               {unmountedPreviewNote(selections, item.id) && (
                 <p>{unmountedPreviewNote(selections, item.id)}</p>
               )}
