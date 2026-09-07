@@ -602,3 +602,15 @@ test('creator publication boundaries reject anonymous and cross-origin mutations
   );
   assert.equal(db.queries.length, 0);
 });
+
+test('publication pagination rejects impossible calendar dates before querying storage', async (t) => {
+  const db = database(t);
+  const api = apiFor(db, alice);
+  const response = await api.publications(
+    request(
+      '/api/community/publications?before=2026-02-30T00%3A00%3A00.000Z&id=publication-test-001',
+    ),
+  );
+  privateResponse(response, 400);
+  assert.equal(db.queries.length, 0);
+});

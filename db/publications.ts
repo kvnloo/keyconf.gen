@@ -186,7 +186,8 @@ export async function listOwnedPublications(
       !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(
         cursor.publishedAt,
       ) ||
-      !Number.isFinite(Date.parse(cursor.publishedAt)))
+      !Number.isFinite(Date.parse(cursor.publishedAt)) ||
+      new Date(cursor.publishedAt).toISOString() !== cursor.publishedAt)
   )
     throw new CommunityError(
       'invalid_request',
