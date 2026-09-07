@@ -1,14 +1,17 @@
 import type { Build } from './build.ts';
-import { accessoryCatalog } from './build-accessories.ts';
+import { resolveAccessoryProducts } from './imported-accessories.ts';
 import { documentedKeys } from './accessory-hosts.ts';
 import layouts from '../public/models/layouts.json' with { type: 'json' };
 
 export function artisanPreviewNote(
-  build: Pick<Build, 'layout' | 'selection' | 'accessories'>,
+  build: Pick<
+    Build,
+    'layout' | 'selection' | 'accessories' | 'customAccessories'
+  >,
   id: string,
 ): string | null {
   const item = build.accessories.find((entry) => entry.id === id);
-  const product = accessoryCatalog.find(
+  const product = resolveAccessoryProducts(build.customAccessories).find(
     (entry) => entry.id === item?.productId,
   );
   if (!item || item.location.kind !== 'key' || product?.kind !== 'artisan')

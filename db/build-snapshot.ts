@@ -1,9 +1,7 @@
+import { resolveAccessoryProducts } from '../lib/imported-accessories.ts';
 import { accessoryHost } from '../lib/accessory-hosts.ts';
 import { catalog, categories, checkBuild } from '../lib/catalog.ts';
-import {
-  accessoryCatalog,
-  assessAccessories,
-} from '../lib/build-accessories.ts';
+import { assessAccessories } from '../lib/build-accessories.ts';
 import { soundPacks } from '../lib/sound-packs.ts';
 import { digestText as digest } from '../lib/content-digest.ts';
 import { parsePublicBuildEvidence } from '../lib/build-evidence.ts';
@@ -31,6 +29,7 @@ export function restoreBuildSnapshot(
 
 export async function snapshotEvidence(build: Build): Promise<string> {
   const parts = [...catalog, ...build.customParts];
+  const products = resolveAccessoryProducts(build.customAccessories);
   const recording =
     soundPacks.find((pack) => pack.id === build.audio.source) ?? null;
   return JSON.stringify({
@@ -40,12 +39,13 @@ export async function snapshotEvidence(build: Build): Promise<string> {
       parts.find((part) => part.id === build.selection[category]),
     ),
     compatibility: checkBuild(build.selection, parts, build.layout),
-    accessoryReferences: accessoryCatalog.filter((product) =>
+    accessoryReferences: products.filter((product) =>
       build.accessories.some((accessory) => accessory.productId === product.id),
     ),
     accessoryCompatibility: assessAccessories(
       build.accessories,
       accessoryHost(build),
+      products,
     ),
     sound: {
       ...build.audio,

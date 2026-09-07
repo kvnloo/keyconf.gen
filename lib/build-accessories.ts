@@ -150,8 +150,11 @@ function parseLocation(value: unknown): AccessoryLocation {
   throw new Error('Choose a valid accessory slot, key or desk position.');
 }
 
-export function newAccessorySelection(productId: string): AccessorySelection {
-  const product = accessoryCatalog.find((item) => item.id === productId);
+export function newAccessorySelection(
+  productId: string,
+  products: readonly AccessoryProduct[] = accessoryCatalog,
+): AccessorySelection {
+  const product = products.find((item) => item.id === productId);
   if (!product)
     throw new Error('This accessory is not in the product library.');
   const location: AccessoryLocation =
@@ -196,12 +199,13 @@ export function parseAccessorySnapshot(value: unknown): AccessorySelection[] {
   });
 }
 
-export function parseAccessories(value: unknown): AccessorySelection[] {
+export function parseAccessories(
+  value: unknown,
+  products: readonly AccessoryProduct[] = accessoryCatalog,
+): AccessorySelection[] {
   const selections = parseAccessorySnapshot(value);
   for (const selection of selections) {
-    const product = accessoryCatalog.find(
-      (item) => item.id === selection.productId,
-    );
+    const product = products.find((item) => item.id === selection.productId);
     if (!product)
       throw new Error('This accessory is not in the product library.');
     if (selection.location.kind !== product.placement)
@@ -278,10 +282,9 @@ const requirements: Record<AccessoryKind, readonly AccessoryAspect[]> = {
 export function assessAccessoryCompatibility(
   selection: AccessorySelection,
   host?: AccessoryHost,
+  products: readonly AccessoryProduct[] = accessoryCatalog,
 ): AccessoryCompatibility {
-  const product = accessoryCatalog.find(
-    (item) => item.id === selection.productId,
-  );
+  const product = products.find((item) => item.id === selection.productId);
   if (!product)
     return {
       status: 'unknown',
@@ -290,7 +293,11 @@ export function assessAccessoryCompatibility(
     };
   const locationId = accessoryLocationId(selection.location);
   const conflicts: string[] = [];
-  const unknown: string[] = [];
+  const unknown: string[] = product.id.startsWith('import-accessory:')
+    ? [
+        'Imported product specifications and fit have not been independently verified.',
+      ]
+    : [];
   const confirmed: string[] = [];
   const sources = new Set([product.source]);
   const covered = new Set<AccessoryAspect>();
@@ -342,6 +349,7 @@ export function assessAccessoryCompatibility(
     }
     for (const claim of host.claims) {
       if (
+        product.id.startsWith('import-accessory:') ||
         claim.productId !== product.id ||
         claim.locationId !== locationId ||
         locationId === 'unassigned'
@@ -374,19 +382,20 @@ export function assessAccessoryCompatibility(
 export function assessAccessories(
   selections: readonly AccessorySelection[],
   host?: AccessoryHost,
+  products: readonly AccessoryProduct[] = accessoryCatalog,
 ): Record<string, AccessoryCompatibility> {
   const results: Record<string, AccessoryCompatibility> = {};
   for (const selection of selections) {
-    const result = assessAccessoryCompatibility(selection, host);
+    const result = assessAccessoryCompatibility(selection, host, products);
     const location = selection.location;
     const locationId = accessoryLocationId(location);
     if (location.kind !== 'external' && locationId !== 'unassigned') {
-      const product = accessoryCatalog.find(
+      const product = products.find(
         (entry) => entry.id === selection.productId,
       );
       const used = selections
         .filter((other) => {
-          const otherProduct = accessoryCatalog.find(
+          const otherProduct = products.find(
             (entry) => entry.id === other.productId,
           );
           return (
@@ -417,11 +426,12 @@ export const MAX_UNMOUNTED_PREVIEWS = 6;
 export function unmountedPreviewNote(
   selections: readonly AccessorySelection[],
   id: string,
+  products: readonly AccessoryProduct[] = accessoryCatalog,
 ): string | null {
   const planned = selections.filter(
     (selection) =>
       selection.location.kind === 'embedded' &&
-      accessoryCatalog.some(
+      products.some(
         (product) =>
           product.id === selection.productId &&
           (product.kind === 'screen' ||

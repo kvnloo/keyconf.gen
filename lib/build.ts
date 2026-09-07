@@ -1,4 +1,9 @@
 import {
+  parseCustomAccessories,
+  resolveAccessoryProducts,
+  type ImportedAccessory,
+} from './imported-accessories.ts';
+import {
   catalog,
   categories,
   initialSelection,
@@ -66,6 +71,7 @@ export type Build = {
   profile: (typeof profiles)[number];
   selection: Selection;
   customParts: Part[];
+  customAccessories?: ImportedAccessory[];
   accessories: AccessorySelection[];
   audio: {
     source: string;
@@ -200,6 +206,21 @@ export function parseBuildSnapshot(value: unknown): Build {
       'The saved audio settings are not supported. Open another build file or link.',
     );
   const customParts = parseCustomParts(value.customParts);
+  const customAccessories = parseCustomAccessories(value.customAccessories);
+  const accessories = parseAccessorySnapshot(value.accessories);
+  for (const selected of accessories) {
+    if (
+      selected.productId.startsWith('import-accessory:') &&
+      !customAccessories.some(
+        (product) =>
+          product.id === selected.productId &&
+          product.placement === selected.location.kind,
+      )
+    )
+      throw new Error(
+        'The imported accessory reference is missing or has a different placement. Open a complete build.',
+      );
+  }
   const selection = { ...initialSelection };
   if (!object(value.selection))
     throw new Error('The saved build is missing its component list.');
@@ -235,7 +256,8 @@ export function parseBuildSnapshot(value: unknown): Build {
     profile,
     selection,
     customParts,
-    accessories: parseAccessorySnapshot(value.accessories),
+    ...(customAccessories.length ? { customAccessories } : {}),
+    accessories,
     audio: {
       source: audio.source,
       character: audio.character,
@@ -266,7 +288,10 @@ export function parseBuild(value: unknown): Build {
     throw new Error(
       'The saved audio settings are not supported. Open another build file or link.',
     );
-  parseAccessories(build.accessories);
+  parseAccessories(
+    build.accessories,
+    resolveAccessoryProducts(build.customAccessories),
+  );
   return build;
 }
 
@@ -344,12 +369,22 @@ export function readBuildFile(content: string): Build {
   return parseBuild(data);
 }
 
-export function encodeBuild(build: Build): string {
-  const ids = new Set(Object.values(build.selection));
-  const portable = {
-    ...build,
-    customParts: build.customParts.filter((p) => ids.has(p.id)),
+export function pruneBuildImports(build: Build): Build {
+  const partIds = new Set(Object.values(build.selection));
+  const accessoryIds = new Set(build.accessories.map((item) => item.productId));
+  const selected = build.customAccessories?.filter((product) =>
+    accessoryIds.has(product.id),
+  );
+  const { customAccessories: _customAccessories, ...base } = build;
+  return {
+    ...base,
+    customParts: build.customParts.filter((part) => partIds.has(part.id)),
+    ...(selected?.length ? { customAccessories: selected } : {}),
   };
+}
+
+export function encodeBuild(build: Build): string {
+  const portable = pruneBuildImports(build);
   const bytes = new TextEncoder().encode(JSON.stringify(portable));
   const encoded = btoa(
     Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''),

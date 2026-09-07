@@ -1,10 +1,10 @@
 'use client';
 
+import { resolveAccessoryProducts } from '../lib/imported-accessories';
 import { artisanPreviewNote } from '../lib/artisan-preview';
 import { accessoryHost, documentedKeys } from '../lib/accessory-hosts';
 import { useState } from 'react';
 import {
-  accessoryCatalog,
   unmountedPreviewNote,
   assessAccessories,
   parseAccessories,
@@ -18,19 +18,22 @@ import './build-accessories.css';
 
 export default function BuildAccessories({
   selections,
+  customAccessories,
   layout,
   selection,
   onChange,
 }: {
   selections: AccessorySelection[];
+  customAccessories?: Build['customAccessories'];
   layout: Build['layout'];
   selection: Build['selection'];
   onChange: (selections: AccessorySelection[]) => void;
 }) {
+  const products = resolveAccessoryProducts(customAccessories);
   const [notice, setNotice] = useState('');
   const host = accessoryHost({ layout, selection });
   const keys = documentedKeys({ layout, selection }) ?? layouts[layout];
-  const assessments = assessAccessories(selections, host);
+  const assessments = assessAccessories(selections, host, products);
   function update(next: AccessorySelection) {
     onChange(selections.map((item) => (item.id === next.id ? next : item)));
   }
@@ -53,9 +56,7 @@ export default function BuildAccessories({
       </p>
       <div className="accessory-selections">
         {selections.map((item) => {
-          const product = accessoryCatalog.find(
-            (part) => part.id === item.productId,
-          );
+          const product = products.find((part) => part.id === item.productId);
           if (!product) return null;
           const fit = assessments[item.id];
           const location = item.location;
@@ -82,7 +83,12 @@ export default function BuildAccessories({
                 <>
                   <p>
                     {artisanPreviewNote(
-                      { layout, selection, accessories: selections },
+                      {
+                        layout,
+                        selection,
+                        accessories: selections,
+                        customAccessories,
+                      },
                       item.id,
                     )}
                   </p>
@@ -128,8 +134,8 @@ export default function BuildAccessories({
                   />
                 </label>
               )}
-              {unmountedPreviewNote(selections, item.id) && (
-                <p>{unmountedPreviewNote(selections, item.id)}</p>
+              {unmountedPreviewNote(selections, item.id, products) && (
+                <p>{unmountedPreviewNote(selections, item.id, products)}</p>
               )}
               {location.kind === 'external' ? (
                 <StudioSelect
@@ -233,12 +239,15 @@ export default function BuildAccessories({
                       if (!value.trim()) event.target.value = location.slotId;
                       else {
                         try {
-                          const next = parseAccessories([
-                            {
-                              ...item,
-                              location: { kind: 'embedded', slotId: value },
-                            },
-                          ])[0];
+                          const next = parseAccessories(
+                            [
+                              {
+                                ...item,
+                                location: { kind: 'embedded', slotId: value },
+                              },
+                            ],
+                            products,
+                          )[0];
                           update(next);
                           setNotice(
                             'Placement saved. Physical fit still needs checking.',
@@ -267,7 +276,7 @@ export default function BuildAccessories({
       <details className="accessory-picker">
         <summary>Add an accessory</summary>
         <div className="accessory-options">
-          {accessoryCatalog.map((product) => (
+          {products.map((product) => (
             <article key={product.id}>
               <h4>{product.name}</h4>
               <p>{product.detail}</p>
@@ -282,7 +291,7 @@ export default function BuildAccessories({
                   onClick={() => {
                     onChange([
                       ...selections,
-                      newAccessorySelection(product.id),
+                      newAccessorySelection(product.id, products),
                     ]);
                     setNotice(
                       `${product.name} added to your build plan. Fit is not verified.`,

@@ -1,3 +1,4 @@
+import { parseImportedAccessory } from './imported-accessories.ts';
 import type { Build } from './build.ts';
 import { categories, type Part, type FitCheck } from './catalog.ts';
 import type {
@@ -50,6 +51,8 @@ function part(value: unknown): Part {
 }
 function accessory(value: unknown): AccessoryProduct {
   const item = object(value);
+  if (typeof item.id === 'string' && item.id.startsWith('import-accessory:'))
+    return parseImportedAccessory(item);
   const info = {
     id: text(item.id),
     name: text(item.name),
@@ -163,6 +166,17 @@ export function parsePublicBuildEvidence(value: unknown, build: Build) {
     );
     if (reference?.placement !== selected.location.kind)
       throw new Error('Accessory placement evidence mismatch.');
+    const imported = build.customAccessories?.find(
+      (product) => product.id === selected.productId,
+    );
+    if (
+      imported &&
+      (!reference ||
+        Object.entries(imported).some(
+          ([key, value]) => Reflect.get(reference, key) !== value,
+        ))
+    )
+      throw new Error('Imported accessory evidence mismatch.');
   }
   const checks = object(data.accessoryCompatibility);
   exactIds(
@@ -221,6 +235,13 @@ export function parsePublicBuildEvidence(value: unknown, build: Build) {
         source: source(recording.source),
       },
     };
+  }
+  for (const selected of build.accessories) {
+    if (
+      selected.productId.startsWith('import-accessory:') &&
+      accessoryCompatibility[selected.id]?.status === 'confirmed'
+    )
+      throw new Error('Imported accessory fit cannot be confirmed.');
   }
   return {
     version: 1 as const,

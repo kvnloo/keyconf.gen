@@ -1,4 +1,4 @@
-import { parseBuild, type Build } from './build.ts';
+import { pruneBuildImports, parseBuild, type Build } from './build.ts';
 import { requestText } from './request-text.ts';
 
 export type CommunityProfile = {
@@ -192,13 +192,9 @@ export function parseSaveBuildRequest(value: unknown): SaveBuildRequest {
   }
   try {
     const build = parseBuild(value.build);
-    const selected = new Set(Object.values(build.selection));
     return {
       operationId: value.operationId,
-      build: parseBuild({
-        ...build,
-        customParts: build.customParts.filter((part) => selected.has(part.id)),
-      }),
+      build: parseBuild(pruneBuildImports(build)),
     };
   } catch (error) {
     throw new CommunityError(

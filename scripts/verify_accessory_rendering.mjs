@@ -99,7 +99,7 @@ try {
     'adafruit-326-oled',
     'adafruit-4980-neokey',
     'adafruit-377-encoder',
-  ].map(newAccessorySelection);
+  ].map((id) => newAccessorySelection(id));
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(
     previewLink({ ...defaultBuild, accessories: [...modules, pad] }, base),

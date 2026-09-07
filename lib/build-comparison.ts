@@ -1,16 +1,17 @@
 import type { Build } from './build.ts';
 import type { PublicBuildEvidence } from './build-evidence.ts';
 import { catalog, categories } from './catalog.ts';
-import { accessoryCatalog } from './build-accessories.ts';
+import { resolveAccessoryProducts } from './imported-accessories.ts';
 import { soundPacks } from './sound-packs.ts';
 
 function values(build: Build, evidence?: PublicBuildEvidence) {
   const parts = evidence?.components ?? [...build.customParts, ...catalog];
   const accessories = build.accessories
     .map((item) => {
-      const product = (evidence?.accessoryReferences ?? accessoryCatalog).find(
-        (entry) => entry.id === item.productId,
-      );
+      const product = (
+        evidence?.accessoryReferences ??
+        resolveAccessoryProducts(build.customAccessories)
+      ).find((entry) => entry.id === item.productId);
       const location = item.location;
       const placement =
         location.kind === 'key'
@@ -47,7 +48,10 @@ function values(build: Build, evidence?: PublicBuildEvidence) {
     })),
     {
       label: 'Accessories',
-      sources: (evidence?.accessoryReferences ?? accessoryCatalog)
+      sources: (
+        evidence?.accessoryReferences ??
+        resolveAccessoryProducts(build.customAccessories)
+      )
         .filter((product) =>
           build.accessories.some((item) => item.productId === product.id),
         )

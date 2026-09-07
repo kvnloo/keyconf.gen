@@ -1481,6 +1481,7 @@ function KeyboardStudio({
                     onResearch={() => setModal('research')}
                   />
                   <BuildAccessories
+                    customAccessories={build.customAccessories}
                     layout={build.layout}
                     selection={build.selection}
                     selections={build.accessories}

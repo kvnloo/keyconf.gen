@@ -19,7 +19,8 @@ import type { Build } from '../lib/build';
 import PreviewAdjustments from './preview-adjustments';
 import { compareBuilds } from '../lib/build-comparison';
 import { catalog, categories, checkBuild } from '../lib/catalog';
-import { accessoryCatalog, assessAccessories } from '../lib/build-accessories';
+import { resolveAccessoryProducts } from '../lib/imported-accessories';
+import { assessAccessories } from '../lib/build-accessories';
 import { KeyboardAudio, type SoundSettings } from '../lib/audio';
 import { soundPacks } from '../lib/sound-packs';
 import KeyboardScene, { type SceneOptions } from './keyboard-scene';
@@ -75,9 +76,16 @@ export default function SharedBuildPreview({
       checkBuild(build.selection, parts, build.layout),
     [build, parts, snapshot],
   );
+  const accessoryProducts =
+    snapshot?.evidence.accessoryReferences ??
+    resolveAccessoryProducts(build.customAccessories);
   const accessoryChecks =
     snapshot?.evidence.accessoryCompatibility ??
-    assessAccessories(build.accessories, accessoryHost(build));
+    assessAccessories(
+      build.accessories,
+      accessoryHost(build),
+      accessoryProducts,
+    );
   const sound: SoundSettings = {
     ...build.audio,
     enabled,
@@ -357,9 +365,9 @@ export default function SharedBuildPreview({
                 );
               })}
               {build.accessories.map((selection) => {
-                const part = (
-                  snapshot?.evidence.accessoryReferences ?? accessoryCatalog
-                ).find((item) => item.id === selection.productId);
+                const part = accessoryProducts.find(
+                  (item) => item.id === selection.productId,
+                );
                 return (
                   part && (
                     <li key={selection.id}>
@@ -376,11 +384,13 @@ export default function SharedBuildPreview({
                       {unmountedPreviewNote(
                         build.accessories,
                         selection.id,
+                        accessoryProducts,
                       ) && (
                         <small>
                           {unmountedPreviewNote(
                             build.accessories,
                             selection.id,
+                            accessoryProducts,
                           )}
                         </small>
                       )}
@@ -426,9 +436,7 @@ export default function SharedBuildPreview({
             </ul>
             <AccessoryFitNotes
               selections={build.accessories}
-              products={
-                snapshot?.evidence.accessoryReferences ?? accessoryCatalog
-              }
+              products={accessoryProducts}
               checks={accessoryChecks}
             />
             <p>

@@ -1,4 +1,4 @@
-import { parseBuild, parseBuildSnapshot } from './build.ts';
+import { pruneBuildImports, parseBuild, parseBuildSnapshot } from './build.ts';
 import { parsePublicBuildEvidence } from './build-evidence.ts';
 import { CommunityError, parseCommunityProfile } from './community.ts';
 
@@ -111,14 +111,10 @@ export function parseProposalResponse(value: unknown) {
     );
   try {
     const build = parseBuildSnapshot(value.build);
-    const selected = new Set(Object.values(build.selection));
     return {
       operationId: value.operationId,
       note,
-      build: {
-        ...build,
-        customParts: build.customParts.filter((part) => selected.has(part.id)),
-      },
+      build: pruneBuildImports(build),
     };
   } catch {
     throw new CommunityError(
@@ -165,7 +161,6 @@ export function parseProposalPreview(value: unknown) {
   } catch {
     customization = 'unavailable';
   }
-  const selected = new Set(Object.values(build.selection));
   return {
     id: value.id,
     title: value.title.trim(),
@@ -173,9 +168,8 @@ export function parseProposalPreview(value: unknown) {
     createdAt: value.createdAt,
     author: parseCommunityProfile(value.author),
     build: {
-      ...build,
+      ...pruneBuildImports(build),
       name: value.title.trim(),
-      customParts: build.customParts.filter((part) => selected.has(part.id)),
     },
     evidence,
     customization,
