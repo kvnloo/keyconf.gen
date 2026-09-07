@@ -1,3 +1,9 @@
+import {
+  listOwnedPublications,
+  publishBuild,
+  withdrawPublication,
+} from '../db/publications.ts';
+import { parsePublicationRequest } from './publication.ts';
 import { addFavorite, listFavorites, removeFavorite } from '../db/favorites.ts';
 import {
   listBuilds,
@@ -86,6 +92,50 @@ export function createCommunityApi({
           return communityResponse(await saveBuild(db, subject, input));
         }
         return methodNotAllowed('GET, POST');
+      });
+    },
+    publications(request: Request) {
+      return authenticated(request, async (subject) => {
+        if (request.method === 'POST')
+          return communityResponse(
+            await publishBuild(
+              db,
+              subject,
+              parsePublicationRequest(await communityRequest(request)),
+            ),
+          );
+        if (request.method !== 'GET') return methodNotAllowed('GET, POST');
+        const params = new URL(request.url).searchParams;
+        const publishedAt = params.get('before');
+        const id = params.get('id');
+        if ((publishedAt === null) !== (id === null))
+          throw new CommunityError(
+            'invalid_request',
+            'This publication page cursor is invalid.',
+            400,
+          );
+        return communityResponse(
+          await listOwnedPublications(
+            db,
+            subject,
+            publishedAt !== null && id !== null
+              ? { publishedAt, id }
+              : undefined,
+          ),
+        );
+      });
+    },
+    publication(request: Request, id: string) {
+      return authenticated(request, async (subject) => {
+        if (request.method !== 'DELETE') return methodNotAllowed('DELETE');
+        if (!/^[a-zA-Z0-9_-]{16,100}$/.test(id))
+          throw new CommunityError(
+            'invalid_request',
+            'This publication identifier is invalid.',
+            400,
+          );
+        await communityRequest(request);
+        return communityResponse(await withdrawPublication(db, subject, id));
       });
     },
     favorites(request: Request) {

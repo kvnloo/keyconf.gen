@@ -491,3 +491,114 @@ test('favorite request boundaries reject anonymous, cross-origin and malformed r
   assert.equal(unsupported.headers.get('Allow'), 'PUT, DELETE');
   assert.equal(db.queries.length, 0);
 });
+
+test('creator publication requests require deliberate owned snapshots and isolate withdrawal', async (t) => {
+  const db = database(t);
+  const owner = apiFor(db, alice);
+  const other = apiFor(db, bob);
+  const saved = await save(owner, 'creator-api-save-001');
+  const input = {
+    operationId: 'creator-api-publish-001',
+    buildId: saved.id,
+    title: 'Creator release',
+    note: '',
+    kind: 'build',
+    subject: bob,
+  };
+  const publish = () =>
+    owner.publications(request('/api/community/publications', 'POST', input));
+  privateResponse(await publish(), 409);
+  await owner.profile(request('/api/community/profile', 'PATCH', profile));
+  privateResponse(
+    await other.publications(
+      request('/api/community/publications', 'POST', input),
+    ),
+    404,
+  );
+  const response = await publish();
+  privateResponse(response);
+  const released = await response.json();
+  assert.deepEqual(await (await publish()).json(), released);
+  privateResponse(
+    await owner.publications(
+      request('/api/community/publications', 'POST', {
+        ...input,
+        title: 'Different',
+      }),
+    ),
+    409,
+  );
+  const path = `/api/community/publications/${released.id}`;
+  privateResponse(
+    await other.publication(request(path, 'DELETE', {}), released.id),
+    404,
+  );
+  assert.deepEqual(
+    await (
+      await other.publications(request('/api/community/publications'))
+    ).json(),
+    { items: [], next: null },
+  );
+  const withdrawn = await owner.publication(
+    request(path, 'DELETE', {}),
+    released.id,
+  );
+  privateResponse(withdrawn);
+  assert.deepEqual(
+    await (
+      await owner.publication(request(path, 'DELETE', {}), released.id)
+    ).json(),
+    await withdrawn.json(),
+  );
+  const listed = await (
+    await owner.publications(request('/api/community/publications'))
+  ).json();
+  assert.equal(listed.items.length, 1);
+  assert.ok(listed.items[0].withdrawnAt);
+});
+
+test('creator publication boundaries reject anonymous and cross-origin mutations before storage', async (t) => {
+  const db = database(t);
+  const anonymous = apiFor(db, null);
+  const id = 'publication-test-001';
+  privateResponse(
+    await anonymous.publications(request('/api/community/publications')),
+    401,
+  );
+  privateResponse(
+    await anonymous.publication(
+      request('/api/community/publications/x', 'DELETE', {}),
+      id,
+    ),
+    401,
+  );
+  const owner = apiFor(db, alice);
+  privateResponse(
+    await owner.publications(
+      request(
+        '/api/community/publications',
+        'POST',
+        {},
+        { Origin: 'https://attacker.example' },
+      ),
+    ),
+    403,
+  );
+  privateResponse(
+    await owner.publication(
+      request(
+        '/api/community/publications/x',
+        'DELETE',
+        {},
+        { Origin: 'https://attacker.example' },
+      ),
+      id,
+    ),
+    403,
+  );
+  privateResponse(
+    await owner.publications(request('/api/community/publications?before=bad')),
+    400,
+  );
+  assert.equal(db.queries.length, 0);
+});

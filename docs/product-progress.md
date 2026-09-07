@@ -967,3 +967,7 @@ The browser fixture now routes favorites through the actual account handlers and
 ## September 6, 2026: favorites keyboard pagination recovery
 
 Favorites pagination now transfers focus to the first newly loaded row, including when the final Load more button disappears. Failed pagination focuses Try again. A keyboard-only failed-request/retry browser regression passes alongside the existing favorites checks. Typecheck and focused formatting pass. The verifier now explicitly selects PUT or DELETE for mutation fetches to satisfy the fetch-options lint rule.
+
+## September 6, 2026: creator publication request preparation
+
+The provider-neutral account factory now supports owned publication listing, explicit publication of a saved revision and owner withdrawal. It reuses frozen publication storage and existing same-origin JSON boundaries. Eleven account API integration tests pass, including profile requirements, cross-account snapshot rejection, retry deduplication, conflicting retries, isolated withdrawal and anonymous/cross-origin rejection. This introduces no hosted route or public publishing control. The review screen, client integration, actual Google identity and end-to-end creator publishing remain required.
