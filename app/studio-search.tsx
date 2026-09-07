@@ -13,12 +13,14 @@ import './studio-search.css';
 type ProductResult = Exclude<StudioSearchResult, { kind: 'destination' }>;
 export default function StudioSearch({
   parts,
+  accessories,
   canAddAccessory,
   onNavigate,
   onPart,
   onAccessory,
 }: {
   parts: Part[];
+  accessories: readonly AccessoryProduct[];
   canAddAccessory: boolean;
   onNavigate: (destination: StudioDestination) => void;
   onPart: (part: Part) => void;
@@ -29,7 +31,7 @@ export default function StudioSearch({
   const input = useRef<HTMLInputElement>(null);
   const title = useRef<HTMLHeadingElement>(null);
   const results = useRef<HTMLUListElement>(null);
-  const matches = searchStudio(query, parts);
+  const matches = searchStudio(query, parts, accessories);
   useEffect(() => {
     if (selected) title.current?.focus();
     else input.current?.focus();

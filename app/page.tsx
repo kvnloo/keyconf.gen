@@ -44,7 +44,7 @@ import {
   Pause,
 } from 'lucide-react';
 import KeyboardScene, { type SceneOptions } from './keyboard-scene';
-import ImportDialog from './import-dialog';
+import ImportDialog, { type ImportAddition } from './import-dialog';
 import StudioSearch from './studio-search';
 import TypingTest from './typing-test';
 import VolumeDial from './volume-dial';
@@ -61,10 +61,11 @@ import SampleWaveform from './sample-waveform';
 import ComponentsPanel from './components-panel';
 import SwitchDetail from './switch-detail';
 import BuildAccessories from './build-accessories';
+import { newAccessorySelection } from '../lib/build-accessories';
 import {
-  accessoryCatalog,
-  newAccessorySelection,
-} from '../lib/build-accessories';
+  resolveAccessoryProducts,
+  parseCustomAccessories,
+} from '../lib/imported-accessories';
 import ResearchProducts from './research-products';
 import StudioSelect from './studio-select';
 import { useBuild } from './use-build';
@@ -76,11 +77,12 @@ import {
   profiles,
   readBuildFile,
   parseCustomParts,
+  parseBuild,
   encodeBuild,
 } from '../lib/build';
 import { soundPacks } from '../lib/sound-packs';
 import { registerStudioTools } from '../lib/webmcp';
-import { catalog, categories, checkBuild, type Part } from '../lib/catalog';
+import { catalog, categories, checkBuild } from '../lib/catalog';
 import { KeyboardAudio, type SoundSettings } from '../lib/audio';
 
 function subscribeLocation(onChange: () => void) {
@@ -721,7 +723,42 @@ function KeyboardStudio({
       ),
     );
   }
-  function addParts(incoming: Part[]) {
+  function addImported(addition: ImportAddition) {
+    if (addition.kind === 'accessories') {
+      const references = parseCustomAccessories(
+        Array.from(
+          new Map(
+            [...(build.customAccessories ?? []), ...addition.products].map(
+              (product) => [product.id, product],
+            ),
+          ).values(),
+        ),
+      );
+      const products = resolveAccessoryProducts(references);
+      const existing = new Set(build.accessories.map((item) => item.productId));
+      const additions = Array.from(
+        new Map(
+          addition.products.map((product) => [product.id, product]),
+        ).values(),
+      )
+        .filter((product) => !existing.has(product.id))
+        .map((product) => newAccessorySelection(product.id, products));
+      const next = parseBuild({
+        ...build,
+        customAccessories: references,
+        accessories: [...build.accessories, ...additions],
+      });
+      edit({
+        customAccessories: next.customAccessories,
+        accessories: next.accessories,
+      });
+      setNotice(
+        `${additions.length} accessories added. Review placement and fit in Components.`,
+      );
+      setTab('parts');
+      return;
+    }
+    const incoming = addition.parts;
     const merged = Array.from(
       new Map([...imports, ...incoming].map((p) => [p.id, p])).values(),
     );
@@ -776,7 +813,9 @@ function KeyboardStudio({
         parts.find((p) => p.id === selection[c]),
       ),
       compatibility: checks,
-      accessoryReferences: accessoryCatalog.filter((product) =>
+      accessoryReferences: resolveAccessoryProducts(
+        build.customAccessories,
+      ).filter((product) =>
         build.accessories.some(
           (accessory) => accessory.productId === product.id,
         ),
@@ -1752,6 +1791,7 @@ function KeyboardStudio({
         {modal === 'search' && (
           <StudioSearch
             parts={parts}
+            accessories={resolveAccessoryProducts(build.customAccessories)}
             canAddAccessory={build.accessories.length < 100}
             onNavigate={(destination) => {
               setFocusAt(null);
@@ -1774,7 +1814,10 @@ function KeyboardStudio({
               edit({
                 accessories: [
                   ...build.accessories,
-                  newAccessorySelection(part.id),
+                  newAccessorySelection(
+                    part.id,
+                    resolveAccessoryProducts(build.customAccessories),
+                  ),
                 ],
               });
               setModal(null);
@@ -1842,7 +1885,7 @@ function KeyboardStudio({
         )}
         {importing && (
           <ImportDialog
-            onAdd={addParts}
+            onAdd={addImported}
             initialUrl={typeof modal === 'object' ? modal?.source : undefined}
             initialCategory={typeof modal === 'object' ? 'switch' : undefined}
           />

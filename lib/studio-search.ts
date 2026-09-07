@@ -66,6 +66,7 @@ const normalize = (value: string) =>
 export function searchStudio(
   query: string,
   parts: readonly Part[],
+  accessories: readonly AccessoryProduct[] = accessoryCatalog,
 ): StudioSearchResult[] {
   const terms = normalize(query).trim().split(/\s+/).filter(Boolean);
   const destinations: StudioSearchResult[] = studioDestinations.map((item) => ({
@@ -76,7 +77,7 @@ export function searchStudio(
   const candidates: StudioSearchResult[] = [
     ...destinations,
     ...parts.map((item): StudioSearchResult => ({ kind: 'part', item })),
-    ...accessoryCatalog.map(
+    ...accessories.map(
       (item): StudioSearchResult => ({ kind: 'accessory', item }),
     ),
   ];

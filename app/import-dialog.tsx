@@ -2,6 +2,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Check, Globe, LoaderCircle } from 'lucide-react';
 import { categories, type Part, type Category } from '../lib/catalog';
+import {
+  createImportedAccessory,
+  type ImportedAccessory,
+} from '../lib/imported-accessories';
 import StudioSelect from './studio-select';
 import { formatProductPrice } from '../lib/product-pricing';
 import { importEndpoint } from '../lib/import-endpoint';
@@ -16,13 +20,66 @@ import {
 type PreviewResult = Omit<ImportResult, 'products'> & {
   products: (ImportedProduct & { observedAt: string })[];
 };
+const accessoryChoices = [
+  {
+    value: 'accessory:artisan',
+    label: 'Artisan keycap · on a key',
+    kind: 'artisan',
+    placement: 'key',
+  },
+  {
+    value: 'accessory:knob',
+    label: 'Replacement knob · embedded',
+    kind: 'knob',
+    placement: 'embedded',
+  },
+  {
+    value: 'accessory:encoder',
+    label: 'Rotary encoder · embedded',
+    kind: 'encoder',
+    placement: 'embedded',
+  },
+  {
+    value: 'accessory:screen-embedded',
+    label: 'Screen · embedded',
+    kind: 'screen',
+    placement: 'embedded',
+  },
+  {
+    value: 'accessory:screen-external',
+    label: 'Screen · beside the keyboard',
+    kind: 'screen',
+    placement: 'external',
+  },
+  {
+    value: 'accessory:buttons-embedded',
+    label: 'Custom buttons · embedded',
+    kind: 'buttons',
+    placement: 'embedded',
+  },
+  {
+    value: 'accessory:buttons-external',
+    label: 'Custom buttons · beside the keyboard',
+    kind: 'buttons',
+    placement: 'external',
+  },
+  {
+    value: 'accessory:macropad',
+    label: 'Macropad · beside the keyboard',
+    kind: 'macropad',
+    placement: 'external',
+  },
+] as const;
+export type ImportAddition =
+  | { kind: 'parts'; parts: Part[] }
+  | { kind: 'accessories'; products: ImportedAccessory[] };
 type ImportError = { kind: 'preview' | 'more' | 'add'; message: string };
 export default function ImportDialog({
   onAdd,
   initialUrl = '',
   initialCategory = 'case',
 }: {
-  onAdd: (parts: Part[]) => void;
+  onAdd: (addition: ImportAddition) => void;
   initialUrl?: string;
   initialCategory?: Category;
 }) {
@@ -32,6 +89,10 @@ export default function ImportDialog({
   const [result, setResult] = useState<PreviewResult | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [category, setCategory] = useState<Category>(initialCategory);
+  const [accessoryChoice, setAccessoryChoice] = useState<
+    (typeof accessoryChoices)[number] | null
+  >(null);
+  const [adding, setAdding] = useState(false);
   const [raw, setRaw] = useState('');
   const [added, setAdded] = useState(false);
   const request = useRef<AbortController | null>(null);
@@ -118,8 +179,9 @@ export default function ImportDialog({
       if (!controller.signal.aborted) setBusy(false);
     }
   }
-  function add() {
-    if (!result) return;
+  async function add() {
+    if (!result || adding) return;
+    setAdding(true);
     setError(null);
     const parts: Part[] = result.products.flatMap((p, i) =>
       selected.has(i)
@@ -145,7 +207,38 @@ export default function ImportDialog({
         : [],
     );
     try {
-      onAdd(parts);
+      if (accessoryChoice) {
+        const products = await Promise.all(
+          result.products
+            .filter((_, index) => selected.has(index))
+            .map((product) =>
+              createImportedAccessory({
+                origin: 'import',
+                name: product.name,
+                brand: product.brand || new URL(result.source).hostname,
+                detail:
+                  [
+                    product.sku,
+                    formatProductPrice(product.pricing),
+                    product.availability,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ') || 'Imported product reference',
+                source: product.url,
+                sku: product.sku || null,
+                observedAt: product.observedAt,
+                method: result.method,
+                fit: 'unknown',
+                geometry: 'unavailable',
+                kind: accessoryChoice.kind,
+                placement: accessoryChoice.placement,
+                sizeU: null,
+                stem: null,
+              }),
+            ),
+        );
+        onAdd({ kind: 'accessories', products });
+      } else onAdd({ kind: 'parts', parts });
       setAdded(true);
     } catch (error) {
       setError({
@@ -155,6 +248,8 @@ export default function ImportDialog({
             ? error.message
             : 'These products could not be added. Try a smaller selection.',
       });
+    } finally {
+      setAdding(false);
     }
   }
   return (
@@ -189,7 +284,7 @@ export default function ImportDialog({
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://your-favorite-store.com"
           />
-          <button className="button" type="submit" disabled={busy}>
+          <button className="button" type="submit" disabled={busy || adding}>
             {busy ? (
               <LoaderCircle className="spin" size={17} />
             ) : (
@@ -253,13 +348,33 @@ export default function ImportDialog({
           <label htmlFor="import-category">Add selected products as</label>
           <StudioSelect
             id="import-category"
-            value={category}
+            value={accessoryChoice?.value ?? category}
             onValueChange={(value) => {
               const c = categories.find((c) => c === value);
-              if (c) setCategory(c);
+              if (c) {
+                setCategory(c);
+                setAccessoryChoice(null);
+              } else {
+                const choice = accessoryChoices.find(
+                  (item) => item.value === value,
+                );
+                if (choice) setAccessoryChoice(choice);
+              }
+              setAdded(false);
             }}
-            options={categories.map((c) => ({ value: c, label: c }))}
+            options={[
+              ...categories.map((c) => ({ value: c, label: c })),
+              ...accessoryChoices,
+            ]}
           />
+          {accessoryChoice && (
+            <p className="import-note">
+              Review the product type and placement above. Selected accessories
+              are added to this build with unknown fit and unavailable geometry.
+              Artisan width and stem remain unknown, so imported caps are not
+              placed on keys.
+            </p>
+          )}
           <div className="import-list">
             {result.products.map((p, i) => (
               <label key={p.url + p.sku + i} className="import-product">
@@ -281,6 +396,9 @@ export default function ImportDialog({
                   <small>
                     {p.brand} {p.sku && '· ' + p.sku}
                   </small>
+                  <a href={p.url} target="_blank" rel="noreferrer">
+                    Review product source
+                  </a>
                 </span>
                 <span>
                   {formatProductPrice(p.pricing)}
@@ -292,7 +410,7 @@ export default function ImportDialog({
           {result.next && (
             <button
               className="button secondary full"
-              disabled={busy}
+              disabled={busy || adding}
               aria-describedby={
                 error?.kind === 'more' ? 'import-error' : undefined
               }
@@ -305,13 +423,15 @@ export default function ImportDialog({
           )}
           <button
             className="button full"
-            disabled={!selected.size || added}
-            onClick={add}
+            disabled={!selected.size || added || busy || adding}
+            onClick={() => void add()}
           >
             {added ? (
               <>
                 <Check size={16} /> Added to this browser
               </>
+            ) : adding ? (
+              'Adding…'
             ) : (
               'Add ' + selected.size + ' selected products'
             )}
