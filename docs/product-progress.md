@@ -812,3 +812,12 @@ Shared preview adjustments now expose known incompatibilities beside the switch 
 The real browser journey selected Gateron Magnetic Jade for the default contact PCB, verified the electrical-interface warning and documentation URL at phone width, then reset and verified the warning disappeared. Existing feedback, audio, storage isolation and accessibility checks also passed. Strict types, lint and formatting passed. This increment is not yet deployed.
 
 The preceding feedback confirmation fix is live as Sites version 29, source d25780a; deployment appgdep_6a9e0e05998c8191b3d99f0fdfa11637 succeeded. Its GitHub run 34071806886 was still running at the latest inspection.
+
+
+## September 6, 2026: before/after variation review
+
+Try changes now includes a collapsed review with original and variation values, clickable maker links for changed parts, and color swatches beside hex values. The existing file comparison uses the same rendering component. The original side uses creator snapshot evidence where present; rows are restricted to actual client setting changes, so catalog description updates alone do not become client edits.
+
+The full local feedback/browser journey passed with the review expanded: changed switch values, original and replacement source links, mobile overflow, reset, feedback copying, storage isolation and accessibility. Types, lint and formatting passed. A targeted visual check covers the later-added color swatches. The production build completed before that final swatch polish and must be rebuilt before publication.
+
+The compatibility-control update is live as Sites version 30, source eec87c1; deployment appgdep_6a9e0f9d1e288191b3958b813476902b succeeded. Full creator account and response submission controls remain unfinished; Google setup is still deferred.

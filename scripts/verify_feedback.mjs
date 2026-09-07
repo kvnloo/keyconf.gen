@@ -175,6 +175,11 @@ try {
   await page
     .getByRole('option', { name: 'Gateron Magnetic Jade', exact: true })
     .click();
+  await page.getByText('Review your changes', { exact: true }).click();
+  const review = page.locator('.preview-change-review');
+  assert.match(await review.textContent(), /Original.*Your variation/s);
+  assert.match(await review.textContent(), /Gateron Magnetic Jade/);
+  assert.equal(await review.locator('a').count(), 2);
   const fit = page.locator('.preview-change-fit');
   await fit
     .getByText('Incompatible: Switch & PCB interface', { exact: true })
@@ -285,6 +290,15 @@ try {
     window.denyCopy = false;
   });
   await page.getByRole('button', { name: 'Porcelain', exact: true }).click();
+  await page.getByText('Review your changes', { exact: true }).click();
+  assert.ok((await page.locator('.preview-change-review dt').count()) > 0);
+  assert.equal(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > innerWidth,
+    ),
+    false,
+  );
+
   const editAccessibility = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
     .analyze();

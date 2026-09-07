@@ -3,6 +3,8 @@ import { palettes, caseColors, type Build } from '../lib/build';
 import { catalog, type FitCheck } from '../lib/catalog';
 import { soundPacks } from '../lib/sound-packs';
 import { compareBuilds } from '../lib/build-comparison';
+import BuildChangeList from './build-change-list';
+import type { PublicBuildEvidence } from '../lib/build-evidence';
 import StudioSelect from './studio-select';
 
 export default function PreviewAdjustments({
@@ -10,13 +12,20 @@ export default function PreviewAdjustments({
   build,
   onChange,
   checks,
+  evidence,
 }: {
+  evidence?: PublicBuildEvidence;
   checks: FitCheck[];
   original: Build;
   build: Build;
   onChange: (build: Build) => void;
 }) {
-  const changes = compareBuilds(original, build);
+  const changedLabels = new Set(
+    compareBuilds(original, build).map((change) => change.label),
+  );
+  const changes = compareBuilds(original, build, evidence).filter((change) =>
+    changedLabels.has(change.label),
+  );
   const conflicts = checks.filter((check) => check.status === 'incompatible');
   const unknown = checks.filter((check) => check.status === 'unknown').length;
   const switches = [...catalog, ...build.customParts].filter(
@@ -125,7 +134,7 @@ export default function PreviewAdjustments({
       </p>
       <output aria-live="polite">
         {changes.length
-          ? `${changes.length} settings changed from the original.`
+          ? `${changes.length} ${changes.length === 1 ? 'setting' : 'settings'} changed from the original.`
           : 'Viewing the original build.'}
       </output>
       <button
@@ -147,11 +156,14 @@ export default function PreviewAdjustments({
       </button>
       {changes.length > 0 && (
         <>
-          <ul>
-            {changes.map((change) => (
-              <li key={change.label}>{change.label}</li>
-            ))}
-          </ul>
+          <details className="preview-change-review">
+            <summary>Review your changes</summary>
+            <BuildChangeList
+              changes={changes}
+              beforeLabel="Original"
+              afterLabel="Your variation"
+            />
+          </details>
           <button
             className="preview-customize"
             onClick={() => onChange(original)}

@@ -385,21 +385,21 @@
   font: inherit;
   font-size: 0.875rem;
 }
-.preview-comparison dl > div {
+.build-change-list > div {
   padding: 12px 0;
   border-top: 1px solid #ffffff22;
 }
-.preview-comparison dt {
+.build-change-list dt {
   text-transform: capitalize;
   font-weight: 600;
 }
-.preview-comparison dd {
+.build-change-list dd {
   margin: 8px 0;
   overflow-wrap: anywhere;
   white-space: pre-line;
   font-size: 0.875rem;
 }
-.preview-comparison dd span {
+.build-change-list dd span {
   display: block;
   color: #b7c6b9;
   font-size: 0.75rem;
@@ -448,9 +448,19 @@
   text-transform: capitalize;
 }
 
-.preview-comparison dd a {
+.build-change-list dd a {
   display: block;
   width: fit-content;
   margin-top: 6px;
   text-underline-offset: 3px;
+}
+
+.build-change-list i {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 7px;
+  border: 1px solid #ffffff66;
+  border-radius: 50%;
+  vertical-align: -2px;
 }

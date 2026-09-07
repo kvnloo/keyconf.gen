@@ -235,6 +235,7 @@ export default function SharedBuildPreview({
         <aside className="preview-details" aria-label="Shared build details">
           {creatorDetails}
           <PreviewAdjustments
+            evidence={frozen?.evidence}
             checks={checks}
             original={original}
             build={build}

@@ -1,5 +1,6 @@
 'use client';
 import { useRef, useState } from 'react';
+import BuildChangeList from './build-change-list';
 import { readBuildFile, type Build } from '../lib/build';
 import type { PublicBuildEvidence } from '../lib/build-evidence';
 import { compareBuilds } from '../lib/build-comparison';
@@ -65,41 +66,11 @@ export default function BuildComparison({
             Names and unused imported parts are excluded. Visual and audio
             settings do not establish physical fit or exact sound.
           </p>
-          <dl>
-            {changes.map((change) => (
-              <div key={change.label}>
-                <dt>{change.label}</dt>
-                <dd>
-                  <span>Preview</span>
-                  {change.before}
-                  {change.beforeSources.map((source) => (
-                    <a
-                      key={source.url}
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Visit {source.name} ↗
-                    </a>
-                  ))}
-                </dd>
-                <dd>
-                  <span>Compared build</span>
-                  {change.after}
-                  {change.afterSources.map((source) => (
-                    <a
-                      key={source.url}
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Visit {source.name} ↗
-                    </a>
-                  ))}
-                </dd>
-              </div>
-            ))}
-          </dl>
+          <BuildChangeList
+            changes={changes}
+            beforeLabel="Preview"
+            afterLabel="Compared build"
+          />
           <button
             className="preview-customize"
             onClick={() => {
