@@ -1,13 +1,20 @@
 'use client';
 import { useRef, useState } from 'react';
 import { readBuildFile, type Build } from '../lib/build';
+import type { PublicBuildEvidence } from '../lib/build-evidence';
 import { compareBuilds } from '../lib/build-comparison';
 
-export default function BuildComparison({ build }: { build: Build }) {
+export default function BuildComparison({
+  build,
+  evidence,
+}: {
+  build: Build;
+  evidence?: PublicBuildEvidence;
+}) {
   const [candidate, setCandidate] = useState<Build | null>(null);
   const [message, setMessage] = useState('');
   const generation = useRef(0);
-  const changes = candidate ? compareBuilds(build, candidate) : [];
+  const changes = candidate ? compareBuilds(build, candidate, evidence) : [];
   async function open(file: File | undefined) {
     const current = ++generation.current;
     if (!file) return;
@@ -34,6 +41,8 @@ export default function BuildComparison({ build }: { build: Build }) {
       <p>
         Choose an exported Keyconf build to compare with this preview. Files are
         read on this device.
+        {evidence &&
+          ' This preview uses the creator’s saved product details; the compared file uses current catalog details.'}
       </p>
       <label htmlFor="comparison-file">Build file to compare</label>
       <input
@@ -63,10 +72,30 @@ export default function BuildComparison({ build }: { build: Build }) {
                 <dd>
                   <span>Preview</span>
                   {change.before}
+                  {change.beforeSources.map((source) => (
+                    <a
+                      key={source.url}
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Visit {source.name} ↗
+                    </a>
+                  ))}
                 </dd>
                 <dd>
                   <span>Compared build</span>
                   {change.after}
+                  {change.afterSources.map((source) => (
+                    <a
+                      key={source.url}
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Visit {source.name} ↗
+                    </a>
+                  ))}
                 </dd>
               </div>
             ))}

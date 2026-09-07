@@ -447,3 +447,10 @@
 .preview-adjustments li {
   text-transform: capitalize;
 }
+
+.preview-comparison dd a {
+  display: block;
+  width: fit-content;
+  margin-top: 6px;
+  text-underline-offset: 3px;
+}

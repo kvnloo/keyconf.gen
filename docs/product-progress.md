@@ -785,3 +785,12 @@ removed. Hosted-gateway behavior is checked separately. Typed lint now recognize
 only Node's test registrations as runner-managed promises in test files; other
 floating promises remain errors. The query recorder has an explicit string-array
 type so index checks retain precise SQL values.
+
+
+## September 6, 2026: shared comparison evidence and maker links
+
+Shared publication and proposal comparisons now use the original saved product, accessory and recording names while that original is being previewed. A locally edited variation uses current catalog details. The comparison explains this distinction and provides separate clickable original-maker links for both builds, including accessories. Source URL changes remain visible even when product labels match.
+
+Validation: 161 unit tests passed, strict TypeScript, lint and formatting passed. The real local browser feedback journey passed, including two maker links for a changed case, mobile overflow, accessibility, unchanged local storage, malformed file recovery and sound/variation controls. GitHub run 34070756706 for the preceding version 27 release finished successfully. This comparison increment is not yet published to Sites.
+
+Still outstanding: clearer before/after review for inline changes, creator-facing proposal creation and authenticated client response submission. Google setup remains deferred by the user.

@@ -116,6 +116,44 @@ try {
     ),
     false,
   );
+  const importedCase = {
+    id: 'import:comparison-case',
+    category: 'case',
+    name: 'Client case',
+    brand: 'Independent maker',
+    detail: 'Client supplied dimensions',
+    source: 'https://example.com/client-case',
+    family: 'unknown',
+    evidence: 'unknown',
+  };
+  await upload.setInputFiles({
+    name: 'maker-revision.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(
+      JSON.stringify({
+        ...build,
+        selection: { ...build.selection, case: importedCase.id },
+        customParts: [importedCase],
+      }),
+    ),
+  });
+  const makerLink = page.getByRole('link', {
+    name: 'Visit Independent maker Client case',
+  });
+  await makerLink.waitFor();
+  assert.equal(await makerLink.getAttribute('href'), importedCase.source);
+  assert.equal(await makerLink.getAttribute('target'), '_blank');
+  assert.equal(await page.locator('.preview-comparison dd a').count(), 2);
+  assert.equal(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > innerWidth,
+    ),
+    false,
+  );
+  assert.equal(
+    await page.evaluate(() => JSON.stringify(localStorage)),
+    storedBefore,
+  );
   const accessibility = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
     .analyze();

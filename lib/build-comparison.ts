@@ -1,13 +1,14 @@
 import type { Build } from './build.ts';
+import type { PublicBuildEvidence } from './build-evidence.ts';
 import { catalog, categories } from './catalog.ts';
 import { accessoryCatalog } from './build-accessories.ts';
 import { soundPacks } from './sound-packs.ts';
 
-function values(build: Build) {
-  const parts = [...build.customParts, ...catalog];
+function values(build: Build, evidence?: PublicBuildEvidence) {
+  const parts = evidence?.components ?? [...build.customParts, ...catalog];
   const accessories = build.accessories
     .map((item) => {
-      const product = accessoryCatalog.find(
+      const product = (evidence?.accessoryReferences ?? accessoryCatalog).find(
         (entry) => entry.id === item.productId,
       );
       const location = item.location;
@@ -28,8 +29,11 @@ function values(build: Build) {
       return {
         label: category,
         identity: build.selection[category],
+        sources: part
+          ? [{ name: `${part.brand} ${part.name}`, url: part.source }]
+          : [],
         value: part
-          ? `${part.brand} ${part.name} · ${part.source} · ${part.detail}`
+          ? `${part.brand} ${part.name} · ${part.detail}`
           : build.selection[category],
       };
     }),
@@ -43,6 +47,12 @@ function values(build: Build) {
     })),
     {
       label: 'Accessories',
+      sources: (evidence?.accessoryReferences ?? accessoryCatalog)
+        .filter((product) =>
+          build.accessories.some((item) => item.productId === product.id),
+        )
+        .map((product) => ({ name: product.name, url: product.source }))
+        .sort((a, b) => a.url.localeCompare(b.url)),
       value: accessories.join('\n') || 'None',
       identity: JSON.stringify(
         build.accessories
@@ -63,6 +73,7 @@ function values(build: Build) {
       label: 'Sound reference',
       identity: build.audio.source,
       value:
+        evidence?.sound.recording?.name ??
         soundPacks.find((pack) => pack.id === build.audio.source)?.name ??
         build.audio.source,
     },
@@ -76,19 +87,30 @@ function values(build: Build) {
   ];
 }
 
-export function compareBuilds(original: Build, candidate: Build) {
-  const before = new Map(values(original).map((item) => [item.label, item]));
+export function compareBuilds(
+  original: Build,
+  candidate: Build,
+  evidence?: PublicBuildEvidence,
+) {
+  const before = new Map(
+    values(original, evidence).map((item) => [item.label, item]),
+  );
   return values(candidate).flatMap((item) => {
     const previous = before.get(item.label);
     if (
       !previous ||
-      (previous.value === item.value && previous.identity === item.identity)
+      (previous.value === item.value &&
+        previous.identity === item.identity &&
+        JSON.stringify(previous.sources) === JSON.stringify(item.sources))
     )
       return [];
-    const sameLabel = previous.value === item.value;
+    const sameLabel =
+      previous.value === item.value && previous.identity !== item.identity;
     return [
       {
         label: item.label,
+        beforeSources: previous.sources ?? [],
+        afterSources: item.sources ?? [],
         before: sameLabel
           ? `${previous.value} (${previous.identity})`
           : previous.value,

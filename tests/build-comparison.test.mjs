@@ -108,3 +108,25 @@ test('distinct imported part identities and precise volume changes are not hidde
   const louder = { ...quiet, audio: { ...quiet.audio, volume: 0.702 } };
   assert.equal(compareBuilds(quiet, louder)[0]?.label, 'Playback volume');
 });
+
+test('comparison preserves saved maker evidence and exposes original and current source links', async () => {
+  const { snapshotEvidence } = await import('../db/build-snapshot.ts');
+  const { parsePublicBuildEvidence } = await import('../lib/build-evidence.ts');
+  const evidence = parsePublicBuildEvidence(
+    JSON.parse(await snapshotEvidence(defaultBuild)),
+    defaultBuild,
+  );
+  const part = evidence.components.find((item) => item.category === 'case');
+  part.name = 'Original creator case';
+  part.source = 'https://example.com/original-case';
+  const change = compareBuilds(defaultBuild, defaultBuild, evidence).find(
+    (item) => item.label === 'case',
+  );
+  assert.match(change.before, /Original creator case/);
+  assert.equal(
+    change.beforeSources[0].url,
+    'https://example.com/original-case',
+  );
+  assert.notEqual(change.afterSources[0].url, change.beforeSources[0].url);
+  assert.equal(compareBuilds(defaultBuild, defaultBuild).length, 0);
+});

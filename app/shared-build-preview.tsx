@@ -257,7 +257,7 @@ export default function SharedBuildPreview({
                   : 'preview'
             }
           />
-          <BuildComparison build={build} />
+          <BuildComparison build={build} evidence={snapshot?.evidence} />
           <section className="preview-sound">
             <span className="preview-eyebrow">LISTEN</span>
             <h2>
