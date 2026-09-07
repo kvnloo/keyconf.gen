@@ -925,3 +925,13 @@ Sites version 37 is live at https://keyconf-nightly.kvnloo.chatgpt.site from sou
 The next account increment adds provider-neutral request handlers for profile read/update and private keyboard save/list/read. A caller-supplied verified identity resolver runs before database access. The handlers reuse existing origin/body checks, ownership queries, immutable idempotent saves and private error responses. They are not exposed as production routes and do not implement Google identity or sessions.
 
 Seven new SQLite integration tests cover anonymous requests with forged identity fields, ownership, rejected origins, repeated/conflicting saves, tied pagination, invalid requests and private errors. All 179 unit tests passed. Typecheck, focused lint and formatting passed. Real Google sign-in, hosted account routing, account UI and cross-device browser verification remain required; Google setup is still deferred.
+
+## September 6, 2026: account interface and retry verification
+
+GitHub runs 34078910770 and 34079475747 both succeeded. The public artisan release remains Sites version 37 from 77c2c9d. The later account-handler code does not expose public routes.
+
+The account panel and typed same-origin client now implement chosen profile editing, private keyboard snapshots, paginated saved builds and reopening through the studio's existing Undo history. The panel is not imported into the public app while Google setup is deferred. Its isolated localhost fixture uses real request handlers and SQLite migrations with test-only identities.
+
+Independent review found and corrected a pagination overwrite of newly saved rows, busy controls surviving reauthentication, a rejected-save recovery trap and focus loss during overlapping pagination/open requests. The final browser journey passes those timing cases, a lost acknowledgement after a successful database save, owner isolation, profile/source-link reload, corrected-draft recovery and mobile accessibility. Desktop and phone screenshots were inspected. The client adds ten unit tests; all 189 unit tests pass. Production build, typecheck, final lint and formatting passed.
+
+The account fixture does not prove Google sign-in, hosted identity, cross-device persistence or pending-operation recovery across a full sign-in redirect. These remain activation gates in [Account interface contract](account-interface-contract.md). The account browser check now runs in CI. No real users, profiles or publications were seeded.

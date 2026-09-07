@@ -38,7 +38,8 @@
     "verify:feedback": "node --experimental-strip-types scripts/verify_feedback.mjs",
     "verify:publication": "node scripts/verify_publication.mjs",
     "verify:proposal": "node --experimental-strip-types scripts/verify_proposal.mjs",
-    "verify:worker": "node --experimental-strip-types scripts/verify_worker.mjs"
+    "verify:worker": "node --experimental-strip-types scripts/verify_worker.mjs",
+    "verify:account": "node --experimental-strip-types scripts/verify_account.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

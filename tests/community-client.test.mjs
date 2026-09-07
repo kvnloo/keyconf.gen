@@ -1,0 +1,350 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { defaultBuild } from '../lib/build.ts';
+import {
+  CommunityClientError,
+  createCommunityClient,
+  parseSavedBuildPage,
+} from '../lib/community-client.ts';
+
+const profile = {
+  handle: 'alice_keys',
+  displayName: 'Alice',
+  bio: '',
+  links: [],
+};
+const saved = {
+  id: 'saved-build-00000001',
+  name: 'Private keyboard',
+  createdAt: '2026-09-06T00:00:00.000Z',
+  build: { ...defaultBuild, name: 'Private keyboard' },
+};
+const summary = (id = saved.id) => ({
+  id,
+  name: saved.name,
+  createdAt: saved.createdAt,
+});
+
+function queued(...responses) {
+  const calls = [];
+  const client = createCommunityClient({
+    fetch: async (url, init) => {
+      calls.push({ url, ...init });
+      const next = responses.shift();
+      assert.ok(next, 'Unexpected account request');
+      return next;
+    },
+  });
+  return { client, calls };
+}
+
+function errorCode(code) {
+  return (error) =>
+    error instanceof CommunityClientError && error.code === code;
+}
+
+test('account operations use fixed paths, private requests and parsed response shapes', async () => {
+  const page = { items: [summary()], next: null };
+  const { client, calls } = queued(
+    Response.json({ profile: null }),
+    Response.json({ profile: { ...profile, privateField: 'hidden' } }),
+    Response.json({ profile }),
+    Response.json(page),
+    Response.json(saved),
+    Response.json(saved),
+  );
+  assert.equal(await client.readProfile(), null);
+  assert.deepEqual(await client.readProfile(), profile);
+  assert.deepEqual(
+    await client.saveProfile({ ...profile, handle: ' ALICE_KEYS ' }),
+    profile,
+  );
+  assert.deepEqual(await client.listBuilds(), page);
+  const input = {
+    operationId: 'client-save-operation-001',
+    build: saved.build,
+  };
+  assert.deepEqual(await client.saveBuild(input), saved);
+  assert.deepEqual(await client.readBuild(saved.id), saved);
+  assert.deepEqual(
+    calls.map(({ url, method }) => [url, method]),
+    [
+      ['/api/community/profile', 'GET'],
+      ['/api/community/profile', 'GET'],
+      ['/api/community/profile', 'PATCH'],
+      ['/api/community/builds', 'GET'],
+      ['/api/community/builds', 'POST'],
+      [`/api/community/builds/${saved.id}`, 'GET'],
+    ],
+  );
+  for (const call of calls) {
+    assert.equal(call.credentials, 'same-origin');
+    assert.equal(call.cache, 'no-store');
+    assert.equal(call.redirect, 'error');
+    assert.equal(call.headers.Accept, 'application/json');
+    assert.ok(call.signal instanceof AbortSignal);
+    if (call.method === 'GET') assert.equal(call.body, undefined);
+    else assert.equal(call.headers['Content-Type'], 'application/json');
+  }
+  assert.deepEqual(JSON.parse(calls[2].body), profile);
+  assert.deepEqual(JSON.parse(calls[4].body), input);
+});
+
+test('saved-build page parsing strips extra fields and enforces cursor correctness', () => {
+  const first = { ...summary('saved-build-00000003'), privateField: 'hidden' };
+  const second = summary('saved-build-00000002');
+  assert.deepEqual(
+    parseSavedBuildPage({
+      items: [first, second],
+      next: { id: second.id, createdAt: second.createdAt },
+      owner: 'hidden',
+    }),
+    {
+      items: [summary(first.id), second],
+      next: { id: second.id, createdAt: second.createdAt },
+    },
+  );
+  for (const value of [
+    null,
+    [],
+    { items: [] },
+    { items: {}, next: null },
+    { items: Array.from({ length: 26 }, () => first), next: null },
+    { items: [first, first], next: null },
+    {
+      items: [first, { ...first, createdAt: '2026-09-05T00:00:00.000Z' }],
+      next: null,
+    },
+    { items: [second, first], next: null },
+    { items: [{ ...first, createdAt: '2026-09-06T00:00:00Z' }], next: null },
+    {
+      items: [{ ...first, createdAt: '2026-02-30T00:00:00.000Z' }],
+      next: null,
+    },
+    {
+      items: [{ ...first, createdAt: '2026-09-06T01:00:00.000+01:00' }],
+      next: null,
+    },
+    { items: [{ ...first, id: '../private' }], next: null },
+    { items: [], next: { id: first.id, createdAt: first.createdAt } },
+    { items: [first], next: { id: second.id, createdAt: first.createdAt } },
+    {
+      items: [first],
+      next: { id: first.id, createdAt: '2026-09-05T00:00:00.000Z' },
+    },
+  ])
+    assert.throws(
+      () => parseSavedBuildPage(value),
+      errorCode('invalid_response'),
+    );
+});
+
+test('list requests encode the cursor and reject pages that repeat or precede its boundary', async () => {
+  const cursor = { createdAt: saved.createdAt, id: 'saved-build-00000003' };
+  const page = { items: [summary('saved-build-00000002')], next: null };
+  const { client, calls } = queued(
+    Response.json(page),
+    Response.json({ items: [summary(cursor.id)], next: null }),
+  );
+  assert.deepEqual(await client.listBuilds(cursor), page);
+  const url = new URL(calls[0].url, 'https://keyconf.example');
+  assert.equal(url.searchParams.get('before'), cursor.createdAt);
+  assert.equal(url.searchParams.get('id'), cursor.id);
+  await assert.rejects(
+    client.listBuilds(cursor),
+    errorCode('invalid_response'),
+  );
+});
+
+test('safe server error codes remain recognisable without displaying backend messages', async () => {
+  const secret = 'SQL private-token <script>alert(1)</script>';
+  for (const [status, payload, expected] of [
+    [
+      401,
+      { error: { code: 'authentication_required', message: secret } },
+      'authentication_required',
+    ],
+    [
+      409,
+      { error: { code: 'operation_conflict', message: secret } },
+      'operation_conflict',
+    ],
+    [409, { error: { code: 'handle_taken', message: secret } }, 'handle_taken'],
+    [
+      500,
+      { error: { code: 'internal_sql_error', message: secret } },
+      'storage_unavailable',
+    ],
+  ]) {
+    const { client } = queued(Response.json(payload, { status }));
+    await assert.rejects(client.readProfile(), (error) => {
+      assert.ok(errorCode(expected)(error));
+      assert.equal(error.status, status);
+      assert.equal(error.message.includes(secret), false);
+      assert.ok(error.message.length < 250);
+      return true;
+    });
+  }
+  const { client } = queued(
+    new Response('<html>Sign in</html>', {
+      status: 401,
+      headers: { 'Content-Type': 'text/html' },
+    }),
+  );
+  await assert.rejects(
+    client.readProfile(),
+    errorCode('authentication_required'),
+  );
+});
+
+test('malformed success responses and error pages never reach the account panel', async () => {
+  for (const response of [
+    new Response('<html>Service unavailable</html>', {
+      headers: { 'Content-Type': 'text/html' },
+    }),
+    new Response('{broken', {
+      headers: { 'Content-Type': 'application/json' },
+    }),
+    Response.json({}),
+    Response.json({ profile: { ...profile, handle: 'admin' } }),
+  ]) {
+    const { client } = queued(response);
+    await assert.rejects(client.readProfile(), errorCode('invalid_response'));
+  }
+  const nullSave = queued(Response.json({ profile: null })).client;
+  await assert.rejects(
+    nullSave.saveProfile(profile),
+    errorCode('invalid_response'),
+  );
+  const wrongBuild = queued(
+    Response.json({ ...saved, id: 'different-build-0001' }),
+  ).client;
+  await assert.rejects(
+    wrongBuild.readBuild(saved.id),
+    errorCode('invalid_response'),
+  );
+  const malformedBuild = queued(
+    Response.json({ ...saved, build: null }),
+  ).client;
+  await assert.rejects(
+    malformedBuild.saveBuild({
+      operationId: 'client-save-operation-001',
+      build: saved.build,
+    }),
+    errorCode('invalid_response'),
+  );
+});
+
+test('account responses are bounded by bytes for declared and streamed bodies', async () => {
+  let cancelled = false;
+  const body = new ReadableStream({
+    cancel() {
+      cancelled = true;
+    },
+  });
+  const declared = queued(
+    new Response(body, {
+      headers: {
+        'Content-Length': String(256 * 1024 + 1),
+        'Content-Type': 'application/json',
+      },
+    }),
+  ).client;
+  await assert.rejects(declared.readProfile(), errorCode('invalid_response'));
+  assert.equal(cancelled, true);
+  const streamed = queued(
+    Response.json({ profile, extra: 'é'.repeat(140000) }),
+  ).client;
+  await assert.rejects(streamed.readProfile(), errorCode('invalid_response'));
+  const oversizedError = queued(
+    Response.json(
+      { error: { code: 'handle_taken', message: 'private'.repeat(1000) } },
+      { status: 409 },
+    ),
+  ).client;
+  await assert.rejects(
+    oversizedError.readProfile(),
+    errorCode('storage_unavailable'),
+  );
+});
+
+test('save retries send the original operation ID and never retry automatically', async () => {
+  const calls = [];
+  const client = createCommunityClient({
+    fetch: async (_url, init) => {
+      calls.push(JSON.parse(init.body));
+      if (calls.length === 1) throw new Error('private network details');
+      return Response.json(saved);
+    },
+  });
+  const input = {
+    operationId: 'client-retry-operation-001',
+    build: saved.build,
+  };
+  await assert.rejects(client.saveBuild(input), errorCode('network_error'));
+  assert.equal(calls.length, 1);
+  assert.deepEqual(await client.saveBuild(input), saved);
+  assert.deepEqual(calls, [input, input]);
+});
+
+test('invalid IDs, cursors and save inputs cannot cause outgoing requests', async () => {
+  const { client, calls } = queued();
+  for (const action of [
+    () => client.readBuild('https://evil.example/steal'),
+    () => client.readBuild('../profile'),
+    () => client.listBuilds({ id: saved.id, createdAt: 'yesterday' }),
+    () => client.saveBuild({ build: saved.build }),
+    () => client.saveProfile({ ...profile, handle: 'admin' }),
+  ])
+    await assert.rejects(async () => action(), errorCode('invalid_request'));
+  assert.equal(calls.length, 0);
+});
+
+test('cancellation is preserved before fetch and during an active account request', async () => {
+  const preAborted = new AbortController();
+  preAborted.abort();
+  const { client, calls } = queued();
+  await assert.rejects(client.readProfile({ signal: preAborted.signal }), {
+    name: 'AbortError',
+  });
+  assert.equal(calls.length, 0);
+  const controller = new AbortController();
+  let started;
+  const ready = new Promise((resolve) => {
+    started = resolve;
+  });
+  const pendingClient = createCommunityClient({
+    fetch: async (_url, { signal }) => {
+      started();
+      return new Promise((_resolve, reject) =>
+        signal.addEventListener('abort', () => reject(signal.reason), {
+          once: true,
+        }),
+      );
+    },
+  });
+  const result = pendingClient.readProfile({ signal: controller.signal });
+  await ready;
+  controller.abort();
+  await assert.rejects(result, { name: 'AbortError' });
+});
+
+test('request timeouts abort fetch and return a typed retryable error', async () => {
+  let aborted = false;
+  const client = createCommunityClient({
+    timeoutMs: 5,
+    fetch: async (_url, { signal }) =>
+      new Promise((_resolve, reject) =>
+        signal.addEventListener(
+          'abort',
+          () => {
+            aborted = true;
+            reject(signal.reason);
+          },
+          { once: true },
+        ),
+      ),
+  });
+  await assert.rejects(client.listBuilds(), errorCode('timeout'));
+  assert.equal(aborted, true);
+});

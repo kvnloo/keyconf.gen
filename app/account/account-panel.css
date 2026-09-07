@@ -1,0 +1,182 @@
+.account-panel {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(20px, 5vw, 56px);
+  color: #eeeae0;
+  background: #171e1a;
+  border: 1px solid #455047;
+  border-radius: 24px;
+}
+.account-panel h1 {
+  font-size: clamp(30px, 5vw, 48px);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  margin: 12px 0;
+  font-family: inherit;
+}
+.account-panel h2 {
+  font-size: 22px;
+  font-weight: 500;
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.account-panel h3 {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 6px;
+  overflow-wrap: anywhere;
+}
+.account-panel p,
+.account-panel time {
+  color: #bcc6bd;
+  line-height: 1.6;
+}
+.account-panel small {
+  font-size: 12px;
+  color: #c9d6c4;
+  margin-left: 8px;
+}
+.account-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: #bdcdb7;
+}
+.account-panel button {
+  border: 1px solid #657862;
+  background: #d5e1c8;
+  color: #182019;
+  border-radius: 12px;
+  padding: 12px 16px;
+  min-height: 44px;
+  font: inherit;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.account-panel button:disabled,
+.account-panel button[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: wait;
+}
+.account-panel :is(button, input, textarea, summary):focus-visible {
+  outline: 2px solid #dfedcc;
+  outline-offset: 4px;
+}
+.account-build-list li:focus-visible {
+  outline: 2px solid #dfedcc;
+  outline-offset: 4px;
+}
+.account-current {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: center;
+  padding: 24px 0;
+  margin: 20px 0;
+  border-block: 1px solid #455047;
+}
+.account-current > div:first-child {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.account-receipt {
+  flex: 1 1 100%;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.account-build-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+.account-build-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #455047;
+}
+.account-build-list li > div {
+  min-width: 0;
+}
+.account-build-list button {
+  flex-shrink: 0;
+  background: transparent;
+  color: #dfebd3;
+}
+.account-profile {
+  border-top: 1px solid #455047;
+  margin-top: 28px;
+  padding-top: 24px;
+}
+.account-profile summary {
+  cursor: pointer;
+  font-size: 18px;
+  padding: 8px 0;
+}
+.account-panel .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.account-profile button[type='button'] {
+  background: transparent;
+  color: #dfebd3;
+}
+.account-profile fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+.account-profile label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+.account-profile input,
+.account-profile textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  border: 1px solid #657062;
+  border-radius: 10px;
+  padding: 12px;
+  background: #202922;
+  color: #eeeae0;
+  font: inherit;
+}
+.account-profile textarea {
+  resize: vertical;
+}
+.account-profile-link {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #455047;
+  border-radius: 16px;
+}
+.account-panel [role='alert'] {
+  color: #f0ccaa;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 480px) {
+  .account-panel {
+    border-radius: 16px;
+  }
+  .account-current > button {
+    width: 100%;
+  }
+  .account-build-list li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
