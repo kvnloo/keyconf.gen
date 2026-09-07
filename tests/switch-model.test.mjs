@@ -35,12 +35,21 @@ for (const layout of [60, 65, 75]) {
         assert.equal(matrix.elements[14], key.translation[2]);
       });
     }
-    model.separate(true);
+    model.separate(0.5);
+    assert.equal(
+      model.group.getObjectByName('switch_cross_stems').position.y,
+      0.575,
+    );
+    assert.equal(
+      model.group.getObjectByName('switch_top_housings').position.y,
+      0.325,
+    );
+    model.separate(1);
     assert.equal(
       model.group.getObjectByName('switch_cross_stems').position.y,
       1.15,
     );
-    model.separate(false);
+    model.separate(0);
     assert.equal(
       model.group.getObjectByName('switch_cross_stems').position.y,
       0,

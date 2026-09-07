@@ -103,9 +103,9 @@ export function createSwitchAssembly(positions: THREE.Vector3[], id: string) {
       housing.color.set(next.housing);
       stem.color.set(next.stem);
     },
-    separate(open: boolean) {
-      tops.position.y = open ? 0.65 : 0;
-      stems.position.y = open ? 1.15 : 0;
+    separate(progress: number) {
+      tops.position.y = progress * 0.65;
+      stems.position.y = progress * 1.15;
     },
     dispose() {
       for (const geometry of [

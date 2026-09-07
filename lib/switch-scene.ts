@@ -57,18 +57,16 @@ export function createSwitchScene(
   controls.enableDamping = false;
   controls.minDistance = 1.6;
   controls.maxDistance = 7;
-  let opened = false;
+  let progress = 0;
+  let frame = 0;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let stopped = false;
   function render() {
     if (!stopped) renderer.render(scene, camera);
   }
   function reset() {
-    controls.target.set(0, opened ? 0.8 : 0.25, 0);
-    camera.position.set(
-      opened ? 2 : 1.2,
-      opened ? 2.4 : 1.25,
-      opened ? 2.8 : 1.65,
-    );
+    controls.target.set(0, 0.75, 0);
+    camera.position.set(2, 2.4, 2.8);
     controls.update();
     render();
   }
@@ -127,13 +125,28 @@ export function createSwitchScene(
   return {
     reset,
     separate(value: boolean) {
-      opened = value;
-      model.separate(value);
-      spring.visible = value;
-      reset();
+      cancelAnimationFrame(frame);
+      const start = progress;
+      const target = value ? 1 : 0;
+      const began = performance.now();
+      function animate(now: number) {
+        if (stopped) return;
+        const elapsed = reducedMotion.matches
+          ? 1
+          : Math.min(1, (now - began) / 650);
+        const eased = elapsed * elapsed * (3 - 2 * elapsed);
+        progress = start + (target - start) * eased;
+        model.separate(progress);
+        spring.visible = progress > 0;
+        spring.scale.y = 0.35 + progress * 0.65;
+        render();
+        if (elapsed < 1) frame = requestAnimationFrame(animate);
+      }
+      animate(began);
     },
     dispose() {
       stopped = true;
+      cancelAnimationFrame(frame);
       observer.disconnect();
       controls.dispose();
       renderer.domElement.removeEventListener('keydown', keydown);
