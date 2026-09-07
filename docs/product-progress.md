@@ -987,3 +987,7 @@ The custom probe reduced long-task entries from 44 to 3 but still failed timer v
 The full local typing run passed desktop result validation but then timed out capturing `typing-results.png`; mobile/recovery scenarios were not reached. A separate live-browser check passed last-key updates while Sound is mounted, updates while unmounted and Sound navigation persistence. A headed software-rendering rerun is being prepared to distinguish the screenshot failure from typing correctness. No claim of complete verification or public deployment is made.
 
 The last-key persistence regression is now part of the maintained typing verifier. Typecheck and focused lint/format pass. Headed verification could not launch because the local X display was inaccessible; the complete headed journey remains a CI verification gate. The renderer is unchanged, and no failing timer result is allowed by the test.
+
+## September 6, 2026: typing fix release build
+
+The production build for f500fec completed successfully. GitHub run 34083815159 for the preceding diagnostics commit succeeded; run 34084317722 containing the isolated last-key update is still in progress. Public nightly remains Sites version 38. The product checklist now reflects the locally verified favorites controls without claiming hosted account integration.
