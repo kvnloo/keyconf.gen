@@ -971,3 +971,9 @@ Favorites pagination now transfers focus to the first newly loaded row, includin
 ## September 6, 2026: creator publication request preparation
 
 The provider-neutral account factory now supports owned publication listing, explicit publication of a saved revision and owner withdrawal. It reuses frozen publication storage and existing same-origin JSON boundaries. Eleven account API integration tests pass, including profile requirements, cross-account snapshot rejection, retry deduplication, conflicting retries, isolated withdrawal and anonymous/cross-origin rejection. This introduces no hosted route or public publishing control. The review screen, client integration, actual Google identity and end-to-end creator publishing remain required.
+
+## September 6, 2026: typing performance regression reproduced
+
+GitHub run 34082704266 failed the production typing journey because Monkeytype reported `failed (slow timer)`, despite 100% accuracy. A local headless SwiftShader run against localhost:3000 reproduced the same failure (`/tmp/keyconf-typing-reproduce-headless.log`). This is an unresolved software-rendering performance issue, not a reason to relax Monkeytype's result-validity assertion. Renderer profiling is in progress, with concurrent browser measurements avoided. Creator UI work is paused while this regression is investigated.
+
+The typing verifier now writes `outputs/typing-performance.json` before result-validity assertions, containing the result and up to 100 recent long-task entries from both the parent and Monkeytype frame. Existing CI failure artifacts retain this file. This instrumentation does not alter timer validation or rendering. Focused lint and formatting pass; renderer profiling remains inconclusive and no performance fix is claimed.

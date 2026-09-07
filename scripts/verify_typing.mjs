@@ -27,6 +27,16 @@ try {
     reducedMotion: 'reduce',
   });
   await context.addInitScript(() => {
+    const stalls = [];
+    if (PerformanceObserver.supportedEntryTypes.includes('longtask')) {
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          stalls.push({ start: entry.startTime, duration: entry.duration });
+          if (stalls.length > 100) stalls.shift();
+        }
+      }).observe({ type: 'longtask', buffered: true });
+    }
+    window.keyconfTypingStalls = () => stalls;
     let count = 0;
     const resume = Reflect.get(AudioContext.prototype, 'resume');
     AudioContext.prototype.resume = async function (...args) {
@@ -170,6 +180,21 @@ try {
         ),
     );
   const result = await frame.locator('#result').innerText();
+  await writeFile(
+    'outputs/typing-performance.json',
+    JSON.stringify(
+      {
+        base,
+        result,
+        parentStalls: await page.evaluate(() => window.keyconfTypingStalls()),
+        typingStalls: await frame
+          .locator('body')
+          .evaluate(() => window.keyconfTypingStalls()),
+      },
+      null,
+      2,
+    ),
+  );
   assert.match(result, /wpm/i);
   assert.match(result, /100%/);
   assert.match(result, /words 10/);
