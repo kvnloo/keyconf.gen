@@ -863,3 +863,13 @@ Artisan width now supports an explicit unknown value. Unknown width cannot repla
 Validation: 165 unit tests, strict types, lint and formatting passed. New tests cover deterministic identity, variant changes, original source retention, malformed/unsafe data, unknown dimensions, duplicate identities and fake fit. The deployed artisan-placement release CI 34073993001 is green.
 
 This boundary is not exposed in the importer and is not a complete accessory-import feature. Build-owned persistence, canonical serialization/pruning, server evidence checks, safe geometry fallback and reviewed atomic addition are still required by the accessory import contract. Do not publish an accessory import control until those paths are verified together.
+
+## September 6, 2026: reviewed accessory imports and release verification
+
+Imported accessories now retain original source/variant identity through the editor, search, file export, portable previews, immutable evidence and database publication reads. Explicit review distinguishes keycap, replacement knob, encoder, embedded/external screen or buttons, and external macropad. Addition updates the reference library and selections in one history action. Reimport refreshes an existing reference without duplicating its selection. Unknown artisan dimensions remain unknown; unavailable product geometry uses neutral placement markers, not another maker's product model.
+
+Local evidence: 168 unit tests passed before the additional database regression; all 36 community tests subsequently passed with that regression. Type/lint/format checks passed. The reviewed accessory import browser flow passed at phone width with Undo/Redo, reload, export, SKU/source preservation, search and clean-device shared preview. Core-part import regression and desktop/mobile imported rendering/removal checks passed. The production Worker build passed, followed by proposal API, published-page and private-preview browser/privacy/accessibility checks.
+
+Source `eca693d75f1f03c977422e3b2b0328b422e52edb` is saved as Sites version 35 and awaits GitHub run 34075823394 before publication. The later `0c641b4` changes only database regression coverage. Version 34 remains public at this checkpoint. Do not report version 35 as deployed until its deployment succeeds.
+
+Remaining: hosted identity and account UI are deferred pending Google setup; creator publishing/proposal management, authenticated client feedback and account favorites are unfinished. Public discovery and creator/drop presentation still need implementation. Exact accessory geometry, embedded host support and broad catalog coverage remain incomplete.
