@@ -171,6 +171,35 @@ try {
   await page.getByRole('button', { name: 'Clear comparison' }).click();
   assert.equal(await page.locator('.preview-comparison dt').count(), 0);
   await page.getByText('Try changes', { exact: true }).click();
+  await page.getByLabel('Switches', { exact: true }).click();
+  await page
+    .getByRole('option', { name: 'Gateron Magnetic Jade', exact: true })
+    .click();
+  const fit = page.locator('.preview-change-fit');
+  await fit
+    .getByText('Incompatible: Switch & PCB interface', { exact: true })
+    .waitFor();
+  assert.match(await fit.textContent(), /different electrical interfaces/);
+  assert.match(
+    await fit
+      .getByRole('link', { name: 'Maker documentation' })
+      .getAttribute('href'),
+    /^https:\/\//,
+  );
+  assert.equal(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > innerWidth,
+    ),
+    false,
+  );
+  await page
+    .getByRole('button', { name: 'Reset to original', exact: true })
+    .click();
+  await fit
+    .getByText('Incompatible: Switch & PCB interface', { exact: true })
+    .waitFor({ state: 'hidden' });
+  assert.match(await fit.textContent(), /needs? confirmation/);
+
   await page.getByRole('button', { name: 'Hear a key', exact: true }).click();
   await page
     .getByRole('button', { name: 'Mute keyboard', exact: true })

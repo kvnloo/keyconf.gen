@@ -803,3 +803,12 @@ The comparison evidence release is live as Sites version 28, from 40a1482. Produ
 Feedback receipts and manual-copy messages now belong to the exact build, notes and link mode used by their copy operation. Editing notes invalidates pending copy results; newer copy requests supersede older ones. Changing keyboard settings hides obsolete confirmations and manual-copy text while preserving the notes. No clipboard content is changed automatically after a keyboard edit; users explicitly copy the new version.
 
 Local browser coverage exercises delayed clipboard completion after note edits, fallback-message removal after a build change, and preserved notes. The initial journey, type check, lint and formatting passed. The strengthened delayed-completion browser assertion and production build also passed. This feedback increment is committed for nightly but not yet deployed to Sites.
+
+
+## September 6, 2026: compatibility beside preview controls
+
+Shared preview adjustments now expose known incompatibilities beside the switch selector, including the reason and original documentation link. Unknown checks remain explicitly unconfirmed, rather than being presented as a pass. The summary consumes the same checks as the detailed compatibility section, preserving saved creator evidence until a variation is made.
+
+The real browser journey selected Gateron Magnetic Jade for the default contact PCB, verified the electrical-interface warning and documentation URL at phone width, then reset and verified the warning disappeared. Existing feedback, audio, storage isolation and accessibility checks also passed. Strict types, lint and formatting passed. This increment is not yet deployed.
+
+The preceding feedback confirmation fix is live as Sites version 29, source d25780a; deployment appgdep_6a9e0e05998c8191b3d99f0fdfa11637 succeeded. Its GitHub run 34071806886 was still running at the latest inspection.

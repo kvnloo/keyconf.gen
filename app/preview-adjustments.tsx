@@ -1,6 +1,6 @@
 'use client';
 import { palettes, caseColors, type Build } from '../lib/build';
-import { catalog } from '../lib/catalog';
+import { catalog, type FitCheck } from '../lib/catalog';
 import { soundPacks } from '../lib/sound-packs';
 import { compareBuilds } from '../lib/build-comparison';
 import StudioSelect from './studio-select';
@@ -9,12 +9,16 @@ export default function PreviewAdjustments({
   original,
   build,
   onChange,
+  checks,
 }: {
+  checks: FitCheck[];
   original: Build;
   build: Build;
   onChange: (build: Build) => void;
 }) {
   const changes = compareBuilds(original, build);
+  const conflicts = checks.filter((check) => check.status === 'incompatible');
+  const unknown = checks.filter((check) => check.status === 'unknown').length;
   const switches = [...catalog, ...build.customParts].filter(
     (part) => part.category === 'switch',
   );
@@ -38,9 +42,35 @@ export default function PreviewAdjustments({
         }
       />
       <p className="preview-tip">
-        Changing switches does not select a recording automatically. Check
-        compatibility below.
+        Changing switches does not select a recording automatically.
       </p>
+      <div className="preview-change-fit" aria-live="polite">
+        {conflicts.map((check) => (
+          <p key={check.title}>
+            <strong>Incompatible: {check.title}</strong>
+            <br />
+            {check.detail}{' '}
+            {check.source && (
+              <a href={check.source} target="_blank" rel="noreferrer">
+                Maker documentation ↗
+              </a>
+            )}
+          </p>
+        ))}
+        {unknown > 0 && (
+          <p>
+            {unknown} compatibility{' '}
+            {unknown === 1 ? 'check needs' : 'checks need'} confirmation. Review
+            the compatibility notes before ordering.
+          </p>
+        )}
+        {conflicts.length === 0 && unknown === 0 && (
+          <p>
+            Selected interfaces are documented. Check exact product variants
+            before ordering.
+          </p>
+        )}
+      </div>
       <label htmlFor="preview-recording">Sound reference</label>
       <StudioSelect
         id="preview-recording"
