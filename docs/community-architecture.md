@@ -45,6 +45,8 @@ Proposal editing uses its own local draft key, separate from `keyconf-build-v1`,
 
 ## Identity and authorization boundary
 
+`lib/community-api.ts` now composes profile and immutable keyboard save/list/read handlers around the existing storage functions. Its caller supplies a verified identity resolver; request JSON, query parameters and headers are not identity sources within these handlers. Anonymous requests fail before database access. SQLite integration tests cover ownership, origin checks, idempotent saves, pagination and private errors. No production route imports these handlers yet. This is application behavior ready for an authentication adapter, not verified hosted authentication.
+
 Google is the selected provider as of September 6, 2026. The user has not created a Google project and explicitly deferred setup. Provider-neutral storage and validation are implemented; no account route or authentication endpoint is exposed. The previous SIWC implementation plan is superseded. Google sign-in is not live. The available Sites documentation describes dispatch-owned ChatGPT authentication but does not establish an external Google authentication path. Confirm that integration before shipping provider-specific routes or buttons; do not label a ChatGPT redirect as Google sign-in.
 
 Google Identity Services requires a web OAuth client ID and registered site origins. See [Google setup](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid). Production configuration and an end-to-end hosted sign-in/sign-out test remain release requirements.

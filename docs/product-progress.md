@@ -917,3 +917,11 @@ The browser handoff was skipped for this automatic background continuation, pres
 The production build completed successfully. The compiled Worker browser journey passed at 320px, including invalid-width recovery, user-entered width/stem preservation, assignment to KeyA, export, reload and a clean-browser shared preview with the original maker link and unavailable-geometry notice. The same journey now runs in the default Worker verification suite; a focused `--artisan-imports` option supports local iteration. Lint and formatting checks passed.
 
 These controls remain unpublished at this checkpoint. Nightly is still version 36 while the new release's GitHub checks run. Known width enables a neutral placement marker; it does not establish physical fit or provide the maker's sculpt geometry.
+
+## September 6, 2026: artisan controls published and account handlers prepared
+
+Sites version 37 is live at https://keyconf-nightly.kvnloo.chatgpt.site from source `77c2c9d2f4c7ec505755b9006fb842da93a7cabf`. Deployment `appgdep_6a9e2d98c9bc8191b3c9b13ff1c8401f` succeeded at 2026-09-07T03:21:12.199060+00:00. The 320px artisan import, assignment, export, reload and clean-browser sharing journey also passed against this public release. The app code passed GitHub checks in b51431b; run 34078910770 for the expanded production regression remains in progress at this checkpoint. The background continuation preserved the user's existing browser view.
+
+The next account increment adds provider-neutral request handlers for profile read/update and private keyboard save/list/read. A caller-supplied verified identity resolver runs before database access. The handlers reuse existing origin/body checks, ownership queries, immutable idempotent saves and private error responses. They are not exposed as production routes and do not implement Google identity or sessions.
+
+Seven new SQLite integration tests cover anonymous requests with forged identity fields, ownership, rejected origins, repeated/conflicting saves, tied pagination, invalid requests and private errors. All 179 unit tests passed. Typecheck, focused lint and formatting passed. Real Google sign-in, hosted account routing, account UI and cross-device browser verification remain required; Google setup is still deferred.
