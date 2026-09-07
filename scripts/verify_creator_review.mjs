@@ -129,6 +129,40 @@ try {
   await page
     .getByRole('button', { name: 'Review publication', exact: true })
     .click();
+  await saveProfile(fixture.db, 'fixture:alice', {
+    handle: 'review_creator',
+    displayName: 'Updated creator',
+    bio: '',
+    links: [],
+  });
+  await page.getByRole('button', { name: 'Publish drop', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText(
+    'creator profile changed',
+  );
+  assert.equal(
+    fixture.sqlite
+      .prepare('SELECT count(*) AS n FROM community_publication')
+      .get().n,
+    1,
+  );
+  await page
+    .getByRole('button', { name: 'Refresh creator profile', exact: true })
+    .click();
+  await expect(
+    page.getByRole('heading', { name: 'Prepare publication' }),
+  ).toBeVisible();
+  await expect(
+    page.getByLabel('Publication title', { exact: true }),
+  ).toHaveValue('Forest drop');
+  await expect(
+    page.getByLabel(/^Original purchase or enquiry link/),
+  ).toHaveValue('https://example.com/creator-enquiry');
+  await page
+    .getByRole('button', { name: 'Review publication', exact: true })
+    .click();
+  await expect(page.locator('.publication-review')).toContainText(
+    'Updated creator',
+  );
   await page.getByRole('button', { name: 'Publish drop', exact: true }).click();
   await expect(page.locator('a[href^="/builds/"]')).toHaveCount(1);
   const drop = fixture.sqlite

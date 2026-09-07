@@ -29,6 +29,7 @@ export type CommunityErrorCode =
   | 'proposal_not_found'
   | 'response_not_found'
   | 'profile_required'
+  | 'profile_changed'
   | 'saved_build_unavailable'
   | 'storage_unavailable';
 

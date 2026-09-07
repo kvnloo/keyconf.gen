@@ -132,7 +132,11 @@ function Review({
       if (profile)
         setDecision((current) =>
           current.kind === 'failed' && current.profileRequired
-            ? { ...current, profile, profileRequired: false }
+            ? {
+                kind: 'editing',
+                notice:
+                  'Review your updated creator profile before publishing. Your entered details are kept.',
+              }
             : current,
         );
       setError(
@@ -156,6 +160,7 @@ function Review({
       return;
     try {
       const request = parsePublicationRequest({
+        reviewedProfile: load.value.profile,
         operationId: savedBuildId,
         buildId: savedBuildId,
         title,
@@ -210,7 +215,8 @@ function Review({
           message: message(cause),
           profileRequired:
             cause instanceof CommunityClientError &&
-            cause.code === 'profile_required',
+            (cause.code === 'profile_required' ||
+              cause.code === 'profile_changed'),
         });
     } finally {
       busy.current = false;

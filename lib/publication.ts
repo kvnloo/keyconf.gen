@@ -1,6 +1,11 @@
-import { CommunityError } from './community.ts';
+import {
+  CommunityError,
+  parseCommunityProfile,
+  type CommunityProfile,
+} from './community.ts';
 
 export type PublicationRequest = {
+  reviewedProfile?: CommunityProfile;
   operationId: string;
   buildId: string;
   title: string;
@@ -23,6 +28,9 @@ export function parsePublicationRequest(value: unknown): PublicationRequest {
   if (!('title' in value) || !('note' in value))
     throw invalid('Add a title and note for the publication.');
   const common = {
+    ...('reviewedProfile' in value
+      ? { reviewedProfile: parseCommunityProfile(value.reviewedProfile) }
+      : {}),
     operationId: value.operationId,
     buildId: value.buildId,
     title: text(value.title, 80, false),

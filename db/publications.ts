@@ -109,11 +109,12 @@ export async function publishBuild(
       404,
     );
   restoreBuildSnapshot(owned);
+  const profile = request.reviewedProfile;
   await db
     .prepare(`INSERT INTO community_publication(id,account_id,build_id,operation_id,request_digest,metadata,author,published_at)
     SELECT ?,a.id,b.id,?,?,?,json_object('handle',f.handle,'displayName',f.display_name,'bio',f.bio,'links',json(f.links)),?
     FROM community_build b JOIN community_account a ON a.id=b.account_id JOIN community_profile f ON f.account_id=a.id
-    WHERE b.id=? AND a.subject=? ON CONFLICT(account_id,operation_id) DO NOTHING`)
+    WHERE b.id=? AND a.subject=? ${profile ? 'AND f.handle=? AND f.display_name=? AND f.bio=? AND f.links=?' : ''} ON CONFLICT(account_id,operation_id) DO NOTHING`)
     .bind(
       crypto.randomUUID(),
       request.operationId,
@@ -122,13 +123,23 @@ export async function publishBuild(
       new Date().toISOString(),
       request.buildId,
       subject,
+      ...(profile
+        ? [
+            profile.handle,
+            profile.displayName,
+            profile.bio,
+            JSON.stringify(profile.links),
+          ]
+        : []),
     )
     .run();
   const row = await lookup();
   if (row) return operationResult(row, requestDigest);
   throw new CommunityError(
-    'profile_required',
-    'Choose your creator profile before publishing.',
+    profile ? 'profile_changed' : 'profile_required',
+    profile
+      ? 'Your creator profile changed. Review it again before publishing.'
+      : 'Choose your creator profile before publishing.',
     409,
   );
 }

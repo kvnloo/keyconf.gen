@@ -616,3 +616,55 @@ test('publication pagination rejects impossible calendar dates before querying s
   privateResponse(response, 400);
   assert.equal(db.queries.length, 0);
 });
+
+test('publishing binds the reviewed profile and retry preserves acknowledged attribution', async (t) => {
+  const db = database(t);
+  const api = apiFor(db, alice);
+  await api.profile(request('/api/community/profile', 'PATCH', profile));
+  const saved = await save(api, 'profile-binding-save-001');
+  const input = {
+    operationId: 'profile-binding-publish-001',
+    buildId: saved.id,
+    title: 'Reviewed identity',
+    note: '',
+    kind: 'build',
+    reviewedProfile: profile,
+  };
+  await api.profile(
+    request('/api/community/profile', 'PATCH', {
+      ...profile,
+      displayName: 'Changed elsewhere',
+    }),
+  );
+  const stale = await api.publications(
+    request('/api/community/publications', 'POST', input),
+  );
+  privateResponse(stale, 409);
+  assert.equal((await stale.json()).error.code, 'profile_changed');
+  assert.equal(
+    db.sqlite.prepare('SELECT count(*) AS n FROM community_publication').get()
+      .n,
+    0,
+  );
+  await api.profile(request('/api/community/profile', 'PATCH', profile));
+  const published = await api.publications(
+    request('/api/community/publications', 'POST', input),
+  );
+  privateResponse(published);
+  const receipt = await published.json();
+  await api.profile(
+    request('/api/community/profile', 'PATCH', {
+      ...profile,
+      displayName: 'Later name',
+    }),
+  );
+  assert.deepEqual(
+    await (
+      await api.publications(
+        request('/api/community/publications', 'POST', input),
+      )
+    ).json(),
+    receipt,
+  );
+  assert.equal(receipt.author.displayName, profile.displayName);
+});

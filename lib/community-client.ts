@@ -61,6 +61,10 @@ const serverErrors = [
   ['publication_not_found', 'This publication is not available.'],
   ['proposal_not_found', 'This proposal is not available.'],
   ['response_not_found', 'This response is not available.'],
+  [
+    'profile_changed',
+    'Your creator profile changed. Return to editing and review it again before publishing.',
+  ],
   ['profile_required', 'Choose your profile before continuing.'],
   [
     'saved_build_unavailable',
