@@ -3,7 +3,6 @@ import Link from 'next/link';
 import AccessoryFitNotes from './accessory-fit-notes';
 import BuildFeedback from './build-feedback';
 import BuildComparison from './build-comparison';
-import { useState } from 'react';
 import type { PublicPublication } from '../db/publications';
 import { encodeBuild } from '../lib/build';
 import SharedBuildPreview from './shared-build-preview';
@@ -15,7 +14,6 @@ export default function PublishedBuild({
   publication: PublicPublication;
 }) {
   const { author, release, evidence } = publication;
-  const [notice, setNotice] = useState('');
   const creatorDetails = (
     <section className="publication-author" aria-label="Creator and release">
       <div>
@@ -44,7 +42,6 @@ export default function PublishedBuild({
           )}
         </div>
       )}
-      <output aria-live="polite">{notice}</output>
       <button
         onClick={() => {
           const url = URL.createObjectURL(
@@ -70,15 +67,8 @@ export default function PublishedBuild({
           build={publication.build}
           publication={publication}
           creatorDetails={creatorDetails}
-          onCustomize={() => {
-            try {
-              window.location.href = `/#build=${encodeBuild(publication.build)}`;
-            } catch {
-              setNotice(
-                'This build is too large for a link. Download its build file, then open it in your studio.',
-              );
-              window.scrollTo({ top: 0, behavior: 'instant' });
-            }
+          onCustomize={(draft) => {
+            window.location.href = `/#build=${encodeBuild(draft)}`;
           }}
         />
       ) : (
@@ -90,7 +80,7 @@ export default function PublishedBuild({
             Some parts or recordings are no longer supported in the studio. The
             original parts and sources are preserved below.
           </p>
-          <BuildFeedback build={publication.build} published />
+          <BuildFeedback build={publication.build} linkMode="publication" />
           <BuildComparison build={publication.build} />
           <h2>Original parts</h2>
           <ul className="preview-parts">

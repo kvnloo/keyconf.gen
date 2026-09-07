@@ -405,3 +405,45 @@
   font-size: 0.75rem;
   margin-bottom: 3px;
 }
+
+.preview-adjustments > label {
+  display: block;
+  margin: 16px 0 8px;
+}
+.preview-adjustments fieldset {
+  border: 0;
+  padding: 0;
+  margin: 20px 0;
+  min-width: 0;
+}
+.preview-adjustments legend {
+  margin-bottom: 10px;
+}
+.preview-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.preview-options button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #ffffff44;
+  border-radius: 10px;
+  font-size: 0.8rem;
+}
+.preview-options button[aria-pressed='true'] {
+  border-color: #c5dbc9;
+  background: #a6c9af22;
+}
+.preview-options button span {
+  width: 18px;
+  height: 18px;
+  border: 1px solid #ffffff44;
+  border-radius: 50%;
+}
+.preview-adjustments li {
+  text-transform: capitalize;
+}

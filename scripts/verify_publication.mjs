@@ -83,6 +83,38 @@ try {
       .locator('li')
       .count(),
   );
+  await page.getByText('Try changes', { exact: true }).click();
+  await page.getByRole('button', { name: 'Midnight', exact: true }).click();
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async (text) => {
+          window.variationFeedback = text;
+        },
+      },
+    });
+  });
+  await page.getByText('Feedback for the builder', { exact: true }).click();
+  await page
+    .getByLabel('Your notes', { exact: true })
+    .fill('Try this darker version.');
+  await page.getByRole('button', { name: 'Copy notes & build link' }).click();
+  const variationUrl = new URL(
+    (await page.evaluate(() => window.variationFeedback)).split(
+      'Build preview: ',
+    )[1],
+  );
+  assert.equal(variationUrl.pathname, '/');
+  assert.ok(variationUrl.hash.startsWith('#preview='));
+  await page.goto(variationUrl.href);
+  await page.getByText('Try changes', { exact: true }).click();
+  assert.equal(
+    await page
+      .getByRole('button', { name: 'Midnight', exact: true })
+      .getAttribute('aria-pressed'),
+    'true',
+  );
   await page.getByRole('button', { name: 'Customize a copy' }).click();
   await page.waitForURL(
     (url) => url.pathname === '/' && url.hash === '#studio',

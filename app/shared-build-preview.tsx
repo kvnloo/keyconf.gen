@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import type { PublicPublication } from '../db/publications';
 import type { Build } from '../lib/build';
+import PreviewAdjustments from './preview-adjustments';
+import { compareBuilds } from '../lib/build-comparison';
 import { catalog, categories, checkBuild } from '../lib/catalog';
 import { accessoryCatalog, assessAccessories } from '../lib/build-accessories';
 import { KeyboardAudio, type SoundSettings } from '../lib/audio';
@@ -24,44 +26,51 @@ import BuildComparison from './build-comparison';
 import './shared-build-preview.css';
 
 export default function SharedBuildPreview({
-  build,
+  build: original,
   onCustomize,
   publication,
   creatorDetails,
 }: {
   build: Build;
-  onCustomize: () => void;
+  onCustomize: (build: Build) => void;
   publication?: PublicPublication;
   creatorDetails?: ReactNode;
 }) {
+  const [build, setBuild] = useState(original);
+  const changed = compareBuilds(original, build).length > 0;
+  const snapshot = changed ? undefined : publication;
   const [exploded, setExploded] = useState(false);
   const [view, setView] = useState('perspective');
   const [enabled, setEnabled] = useState(false);
   const [volume, setVolume] = useState(build.audio.volume);
   const [loaded, setLoaded] = useState<{
     attempt: number;
+    source: string;
     state: 'ready' | 'error';
   } | null>(null);
   const [attempt, setAttempt] = useState(0);
-  const load = loaded?.attempt === attempt ? loaded.state : 'loading';
+  const source = build.audio.source;
+  const load =
+    loaded?.attempt === attempt && loaded.source === source
+      ? loaded.state
+      : 'loading';
   const [notice, setNotice] = useState('');
   const audio = useRef<KeyboardAudio | null>(null);
   const revision = useRef({ value: 0 });
   const currentVolume = useRef(volume);
   const pack = soundPacks.find((item) => item.id === build.audio.source);
   const parts = useMemo(
-    () =>
-      publication?.evidence.components ?? [...catalog, ...build.customParts],
-    [build.customParts, publication],
+    () => snapshot?.evidence.components ?? [...catalog, ...build.customParts],
+    [build.customParts, snapshot],
   );
   const checks = useMemo(
     () =>
-      publication?.evidence.compatibility ??
+      snapshot?.evidence.compatibility ??
       checkBuild(build.selection, parts, build.layout),
-    [build, parts, publication],
+    [build, parts, snapshot],
   );
   const accessoryChecks =
-    publication?.evidence.accessoryCompatibility ??
+    snapshot?.evidence.accessoryCompatibility ??
     assessAccessories(build.accessories, accessoryHost(build));
   const sound: SoundSettings = {
     ...build.audio,
@@ -96,17 +105,19 @@ export default function SharedBuildPreview({
     const actionClock = revision.current;
     void (pack ? engine.prepare(pack) : Promise.resolve())
       .then(() => {
-        if (audio.current === engine) setLoaded({ attempt, state: 'ready' });
+        if (audio.current === engine)
+          setLoaded({ attempt, source, state: 'ready' });
       })
       .catch(() => {
-        if (audio.current === engine) setLoaded({ attempt, state: 'error' });
+        if (audio.current === engine)
+          setLoaded({ attempt, source, state: 'error' });
       });
     return () => {
       actionClock.value++;
       audio.current = null;
       engine.close();
     };
-  }, [pack, attempt]);
+  }, [pack, attempt, source]);
   useEffect(() => {
     currentVolume.current = volume;
     audio.current?.setLevel(enabled, volume);
@@ -158,11 +169,22 @@ export default function SharedBuildPreview({
           <h1>{build.name}</h1>
           <p>
             {publication
-              ? `By ${publication.author.displayName} · @${publication.author.handle}`
+              ? `${changed ? 'Your variation · Original by' : 'By'} ${publication.author.displayName} · @${publication.author.handle}`
               : 'A snapshot to explore. Your saved build stays untouched.'}
           </p>
         </div>
-        <button className="preview-customize" onClick={onCustomize}>
+        <button
+          className="preview-customize"
+          onClick={() => {
+            try {
+              onCustomize(build);
+            } catch {
+              setNotice(
+                'This build is too large for a link. Use Download this variation under Try changes, then open the file in your studio.',
+              );
+            }
+          }}
+        >
           Customize a copy <ArrowRight size={17} />
         </button>
       </div>
@@ -204,12 +226,34 @@ export default function SharedBuildPreview({
         </section>
         <aside className="preview-details" aria-label="Shared build details">
           {creatorDetails}
-          <BuildFeedback build={build} published={!!publication} />
+          <PreviewAdjustments
+            original={original}
+            build={build}
+            onChange={(next) => {
+              if (next.audio.source !== build.audio.source) {
+                revision.current.value++;
+                audio.current?.stop();
+                setEnabled(false);
+                setAttempt((value) => value + 1);
+              }
+              setBuild(next);
+            }}
+          />
+          <BuildFeedback
+            build={build}
+            linkMode={
+              publication
+                ? changed
+                  ? 'publication-variation'
+                  : 'publication'
+                : 'preview'
+            }
+          />
           <BuildComparison build={build} />
           <section className="preview-sound">
             <span className="preview-eyebrow">LISTEN</span>
             <h2>
-              {publication?.evidence.sound.recording?.name ??
+              {snapshot?.evidence.sound.recording?.name ??
                 pack?.name ??
                 'Synthesized study'}
             </h2>
@@ -268,9 +312,7 @@ export default function SharedBuildPreview({
             </p>
             {pack && (
               <a
-                href={
-                  publication?.evidence.sound.recording?.source ?? pack.source
-                }
+                href={snapshot?.evidence.sound.recording?.source ?? pack.source}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -279,7 +321,9 @@ export default function SharedBuildPreview({
             )}
           </section>
           <section>
-            <span className="preview-eyebrow">THE PARTS</span>
+            <span className="preview-eyebrow">
+              {changed ? 'YOUR VARIATION' : 'THE PARTS'}
+            </span>
             <h2>Explore the originals</h2>
             <ul className="preview-parts">
               {categories.map((category) => {
@@ -302,7 +346,7 @@ export default function SharedBuildPreview({
               })}
               {build.accessories.map((selection) => {
                 const part = (
-                  publication?.evidence.accessoryReferences ?? accessoryCatalog
+                  snapshot?.evidence.accessoryReferences ?? accessoryCatalog
                 ).find((item) => item.id === selection.productId);
                 return (
                   part && (
@@ -330,7 +374,17 @@ export default function SharedBuildPreview({
             </ul>
           </section>
           <details className="preview-fit">
-            <summary>Compatibility notes</summary>
+            <summary>
+              {changed
+                ? 'Compatibility for your changes'
+                : 'Compatibility notes'}
+            </summary>
+            {changed && (
+              <p>
+                These checks use the current catalog. Reset to see the original
+                build’s saved evidence.
+              </p>
+            )}
             <ul>
               {checks.map((check, index) => (
                 <li key={index}>
@@ -347,7 +401,7 @@ export default function SharedBuildPreview({
             <AccessoryFitNotes
               selections={build.accessories}
               products={
-                publication?.evidence.accessoryReferences ?? accessoryCatalog
+                snapshot?.evidence.accessoryReferences ?? accessoryCatalog
               }
               checks={accessoryChecks}
             />

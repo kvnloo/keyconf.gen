@@ -6,17 +6,35 @@ import { previewLink } from '../lib/shared-preview';
 
 export default function BuildFeedback({
   build,
-  published = false,
+  linkMode = 'preview',
 }: {
   build: Build;
-  published?: boolean;
+  linkMode?: 'preview' | 'publication' | 'publication-variation';
 }) {
   const [note, setNote] = useState('');
   const [receipt, setReceipt] = useState('');
   const [manualCopy, setManualCopy] = useState('');
   const fallback = useRef<HTMLTextAreaElement | null>(null);
   async function copy() {
-    const message = `Feedback on ${build.name}\n\n${note.trim()}\n\nBuild preview: ${published ? window.location.href : previewLink(build, window.location.href)}`;
+    let link: string;
+    try {
+      link =
+        linkMode === 'publication'
+          ? window.location.href
+          : previewLink(
+              build,
+              linkMode === 'publication-variation'
+                ? new URL('/', window.location.href).href
+                : window.location.href,
+            );
+    } catch {
+      setReceipt(
+        'This build is too large for a link. Download your variation and share the file with your notes.',
+      );
+      setManualCopy(note.trim());
+      return;
+    }
+    const message = `Feedback on ${build.name}\n\n${note.trim()}\n\nBuild preview: ${link}`;
     setManualCopy('');
     try {
       await navigator.clipboard.writeText(message);

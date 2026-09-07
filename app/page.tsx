@@ -76,6 +76,7 @@ import {
   profiles,
   readBuildFile,
   parseCustomParts,
+  encodeBuild,
 } from '../lib/build';
 import { soundPacks } from '../lib/sound-packs';
 import { registerStudioTools } from '../lib/webmcp';
@@ -114,8 +115,8 @@ export default function Home() {
       <SharedBuildPreview
         key={hash}
         build={preview.build}
-        onCustomize={() => {
-          window.location.hash = hash.replace(/^#preview=/, '#build=');
+        onCustomize={(draft) => {
+          window.location.hash = 'build=' + encodeBuild(draft);
         }}
       />
     );

@@ -726,3 +726,30 @@ retired catalog parts, rejected inputs without orphan builds, private reads,
 client-supplied author/evidence/version claims. A separate read-only review found
 no concrete blocker. This remains storage work; no Google account API or
 response interface is exposed yet.
+
+## Isolated preview variations
+
+Shared previews and supported public releases now offer a collapsed Try changes
+panel for switches, independent recording references, keycap palettes and case
+colors. Edits stay in component state until the user explicitly opens a copy in
+the studio. Reset restores the original; a variation file can be downloaded.
+Feedback links and studio navigation carry the edited build. Published variation
+links target the root preview route, while unchanged release feedback keeps its
+canonical URL. Changes use current compatibility evidence and are labeled as the
+visitor's variation. Original publication evidence returns on reset.
+
+Changing a recording invalidates readiness and turns sound off before replacing
+the audio engine. Switch selection never silently chooses a recording. Colors
+remain labeled as visual studies rather than maker-confirmed finishes.
+
+This is a usable preview-editing flow without sign-in. Account-backed proposal
+pages, response submission and creator review remain unfinished; feedback here
+is copied or downloaded for the user's existing conversation, not sent.
+
+Validation for this change: 160 unit tests, typecheck, lint, formatting and the
+production build passed. Browser checks against the built Worker passed for
+private-field exclusion, original and edited release links, archived releases,
+withdrawn/missing pages, variation reset, recording changes, explicit studio
+handoff, local-storage isolation before handoff, clipboard fallback and expanded
+mobile controls with no WCAG A/AA violations detected. Independent review found
+three issues in the first implementation; all were corrected before publishing.

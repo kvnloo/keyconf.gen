@@ -128,6 +128,87 @@ try {
   );
   await page.getByRole('button', { name: 'Clear comparison' }).click();
   assert.equal(await page.locator('.preview-comparison dt').count(), 0);
+  await page.getByText('Try changes', { exact: true }).click();
+  await page.getByRole('button', { name: 'Hear a key', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Mute keyboard', exact: true })
+    .waitFor();
+  await page.getByLabel('Sound reference', { exact: true }).click();
+  await page
+    .getByRole('option', { name: 'Synthesized study', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'Enable keyboard sound', exact: true })
+    .waitFor();
+  await page.getByRole('button', { name: 'Hear a key', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Mute keyboard', exact: true })
+    .waitFor();
+  await page
+    .getByRole('button', { name: 'Reset to original', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Midnight', exact: true }).click();
+  await page
+    .getByText('Viewing the original build.', { exact: true })
+    .waitFor({ state: 'hidden' });
+  assert.equal(
+    await page.evaluate(() => JSON.stringify(localStorage)),
+    storedBefore,
+  );
+  await page.evaluate(() => {
+    window.denyCopy = false;
+  });
+  await notes.fill('Please use this darker colorway.');
+  await copy.click();
+  const changedMessage = await page.evaluate(() => window.copiedFeedback);
+  const variation = sharedPreview(
+    new URL(changedMessage.split('Build preview: ')[1]).hash,
+  );
+  assert.equal(variation.build.palette.name, 'Midnight');
+  assert.equal(variation.build.selection.switch, build.selection.switch);
+  await page
+    .getByRole('button', { name: 'Reset to original', exact: true })
+    .click();
+  await page
+    .getByText('Viewing the original build.', { exact: true })
+    .waitFor();
+  await copy.click();
+  const resetMessage = await page.evaluate(() => window.copiedFeedback);
+  assert.deepEqual(
+    sharedPreview(new URL(resetMessage.split('Build preview: ')[1]).hash).build,
+    build,
+  );
+  await page.getByRole('button', { name: 'Porcelain', exact: true }).click();
+  const editAccessibility = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze();
+  assert.deepEqual(
+    editAccessibility.violations.map((v) => ({
+      id: v.id,
+      targets: v.nodes.map((n) => n.target),
+    })),
+    [],
+  );
+  await page.screenshot({
+    path: 'outputs/preview-adjustments-mobile.png',
+    fullPage: true,
+  });
+
+  await page
+    .getByRole('button', { name: 'Customize a copy', exact: true })
+    .click();
+  await page.waitForURL((url) => url.hash === '#studio');
+  await page.waitForFunction(() =>
+    Object.keys(localStorage).some((key) => {
+      try {
+        return (
+          JSON.parse(localStorage.getItem(key)).palette?.name === 'Porcelain'
+        );
+      } catch {
+        return false;
+      }
+    }),
+  );
   assert.deepEqual(errors, []);
   console.log(
     'Feedback copy, exact build link, denied-clipboard fallback, empty notes and mobile layout passed.',
