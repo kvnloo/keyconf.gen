@@ -977,3 +977,13 @@ The provider-neutral account factory now supports owned publication listing, exp
 GitHub run 34082704266 failed the production typing journey because Monkeytype reported `failed (slow timer)`, despite 100% accuracy. A local headless SwiftShader run against localhost:3000 reproduced the same failure (`/tmp/keyconf-typing-reproduce-headless.log`). This is an unresolved software-rendering performance issue, not a reason to relax Monkeytype's result-validity assertion. Renderer profiling is in progress, with concurrent browser measurements avoided. Creator UI work is paused while this regression is investigated.
 
 The typing verifier now writes `outputs/typing-performance.json` before result-validity assertions, containing the result and up to 100 recent long-task entries from both the parent and Monkeytype frame. Existing CI failure artifacts retain this file. This instrumentation does not alter timer validation or rendering. Focused lint and formatting pass; renderer profiling remains inconclusive and no performance fix is claimed.
+
+## September 6, 2026: per-key React work isolated
+
+Profiling found varying keys updated `lastKey` on the entire studio component, producing repeated parent main-thread tasks while repeated Shift presses avoided most work. A dedicated subscribed last-key display now owns that update; the value remains in a studio-scoped store for remounts. No geometry, shadow, audio or Monkeytype timer behavior is changed.
+
+The custom probe reduced long-task entries from 44 to 3 but still failed timer validation, so that probe alone does not prove resolution. The full verifier subsequently produced a valid desktop result (109 WPM, 100% accuracy, no failed/invalid result), with remaining mobile/recovery scenarios still running at this checkpoint. Focused lint and formatting pass. The change is not yet committed or deployed.
+
+The full local typing run passed desktop result validation but then timed out capturing `typing-results.png`; mobile/recovery scenarios were not reached. A separate live-browser check passed last-key updates while Sound is mounted, updates while unmounted and Sound navigation persistence. A headed software-rendering rerun is being prepared to distinguish the screenshot failure from typing correctness. No claim of complete verification or public deployment is made.
+
+The last-key persistence regression is now part of the maintained typing verifier. Typecheck and focused lint/format pass. Headed verification could not launch because the local X display was inaccessible; the complete headed journey remains a CI verification gate. The renderer is unchanged, and no failing timer result is allowed by the test.

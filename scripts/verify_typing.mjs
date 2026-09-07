@@ -79,6 +79,22 @@ try {
     () => document.querySelector('.scene-host')?.dataset.renderState === 'idle',
   );
   assert.equal(await page.locator('.scene-host canvas').count(), 1);
+  await page.getByRole('tab', { name: 'Sound', exact: true }).click();
+  await page.locator('.scene-host canvas').focus();
+  await page.keyboard.press('a');
+  await page.waitForFunction(
+    () => document.querySelector('.last-key kbd')?.textContent === 'A',
+  );
+  await page.getByRole('tab', { name: 'Design', exact: true }).click();
+  await page.locator('.scene-host canvas').focus();
+  await page.keyboard.press('7');
+  await page.getByRole('tab', { name: 'Sound', exact: true }).click();
+  assert.equal(
+    await page.locator('.last-key kbd').textContent(),
+    '7',
+    'Last key must retain presses while the Sound panel is unmounted',
+  );
+  await page.getByRole('tab', { name: 'Design', exact: true }).click();
   await button(page, 'Explode').click();
   await button(page, 'Start typing test').click();
   const frame = page.frameLocator(

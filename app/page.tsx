@@ -47,6 +47,7 @@ import KeyboardScene, { type SceneOptions } from './keyboard-scene';
 import ImportDialog, { type ImportAddition } from './import-dialog';
 import StudioSearch from './studio-search';
 import TypingTest from './typing-test';
+import LastKey, { createLastKey } from './last-key';
 import VolumeDial from './volume-dial';
 import MusicControls from './music-controls';
 import { StudioMusic } from '../lib/music';
@@ -436,7 +437,7 @@ function KeyboardStudio({
       ? loaded
       : null;
   const sampleState = pack ? (currentRecording?.state ?? 'loading') : 'ready';
-  const [lastKey, setLastKey] = useState('');
+  const [lastKey] = useState(createLastKey);
   const [demo, setDemo] = useState(false);
   const [roomMotion, setRoomMotion] = useState(true);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -674,7 +675,7 @@ function KeyboardStudio({
   }
   function press(code: string) {
     if (soundRef.current.enabled) music.setBlocked('keyboard', true);
-    setLastKey(code.replace('Key', '').replace('Digit', ''));
+    lastKey.press(code);
     audio.current?.play(code, soundRef.current);
   }
   function release(code: string) {
@@ -693,7 +694,7 @@ function KeyboardStudio({
       timers.current.add(
         setTimeout(
           () => {
-            setLastKey(code.replace('Key', '').replace('Digit', ''));
+            lastKey.press(code);
             window.dispatchEvent(
               new CustomEvent('keyconf-demo', { detail: { code, down: true } }),
             );
@@ -1591,9 +1592,7 @@ function KeyboardStudio({
                       </button>
                     </p>
                   )}
-                  <div className="last-key">
-                    Last key <kbd>{lastKey || '—'}</kbd>
-                  </div>
+                  <LastKey source={lastKey} />
                   {!pack && (
                     <>
                       <label htmlFor="character">Switch character</label>
