@@ -957,3 +957,9 @@ Added private favorites list/add/remove methods to the provider-neutral account 
 ## September 6, 2026: favorites client preparation
 
 The account client now lists favorites with validated pagination and sends explicit PUT/DELETE state changes. It verifies acknowledgement identity, rejects repeated or malformed pages, and projects unavailable entries without old titles or extra fields. Three new client tests pass alongside the ten existing client tests. Typecheck, lint and targeted formatting pass. This is not yet a user-facing favorites workflow: the account component, fixture routing and browser journey still need integration, and hosted identity remains deferred.
+
+## September 6, 2026: favorites interface verified locally
+
+Added a private favorites panel and reusable add/remove control, still isolated from public navigation. Confirmed mutations update the list; unavailable publications retain a removable entry without their former title. Requests abort on unmount or refresh, and completed removals are filtered from overlapping page responses.
+
+The browser fixture now routes favorites through the actual account handlers and SQLite. Its dedicated journey passes add/remove, repeated mutations, withdrawal redaction, 27-item pagination, account isolation, 320px overflow and accessibility checks. The mobile list screenshot was inspected. The existing account browser regression also passes, including interrupted saves and pagination races. Favorites verification is now included in CI. Public Google authentication and discovery-page favorite integration remain unfinished. The deployed gallery release's GitHub run 34082155164 succeeded.

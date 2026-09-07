@@ -1,10 +1,17 @@
 import { createRoot } from 'react-dom/client';
 import { useCallback, useState } from 'react';
+import FavoritesPanel, {
+  FavoriteButton,
+} from '../../app/account/favorites-panel';
 import AccountPanel from '../../app/account/account-panel';
 import { useBuild } from '../../app/use-build';
 import '../../app/globals.css';
 
 function Fixture() {
+  const [favoriteRevision, setFavoriteRevision] = useState(0);
+  const candidate = new URL(window.location.href).searchParams.get(
+    'publication',
+  );
   const [notice, setNotice] = useState('');
   const notify = useCallback((message: string) => setNotice(message), []);
   const { build, edit, undo, canUndo, ready } = useBuild(notify);
@@ -27,6 +34,17 @@ function Fixture() {
         <output>{notice}</output>
       </section>
       {ready && <AccountPanel draft={build} onOpen={(saved) => edit(saved)} />}
+      {ready && (
+        <>
+          {candidate && (
+            <FavoriteButton
+              publicationId={candidate}
+              onChange={() => setFavoriteRevision((value) => value + 1)}
+            />
+          )}
+          <FavoritesPanel refreshKey={favoriteRevision} />
+        </>
+      )}
     </main>
   );
 }

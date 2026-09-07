@@ -72,10 +72,13 @@ export async function accountFixture() {
         configureServer(vite) {
           vite.middlewares.use(async (incoming, outgoing, next) => {
             const path = incoming.url ?? '/';
-            if (path !== '/' && !path.startsWith('/api/community/'))
+            if (
+              path.split('?')[0] !== '/' &&
+              !path.startsWith('/api/community/')
+            )
               return next();
             try {
-              if (path === '/') {
+              if (path.split('?')[0] === '/') {
                 const html = await vite.transformIndexHtml(
                   '/',
                   '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Account verification fixture</title></head><body><div id="root"></div><script type="module" src="/scripts/account-fixture/entry.tsx"></script></body></html>',
@@ -103,14 +106,21 @@ export async function accountFixture() {
               const response =
                 pathname === '/api/community/profile'
                   ? await api.profile(request)
-                  : pathname === '/api/community/builds'
-                    ? await api.builds(request)
-                    : pathname.startsWith('/api/community/builds/')
-                      ? await api.build(
+                  : pathname === '/api/community/favorites'
+                    ? await api.favorites(request)
+                    : pathname.startsWith('/api/community/favorites/')
+                      ? await api.favorite(
                           request,
-                          pathname.slice('/api/community/builds/'.length),
+                          pathname.slice('/api/community/favorites/'.length),
                         )
-                      : new Response('Not found', { status: 404 });
+                      : pathname === '/api/community/builds'
+                        ? await api.builds(request)
+                        : pathname.startsWith('/api/community/builds/')
+                          ? await api.build(
+                              request,
+                              pathname.slice('/api/community/builds/'.length),
+                            )
+                          : new Response('Not found', { status: 404 });
               const holdIndex = holds.findIndex(
                 (hold) =>
                   hold.path === pathname && hold.method === request.method,

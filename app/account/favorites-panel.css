@@ -1,0 +1,133 @@
+.favorites-panel {
+  max-width: 900px;
+  margin: 24px auto;
+  padding: clamp(20px, 5vw, 56px);
+  border: 1px solid #455047;
+  border-radius: 24px;
+  background: #171e1a;
+  color: #eeeae0;
+}
+.favorites-panel h2 {
+  margin: 12px 0;
+  font-family: inherit;
+  font-size: clamp(24px, 4vw, 32px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+.favorites-panel h3 {
+  margin: 8px 0;
+  font-size: 16px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.favorites-panel p {
+  color: #bcc6bd;
+  line-height: 1.6;
+}
+.favorites-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: #bdcdb7;
+}
+.favorites-status {
+  display: block;
+  min-height: 1.6em;
+  margin: 13px 0;
+  color: #bcc6bd;
+  font-size: 13px;
+}
+.favorites-list {
+  padding: 0;
+  margin: 0 0 24px;
+  list-style: none;
+}
+.favorites-list li {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 0;
+  border-bottom: 1px solid #455047;
+}
+.favorite-details {
+  min-width: 0;
+}
+.favorite-details a {
+  color: #eeeae0;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.favorite-details a svg {
+  display: inline;
+  vertical-align: middle;
+}
+.favorite-details p {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+.favorite-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 11px 15px;
+  border: 1px solid #657862;
+  border-radius: 12px;
+  background: #202922;
+  color: #dfebd3;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.favorite-button svg {
+  flex-shrink: 0;
+}
+.favorite-button:hover:not(:disabled) {
+  background: #2c382d;
+}
+.favorite-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.favorite-button:focus-visible,
+.favorites-panel :is(a, h2):focus-visible {
+  outline: 2px solid #dfedcc;
+  outline-offset: 4px;
+}
+.favorite-control {
+  flex-shrink: 0;
+  max-width: 100%;
+}
+.favorite-control [role='alert'],
+.favorites-error [role='alert'] {
+  max-width: 32ch;
+  color: #f0ccaa;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.favorites-empty {
+  padding: 32px 0;
+  border-top: 1px solid #455047;
+}
+.favorites-empty > svg {
+  color: #bdcdb7;
+}
+@media (max-width: 560px) {
+  .favorites-panel {
+    border-radius: 16px;
+  }
+  .favorites-list li {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .favorite-control .favorite-button {
+    width: 100%;
+  }
+}

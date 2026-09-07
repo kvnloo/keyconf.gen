@@ -29,6 +29,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Verify account interface against isolated identity fixtures
         run: npm run verify:account
+      - name: Verify favorites
+        run: npm run verify:favorites
       - name: Verify browser journeys and accessibility
         shell: bash
         run: |
