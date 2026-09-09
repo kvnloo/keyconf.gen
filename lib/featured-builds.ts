@@ -102,7 +102,7 @@ export const featuredBuilds: FeaturedBuild[] = [
   keyboard(
     'cyberboard-r2',
     'CYBERBOARD R2',
-    'q1-max',
+    'cyberboard-r2',
     {
       name: 'Jet Black',
       alpha: '#2a2a2e',
@@ -111,12 +111,12 @@ export const featuredBuilds: FeaturedBuild[] = [
       space: '#1a1a1f',
     },
     '#0d0d10',
-    'Angry Miao · 75% LED matrix study · unmodeled',
+    'Angry Miao · 75% LED-panel study · not CAD',
   ),
   keyboard(
     'am-hatsu',
     'AM HATSU',
-    'bakeneko60',
+    'am-hatsu',
     {
       name: 'Battleship',
       alpha: '#c8cdd4',
@@ -125,7 +125,7 @@ export const featuredBuilds: FeaturedBuild[] = [
       space: '#7a8796',
     },
     '#4a5564',
-    'Angry Miao · split ergonomic study · unmodeled',
+    'Angry Miao · split 4×6 study · not CAD',
   ),
   {
     kind: 'control-deck',

@@ -14,7 +14,7 @@ test('every starting assembly resolves six distinct-category products with docum
   assert.equal(new Set(catalog.map((part) => part.id)).size, catalog.length);
   assert.deepEqual(
     [...new Set(assemblies.map((assembly) => assembly.layout))].sort(),
-    ['60', '65', '75'],
+    ['45', '60', '65', '75'],
   );
   for (const assembly of assemblies) {
     for (const category of categories) {

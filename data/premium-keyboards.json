@@ -11,7 +11,7 @@
         { "amount": 1099, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "available", "configuration": "Standard", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/am-hatsu" },
         { "amount": 2350, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "BATTLESHIP Limited Edition", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/am-hatsu-battleship" }
       ],
-      "geometry": { "status": "unmodeled", "evidence": ["Manual documents 4x6 split layout; no CAD or exact body dimensions published."] },
+      "geometry": { "status": "modeled", "modelId": "keyboard-hatsu", "fidelity": "illustrative", "evidence": ["Official 4x6 / 45% split ortho description. Scene uses two 4x6 1u halves with a gap; not manufacturer CAD, tent angle, or half footprint."] },
       "notes": "HATSU-to-CYBERMAT R2 compatibility is official (ten central coils designed for HATSU). Qi placement unverified without footprint."
     },
     {
@@ -26,7 +26,7 @@
         { "amount": 799, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Meteor Grey / Bundle", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/cyberboard-r2-1" },
         { "amount": 635, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Psychedelic / Base Kit", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/cyberboard-r2-1" }
       ],
-      "geometry": { "status": "unmodeled", "evidence": ["No official CAD/STEP/STL/DWG found; 40x5 pixel matrix documented; exterior dimensions unknown."] },
+      "geometry": { "status": "modeled", "modelId": "keyboard-cyberboard-r2", "fidelity": "illustrative", "evidence": ["Official 5x40 / 200-LED panel count. Scene keeps a generic 75% key grid and adds an illustrative panel; exterior dimensions and LED pitch unpublished."] },
       "notes": "40x5 RGB matrix is demonstrable; case silhouette must remain approximate until licensed dimensioned source appears."
     },
     {

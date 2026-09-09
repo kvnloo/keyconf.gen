@@ -249,9 +249,15 @@ export function checkBuild(
     stabs?.evidence === 'documented' &&
     assembly &&
     assembly.selection.stabilizers === stabs?.id &&
-    ['nk65-entry', 'q1-max', 'q1-he', 'q1-he-8k', 'bakeneko60'].includes(
-      assembly.id,
-    );
+    [
+      'nk65-entry',
+      'q1-max',
+      'q1-he',
+      'q1-he-8k',
+      'bakeneko60',
+      'am-hatsu',
+      'cyberboard-r2',
+    ].includes(assembly.id);
   result.push({
     status:
       reduxConflict || oRingConflict || plateMountConflict

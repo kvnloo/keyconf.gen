@@ -86,6 +86,14 @@ export function FeaturedGallery({
             key={preset.id}
             aria-pressed={selected === preset.id}
             aria-label={`Preview ${preset.name}`}
+            data-layout={
+              preset.kind === 'keyboard' ? preset.build.layout : undefined
+            }
+            data-case={
+              preset.kind === 'keyboard'
+                ? preset.build.selection.case
+                : undefined
+            }
             onClick={() => onSelect(preset)}
           >
             <img
@@ -182,7 +190,11 @@ export function FeaturedInspector({
             })}
           </div>
           <p className="preview-note">
-            Original 3D study. Review part fit in the workshop.
+            {featured.id === 'am-hatsu'
+              ? 'Illustrative split 4×6 study. Not manufacturer CAD.'
+              : featured.id === 'cyberboard-r2'
+                ? 'Illustrative 75% study with a 5×40 LED panel. Not manufacturer CAD.'
+                : 'Original 3D study. Review part fit in the workshop.'}
           </p>
         </>
       ) : (

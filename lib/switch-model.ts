@@ -5,6 +5,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 export function switchColors(id: string) {
   const stems: Record<string, string> = {
     'oil-king': '#252927',
+    'am-icy-silver': '#c5d0d6',
     'g-pro-3-white': '#f3f0df',
     'g-pro-3-silver': '#9babb2',
     'g-pro-3-red': '#d95048',
@@ -14,7 +15,12 @@ export function switchColors(id: string) {
     'g-pro-3-blue': '#477cba',
   };
   return {
-    housing: id === 'oil-king' ? '#3a4240' : '#a9b7aa',
+    housing:
+      id === 'oil-king'
+        ? '#3a4240'
+        : id === 'am-icy-silver'
+          ? '#d7dee3'
+          : '#a9b7aa',
     stem: stems[id] ?? '#92aa74',
   };
 }

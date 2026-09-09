@@ -1,6 +1,10 @@
 'use client';
 import '../components/analytics-setup';
-import { isQ1MaxAssembly } from '../lib/keyboard-variant';
+import {
+  isQ1MaxAssembly,
+  isHatsuAssembly,
+  isCyberboardR2Assembly,
+} from '../lib/keyboard-variant';
 import {
   useCallback,
   useEffect,
@@ -551,6 +555,8 @@ function KeyboardStudio({
         kind: 'keyboard',
         layout: visibleBuild.layout,
         q1Max: isQ1MaxAssembly(visibleBuild),
+        hatsu: isHatsuAssembly(visibleBuild) || visibleBuild.layout === '45',
+        cyberboard: isCyberboardR2Assembly(visibleBuild),
       },
       switchId: visibleBuild.selection.switch,
       accessories: visibleBuild.accessories,

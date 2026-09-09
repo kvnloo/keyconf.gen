@@ -14,6 +14,8 @@ const nk65 = 'https://novelkeys.com/products/nk65-entry-edition';
 const doubleRail =
   'https://www.keychron.com/products/gateron-double-rail-magnetic-switch';
 const gPro = 'https://www.gateron.com/products/gateron-g-pro-30-switch-set';
+const amHatsu = 'https://store.angrymiao.com/products/am-hatsu';
+const cyberboardR2 = 'https://store.angrymiao.com/products/cyberboard-r2-1';
 
 export type Assembly = Pick<Build, 'layout' | 'finish'> & {
   id: string;
@@ -140,6 +142,45 @@ export const assemblies: Assembly[] = [
       stabilizers: 'q1-he-stabs',
       switch: 'double-rail-nebula',
       keycaps: 'keychron-bow',
+    },
+  },
+  {
+    id: 'am-hatsu',
+    name: 'AM HATSU',
+    brand: 'Angry Miao',
+    layout: '45',
+    finish: 'Aluminum',
+    mount: 'Split halves',
+    availability: 'reference',
+    source: amHatsu,
+    note: 'Illustrative split 4x6 study from official 45% ortho description. No CAD, half footprint, or tent angle is published; halves and gap are not manufacturer dimensions.',
+    suppliedKeycaps: true,
+    selection: {
+      case: 'am-hatsu-case',
+      pcb: 'am-hatsu-pcb',
+      plate: 'am-hatsu-plate',
+      stabilizers: 'am-hatsu-stabs',
+      switch: 'am-icy-silver',
+      keycaps: 'am-glacier-caps',
+    },
+  },
+  {
+    id: 'cyberboard-r2',
+    name: 'CYBERBOARD R2',
+    brand: 'Angry Miao',
+    layout: '75',
+    finish: 'Aluminum',
+    mount: 'Gasket mount',
+    availability: 'reference',
+    source: cyberboardR2,
+    note: 'Illustrative 75% study with a 5x40 LED panel. Official sources document the matrix and 200 panel LEDs; exterior dimensions and LED pitch are unpublished.',
+    selection: {
+      case: 'am-cyberboard-r2-case',
+      pcb: 'am-cyberboard-r2-pcb',
+      plate: 'am-cyberboard-r2-plate',
+      stabilizers: 'am-cyberboard-r2-stabs',
+      switch: 'oil-king',
+      keycaps: 'am-cyberboard-caps',
     },
   },
 ];
@@ -317,6 +358,105 @@ const kitParts: {
     category: 'stabilizers',
     detail: 'Original Q1 HE assembly · screw-in PCB stabilizers',
   },
+  {
+    id: 'am-hatsu-case',
+    name: 'AM HATSU case',
+    brand: 'Angry Miao',
+    source: amHatsu,
+    family: 'am-hatsu',
+    category: 'case',
+    detail: 'Split 3D-curved metal halves · 45% study · no published CAD',
+  },
+  {
+    id: 'am-hatsu-pcb',
+    name: 'AM HATSU PCB',
+    brand: 'Angry Miao',
+    source: amHatsu,
+    family: 'am-hatsu',
+    category: 'pcb',
+    detail: 'Soldered MX · 4x6 per half · BLE 5.0 · two 5,000 mAh cells',
+  },
+  {
+    id: 'am-hatsu-plate',
+    name: 'AM HATSU plate',
+    brand: 'Angry Miao',
+    source: amHatsu,
+    family: 'am-hatsu',
+    category: 'plate',
+    detail: 'Ortholinear 4x6 plate study per half · dimensions unpublished',
+  },
+  {
+    id: 'am-hatsu-stabs',
+    name: 'AM HATSU soldered grid',
+    brand: 'Angry Miao',
+    source: amHatsu,
+    family: 'soldered',
+    category: 'stabilizers',
+    detail: 'Soldered 1u grid · no stabilizer wires on the documented layout',
+  },
+  {
+    id: 'am-icy-silver',
+    name: 'Icy Silver',
+    brand: 'Angry Miao',
+    source: amHatsu,
+    family: 'mx',
+    category: 'switch',
+    detail: 'Linear · soldered stock switch named in the HATSU manual',
+  },
+  {
+    id: 'am-glacier-caps',
+    name: 'Glacier transparent Ergo kit',
+    brand: 'Angry Miao',
+    source: amHatsu,
+    family: 'mx',
+    category: 'keycaps',
+    detail: 'Stock HATSU Glacier transparent set with black Ergo kit',
+  },
+  {
+    id: 'am-cyberboard-r2-case',
+    name: 'CYBERBOARD R2 case',
+    brand: 'Angry Miao',
+    source: cyberboardR2,
+    family: 'cyberboard-r2',
+    category: 'case',
+    detail: '75% gasket-mount metal case · 5x40 LED panel family',
+  },
+  {
+    id: 'am-cyberboard-r2-pcb',
+    name: 'CYBERBOARD R2 PCB',
+    brand: 'Angry Miao',
+    source: cyberboardR2,
+    family: 'cyberboard-r2',
+    category: 'pcb',
+    detail: 'Hot-swap · BLE 5.0 + USB-C · 81 in-switch LEDs',
+  },
+  {
+    id: 'am-cyberboard-r2-plate',
+    name: 'CYBERBOARD R2 plate',
+    brand: 'Angry Miao',
+    source: cyberboardR2,
+    family: 'cyberboard-r2',
+    category: 'plate',
+    detail: '75% gasket plate · study, exact outline unpublished',
+  },
+  {
+    id: 'am-cyberboard-r2-stabs',
+    name: 'CYBERBOARD R2 stabilizers',
+    brand: 'Angry Miao',
+    source: cyberboardR2,
+    family: 'screw',
+    category: 'stabilizers',
+    detail: 'Factory stabilizer reference for the R2 assembly',
+  },
+  {
+    id: 'am-cyberboard-caps',
+    name: 'CYBERBOARD R2 keycaps',
+    brand: 'Angry Miao',
+    source: cyberboardR2,
+    family: 'mx',
+    category: 'keycaps',
+    detail: 'Stock R2 keycap set · profile dimensions unpublished',
+  },
 ];
 
 export const extraParts: Part[] = [
@@ -430,6 +570,8 @@ export const pcbInterfaces: Record<string, SwitchInterface> = {
   'q1-max-pcb': 'mx-contact',
   'q1-he-pcb': 'keychron-double-rail',
   'q1-he-8k-pcb': 'keychron-ultrafast',
+  'am-hatsu-pcb': 'mx-contact',
+  'am-cyberboard-r2-pcb': 'mx-contact',
 };
 export function switchInterface(part: Part): SwitchInterface | undefined {
   if (part.category !== 'switch' || part.evidence !== 'documented') return;

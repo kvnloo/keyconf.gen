@@ -1,4 +1,6 @@
 import { adaptQ1MaxModel } from './q1-model';
+import { adaptHatsuModel } from './hatsu-model';
+import { adaptCyberboardR2Model } from './cyberboard-model';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -30,7 +32,13 @@ class RoomOcclusion extends GTAOPass {
 export type SceneOptions = Pick<Build, 'caseColor' | 'finish' | 'profile'> &
   Omit<Palette, 'name'> & {
     device:
-      | { kind: 'keyboard'; layout: Build['layout']; q1Max?: boolean }
+      | {
+          kind: 'keyboard';
+          layout: Build['layout'];
+          q1Max?: boolean;
+          hatsu?: boolean;
+          cyberboard?: boolean;
+        }
       | {
           kind: 'control-deck';
           model: 'grok-bot' | 'codex-micro';
@@ -379,11 +387,17 @@ export function createKeyboardScene(
     controls.maxDistance = Math.max(46, cameraTarget.distanceTo(target) * 1.15);
   }
   function modelIdFor(device: SceneOptions['device']) {
-    return device.kind === 'keyboard'
-      ? device.q1Max
-        ? `keyboard-q1-max`
-        : `keyboard-${device.layout}`
-      : device.model;
+    if (device.kind !== 'keyboard') return device.model;
+    if (device.hatsu) return 'keyboard-hatsu';
+    if (device.cyberboard) return 'keyboard-cyberboard-r2';
+    if (device.q1Max) return 'keyboard-q1-max';
+    return `keyboard-${device.layout}`;
+  }
+  function sourceGlb(modelId: string) {
+    if (modelId === 'keyboard-hatsu') return 'keyboard-60.glb';
+    if (modelId === 'keyboard-q1-max' || modelId === 'keyboard-cyberboard-r2')
+      return 'keyboard-75.glb';
+    return `${modelId}.glb`;
   }
   function updateAccessories() {
     const hadExternal = !!(
@@ -429,10 +443,7 @@ export function createKeyboardScene(
     if (!promise) {
       promise = new GLTFLoader()
         .loadAsync(
-          new URL(
-            `models/${modelId === 'keyboard-q1-max' ? 'keyboard-75' : modelId}.glb`,
-            document.baseURI,
-          ).href,
+          new URL(`models/${sourceGlb(modelId)}`, document.baseURI).href,
         )
         .then((gltf) => {
           if (stopped) {
@@ -440,7 +451,9 @@ export function createKeyboardScene(
             return gltf.scene;
           }
           if (device.kind === 'keyboard') {
-            if (device.q1Max) adaptQ1MaxModel(gltf.scene);
+            if (device.hatsu) adaptHatsuModel(gltf.scene);
+            else if (device.cyberboard) adaptCyberboardR2Model(gltf.scene);
+            else if (device.q1Max) adaptQ1MaxModel(gltf.scene);
             const positions: THREE.Vector3[] = [];
             gltf.scene.traverse((object) => {
               if (object.name.startsWith('key_'))
@@ -511,6 +524,8 @@ export function createKeyboardScene(
           ? keys.size
           : 0,
       );
+      element.dataset.keyboardVariant = modelId;
+      element.dataset.keyCount = String(keys.size);
       scene.add(model);
       updateAccessories();
       appearance(true);

@@ -1,0 +1,463 @@
+{
+  "id": "am-hatsu-split-4x6",
+  "name": "AM HATSU split 4x6 study",
+  "layout": "4x6-split-ortho",
+  "unit": "u",
+  "fidelity": "illustrative",
+  "note": "Official sources call HATSU a 4x6 / 45% split ortholinear board. Per-half 4x6 is the usual 45% split-ortho reading; Angry Miao does not publish CAD, half footprints, tent angle, or a total key count. Coordinates are a visual study, not manufacturer dimensions.",
+  "source": {
+    "product": "https://store.angrymiao.com/products/am-hatsu",
+    "manual": "https://cdn-www.angrymiao.com/pdf/AMHATSUUserManual%E7%94%A8%E6%88%B7%E4%BD%BF%E7%94%A8%E6%89%8B%E5%86%8C.pdf"
+  },
+  "bounds": {
+    "width": 15,
+    "height": 4,
+    "splitGap": 3
+  },
+  "halves": {
+    "left": {
+      "centerX": -4.5,
+      "columns": 6,
+      "rows": 4
+    },
+    "right": {
+      "centerX": 4.5,
+      "columns": 6,
+      "rows": 4
+    }
+  },
+  "keys": [
+    {
+      "code": "Escape",
+      "half": "left",
+      "row": 0,
+      "col": 0,
+      "width": 1,
+      "x": -7.0,
+      "y": 1.5
+    },
+    {
+      "code": "Digit1",
+      "half": "left",
+      "row": 0,
+      "col": 1,
+      "width": 1,
+      "x": -6.0,
+      "y": 1.5
+    },
+    {
+      "code": "Digit2",
+      "half": "left",
+      "row": 0,
+      "col": 2,
+      "width": 1,
+      "x": -5.0,
+      "y": 1.5
+    },
+    {
+      "code": "Digit3",
+      "half": "left",
+      "row": 0,
+      "col": 3,
+      "width": 1,
+      "x": -4.0,
+      "y": 1.5
+    },
+    {
+      "code": "Digit4",
+      "half": "left",
+      "row": 0,
+      "col": 4,
+      "width": 1,
+      "x": -3.0,
+      "y": 1.5
+    },
+    {
+      "code": "Digit5",
+      "half": "left",
+      "row": 0,
+      "col": 5,
+      "width": 1,
+      "x": -2.0,
+      "y": 1.5
+    },
+    {
+      "code": "KeyQ",
+      "half": "left",
+      "row": 1,
+      "col": 0,
+      "width": 1,
+      "x": -7.0,
+      "y": 0.5
+    },
+    {
+      "code": "KeyW",
+      "half": "left",
+      "row": 1,
+      "col": 1,
+      "width": 1,
+      "x": -6.0,
+      "y": 0.5
+    },
+    {
+      "code": "KeyE",
+      "half": "left",
+      "row": 1,
+      "col": 2,
+      "width": 1,
+      "x": -5.0,
+      "y": 0.5
+    },
+    {
+      "code": "KeyR",
+      "half": "left",
+      "row": 1,
+      "col": 3,
+      "width": 1,
+      "x": -4.0,
+      "y": 0.5
+    },
+    {
+      "code": "KeyT",
+      "half": "left",
+      "row": 1,
+      "col": 4,
+      "width": 1,
+      "x": -3.0,
+      "y": 0.5
+    },
+    {
+      "code": "BracketLeft",
+      "half": "left",
+      "row": 1,
+      "col": 5,
+      "width": 1,
+      "x": -2.0,
+      "y": 0.5
+    },
+    {
+      "code": "KeyA",
+      "half": "left",
+      "row": 2,
+      "col": 0,
+      "width": 1,
+      "x": -7.0,
+      "y": -0.5
+    },
+    {
+      "code": "KeyS",
+      "half": "left",
+      "row": 2,
+      "col": 1,
+      "width": 1,
+      "x": -6.0,
+      "y": -0.5
+    },
+    {
+      "code": "KeyD",
+      "half": "left",
+      "row": 2,
+      "col": 2,
+      "width": 1,
+      "x": -5.0,
+      "y": -0.5
+    },
+    {
+      "code": "KeyF",
+      "half": "left",
+      "row": 2,
+      "col": 3,
+      "width": 1,
+      "x": -4.0,
+      "y": -0.5
+    },
+    {
+      "code": "KeyG",
+      "half": "left",
+      "row": 2,
+      "col": 4,
+      "width": 1,
+      "x": -3.0,
+      "y": -0.5
+    },
+    {
+      "code": "Semicolon",
+      "half": "left",
+      "row": 2,
+      "col": 5,
+      "width": 1,
+      "x": -2.0,
+      "y": -0.5
+    },
+    {
+      "code": "KeyZ",
+      "half": "left",
+      "row": 3,
+      "col": 0,
+      "width": 1,
+      "x": -7.0,
+      "y": -1.5
+    },
+    {
+      "code": "KeyX",
+      "half": "left",
+      "row": 3,
+      "col": 1,
+      "width": 1,
+      "x": -6.0,
+      "y": -1.5
+    },
+    {
+      "code": "KeyC",
+      "half": "left",
+      "row": 3,
+      "col": 2,
+      "width": 1,
+      "x": -5.0,
+      "y": -1.5
+    },
+    {
+      "code": "KeyV",
+      "half": "left",
+      "row": 3,
+      "col": 3,
+      "width": 1,
+      "x": -4.0,
+      "y": -1.5
+    },
+    {
+      "code": "KeyB",
+      "half": "left",
+      "row": 3,
+      "col": 4,
+      "width": 1,
+      "x": -3.0,
+      "y": -1.5
+    },
+    {
+      "code": "Quote",
+      "half": "left",
+      "row": 3,
+      "col": 5,
+      "width": 1,
+      "x": -2.0,
+      "y": -1.5
+    },
+    {
+      "code": "Digit6",
+      "half": "right",
+      "row": 0,
+      "col": 0,
+      "width": 1,
+      "x": 2.0,
+      "y": 1.5
+    },
+    {
+      "code": "Digit7",
+      "half": "right",
+      "row": 0,
+      "col": 1,
+      "width": 1,
+      "x": 3.0,
+      "y": 1.5
+    },
+    {
+      "code": "Digit8",
+      "half": "right",
+      "row": 0,
+      "col": 2,
+      "width": 1,
+      "x": 4.0,
+      "y": 1.5
+    },
+    {
+      "code": "Digit9",
+      "half": "right",
+      "row": 0,
+      "col": 3,
+      "width": 1,
+      "x": 5.0,
+      "y": 1.5
+    },
+    {
+      "code": "Digit0",
+      "half": "right",
+      "row": 0,
+      "col": 4,
+      "width": 1,
+      "x": 6.0,
+      "y": 1.5
+    },
+    {
+      "code": "Backspace",
+      "half": "right",
+      "row": 0,
+      "col": 5,
+      "width": 1,
+      "x": 7.0,
+      "y": 1.5
+    },
+    {
+      "code": "KeyY",
+      "half": "right",
+      "row": 1,
+      "col": 0,
+      "width": 1,
+      "x": 2.0,
+      "y": 0.5
+    },
+    {
+      "code": "KeyU",
+      "half": "right",
+      "row": 1,
+      "col": 1,
+      "width": 1,
+      "x": 3.0,
+      "y": 0.5
+    },
+    {
+      "code": "KeyI",
+      "half": "right",
+      "row": 1,
+      "col": 2,
+      "width": 1,
+      "x": 4.0,
+      "y": 0.5
+    },
+    {
+      "code": "KeyO",
+      "half": "right",
+      "row": 1,
+      "col": 3,
+      "width": 1,
+      "x": 5.0,
+      "y": 0.5
+    },
+    {
+      "code": "KeyP",
+      "half": "right",
+      "row": 1,
+      "col": 4,
+      "width": 1,
+      "x": 6.0,
+      "y": 0.5
+    },
+    {
+      "code": "BracketRight",
+      "half": "right",
+      "row": 1,
+      "col": 5,
+      "width": 1,
+      "x": 7.0,
+      "y": 0.5
+    },
+    {
+      "code": "KeyH",
+      "half": "right",
+      "row": 2,
+      "col": 0,
+      "width": 1,
+      "x": 2.0,
+      "y": -0.5
+    },
+    {
+      "code": "KeyJ",
+      "half": "right",
+      "row": 2,
+      "col": 1,
+      "width": 1,
+      "x": 3.0,
+      "y": -0.5
+    },
+    {
+      "code": "KeyK",
+      "half": "right",
+      "row": 2,
+      "col": 2,
+      "width": 1,
+      "x": 4.0,
+      "y": -0.5
+    },
+    {
+      "code": "KeyL",
+      "half": "right",
+      "row": 2,
+      "col": 3,
+      "width": 1,
+      "x": 5.0,
+      "y": -0.5
+    },
+    {
+      "code": "Slash",
+      "half": "right",
+      "row": 2,
+      "col": 4,
+      "width": 1,
+      "x": 6.0,
+      "y": -0.5
+    },
+    {
+      "code": "Enter",
+      "half": "right",
+      "row": 2,
+      "col": 5,
+      "width": 1,
+      "x": 7.0,
+      "y": -0.5
+    },
+    {
+      "code": "KeyN",
+      "half": "right",
+      "row": 3,
+      "col": 0,
+      "width": 1,
+      "x": 2.0,
+      "y": -1.5
+    },
+    {
+      "code": "KeyM",
+      "half": "right",
+      "row": 3,
+      "col": 1,
+      "width": 1,
+      "x": 3.0,
+      "y": -1.5
+    },
+    {
+      "code": "Comma",
+      "half": "right",
+      "row": 3,
+      "col": 2,
+      "width": 1,
+      "x": 4.0,
+      "y": -1.5
+    },
+    {
+      "code": "Period",
+      "half": "right",
+      "row": 3,
+      "col": 3,
+      "width": 1,
+      "x": 5.0,
+      "y": -1.5
+    },
+    {
+      "code": "ShiftRight",
+      "half": "right",
+      "row": 3,
+      "col": 4,
+      "width": 1,
+      "x": 6.0,
+      "y": -1.5
+    },
+    {
+      "code": "ControlRight",
+      "half": "right",
+      "row": 3,
+      "col": 5,
+      "width": 1,
+      "x": 7.0,
+      "y": -1.5
+    }
+  ]
+}

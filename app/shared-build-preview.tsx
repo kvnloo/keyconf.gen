@@ -3,7 +3,11 @@ import { artisanPreviewNote } from '../lib/artisan-preview';
 import { unmountedPreviewNote } from '../lib/build-accessories';
 import AccessoryFitNotes from './accessory-fit-notes';
 import { accessoryHost } from '../lib/accessory-hosts.ts';
-import { isQ1MaxAssembly } from '../lib/keyboard-variant';
+import {
+  isCyberboardR2Assembly,
+  isHatsuAssembly,
+  isQ1MaxAssembly,
+} from '../lib/keyboard-variant';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ArrowLeft,
@@ -103,6 +107,8 @@ export default function SharedBuildPreview({
         kind: 'keyboard',
         layout: build.layout,
         q1Max: isQ1MaxAssembly(build),
+        hatsu: isHatsuAssembly(build) || build.layout === '45',
+        cyberboard: isCyberboardR2Assembly(build),
       },
       switchId: build.selection.switch,
       accessories: build.accessories,

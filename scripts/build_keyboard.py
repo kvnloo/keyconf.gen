@@ -83,5 +83,10 @@ for layout in ['60','65','75']:
     all_layouts[layout]=keys
     bpy.ops.export_scene.gltf(filepath=os.path.join(ROOT,'public/models/keyboard-'+layout+'.glb'),export_format='GLB',export_yup=True,export_apply=True)
     if layout=='60':bpy.ops.wm.save_as_mainfile(filepath=os.path.join(ROOT,'public/models/keyboard-study.blend'))
+hatsu=os.path.join(ROOT,'docs/reference-assets/am-hatsu-layout.json')
+if os.path.exists(hatsu):
+    study=json.load(open(hatsu))
+    labels={'Escape':'Esc','Digit1':'1','Digit2':'2','Digit3':'3','Digit4':'4','Digit5':'5','Digit6':'6','Digit7':'7','Digit8':'8','Digit9':'9','Digit0':'0','Backspace':'Backspace','KeyQ':'Q','KeyW':'W','KeyE':'E','KeyR':'R','KeyT':'T','BracketLeft':'[','KeyY':'Y','KeyU':'U','KeyI':'I','KeyO':'O','KeyP':'P','BracketRight':']','KeyA':'A','KeyS':'S','KeyD':'D','KeyF':'F','KeyG':'G','Semicolon':';','KeyH':'H','KeyJ':'J','KeyK':'K','KeyL':'L','Slash':'/','Enter':'Enter','KeyZ':'Z','KeyX':'X','KeyC':'C','KeyV':'V','KeyB':'B','Quote':"'",'KeyN':'N','KeyM':'M','Comma':',','Period':'.','ShiftRight':'Shift','ControlRight':'Ctrl'}
+    all_layouts['45']=[{'label':labels[k['code']],'code':k['code'],'width':k['width'],'x':k['x'],'y':k['y']} for k in study['keys']]
 with open(os.path.join(ROOT,'public/models/layouts.json'),'w') as f:json.dump(all_layouts,f)
-print('Exported original Blender studies: 60%, 65%, 75%.')
+print('Exported original Blender studies: 45% split, 60%, 65%, 75%.')

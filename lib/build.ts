@@ -57,7 +57,7 @@ export const caseColors = [
   { name: 'Copper', color: '#b17152' },
   { name: 'Slate', color: '#606a84' },
 ];
-export const layouts = ['60', '65', '75'] as const;
+export const layouts = ['45', '60', '65', '75'] as const;
 export const finishes = ['Aluminum', 'Polycarbonate', 'Brass'] as const;
 export const profiles = ['Sculpted', 'Tall sculpted', 'Low uniform'] as const;
 export const maxVolume = 2;

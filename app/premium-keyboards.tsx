@@ -32,8 +32,9 @@ export default function PremiumKeyboards() {
       <h3>Premium keyboard discovery</h3>
       <p className="muted">
         Source-backed product references for high-price keyboard boards, kits,
-        and charging ecosystems. Geometry is unmodeled until verified CAD is
-        released. Prices are from official listings (2026-09-08) and may vary.
+        and charging ecosystems. Illustrative studies are labeled; other
+        geometry stays unmodeled until verified CAD is released. Prices are from
+        official listings (2026-09-08) and may vary.
       </p>
       <label className="catalog-search">
         <Search size={17} aria-hidden="true" />
@@ -87,7 +88,11 @@ export default function PremiumKeyboards() {
                   : best.availability === 'sold-out'
                     ? 'Sold out'
                     : 'Unknown'}
-                {board.geometry.status === 'unmodeled' ? ' · Unmodeled' : ''}
+                {board.geometry.status === 'unmodeled'
+                  ? ' · Unmodeled'
+                  : board.geometry.fidelity === 'illustrative'
+                    ? ' · Illustrative study'
+                    : ''}
               </span>
             </a>
           );
@@ -97,9 +102,9 @@ export default function PremiumKeyboards() {
         )}
       </div>
       <p className="catalog-provenance">
-        Source-backed 2026-09-08. All geometry remains unmodeled until a
-        licensed dimensioned source is published; previews are visual studies,
-        not manufacturer CAD.
+        Source-backed 2026-09-08. Illustrative studies are not manufacturer CAD.
+        Unmodeled products stay listed until a licensed dimensioned source is
+        published.
       </p>
     </section>
   );
