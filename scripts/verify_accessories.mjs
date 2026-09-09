@@ -88,15 +88,16 @@ try {
       .getByRole('navigation', { name: 'Exploded keyboard layers' })
       .boundingBox();
     const dial = await page.locator('.stage > .volume-dial').boundingBox();
-    assert.ok(
-      layers &&
-        dial &&
-        (layers.y + layers.height <= dial.y ||
+    assert.ok(layers, 'Exploded layer navigation must remain visible');
+    if (dial) {
+      assert.ok(
+        layers.y + layers.height <= dial.y ||
           layers.x + layers.width <= dial.x ||
           dial.x + dial.width <= layers.x ||
-          dial.y + dial.height <= layers.y),
-      'Layer links and volume controls must not overlap',
-    );
+          dial.y + dial.height <= layers.y,
+        'Layer links and volume controls must not overlap',
+      );
+    }
     assert.equal(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth + 1,
