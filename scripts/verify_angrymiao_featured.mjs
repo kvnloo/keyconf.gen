@@ -16,7 +16,10 @@ try {
     name: 'Preview CYBERBOARD R2',
     exact: true,
   });
-  const hatsu = page.getByRole('button', { name: 'Preview AM HATSU', exact: true });
+  const hatsu = page.getByRole('button', {
+    name: 'Preview AM HATSU',
+    exact: true,
+  });
   await cyber.waitFor();
   await hatsu.waitFor();
 

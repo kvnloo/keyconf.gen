@@ -76,21 +76,21 @@ import ResearchProducts from './research-products';
 import StudioSelect from './studio-select';
 import { useBuild } from './use-build';
 import { applyPaletteTheme } from '../lib/theme';
- import {
-   palettes,
-   caseColors,
-   layouts,
-   finishes,
-   profiles,
-   readBuildFile,
-   parseCustomParts,
-   parseBuild,
-   encodeBuild,
- } from '../lib/build';
- import { soundPacks } from '../lib/sound-packs';
- import { registerStudioTools } from '../lib/webmcp';
- import { catalog, categories, checkBuild } from '../lib/catalog';
- import { KeyboardAudio, type SoundSettings } from '../lib/audio';
+import {
+  palettes,
+  caseColors,
+  layouts,
+  finishes,
+  profiles,
+  readBuildFile,
+  parseCustomParts,
+  parseBuild,
+  encodeBuild,
+} from '../lib/build';
+import { soundPacks } from '../lib/sound-packs';
+import { registerStudioTools } from '../lib/webmcp';
+import { catalog, categories, checkBuild } from '../lib/catalog';
+import { KeyboardAudio, type SoundSettings } from '../lib/audio';
 
 function subscribeLocation(onChange: () => void) {
   window.addEventListener('hashchange', onChange);
@@ -1407,360 +1407,356 @@ function KeyboardStudio({
               </>
             }
           >
-              {tab === 'design' && (
-                <>
-                  <section>
-                    <div className="section-label">
-                      <span>01</span>
-                      <h3>Form & foundation</h3>
-                    </div>
-                    <fieldset className="control-group">
-                      <legend>Layout</legend>
-                      <div className="segmented">
-                        {layouts.map((x) => (
-                          <button
-                            key={x}
-                            aria-pressed={x === layout}
-                            className={x === layout ? 'selected' : ''}
-                            onClick={() => setLayout(x)}
-                          >
-                            {x}%
-                          </button>
-                        ))}
-                      </div>
-                    </fieldset>
-                    <label htmlFor="finish">Case material</label>
-                    <StudioSelect
-                      id="finish"
-                      value={finish}
-                      onValueChange={(value) => {
-                        const finish = finishes.find((x) => x === value);
-                        if (finish) edit({ finish });
-                      }}
-                      options={finishes.map((x) => ({ value: x, label: x }))}
-                    />
-                    <fieldset className="control-group">
-                      <legend>
-                        Case finish{' '}
-                        <span>
-                          {caseColors.find((c) => c.color === caseColor)
-                            ?.name || 'Custom'}
-                        </span>
-                      </legend>
-                      <div className="swatches">
-                        {caseColors.map((x) => (
-                          <button
-                            key={x.color}
-                            style={{ background: x.color }}
-                            aria-label={x.name + ' case'}
-                            aria-pressed={caseColor === x.color}
-                            onClick={() => edit({ caseColor: x.color })}
-                          >
-                            {caseColor === x.color && <Check size={15} />}
-                          </button>
-                        ))}
-                      </div>
-                    </fieldset>
-                  </section>
-                  <section>
-                    <div className="section-label">
-                      <span>02</span>
-                      <h3>Color & character</h3>
-                    </div>
-                    <div className="palette-list">
-                      {palettes.map((p) => (
+            {tab === 'design' && (
+              <>
+                <section>
+                  <div className="section-label">
+                    <span>01</span>
+                    <h3>Form & foundation</h3>
+                  </div>
+                  <fieldset className="control-group">
+                    <legend>Layout</legend>
+                    <div className="segmented">
+                      {layouts.map((x) => (
                         <button
-                          key={p.name}
-                          aria-pressed={palette.name === p.name}
-                          className={
-                            palette.name === p.name
-                              ? 'palette selected'
-                              : 'palette'
-                          }
-                          onClick={() => setPalette(p)}
+                          key={x}
+                          aria-pressed={x === layout}
+                          className={x === layout ? 'selected' : ''}
+                          onClick={() => setLayout(x)}
                         >
-                          <span className="palette-colors">
-                            {[p.alpha, p.mod, p.accent, p.space].map((c, i) => (
-                              <i key={i} style={{ background: c }} />
-                            ))}
-                          </span>
-                          {p.name}
-                          {palette.name === p.name && <Check size={16} />}
+                          {x}%
                         </button>
                       ))}
                     </div>
-                    <details className="custom-colors">
-                      <summary>
-                        <SlidersHorizontal size={14} /> Make it your own
-                      </summary>
-                      <div className="color-inputs">
-                        {(
-                          [
-                            'alpha',
-                            'mod',
-                            'accent',
-                            'space',
-                          ] satisfies (keyof typeof palette)[]
-                        ).map((zone) => (
-                          <label key={zone}>
-                            {zone}
-                            <input
-                              type="color"
-                              aria-label={zone + ' color'}
-                              value={palette[zone]}
-                              onChange={(e) =>
-                                edit(
-                                  {
-                                    palette: {
-                                      ...palette,
-                                      name: 'Custom',
-                                      [zone]: e.target.value,
-                                    },
+                  </fieldset>
+                  <label htmlFor="finish">Case material</label>
+                  <StudioSelect
+                    id="finish"
+                    value={finish}
+                    onValueChange={(value) => {
+                      const finish = finishes.find((x) => x === value);
+                      if (finish) edit({ finish });
+                    }}
+                    options={finishes.map((x) => ({ value: x, label: x }))}
+                  />
+                  <fieldset className="control-group">
+                    <legend>
+                      Case finish{' '}
+                      <span>
+                        {caseColors.find((c) => c.color === caseColor)?.name ||
+                          'Custom'}
+                      </span>
+                    </legend>
+                    <div className="swatches">
+                      {caseColors.map((x) => (
+                        <button
+                          key={x.color}
+                          style={{ background: x.color }}
+                          aria-label={x.name + ' case'}
+                          aria-pressed={caseColor === x.color}
+                          onClick={() => edit({ caseColor: x.color })}
+                        >
+                          {caseColor === x.color && <Check size={15} />}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+                </section>
+                <section>
+                  <div className="section-label">
+                    <span>02</span>
+                    <h3>Color & character</h3>
+                  </div>
+                  <div className="palette-list">
+                    {palettes.map((p) => (
+                      <button
+                        key={p.name}
+                        aria-pressed={palette.name === p.name}
+                        className={
+                          palette.name === p.name
+                            ? 'palette selected'
+                            : 'palette'
+                        }
+                        onClick={() => setPalette(p)}
+                      >
+                        <span className="palette-colors">
+                          {[p.alpha, p.mod, p.accent, p.space].map((c, i) => (
+                            <i key={i} style={{ background: c }} />
+                          ))}
+                        </span>
+                        {p.name}
+                        {palette.name === p.name && <Check size={16} />}
+                      </button>
+                    ))}
+                  </div>
+                  <details className="custom-colors">
+                    <summary>
+                      <SlidersHorizontal size={14} /> Make it your own
+                    </summary>
+                    <div className="color-inputs">
+                      {(
+                        [
+                          'alpha',
+                          'mod',
+                          'accent',
+                          'space',
+                        ] satisfies (keyof typeof palette)[]
+                      ).map((zone) => (
+                        <label key={zone}>
+                          {zone}
+                          <input
+                            type="color"
+                            aria-label={zone + ' color'}
+                            value={palette[zone]}
+                            onChange={(e) =>
+                              edit(
+                                {
+                                  palette: {
+                                    ...palette,
+                                    name: 'Custom',
+                                    [zone]: e.target.value,
                                   },
-                                  'color-' + zone,
-                                )
-                              }
-                              onBlur={commit}
-                            />
-                          </label>
-                        ))}
-                      </div>
-                    </details>
+                                },
+                                'color-' + zone,
+                              )
+                            }
+                            onBlur={commit}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </details>
+                  <button
+                    className="text-button"
+                    onClick={() => {
+                      const choices = palettes.filter(
+                        (p) => p.name !== palette.name,
+                      );
+                      const next =
+                        choices[Math.floor(Math.random() * choices.length)];
+                      edit({
+                        palette: next,
+                        caseColor:
+                          caseColors[
+                            Math.floor(Math.random() * caseColors.length)
+                          ].color,
+                      });
+                    }}
+                  >
+                    <Shuffle size={15} /> Surprise me
+                  </button>
+                  <label htmlFor="profile">
+                    Keycap silhouette <span>Illustrative</span>
+                  </label>
+                  <StudioSelect
+                    id="profile"
+                    value={profile}
+                    onValueChange={(value) => {
+                      const profile = profiles.find((x) => x === value);
+                      if (profile) edit({ profile });
+                    }}
+                    options={profiles.map((p) => ({ value: p, label: p }))}
+                  />
+                </section>
+              </>
+            )}
+            {tab === 'parts' && (
+              <>
+                <ComponentsPanel
+                  parts={parts}
+                  selection={selection}
+                  checks={checks}
+                  onSelect={(part) =>
+                    edit({
+                      selection: { ...selection, [part.category]: part.id },
+                    })
+                  }
+                  onAssembly={(assembly) => {
+                    edit({
+                      layout: assembly.layout,
+                      finish: assembly.finish,
+                      selection: assembly.selection,
+                    });
+                    setNotice(
+                      assembly.name +
+                        ' parts selected. Appearance and recording remain your choices.',
+                    );
+                  }}
+                  onImport={() => setModal('import')}
+                  onResearch={() => setModal('research')}
+                />
+                <BuildAccessories
+                  customAccessories={build.customAccessories}
+                  layout={build.layout}
+                  selection={build.selection}
+                  selections={build.accessories}
+                  onChange={(accessories) => edit({ accessories })}
+                />
+              </>
+            )}
+            {tab === 'sound' && (
+              <>
+                <div className="sound-intro">
+                  <span className="pill">
+                    {pack
+                      ? 'Real recorded samples'
+                      : 'Synthesized · approximate'}
+                  </span>
+                  <h3>Hear the switch.</h3>
+                  <p className="muted">
+                    Your build uses{' '}
+                    {selectedSwitch?.name ?? 'an unverified switch'}. Typing
+                    audio uses the recording you choose here. Changing parts
+                    does not change that recording.
+                  </p>
+                </div>
+                <label htmlFor="sound-pack">Typing sound</label>
+                <StudioSelect
+                  id="sound-pack"
+                  value={pack?.id ?? 'synthesized'}
+                  onValueChange={(value) => {
+                    stopDemo();
+                    edit({
+                      audio: { ...build.audio, source: value },
+                    });
+                  }}
+                  options={[
+                    ...soundPacks.map((item) => ({
+                      value: item.id,
+                      label: item.name,
+                    })),
+                    {
+                      value: 'synthesized',
+                      label: 'Synthesized sound study',
+                    },
+                  ]}
+                />
+                {sampleState === 'loading' && (
+                  <output className="muted recording-count">
+                    Loading recordings…
+                  </output>
+                )}
+                {sampleState === 'error' && (
+                  <p role="alert">
+                    Recordings could not load.{' '}
                     <button
                       className="text-button"
-                      onClick={() => {
-                        const choices = palettes.filter(
-                          (p) => p.name !== palette.name,
-                        );
-                        const next =
-                          choices[Math.floor(Math.random() * choices.length)];
-                        edit({
-                          palette: next,
-                          caseColor:
-                            caseColors[
-                              Math.floor(Math.random() * caseColors.length)
-                            ].color,
-                        });
-                      }}
+                      onClick={() => setLoadAttempt((n) => n + 1)}
                     >
-                      <Shuffle size={15} /> Surprise me
+                      Try again
                     </button>
-                    <label htmlFor="profile">
-                      Keycap silhouette <span>Illustrative</span>
-                    </label>
+                  </p>
+                )}
+                <LastKey source={lastKey} />
+                {!pack && (
+                  <>
+                    <label htmlFor="character">Switch character</label>
                     <StudioSelect
-                      id="profile"
-                      value={profile}
-                      onValueChange={(value) => {
-                        const profile = profiles.find((x) => x === value);
-                        if (profile) edit({ profile });
+                      id="character"
+                      value={character}
+                      onValueChange={(v) => {
+                        if (v === 'linear' || v === 'tactile' || v === 'clicky')
+                          edit({ audio: { ...build.audio, character: v } });
                       }}
-                      options={profiles.map((p) => ({ value: p, label: p }))}
+                      options={[
+                        { value: 'linear', label: 'Soft linear' },
+                        { value: 'tactile', label: 'Crisp tactile' },
+                        { value: 'clicky', label: 'Bright clicky' },
+                      ]}
                     />
-                  </section>
-                </>
-              )}
-              {tab === 'parts' && (
-                <>
-                  <ComponentsPanel
-                    parts={parts}
-                    selection={selection}
-                    checks={checks}
-                    onSelect={(part) =>
-                      edit({
-                        selection: { ...selection, [part.category]: part.id },
-                      })
-                    }
-                    onAssembly={(assembly) => {
-                      edit({
-                        layout: assembly.layout,
-                        finish: assembly.finish,
-                        selection: assembly.selection,
-                      });
-                      setNotice(
-                        assembly.name +
-                          ' parts selected. Appearance and recording remain your choices.',
-                      );
-                    }}
-                    onImport={() => setModal('import')}
-                    onResearch={() => setModal('research')}
-                  />
-                  <BuildAccessories
-                    customAccessories={build.customAccessories}
-                    layout={build.layout}
-                    selection={build.selection}
-                    selections={build.accessories}
-                    onChange={(accessories) => edit({ accessories })}
-                  />
-                </>
-              )}
-              {tab === 'sound' && (
-                <>
-                  <div className="sound-intro">
-                    <span className="pill">
-                      {pack
-                        ? 'Real recorded samples'
-                        : 'Synthesized · approximate'}
-                    </span>
-                    <h3>Hear the switch.</h3>
-                    <p className="muted">
-                      Your build uses{' '}
-                      {selectedSwitch?.name ?? 'an unverified switch'}. Typing
-                      audio uses the recording you choose here. Changing parts
-                      does not change that recording.
-                    </p>
-                  </div>
-                  <label htmlFor="sound-pack">Typing sound</label>
-                  <StudioSelect
-                    id="sound-pack"
-                    value={pack?.id ?? 'synthesized'}
-                    onValueChange={(value) => {
-                      stopDemo();
-                      edit({
-                        audio: { ...build.audio, source: value },
-                      });
-                    }}
-                    options={[
-                      ...soundPacks.map((item) => ({
-                        value: item.id,
-                        label: item.name,
-                      })),
-                      {
-                        value: 'synthesized',
-                        label: 'Synthesized sound study',
-                      },
-                    ]}
-                  />
-                  {sampleState === 'loading' && (
-                    <output className="muted recording-count">
-                      Loading recordings…
-                    </output>
-                  )}
-                  {sampleState === 'error' && (
-                    <p role="alert">
-                      Recordings could not load.{' '}
-                      <button
-                        className="text-button"
-                        onClick={() => setLoadAttempt((n) => n + 1)}
-                      >
-                        Try again
-                      </button>
-                    </p>
-                  )}
-                  <LastKey source={lastKey} />
-                  {!pack && (
-                    <>
-                      <label htmlFor="character">Switch character</label>
-                      <StudioSelect
-                        id="character"
-                        value={character}
-                        onValueChange={(v) => {
-                          if (
-                            v === 'linear' ||
-                            v === 'tactile' ||
-                            v === 'clicky'
-                          )
-                            edit({ audio: { ...build.audio, character: v } });
-                        }}
-                        options={[
-                          { value: 'linear', label: 'Soft linear' },
-                          { value: 'tactile', label: 'Crisp tactile' },
-                          { value: 'clicky', label: 'Bright clicky' },
-                        ]}
-                      />
-                      <label htmlFor="damping">
-                        Damping <span>{Math.round(damping * 100)}%</span>
-                      </label>
-                      <input
-                        id="damping"
-                        type="range"
-                        min="0"
-                        max="1"
-                        step=".01"
-                        value={damping}
-                        onChange={(e) =>
-                          edit(
-                            {
-                              audio: {
-                                ...build.audio,
-                                damping: Number(e.target.value),
-                              },
+                    <label htmlFor="damping">
+                      Damping <span>{Math.round(damping * 100)}%</span>
+                    </label>
+                    <input
+                      id="damping"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step=".01"
+                      value={damping}
+                      onChange={(e) =>
+                        edit(
+                          {
+                            audio: {
+                              ...build.audio,
+                              damping: Number(e.target.value),
                             },
-                            'damping',
-                          )
-                        }
-                        onPointerUp={commit}
-                        onBlur={commit}
-                      />
+                          },
+                          'damping',
+                        )
+                      }
+                      onPointerUp={commit}
+                      onBlur={commit}
+                    />
+                  </>
+                )}
+                <label htmlFor="volume">
+                  Volume <span>{Math.round(volume * 100)}%</span>
+                </label>
+                <input
+                  id="volume"
+                  type="range"
+                  min="0"
+                  max="2"
+                  step=".01"
+                  value={volume}
+                  onChange={(e) =>
+                    edit(
+                      {
+                        audio: {
+                          ...build.audio,
+                          volume: Number(e.target.value),
+                        },
+                      },
+                      'volume',
+                    )
+                  }
+                  onPointerUp={commit}
+                  onBlur={commit}
+                />
+                <div className="recording-note">
+                  <Volume2 size={18} />
+                  <h3>{pack ? pack.name : 'A sound study'}</h3>
+                  <p>
+                    {pack
+                      ? 'Original press and release samples. Case, keycap and foam changes do not alter this recording.'
+                      : 'An approximate sound character. Choose a recorded switch above to hear real samples.'}
+                  </p>
+                  {pack && (
+                    <>
+                      <small>
+                        {pack.creator} · {pack.license} · mono MP3, 44.1 kHz
+                      </small>
+                      <p>
+                        {pack.capture} The files retain their original dynamics;
+                        the volume control applies gain only.
+                      </p>
+                      <a
+                        className="text-button"
+                        href={pack.source}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Recording source & license <ArrowUpRight size={14} />
+                      </a>
                     </>
                   )}
-                  <label htmlFor="volume">
-                    Volume <span>{Math.round(volume * 100)}%</span>
-                  </label>
-                  <input
-                    id="volume"
-                    type="range"
-                    min="0"
-                    max="2"
-                    step=".01"
-                    value={volume}
-                    onChange={(e) =>
-                      edit(
-                        {
-                          audio: {
-                            ...build.audio,
-                            volume: Number(e.target.value),
-                          },
-                        },
-                        'volume',
-                      )
+                </div>
+                <SoundReferences
+                  switchName={selectedSwitch?.name}
+                  selected={reference}
+                  onSelect={(record) => {
+                    if (record) {
+                      music.setBlocked('reference', true);
+                      stopDemo();
+                      audio.current?.setLevel(false, volume);
+                      setEnabled(false);
                     }
-                    onPointerUp={commit}
-                    onBlur={commit}
-                  />
-                  <div className="recording-note">
-                    <Volume2 size={18} />
-                    <h3>{pack ? pack.name : 'A sound study'}</h3>
-                    <p>
-                      {pack
-                        ? 'Original press and release samples. Case, keycap and foam changes do not alter this recording.'
-                        : 'An approximate sound character. Choose a recorded switch above to hear real samples.'}
-                    </p>
-                    {pack && (
-                      <>
-                        <small>
-                          {pack.creator} · {pack.license} · mono MP3, 44.1 kHz
-                        </small>
-                        <p>
-                          {pack.capture} The files retain their original
-                          dynamics; the volume control applies gain only.
-                        </p>
-                        <a
-                          className="text-button"
-                          href={pack.source}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Recording source & license <ArrowUpRight size={14} />
-                        </a>
-                      </>
-                    )}
-                  </div>
-                  <SoundReferences
-                    switchName={selectedSwitch?.name}
-                    selected={reference}
-                    onSelect={(record) => {
-                      if (record) {
-                        music.setBlocked('reference', true);
-                        stopDemo();
-                        audio.current?.setLevel(false, volume);
-                        setEnabled(false);
-                      }
-                      setReference(record);
-                    }}
-                  />
-                </>
-              )}
+                    setReference(record);
+                  }}
+                />
+              </>
+            )}
           </MobileWorkbench>
         </div>
       )}

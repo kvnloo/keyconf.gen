@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { decodeBuild } from '../lib/build.ts';
+import { featuredBuilds } from '../lib/featured-builds.ts';
 
 const base = process.env.KEYCONF_BASE_URL ?? 'http://localhost:3000/';
 const browser = await chromium.launch({ args: ['--disable-webgl'] });
