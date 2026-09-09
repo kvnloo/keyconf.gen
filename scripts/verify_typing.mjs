@@ -265,8 +265,9 @@ try {
     reducedMotion: 'reduce',
   });
   const phone = await mobile.newPage();
-  await phone.goto(new URL('#studio', base).href);
-  await button(phone, 'Start typing test').tap();
+  // Mobile workbench hides `.stage-heading`, so typing opens from the Play route.
+  await phone.goto(new URL('#play', base).href);
+  await phone.locator('.typing-widget').waitFor();
   const phoneFrame = phone.frameLocator('.typing-frame');
   await phoneFrame.locator('#words .word').first().waitFor();
   await phone.locator('.typing-load').waitFor({ state: 'hidden' });
@@ -304,7 +305,7 @@ try {
   await phone.keyboard.press('Escape');
   await button(phone, 'Back to builder').tap();
   evidence.push(
-    '390px touch entry, iframe reflow, Monkeytype mobile settings, and return to builder.',
+    '390px Play route entry, iframe reflow, Monkeytype mobile settings, and return to builder.',
   );
   await mobile.close();
 
