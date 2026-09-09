@@ -53,6 +53,26 @@ try {
   );
   const unrankedList = section.locator('[data-premium-unranked]');
 
+  // Coverage: the page states the size of the catalog it actually holds, so a
+  // reader is never left to infer breadth from a ranked list.
+  const brands = [...new Set(data.boards.map((board) => board.brand))];
+  const coverage = section.locator('[data-premium-coverage]');
+  assert.equal(
+    await coverage.getAttribute('data-premium-coverage'),
+    String(data.boards.length),
+  );
+  const coverageText = await coverage.innerText();
+  assert.match(
+    coverageText,
+    new RegExp(`Covering ${data.boards.length} distinct keyboards?`),
+  );
+  for (const brand of brands)
+    assert.ok(
+      coverageText.includes(brand),
+      `coverage line should name the covered brand ${brand}`,
+    );
+  assert.match(coverageText, /not a survey of the premium market/);
+
   const complete = expected('complete');
   assert.ok(
     complete.ranked.length >= 8,

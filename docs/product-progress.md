@@ -1296,3 +1296,35 @@ in the suite runs at 800px of height or more, so none of them can match a rule
 that requires 700 or less. The fix was falsified before being believed: with the
 block reverted, 320x568 fails again at exactly the same place, the settle after
 a component swap, and with it restored all three widths pass.
+
+## Saying how few keyboards we actually cover
+
+PREMIUM-1 asks for three things: hundreds of distinct keyboards, no colorway
+counted as its own model, and a published count of what is really covered. The
+first is research and is not done. The other two were being followed by hand,
+which is another way of saying they were not being followed at all — nothing in
+the repository would have noticed if they broke.
+
+Both are now rules the catalog has to pass. `admissionFaults` rejects a product
+with no HTTPS link to the maker's own listing, an offer whose price has no such
+link, a duplicate id, and — the one that matters for colorways — a name that
+extends another name of the same brand. That last rule is the shape a variant
+takes when someone files it as a second product: `AM Relic 80 Rose` carries the
+whole of `AM Relic 80` and then a qualifier. Comparing whole tokens rather than
+characters keeps `Relic 65` and `CYBERBOARD R3` clear of their siblings, which
+a plain string prefix would not. A test runs the rules against the shipped file,
+and it was falsified before being trusted: planting that Rose entry in the real
+data fails the test with the variant named in the message.
+
+The count is now on the page, computed from the data rather than typed into the
+copy, and `npm run verify:premium` reads the rendered number back and fails if
+it drifts from the file. Reporting 120 while the file holds 9 fails there too,
+which is the failure worth having, since an inflated coverage number is the one
+mistake here a reader could not detect for themselves.
+
+What it publishes is not flattering, and that is the point. Nine distinct
+keyboards from one brand, Angry Miao. The line says the count is what was
+researched and not a survey of the premium market, so nobody reads a ranked
+list of nine as the top of a field. Widening past one brand is the remaining
+work, and now that the rules run on every commit, boards can be admitted
+without the ordering guarantees quietly rotting as the file grows.

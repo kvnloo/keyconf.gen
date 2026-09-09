@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
 import {
+  admissionFaults,
+  catalogCoverage,
   comparableOffer,
   mostExpensiveFirst,
 } from '../lib/premium-keyboards.ts';
@@ -53,6 +56,51 @@ test('an unrecorded price is uncomparable rather than a zero-priced board', () =
     ordered.map((board) => board.id),
     ['priced', 'unpriced'],
   );
+});
+
+test('a colorway or edition is a configuration of one model, not a second model', () => {
+  const base = keyboard('base', [offer(500)]);
+  base.name = 'Relic 80';
+  const colorway = keyboard('colorway', [offer(500)]);
+  colorway.name = 'Relic 80 Rose Gold';
+  assert.match(
+    admissionFaults([base, colorway]).join('\n'),
+    /colorway: "Relic 80 Rose Gold" is a variant of "Relic 80"/,
+  );
+  // A different model that merely shares a prefix length is not a variant.
+  const sibling = keyboard('sibling', [offer(500)]);
+  sibling.name = 'Relic 65';
+  assert.deepEqual(admissionFaults([base, sibling]), []);
+});
+
+test('every admitted product and price carries a primary evidence link', () => {
+  const noSource = keyboard('no-source', [offer(500)]);
+  noSource.source = 'not a url';
+  const insecure = keyboard('insecure', [
+    offer(500, { source: 'http://example.com/product' }),
+  ]);
+  assert.deepEqual(admissionFaults([noSource]), [
+    'no-source: no primary evidence link',
+  ]);
+  assert.deepEqual(admissionFaults([insecure]), [
+    'insecure: offer "Bundle" has no evidence link',
+  ]);
+  const twice = keyboard('same', [offer(500)]);
+  assert.deepEqual(admissionFaults([twice, twice]), ['same: duplicate id']);
+});
+
+test('the shipped catalog obeys the admission rules and reports its real size', () => {
+  const boards = JSON.parse(
+    readFileSync(new URL('../data/premium-keyboards.json', import.meta.url)),
+  ).boards;
+  assert.deepEqual(admissionFaults(boards), []);
+  const coverage = catalogCoverage(boards);
+  // The published number is whatever is actually covered; this asserts the
+  // count is derived from the file rather than written by hand.
+  assert.equal(coverage.models, boards.length);
+  assert.deepEqual(coverage.brands, [
+    ...new Set(boards.map((board) => board.brand)),
+  ]);
 });
 
 test('highest listed configuration retains its identity and sold-out status', () => {

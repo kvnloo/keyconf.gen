@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import { ArrowUpRight, Search } from 'lucide-react';
 import { geometryGrade, sceneLabel } from '../lib/cad-twin.ts';
 import {
+  catalogCoverage,
   comparableOffer,
   mostExpensiveFirst,
   type KeyboardOffer,
@@ -35,6 +36,7 @@ export default function PremiumKeyboards() {
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState<'complete' | 'kit'>('complete');
   const boards = data.boards as PremiumKeyboard[];
+  const coverage = catalogCoverage(boards);
 
   const { ranked, unranked } = useMemo(() => {
     const scope = {
@@ -73,6 +75,16 @@ export default function PremiumKeyboards() {
         and charging ecosystems. A CAD twin requires licensed or measured case,
         plate, and PCB solids. Illustrative studies are labeled; other geometry
         stays unmodeled until that evidence exists.
+      </p>
+      <p className="catalog-basis" data-premium-coverage={coverage.models}>
+        Covering {coverage.models} distinct{' '}
+        {coverage.models === 1 ? 'keyboard' : 'keyboards'} from{' '}
+        {coverage.brands.length}{' '}
+        {coverage.brands.length === 1 ? 'brand' : 'brands'} (
+        {coverage.brands.join(', ')}), each linked to the listing published by
+        its maker. Colorways and limited editions are configurations of a model
+        here, not separate entries. This is the count actually researched, not a
+        survey of the premium market.
       </p>
       <label className="catalog-search">
         <Search size={17} aria-hidden="true" />
