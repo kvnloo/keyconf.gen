@@ -216,7 +216,7 @@ try {
     await reflow(`${name} at 200% browser zoom`);
     await button('Close dialog').click();
   }
-  await openResearch(1280);
+  await openResearch(await page.evaluate(() => innerWidth));
   await reflow('Research at 200% browser zoom');
   await button('Close dialog').click();
   console.log(
