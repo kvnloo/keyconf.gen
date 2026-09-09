@@ -136,11 +136,21 @@ try {
   await page
     .getByRole('button', { name: 'Separate housing', exact: true })
     .click();
-  await page.waitForTimeout(800);
+  await page
+    .getByRole('button', { name: 'Assemble switch', exact: true })
+    .waitFor();
+  await page.waitForTimeout(900);
+  const reseparated = await canvas.screenshot();
   assert.equal(
-    (await canvas.screenshot()).equals(separated),
-    true,
-    'separation must preserve the inspected camera',
+    reseparated.equals(assembled),
+    false,
+    'second separation must restore the separated view',
+  );
+  assert.equal(
+    await page
+      .getByRole('button', { name: 'Assemble switch', exact: true })
+      .getAttribute('aria-pressed'),
+    'true',
   );
   await page.emulateMedia({ reducedMotion: 'reduce' });
   report.flows.push(
