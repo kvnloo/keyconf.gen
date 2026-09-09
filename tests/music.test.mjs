@@ -63,13 +63,15 @@ function fixture(t) {
       this.gain = {
         gain: {
           value: 0,
+          ramps: [],
           cancelScheduledValues() {},
           cancelAndHoldAtTime() {},
           setValueAtTime(value) {
             this.value = value;
           },
-          linearRampToValueAtTime(value) {
+          linearRampToValueAtTime(value, at) {
             this.value = value;
+            this.ramps.push({ value, at });
           },
         },
         connect() {},
@@ -99,7 +101,7 @@ function fixture(t) {
   };
 }
 
-test('music is opt-in and waits for every blocker to clear before loading its source', async (t) => {
+test('requested music waits for every blocker to clear before loading its source', async (t) => {
   const { music, media, contexts } = fixture(t);
   assert.equal(contexts.length, 0);
   music.setBlocked('keyboard', true);
@@ -197,6 +199,34 @@ test('late audio unlock cannot load music after close and errors permit explicit
   f.resume(async () => {});
   await f.music.play();
   assert.equal(f.music.getSnapshot().state.kind, 'playing');
+});
+
+test('music defaults to 3% and fades in over three seconds', async (t) => {
+  const { music, contexts } = fixture(t);
+  await music.play();
+  assert.equal(music.getSnapshot().volume, 0.03);
+  assert.equal(contexts[0].gain.gain.value, 0.03);
+  assert.deepEqual(contexts[0].gain.gain.ramps.at(-1), {
+    value: 0.03,
+    at: 3,
+  });
+});
+
+test('repeated starts while music is requested do not interrupt the active fade', async (t) => {
+  const { music, contexts } = fixture(t);
+  await music.play();
+  const rampCount = contexts[0].gain.gain.ramps.length;
+  await music.play();
+  assert.equal(music.getSnapshot().state.kind, 'playing');
+  assert.equal(contexts[0].gain.gain.ramps.length, rampCount);
+});
+
+test('an explicit Pause prevents a later default gesture start', async (t) => {
+  const { music, contexts } = fixture(t);
+  music.pause();
+  await music.startOnFirstGesture();
+  assert.equal(music.getSnapshot().state.kind, 'off');
+  assert.equal(contexts.length, 0);
 });
 
 test('music assets retain original bytes and an explicit source/license record', () => {

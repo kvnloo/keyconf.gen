@@ -466,6 +466,30 @@ function KeyboardStudio({
       music.close();
     };
   }, [music]);
+  useEffect(() => {
+    let started = false;
+    const startMusic = (event: Event) => {
+      if (started) return;
+      if (
+        event.target instanceof Element &&
+        event.target.closest('.music-trigger, .music-popup')
+      )
+        return;
+      started = true;
+      document.removeEventListener('pointerdown', startMusic, true);
+      document.removeEventListener('keydown', startMusic, true);
+      document.removeEventListener('touchstart', startMusic, true);
+      void music.startOnFirstGesture();
+    };
+    document.addEventListener('pointerdown', startMusic, true);
+    document.addEventListener('keydown', startMusic, true);
+    document.addEventListener('touchstart', startMusic, true);
+    return () => {
+      document.removeEventListener('pointerdown', startMusic, true);
+      document.removeEventListener('keydown', startMusic, true);
+      document.removeEventListener('touchstart', startMusic, true);
+    };
+  }, [music]);
   const options = useMemo<SceneOptions>(() => {
     if (landing && featured.kind === 'control-deck') {
       const { colors, device, lighting, dial } = featured.build;

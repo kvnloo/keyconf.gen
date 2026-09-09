@@ -55,14 +55,10 @@ try {
   };
   const status = (kind) =>
     page.locator(`[data-music-state="${kind}"]`).waitFor();
-  await openMusic();
-  assert.equal(
-    musicRequests.length,
-    0,
-    'Opening controls must not fetch music',
-  );
-  await page.getByRole('button', { name: 'Play music', exact: true }).click();
+  assert.equal(musicRequests.length, 0, 'Music must wait for a user gesture');
+  await page.keyboard.press('Tab');
   await status('playing');
+  await openMusic();
   await page.waitForFunction(() => {
     const probe = window.musicProbe;
     if (!probe) return false;

@@ -15,7 +15,7 @@ export class StudioMusic {
   private snapshot: MusicSnapshot = {
     state: { kind: 'off' },
     requested: false,
-    volume: 0.12,
+    volume: 0.03,
   };
   private listeners = new Set<() => void>();
   private blockers = new Set<MusicBlocker>();
@@ -24,6 +24,7 @@ export class StudioMusic {
   private source: MediaElementAudioSourceNode | null = null;
   private gain: GainNode | null = null;
   private revision = 0;
+  private defaultStartAvailable = true;
   private recovery: ReturnType<typeof setTimeout> | null = null;
   getSnapshot = () => this.snapshot;
   subscribe = (listener: () => void) => {
@@ -81,11 +82,18 @@ export class StudioMusic {
     for (const listener of this.listeners) listener();
   }
   play() {
+    if (this.snapshot.requested) return Promise.resolve();
     this.silence();
     this.publish({ kind: 'loading' }, true);
     return this.start();
   }
+  startOnFirstGesture() {
+    if (!this.defaultStartAvailable) return Promise.resolve();
+    this.defaultStartAvailable = false;
+    return this.play();
+  }
   pause() {
+    this.defaultStartAvailable = false;
     this.silence();
     this.publish({ kind: 'off' }, false);
   }
@@ -149,7 +157,7 @@ export class StudioMusic {
       gain.gain.setValueAtTime(0, context.currentTime);
       gain.gain.linearRampToValueAtTime(
         this.snapshot.volume,
-        context.currentTime + 0.4,
+        context.currentTime + 3,
       );
       this.publish({ kind: 'playing' });
     } catch {
