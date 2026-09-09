@@ -1,5 +1,6 @@
 'use client';
 
+import { computeTheme } from '../lib/theme';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, ArrowLeft, RotateCcw } from 'lucide-react';
 import { parseTypingMessage } from '../lib/typing-test';
@@ -123,7 +124,7 @@ export default function TypingTest({
             const document = frame.current?.contentDocument;
             if (!document?.head) return;
             const theme = document.createElement('style');
-            theme.textContent = `:root { --bg-color: #18221c !important; --main-color: #d7dfbb !important; --caret-color: #e5c788 !important; --sub-color: #a0b29e !important; --sub-alt-color: #223229 !important; --text-color: #f1eedf !important; --error-color: #f29581 !important; --error-extra-color: #c95d4b !important; }`;
+            try { const dataAttr = document.documentElement.getAttribute('data-palette'); if (dataAttr) { const p = JSON.parse(dataAttr); theme.textContent = computeTheme(p).theme; } else { theme.textContent = `:root { --bg-color: #18221c !important; --main-color: #d7dfbb !important; --caret-color: #e5c788 !important; --sub-color: #a0b29e !important; --sub-alt-color: #223229 !important; --text-color: #f1eedf !important; --error-color: #f29581 !important; --error-extra-color: #c95d4b !important; }`; } } catch { theme.textContent = `:root { --bg-color: #18221c !important; --main-color: #d7dfbb !important; --caret-color: #e5c788 !important; --sub-color: #a0b29e !important; --sub-alt-color: #223229 !important; --text-color: #f1eedf !important; --error-color: #f29581 !important; --error-extra-color: #c95d4b !important; }`; }
             document.head.appendChild(theme);
             document.addEventListener(
               'keydown',

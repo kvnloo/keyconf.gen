@@ -28,6 +28,19 @@ Keyconf is a discovery and configuration portal, not a seller of keyboard produc
 | COMMUNITY-8 | Optional music | Very quiet default playback after a permitted user gesture, three-second fade-in; independent music volume/mute; keyboard recordings and sound-reference videos take priority and mute music, with gentle restoration only if the user still wants music; visibility, loading/error and autoplay rules tested | Licensed music with independent volume and keyboard/reference priority shipped; September 8 change to 3% default with three-second fade-in is in progress |
 | COMMUNITY-9 | Durable collaboration and privacy | D1-backed ownership and publication boundaries; private client notes/drafts absent from public search; revoked/invalid links recover clearly; untrusted links/content validated | In progress: owned snapshots, token closure/rotation and private creator/client responses implemented in storage; hosted identity, private routes and UI remain pending |
 
+## Premium catalog and mobile workbench expansion
+
+Added September 8, 2026. Preserve the community direction while implementing the approved mobile workbench and premium keyboard coverage in parallel.
+
+| ID | Requirement | Acceptance evidence | Status |
+| --- | --- | --- | --- |
+| MOBILE-1 | Persistent mobile workbench | Change appearance or components while the keyboard remains visible, without scrolling the document between controls and preview; contextual inspector has explicit collapsed/edit/expanded controls, safe areas, and accessible focus | Implementation in progress; desktop, landing and typing behavior must remain usable |
+| PREMIUM-1 | Broad premium keyboard discovery | Research hundreds of distinct keyboards without counting colorways as separate models; every admitted product links to primary evidence; publish actual covered count | Research in progress; no exhaustive coverage claim |
+| PREMIUM-2 | Most expensive ordering | Comparable currency, offer configuration, kit/complete distinction, price basis, date and availability; unknown prices never become zero-priced claims | Sorting foundation in progress |
+| PREMIUM-3 | HATSU and charging ecosystem | Verified split keywell geometry, handed layout, wireless capabilities and generation-specific CYBERMAT accessory compatibility; preserve source evidence and configuration | Primary-source research in progress |
+| PREMIUM-4 | CYBERBOARD R2 and display keyboards | Correct model-specific display resolution, LED positions, supported lighting/animation controls and saved customization; browser preview distinguished from device firmware export | Primary-source research in progress; R2 5×40 matrix requires manual-backed implementation |
+| PREMIUM-5 | Accurate premium geometry | Each model has dimensional/layout reference evidence and visual comparison; generic previews never presented as exact models; unmodeled products remain discoverable | Pending per-model assets and verification |
+
 ## Configurator completeness, in parallel
 
 The September 6 reference reconciliation and accessory request are part of the community direction. Creator proposals must represent the actual parts a client is choosing. Keep this work moving alongside account and collaboration foundations.

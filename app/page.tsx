@@ -61,6 +61,7 @@ import SoundReferences, { type SoundReference } from './sound-references';
 import type { SamplePreview } from '../lib/audio-preview';
 import SampleWaveform from './sample-waveform';
 import ComponentsPanel from './components-panel';
+import MobileWorkbench from './mobile-workbench';
 import SwitchDetail from './switch-detail';
 import LayerInspector from './layer-inspector';
 import BuildAccessories from './build-accessories';
@@ -69,24 +70,26 @@ import {
   resolveAccessoryProducts,
   parseCustomAccessories,
 } from '../lib/imported-accessories';
+import PremiumKeyboards from './premium-keyboards';
 import ResearchProducts from './research-products';
 import StudioSelect from './studio-select';
 import { useBuild } from './use-build';
-import {
-  palettes,
-  caseColors,
-  layouts,
-  finishes,
-  profiles,
-  readBuildFile,
-  parseCustomParts,
-  parseBuild,
-  encodeBuild,
-} from '../lib/build';
-import { soundPacks } from '../lib/sound-packs';
-import { registerStudioTools } from '../lib/webmcp';
-import { catalog, categories, checkBuild } from '../lib/catalog';
-import { KeyboardAudio, type SoundSettings } from '../lib/audio';
+import { applyPaletteTheme } from '../lib/theme';
+ import {
+   palettes,
+   caseColors,
+   layouts,
+   finishes,
+   profiles,
+   readBuildFile,
+   parseCustomParts,
+   parseBuild,
+   encodeBuild,
+ } from '../lib/build';
+ import { soundPacks } from '../lib/sound-packs';
+ import { registerStudioTools } from '../lib/webmcp';
+ import { catalog, categories, checkBuild } from '../lib/catalog';
+ import { KeyboardAudio, type SoundSettings } from '../lib/audio';
 
 function subscribeLocation(onChange: () => void) {
   window.addEventListener('hashchange', onChange);
@@ -358,6 +361,11 @@ function KeyboardStudio({
   const pack = soundPacks.find((p) => p.id === build.audio.source) ?? null;
   const setPalette = (palette: typeof build.palette) => edit({ palette });
   const setLayout = (layout: typeof build.layout) => edit({ layout });
+  useEffect(() => {
+    const p = build.palette;
+    applyPaletteTheme({ alpha: p.alpha, mod: p.mod, accent: p.accent, space: p.space });
+    document.documentElement.setAttribute('data-palette', JSON.stringify({ alpha: p.alpha, mod: p.mod, accent: p.accent, space: p.space }));
+  }, [build.palette]);
   const [exploded, setExploded] = useState(false);
   const [view, setView] = useState('perspective');
   const [focusAt, setFocusAt] = useState<string | null>(null);
@@ -1045,7 +1053,7 @@ function KeyboardStudio({
           }}
         />
       ) : (
-        <div className="workspace">
+        <div className="workspace mobile-workbench">
           <section className="stage">
             <div className="stage-heading">
               <div className="eyebrow">
@@ -1347,64 +1355,34 @@ function KeyboardStudio({
               onCustomize={customizePreview}
             />
           )}
-          <aside
-            className="config"
-            id="build-settings"
-            aria-label="Keyboard configuration"
-          >
-            <div className="config-title">
-              <h2>Your build</h2>
-              <span className="pill">Live preview</span>
-            </div>
-            <div
-              className="config-tabs"
-              role="tablist"
-              aria-label="Build settings"
-            >
-              {(['design', 'parts', 'sound'] satisfies Tab[]).map((t) => (
+          <MobileWorkbench
+            activeTab={tab}
+            onTabChange={setTab}
+            footer={
+              <>
                 <button
-                  key={t}
-                  role="tab"
-                  id={'tab-' + t}
-                  aria-controls={'panel-' + t}
-                  tabIndex={tab === t ? 0 : -1}
-                  onKeyDown={(event) => {
-                    const tabs: Tab[] = ['design', 'parts', 'sound'];
-                    const index = tabs.indexOf(t);
-                    const next =
-                      event.key === 'ArrowRight'
-                        ? tabs[(index + 1) % tabs.length]
-                        : event.key === 'ArrowLeft'
-                          ? tabs[(index + tabs.length - 1) % tabs.length]
-                          : event.key === 'Home'
-                            ? tabs[0]
-                            : event.key === 'End'
-                              ? tabs[tabs.length - 1]
-                              : undefined;
-                    if (next) {
-                      event.preventDefault();
-                      setTab(next);
-                      document.getElementById('tab-' + next)?.focus();
-                    }
-                  }}
-                  aria-selected={tab === t}
-                  onClick={() => setTab(t)}
+                  className="build-status"
+                  onClick={() => setTab('parts')}
                 >
-                  {t === 'design'
-                    ? 'Design'
-                    : t === 'parts'
-                      ? 'Components'
-                      : 'Sound'}
+                  <span className={blocked ? 'warn-dot' : 'neutral-dot'} />
+                  {blocked
+                    ? blocked + ' compatibility conflicts'
+                    : 'Review component compatibility'}
+                  <ChevronRight size={15} />
                 </button>
-              ))}
-            </div>
-            <div
-              className="config-scroll"
-              role="tabpanel"
-              id={'panel-' + tab}
-              aria-labelledby={'tab-' + tab}
-              tabIndex={0}
-            >
+                <button className="button full" onClick={exportBuild}>
+                  <Download size={16} /> Export your build
+                </button>
+                <small>Visual study · Product dimensions not verified</small>
+                <button
+                  className="text-button research-entry"
+                  onClick={() => setModal('research')}
+                >
+                  Research & sources <ArrowUpRight size={14} />
+                </button>
+              </>
+            }
+          >
               {tab === 'design' && (
                 <>
                   <section>
@@ -1759,27 +1737,7 @@ function KeyboardStudio({
                   />
                 </>
               )}
-            </div>
-            <div className="config-footer">
-              <button className="build-status" onClick={() => setTab('parts')}>
-                <span className={blocked ? 'warn-dot' : 'neutral-dot'} />
-                {blocked
-                  ? blocked + ' compatibility conflicts'
-                  : 'Review component compatibility'}
-                <ChevronRight size={15} />
-              </button>
-              <button className="button full" onClick={exportBuild}>
-                <Download size={16} /> Export your build
-              </button>
-              <small>Visual study · Product dimensions not verified</small>
-              <button
-                className="text-button research-entry"
-                onClick={() => setModal('research')}
-              >
-                Research & sources <ArrowUpRight size={14} />
-              </button>
-            </div>
-          </aside>
+          </MobileWorkbench>
         </div>
       )}
       <output className="sr-only" aria-live="polite">
@@ -1810,6 +1768,7 @@ function KeyboardStudio({
           </div>
           <CommunityDiscovery />
           <TechnologyGuide />
+          <PremiumKeyboards />
           <ResearchLibrary onReviewSwitch={reviewSwitch} />
         </section>
       )}
