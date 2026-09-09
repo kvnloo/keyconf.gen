@@ -3,6 +3,50 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { createSwitchAssembly } from '../lib/switch-model.ts';
+import { UNIT_MM } from '../lib/cad-twin.ts';
+
+const round = (value) => Math.round(value * UNIT_MM * 100) / 100;
+
+test('switch study matches the published Cherry MX envelope', () => {
+  const model = createSwitchAssembly([new THREE.Vector3()], 'oil-king');
+  const box = (name) => {
+    const mesh = model.group.getObjectByName(name);
+    mesh.geometry.computeBoundingBox();
+    return mesh.geometry.boundingBox;
+  };
+  const top = box('switch_top_housings');
+  assert.equal(round(top.max.x - top.min.x), 15.6, 'housing is 15.6 mm square');
+  assert.equal(round(top.max.z - top.min.z), 15.6);
+  assert.equal(round(top.max.y), 11.6, 'housing stands 11.6 mm above the PCB');
+  const base = box('switch_bases');
+  assert.equal(
+    round(base.max.x - base.min.x),
+    15.6,
+    'flange matches the housing',
+  );
+  const stems = box('switch_cross_stems');
+  assert.equal(round(stems.max.y), 15.2, 'stem reaches 15.2 mm overall');
+  assert.equal(
+    round(stems.max.y - top.max.y),
+    3.6,
+    'stem clears the housing by 3.6 mm',
+  );
+
+  // Only the cross clears the housing; the shoulder below it is wider.
+  const points =
+    model.group.getObjectByName('switch_cross_stems').geometry.attributes
+      .position;
+  let widest = 0;
+  let deepest = 0;
+  for (let index = 0; index < points.count; index += 1) {
+    if (round(points.getY(index)) <= 11.7) continue;
+    widest = Math.max(widest, Math.abs(points.getX(index)));
+    deepest = Math.max(deepest, Math.abs(points.getZ(index)));
+  }
+  assert.equal(round(widest * 2), 4.1, 'cross is 4.1 mm wide');
+  assert.equal(round(deepest * 2), 4.1, 'cross is 4.1 mm deep');
+  model.dispose();
+});
 
 for (const layout of [60, 65, 75]) {
   test(`switch instances follow every ${layout}% key center`, () => {

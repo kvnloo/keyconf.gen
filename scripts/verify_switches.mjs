@@ -108,42 +108,50 @@ try {
     'keyboard orbit, zoom, Tab and housing toggle work with reduced motion',
   );
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  const separated = await canvas.screenshot();
-  await page
-    .getByRole('button', { name: 'Assemble switch', exact: true })
-    .click();
-  await page.waitForTimeout(800);
+  const assemble = () =>
+    page.getByRole('button', { name: 'Assemble switch', exact: true }).click();
+  const separate = () =>
+    page.getByRole('button', { name: 'Separate housing', exact: true }).click();
+  // Both baselines are animated endpoints. The separated view captured above
+  // came from the reduced-motion jump and is not comparable to these.
+  await assemble();
+  await page.waitForTimeout(900);
   const assembled = await canvas.screenshot();
+  await separate();
+  await page.waitForTimeout(900);
+  const separated = await canvas.screenshot();
   assert.equal(
-    assembled.equals(separated),
+    separated.equals(assembled),
     false,
-    'assembly must change the rendered switch',
+    'separation must change the rendered switch',
   );
-  await page
-    .getByRole('button', { name: 'Separate housing', exact: true })
-    .click();
-  await page.waitForTimeout(120);
-  await page
-    .getByRole('button', { name: 'Assemble switch', exact: true })
-    .click();
-  await page.waitForTimeout(800);
-  const reversed = await canvas.screenshot();
+  await assemble();
+  await page.waitForTimeout(900);
   assert.equal(
-    reversed.equals(assembled),
+    (await canvas.screenshot()).equals(assembled),
+    true,
+    'a repeated assembly must land on the same pixels, camera untouched',
+  );
+  await separate();
+  await page.waitForTimeout(120);
+  await assemble();
+  await page.waitForTimeout(900);
+  assert.equal(
+    (await canvas.screenshot()).equals(assembled),
     true,
     'mid-transition reversal must restore the same geometry and camera',
   );
-  await page
-    .getByRole('button', { name: 'Separate housing', exact: true })
-    .click();
-  await page
-    .getByRole('button', { name: 'Assemble switch', exact: true })
-    .waitFor();
+  await separate();
   await page.waitForTimeout(900);
   const reseparated = await canvas.screenshot();
   assert.equal(
     reseparated.equals(assembled),
     false,
+    'a second separation must not leave the switch assembled',
+  );
+  assert.equal(
+    reseparated.equals(separated),
+    true,
     'second separation must restore the separated view',
   );
   assert.equal(

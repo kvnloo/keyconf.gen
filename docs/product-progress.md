@@ -1027,3 +1027,41 @@ The studio can now overlay a licensed mesh onto a study model, and the revision 
 No revision lists a mesh today, so every board renders the study it rendered before and the scene host reports `data-cad-parts="0"` and `data-cad-twin="0"`. Twin stays `0` until case, plate and PCB are `cad-derived` or `measured`, so listing one file cannot relabel a board as a CAD twin. An overlay that fails to load keeps its study mesh instead of failing the keyboard, and a replaced study stays in the scene graph, renamed and hidden, so teardown still disposes it and no shared material is released early. `scripts/cad_twin.py` now hashes the generated GLB and prints a paste-ready `scene` block beside the STEP hash; the tests hash every listed GLB, so an absent or altered mesh fails CI.
 
 Verified: 235 tests, type checking, lint and formatting pass, including new coverage for the empty catalog, the display-gate fixtures, the Q1/HATSU/R2 revision mapping and the on-disk hash check. A temporary fixture listed a real generated 16×14 mm knob GLB on the Q1 `control_dial` part, and the live Q1 board rendered it with `data-cad-parts="1"`, `data-cad-twin="0"`, 81 switches and no page errors. Re-listing that part at 42 mm doubled the changed pixels against the study render and raised the silhouette by 33 px, which is how the overlay was confirmed to draw the listed mesh rather than only hide the study. A mesh listed but absent from disk returned `data-cad-parts="0"` and a render pixel-identical to the study. The fixture GLB and its manifest entry were removed afterwards: no CAD file is committed, and no product is labelled a CAD twin.
+
+## September 9, 2026: switch study dimensions and normal-motion framing
+
+Reviewed the focused switch page against its source, which is the gap PART-2
+recorded on September 7. The study was MX-*style* rather than MX-dimensioned:
+its housing measured 12.19 mm against a published 15.6 mm, and its cross stem
+5.72 mm against a published 4.1 mm, so the part a reader inspects most closely
+was 40% oversized. The geometry is now built from the Cherry MX Series
+datasheet (MX1A-11NW): a 15.6 mm square housing, 11.6 mm of body above the PCB,
+3.6 mm of stem above that for 15.2 mm overall, and a 4.1 mm cross with 1.17 mm
+arms, through the standard 14 mm plate cutout. Dimensions are declared in
+millimetres and converted through the same `sceneUnitsFromMm` the CAD work
+uses. A new test measures the rendered geometry and fails on a 0.2 mm error,
+which was confirmed by perturbing the model before trusting the assertion.
+
+This stays a study, not a CAD twin. Wall thicknesses and the internal shoulder
+are proportional rather than published, and one MX-style body still stands in
+for every switch in the catalog; the page labels it as illustrative.
+
+The correction made the switch 40% taller, so the separated view was measured
+rather than assumed. Isolating the model against its own backdrop showed the
+lifted stem running into the top edge of the canvas — 13.2% of the top band was
+model, against 5.2% before, so the clipping predated the change and the taller
+body made it worse. Because separating must not move the camera, one framing
+has to serve both states; it is now centred on the separated assembly, which
+leaves margin on all four sides in both states (assembled 284/246/289/46,
+separated 276/19/282/46 device pixels). An apparent bottom clip turned out to
+be a disconnected one-pixel artifact in the final row, with rows 470-495 empty.
+
+The normal-motion block of `verify:switches` also claimed more than it checked:
+its "second separation must restore the separated view" assertion only proved
+the frame differed from the assembled one, and its baseline was the
+reduced-motion jump rather than an animated endpoint. A probe established that
+animated separate/assemble cycles are pixel-identical, so the baselines are now
+animated endpoints and the assertion compares against the separated view it
+names. A repeated assembly is also checked. All seven flows pass with no Axe
+violations at 1440, 390 and 320 px and no page errors, alongside 236 unit
+tests, types, lint and formatting.

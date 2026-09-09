@@ -63,9 +63,12 @@ export function createSwitchScene(
   function render() {
     if (!stopped) renderer.render(scene, camera);
   }
+  // One framing serves both states, because separating must not move the
+  // camera. It is centred on the separated assembly, whose stem rises well
+  // above the seated switch.
   function reset() {
-    controls.target.set(0, 0.75, 0);
-    camera.position.set(2, 2.4, 2.8);
+    controls.target.set(0, 0.85, 0);
+    camera.position.set(2.24, 2.7, 3.14);
     controls.update();
     render();
   }

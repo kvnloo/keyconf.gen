@@ -1,6 +1,17 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { sceneUnitsFromMm } from './cad-twin.ts';
+
+/**
+ * Cherry MX Series datasheet (MX1A-11NW): 15.6 mm square housing, 11.6 mm of
+ * housing above the PCB, 3.6 mm of stem above that for 15.2 mm overall, and
+ * 4 mm travel. Cherry publishes the keycap slot rather than the male stem, so
+ * the cross is modeled to that 4.1 mm / 1.17 mm figure. Plate cutout is the
+ * standard 14 mm. Wall thicknesses and the internal shoulder are proportional,
+ * not published, which is why this stays a study rather than a CAD twin.
+ */
+const mm = sceneUnitsFromMm;
 
 export function switchColors(id: string) {
   const stems: Record<string, string> = {
@@ -58,26 +69,26 @@ export function createSwitchAssembly(positions: THREE.Vector3[], id: string) {
     roughness: 0.3,
   });
   const baseGeometry = boxes([
-    [0, 0.08, 0, 0.66, 0.16, 0.66],
-    [0, 0.17, 0, 0.74, 0.06, 0.74],
-    [-0.32, 0.24, 0, 0.06, 0.14, 0.22],
-    [0.32, 0.24, 0, 0.06, 0.14, 0.22],
-    [0, -0.045, 0, 0.14, 0.12, 0.14],
+    [0, mm(2.5), 0, mm(13.9), mm(5), mm(13.9)],
+    [0, mm(5), 0, mm(15.6), mm(0.8), mm(15.6)],
+    [-mm(7), mm(3), 0, mm(0.8), mm(2.4), mm(4.2)],
+    [mm(7), mm(3), 0, mm(0.8), mm(2.4), mm(4.2)],
+    [0, -mm(1), 0, mm(4), mm(2), mm(4)],
   ]);
   const topGeometry = boxes([
-    [-0.255, 0.31, 0, 0.13, 0.22, 0.59],
-    [0.255, 0.31, 0, 0.13, 0.22, 0.59],
-    [0, 0.31, -0.255, 0.39, 0.22, 0.13],
-    [0, 0.31, 0.255, 0.39, 0.22, 0.13],
+    [-mm(6.9), mm(8.5), 0, mm(1.8), mm(6.2), mm(15.6)],
+    [mm(6.9), mm(8.5), 0, mm(1.8), mm(6.2), mm(15.6)],
+    [0, mm(8.5), -mm(6.9), mm(12), mm(6.2), mm(1.8)],
+    [0, mm(8.5), mm(6.9), mm(12), mm(6.2), mm(1.8)],
   ]);
   const stemGeometry = boxes([
-    [0, 0.35, 0, 0.29, 0.1, 0.29],
-    [0, 0.47, 0, 0.09, 0.2, 0.3],
-    [0, 0.47, 0, 0.3, 0.2, 0.09],
+    [0, mm(10.6), 0, mm(7), mm(2), mm(7)],
+    [0, mm(13.4), 0, mm(1.17), mm(3.6), mm(4.1)],
+    [0, mm(13.4), 0, mm(4.1), mm(3.6), mm(1.17)],
   ]);
   const pinGeometry = boxes([
-    [-0.17, -0.055, -0.18, 0.035, 0.18, 0.055],
-    [0.18, -0.055, 0.1, 0.035, 0.18, 0.055],
+    [-mm(3.24), -mm(1.05), -mm(3.43), mm(0.67), mm(3.43), mm(1.05)],
+    [mm(3.43), -mm(1.05), mm(1.91), mm(0.67), mm(3.43), mm(1.05)],
   ]);
   const matrix = new THREE.Matrix4();
   function instances(
