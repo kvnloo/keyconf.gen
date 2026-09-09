@@ -98,32 +98,6 @@
       "notes": "40x5 RGB matrix is demonstrable; case silhouette must remain approximate until licensed dimensioned source appears."
     },
     {
-      "id": "cybermat-r2",
-      "brand": "Angry Miao",
-      "name": "CYBERMAT R2",
-      "source": "https://www.angrymiao.com/cybermat-r2/",
-      "description": "Wireless charging mat: 900 x 340 mm, 4 zones, 6 Qi devices, 90 W charger, magnetic phone alignment. Manual documents 323x883 mm internal area, 4.2 kg, 2 mm cloth pad.",
-      "offers": [
-        {
-          "amount": 149,
-          "currency": "USD",
-          "kind": "complete",
-          "basis": "store-listing",
-          "availability": "unavailable",
-          "configuration": "Standard",
-          "observedAt": "2026-09-08",
-          "source": "https://store.angrymiao.com/products/cybermat-r2-wireless-charging-mat"
-        }
-      ],
-      "geometry": {
-        "status": "unmodeled",
-        "evidence": [
-          "External dimensions 340x900 mm documented; coil-center coordinates and exact zone bounds unknown."
-        ]
-      },
-      "notes": "HATSU-specific central coils explicitly named; R3 is materially different (foldable silicone base, 11 coils)."
-    },
-    {
       "id": "am-afa-r2",
       "brand": "Angry Miao",
       "name": "AM AFA R2",
@@ -354,6 +328,58 @@
         ]
       },
       "notes": "Priced from $289 with per-option costs added at build time (edition +$30 or +$40, hot-swap PCB +$5, plate +$10 to +$40), so an assembled price depends on choices not recorded here. Black Sesame, Forest Mocha and Steel Mushroom editions were sold out when observed."
+    },
+    {
+      "id": "mode-encore",
+      "brand": "Mode Designs",
+      "name": "Encore",
+      "source": "https://modedesigns.com/products/encore",
+      "description": "65% kit measuring 326 x 125 mm with a 12.5 mm front height (19.7 mm at the chamfer) and a 5.5 degree typing angle, assembling to 2.9-3.2 lb. Crown mounting system, with a media-blasted maple or aluminium top over a media-blasted aluminium middle and bottom on silicone feet. The base kit is the chassis, PCB and daughterboard, mounting system, feet, fasteners, assembly tools and a microsuede bag; switches, keycaps and stabilisers are bought separately. QMK/VIA ARM PCB for 66-68 MX-style switches over USB-C, designed by Gondolindrim.",
+      "offers": [
+        {
+          "amount": 299,
+          "currency": "USD",
+          "kind": "kit",
+          "basis": "store-listing",
+          "availability": "available",
+          "configuration": "Base kit, before plate, switch, stabiliser and keycap options",
+          "observedAt": "2026-09-09",
+          "source": "https://modedesigns.com/products/encore"
+        }
+      ],
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "Case measurements and typing angle are published, but no CAD or plate/PCB geometry is."
+        ]
+      },
+      "notes": "Priced from $299 with options added at build time (carbon fibre or aluminium plate +$10, copper +$40, switches $42 to $50, stabilisers $15, keycaps $59.99), so an assembled price depends on choices not recorded here. Only the Studio Light edition was orderable when observed; Black Sesame, Matcha Cream, Mocha Mushroom and Monterey Dune were sold out, as were the POM plate and the Obscura Linear switches."
+    },
+    {
+      "id": "cannonkeys-chimera65",
+      "brand": "CannonKeys",
+      "name": "Chimera65 Round 2",
+      "source": "https://cannonkeys.com/products/chimera65-round-2",
+      "description": "65% kit designed by UPAS and produced with the manufacturer Hongtu, built from seven CNC case parts (top, bottom, weight, back accent, bottom accent, badge and plate) on a Poron gasket isolation sandwich mount. 7.5 degree typing angle, 10.86 mm ledge front height and 17.86 mm front height excluding the ledge; built weight is 1.0 kg in polycarbonate, 2.0 kg for the aluminium Standard edition and 2.2 kg for the Special edition. QMK/VIA STM32 PCB in solder or hot-swap form with a C4 unified daughterboard, shipping with a universal ISO-compatible plate, an aluminium Chimera keycap, carrying case and authenticity card. Switches, keycaps and stabilisers are bought separately.",
+      "offers": [
+        {
+          "amount": 565,
+          "currency": "USD",
+          "kind": "kit",
+          "basis": "store-listing",
+          "availability": "available",
+          "configuration": "Listed price before edition, PCB and stock-grade selection",
+          "observedAt": "2026-09-09",
+          "source": "https://cannonkeys.com/products/chimera65-round-2"
+        }
+      ],
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "Typing angle, front heights and built weights are published; case footprint and plate/PCB geometry are not."
+        ]
+      },
+      "notes": "Sold as one listing across eleven colourways in five editions (Standard, PC, E-White, Special and Legendary) and three stock grades, so the single listed price is recorded rather than a per-edition price. The same page still carries provisional group-buy pricing from the 2023 round ($450 Standard, $470 PC and E-White, $630 Special); that is not the current listed price and is not recorded as an offer. Stock was limited when observed. CannonKeys names this and the Satisfaction75 as its premium line, above the Brutal series."
     }
   ]
 }

@@ -1431,3 +1431,50 @@ shop-language grep runs here too.
 What is still missing is a creator page. A reader who likes a curator's taste can
 only find their other sets by luck, because collections are indexed by recency
 and not by the person who made them.
+
+## A desk mat was being counted as a keyboard
+
+Widening the premium catalog turned up something worse than a small count. The
+eleven entries the page published as "distinct keyboards" included CYBERMAT R2,
+which is a wireless charging mat. It was counted as a model, listed among the
+brands, and ranked by its $149 price against actual keyboards.
+
+Nothing caught it because nothing could. `admissionFaults` enforces the two
+rules the contract names — every product and offer links to primary evidence,
+and no name extends another name of the same brand, which is the shape a
+colorway takes when filed as a second model. A charging mat breaks neither. It
+had a real product page and a name unlike any other. The rules were doing their
+job; the job did not include asking whether the product was a keyboard.
+
+The mat is now out of `data/premium-keyboards.json`. Its research is not lost:
+it stays in the Angry Miao research note, and PREMIUM-3 already treats CYBERMAT
+as the charging accessory it is. I did not invent a rule to catch the next one.
+A name-token denylist would have missed `CYBERMAT` anyway, since the tokeniser
+splits on whitespace, and matching substrings would start failing on names that
+merely contain them. What would actually work is recording a layout for every
+admitted board and requiring it, which needs a sourced layout for each entry
+rather than a guess, so it is left undone and said so here rather than papered
+over with a rule that only appears to check.
+
+Two boards were added from their makers' own listings, read on the observation
+date. The Mode Encore is a $299 65% kit on the Crown mounting system, 326 x 125
+mm at a 5.5 degree typing angle, with only the Studio Light edition orderable.
+The CannonKeys Chimera65 Round 2 is a $565 65% kit designed by UPAS on a Poron
+gasket isolation sandwich mount, seven CNC case parts, 7.5 degree typing angle.
+Its listing still carries provisional group-buy prices from the 2023 round;
+those are recorded in the note as stale rather than as offers, because the only
+price the store is actually asking is $565.
+
+Two more brands were read and produced nothing admissible, which is worth
+recording so the search is not repeated. Norbauer's catalog beyond the Seneca is
+housings for other makers' keyboards — the Heavy Grail for the HHKB, the
+Norbaforce for Realforce, the Heavy-6 for the FC660C — and a housing is not a
+keyboard. CannonKeys' Brutal line was skipped because CannonKeys itself says on
+the listing that it is built to a lower quality bar than their premium boards,
+naming the Satisfaction75 and Chimera65 as those; taking them at their word,
+the Chimera65 was admitted and the Brutal was not.
+
+That leaves 12 keyboards from 4 brands, still far short of the hundreds the
+contract asks for, and the count on the page is now 12 because it is derived
+from the file and pinned by `npm run verify:premium`, which reports 8 ranked and
+4 unpriced.
