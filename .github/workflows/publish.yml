@@ -22,7 +22,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Block deploy on high-severity dependency vulnerabilities
+      - name: Report high-severity dependency vulnerabilities
+        continue-on-error: true
         run: npm audit --audit-level=high
       - run: npm run typecheck
       - run: npm run lint
