@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 25
     concurrency:
       group: keyconf-check-${{ github.ref }}
-      cancel-in-progress: ${{ github.ref_name != 'nightly' }}
+      cancel-in-progress: true
     env:
       CHANNEL: ${{ contains(fromJSON('["main","dev","nightly"]'), github.ref_name) && github.ref_name || 'main' }}
     steps:
@@ -99,6 +99,7 @@ jobs:
           xvfb-run -a npm run verify:q1
           npm run verify:shared-preview
           xvfb-run -a npm run verify:feedback
+          xvfb-run -a npm run verify:angrymiao-featured
       - uses: actions/upload-artifact@v4
         if: github.event_name != 'pull_request' && contains(fromJSON('["main","dev","nightly"]'), github.ref_name)
         with:
