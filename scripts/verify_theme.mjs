@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 const page = readFileSync('app/page.tsx', 'utf8');
 assert.ok(page.includes('useEffect'), 'Theme useEffect missing');
 assert.ok(page.includes('build.palette'), 'Theme depends on build.palette');
+assert.ok(page.includes('featured'), 'Landing featured selection must drive theme');
 assert.ok(page.includes('applyPaletteTheme'), 'Theme applies palette');
 
 const globalsCss = readFileSync('app/globals.css', 'utf8');

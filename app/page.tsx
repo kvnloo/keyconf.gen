@@ -363,10 +363,33 @@ function KeyboardStudio({
   const setPalette = (palette: typeof build.palette) => edit({ palette });
   const setLayout = (layout: typeof build.layout) => edit({ layout });
   useEffect(() => {
-    const p = build.palette;
-    applyPaletteTheme({ alpha: p.alpha, mod: p.mod, accent: p.accent, space: p.space });
-    document.documentElement.setAttribute('data-palette', JSON.stringify({ alpha: p.alpha, mod: p.mod, accent: p.accent, space: p.space }));
-  }, [build.palette]);
+    const p =
+      landing && featured.kind === 'keyboard'
+        ? featured.build.palette
+        : landing && featured.kind === 'control-deck'
+          ? {
+              alpha: featured.build.colors.keys,
+              mod: featured.build.colors.commands,
+              accent: featured.build.colors.keys,
+              space: featured.build.colors.wide,
+            }
+          : build.palette;
+    applyPaletteTheme({
+      alpha: p.alpha,
+      mod: p.mod,
+      accent: p.accent,
+      space: p.space,
+    });
+    document.documentElement.setAttribute(
+      'data-palette',
+      JSON.stringify({
+        alpha: p.alpha,
+        mod: p.mod,
+        accent: p.accent,
+        space: p.space,
+      }),
+    );
+  }, [build.palette, featured, landing]);
   const [exploded, setExploded] = useState(false);
   const [view, setView] = useState('perspective');
   const [focusAt, setFocusAt] = useState<string | null>(null);

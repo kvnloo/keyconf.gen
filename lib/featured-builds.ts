@@ -24,6 +24,7 @@ function keyboard(
   assemblyId: string,
   palette: Palette,
   caseColor: string,
+  subtitle?: string,
 ): FeaturedBuild {
   const assembly = assemblies.find((item) => item.id === assemblyId);
   if (!assembly) throw new Error(`Featured assembly is missing: ${assemblyId}`);
@@ -31,7 +32,9 @@ function keyboard(
     kind: 'keyboard',
     id,
     name,
-    subtitle: `${assembly.name} · ${assembly.layout}% study${assemblyId === 'nk65-entry' ? ' · retired kit' : ''}`,
+    subtitle:
+      subtitle ??
+      `${assembly.name} · ${assembly.layout}% study${assemblyId === 'nk65-entry' ? ' · retired kit' : ''}`,
     build: {
       ...defaultBuild,
       name,
@@ -95,6 +98,34 @@ export const featuredBuilds: FeaturedBuild[] = [
       space: '#d1b48a',
     },
     '#c3b69b',
+  ),
+  keyboard(
+    'cyberboard-r2',
+    'CYBERBOARD R2',
+    'q1-max',
+    {
+      name: 'Jet Black',
+      alpha: '#2a2a2e',
+      mod: '#111114',
+      accent: '#5ce1ff',
+      space: '#1a1a1f',
+    },
+    '#0d0d10',
+    'Angry Miao · 75% LED matrix study · unmodeled',
+  ),
+  keyboard(
+    'am-hatsu',
+    'AM HATSU',
+    'bakeneko60',
+    {
+      name: 'Battleship',
+      alpha: '#c8cdd4',
+      mod: '#5a6575',
+      accent: '#9aa8b8',
+      space: '#7a8796',
+    },
+    '#4a5564',
+    'Angry Miao · split ergonomic study · unmodeled',
   ),
   {
     kind: 'control-deck',

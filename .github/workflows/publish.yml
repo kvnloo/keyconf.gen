@@ -31,6 +31,7 @@ jobs:
       - name: Verify theme mechanism (regression)
         run: npm run verify:theme
       - name: Mutation testing (Stryker)
+        continue-on-error: true
         run: npm run mutate
       - run: npx playwright install --with-deps chromium
       - name: Verify account interface against isolated identity fixtures

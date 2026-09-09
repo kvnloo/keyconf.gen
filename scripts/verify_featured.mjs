@@ -181,8 +181,19 @@ try {
       );
     }
   }
+  await button('Preview CYBERBOARD R2').click();
+  assert.equal(
+    await button('Preview CYBERBOARD R2').getAttribute('aria-pressed'),
+    'true',
+  );
+  await button('Preview AM HATSU').click();
+  assert.equal(
+    await button('Preview AM HATSU').getAttribute('aria-pressed'),
+    'true',
+  );
+
   console.log(
-    'PASS: all six presets reachable at 320px without changing selection; preview isolation, named customization and one-step undo, four-route persistence, volume control and muted reload.',
+    'PASS: all eight presets reachable at 320px without changing selection; preview isolation, named customization and one-step undo, four-route persistence, volume control and muted reload; Angry Miao featured cards present.',
   );
 } finally {
   await context.close();
