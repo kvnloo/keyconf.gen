@@ -94,7 +94,11 @@ try {
   await page
     .getByRole('button', { name: 'Retry same publication', exact: true })
     .click();
-  await expect(page.locator('a[href^="/builds/"]')).toHaveCount(1);
+  await expect(
+    page.locator(
+      '.publication-review [aria-live="polite"] a[href^="/builds/"]',
+    ),
+  ).toHaveCount(1);
   assert.equal(
     fixture.sqlite
       .prepare('SELECT count(*) AS n FROM community_publication')
@@ -171,7 +175,11 @@ try {
     'Updated creator',
   );
   await page.getByRole('button', { name: 'Publish drop', exact: true }).click();
-  await expect(page.locator('a[href^="/builds/"]')).toHaveCount(1);
+  await expect(
+    page.locator(
+      '.publication-review [aria-live="polite"] a[href^="/builds/"]',
+    ),
+  ).toHaveCount(1);
   const drop = fixture.sqlite
     .prepare(
       "SELECT metadata FROM community_publication WHERE json_extract(metadata, '$.kind')='drop'",
