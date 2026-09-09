@@ -29,8 +29,29 @@ try {
     );
   }
 
+  /**
+   * The renderer resizes its canvas from a ResizeObserver, which queues behind
+   * whatever frame the software renderer is drawing. Measure the preview only
+   * once it fills the slot the layout already gave it, so a state transition
+   * is judged where it lands rather than part way there.
+   */
+  async function previewFillsSlot() {
+    await page.waitForFunction(
+      () => {
+        const host = document.querySelector('[data-keyboard-variant]');
+        const canvas = host?.querySelector('canvas');
+        if (!host || !canvas) return false;
+        const drawn = canvas.getBoundingClientRect().height;
+        return Math.abs(drawn - host.clientHeight) <= 1;
+      },
+      null,
+      { timeout: 30000 },
+    );
+  }
+
   /** Every state must keep the preview reachable without scrolling the page. */
   async function inspect(name, { preview = true } = {}) {
+    if (preview) await previewFillsSlot();
     const view = await page.evaluate(() => {
       const doc = document.documentElement;
       const rect = document

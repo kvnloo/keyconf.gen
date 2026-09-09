@@ -1113,3 +1113,13 @@ Verified: 236 tests, type checking, lint and formatting pass, and the new check
 passes against the dev server. It now runs in CI beside the other scene checks.
 Physical-device behaviour, 320px and 768px are not covered by this check; the
 existing five-width interface check still covers layout and accessibility there.
+
+## Mobile workbench preview measured where it lands
+
+The nightly run for `cb6eff0` failed its rendered-production step. `verify:mobile` reported the compact preview at 11.4% of the viewport against its 15% floor. The check passes headless and fails headed, and running it locally against the same production Pages build under headed software WebGL reproduced 11.4% exactly.
+
+The layout was not at fault. Instrumenting the transition showed that leaving the catalog restores the preview slot to 390x181 immediately, while the renderer resizes its canvas from a `ResizeObserver` whose callback queues behind whatever frame the software renderer is drawing. The canvas still measured 390x96 half a second after the click and reached 390x181 by one second. The check was reading a state the transition was still passing through.
+
+`inspect` now waits for the canvas to fill the slot the layout already gave it before measuring, so each state is judged where it lands rather than part way there. The wait is bounded at 30 seconds and does not soften the assertion. With the preview genuinely squeezed to 40px by an injected rule the canvas matches that smaller slot, the wait returns at once, and the check still fails at 4.7%. All five headed checks at 390px pass again, alongside 236 tests, type checking, lint and formatting.
+
+One honest limitation remains recorded rather than hidden: under software rendering the preview keeps drawing at its previous size for up to a second after the catalog closes. On hardware this is a frame, and it has not been measured on a physical device.
