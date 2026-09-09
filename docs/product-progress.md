@@ -1478,3 +1478,29 @@ That leaves 12 keyboards from 4 brands, still far short of the hundreds the
 contract asks for, and the count on the page is now 12 because it is derived
 from the file and pinned by `npm run verify:premium`, which reports 8 ranked and
 4 unpriced.
+
+Three more brands were read and admitted, taking the catalog to 15 keyboards
+from 7 brands. The Keychron Q1 Max was recorded from Keychron's own listing at
+$209.99 against a $229.99 compare-at price, with the published case figures —
+327.5 x 145 mm, 20.7 mm front height, 5.2 degree angle, 1724 g assembled. It is
+the one new entry with a studio model, and it is filed `illustrative` rather
+than anything stronger: the studio draws the shared 75% study for it, and only
+the encoder knob is built from published millimetres. The barebone variant sits
+on the same listing but the page never shows its price, so no kit offer was
+invented for it. The Qwertykeys Neo75 was recorded as a $154 kit with a 317.4 x
+133.8 mm footprint and a 7 degree angle, and the Wuque Studio Ikki68 Aurora as a
+$129 kit, sold out when read, so its amount is the last published price rather
+than an orderable one.
+
+Wooting was read and deliberately not admitted. Its 60HE+ page publishes full
+dimensions but no price anywhere on the page, and the board is an ABS-cased
+gaming keyboard rather than a premium custom, so admitting it would have both
+widened the brand count with an unpriced row and stretched what this catalog
+claims to cover. Rama Works was attempted and its store URLs returned 404, so
+nothing was recorded from it rather than guessing a live path.
+
+That leaves 15 keyboards from 7 brands, with Angry Miao still 8 of the 15 and
+the total still far short of the hundreds the contract asks for. The count on
+the page moved on its own because it is derived from the file, and
+`npm run verify:premium` now reports 9 ranked and 6 unpriced against the new
+data.

@@ -380,6 +380,87 @@
         ]
       },
       "notes": "Sold as one listing across eleven colourways in five editions (Standard, PC, E-White, Special and Legendary) and three stock grades, so the single listed price is recorded rather than a per-edition price. The same page still carries provisional group-buy pricing from the 2023 round ($450 Standard, $470 PC and E-White, $630 Special); that is not the current listed price and is not recorded as an offer. Stock was limited when observed. CannonKeys names this and the Satisfaction75 as its premium line, above the Brutal series."
+    },
+    {
+      "id": "keychron-q1-max",
+      "brand": "Keychron",
+      "name": "Q1 Max",
+      "source": "https://www.keychron.com/products/keychron-q1-max-qmk-via-wireless-custom-mechanical-keyboard",
+      "description": "75% board measuring 327.5 x 145 mm with a 20.7 mm front height and 31.8 mm back height excluding keycaps, 2.4 mm feet and a 5.2 degree typing angle, weighing 1724 g plus or minus 10 g fully assembled. CNC-machined 6063 aluminium body on a double-gasket mount, pairing plate gaskets with silicone pads between the top and bottom cases, over a polycarbonate plate. Screw-in PCB stabilisers, south-facing RGB and hot-swap sockets for 3-pin and 5-pin MX-style switches. An ARM Cortex-M4 STM32F402 with 256 KB of flash runs QMK and is remapped through Keychron's Launcher web app. Connects over 2.4 GHz and USB-C at a 1000 Hz polling rate or Bluetooth 5.1 to three devices at 90 Hz, on a 4000 mAh battery rated up to 180 hours with the backlight off.",
+      "offers": [
+        {
+          "amount": 209.99,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "available",
+          "configuration": "Fully assembled with knob, before colour and switch selection",
+          "observedAt": "2026-09-09",
+          "source": "https://www.keychron.com/products/keychron-q1-max-qmk-via-wireless-custom-mechanical-keyboard"
+        }
+      ],
+      "geometry": {
+        "status": "modeled",
+        "modelId": "keyboard-q1-max",
+        "fidelity": "illustrative",
+        "evidence": [
+          "Case footprint, front and back heights, typing angle and assembled weight are published on the product page.",
+          "The studio draws a shared 75% study rather than Keychron case geometry; only the encoder knob is built from published millimetres."
+        ]
+      },
+      "notes": "Listed at $209.99 against a $229.99 compare-at price when observed. A Barebone variant without keycaps and switches is sold on the same listing, but the page does not show its price, so it is not recorded as a kit offer. Carbon Black, Shell White and Purple are colourways of one model, and the ISO layouts are a separate collection rather than separate models."
+    },
+    {
+      "id": "qwertykeys-neo75",
+      "brand": "Qwertykeys",
+      "name": "Neo75",
+      "source": "https://www.qwertykeys.com/products/neo75-custom-mechanical-keyboard",
+      "description": "75% kit measuring 317.4 x 133.8 mm with a 17.6 mm front height and a 7 degree typing angle. Poron gasket mount built on a grooved, adhesive-free gasket structure carried over from the Neo80 Cu, with a chamber-segmented bottom case to break up cavity resonance and a forcebreak layer between the top and bottom cases. Case-only weight is 1459 g with the tri-mode PCB or 1589 g wired. Mirror-polished stainless steel badge, with a stainless steel weight offered in spray-coated or mirror PVD finishes. Hot-swap QMK/VIA PCB in wired ANSI, tri-mode ANSI or tri-mode ISO form over an aluminium or PP plate; tri-mode kits ship with two 2200 mAh batteries and a 2.4 GHz dongle. Switches and keycaps are bought separately.",
+      "offers": [
+        {
+          "amount": 154,
+          "currency": "USD",
+          "kind": "kit",
+          "basis": "store-listing",
+          "availability": "available",
+          "configuration": "Barebone kit, before case colour, weight, PCB and plate selection",
+          "observedAt": "2026-09-09",
+          "source": "https://www.qwertykeys.com/products/neo75-custom-mechanical-keyboard"
+        }
+      ],
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "Case footprint, front height, typing angle and case weights are published; plate and PCB geometry are not."
+        ]
+      },
+      "notes": "Sold as a pre-order with an estimated six-week fulfilment time when observed, and marked a final-sale item. Seven case colours, five weight finishes, three PCBs and two plate materials are selectors on one listing that shows a single price, so that price is recorded rather than a per-configuration one. A prebuilt version exists whose accessories are not compatible with the barebone kit, and its price is not on this page. Regional vendors resell the kit at prices not recorded here."
+    },
+    {
+      "id": "wuque-ikki68-aurora",
+      "brand": "Wuque Studio",
+      "name": "Ikki68 Aurora",
+      "source": "https://shop.wuquestudio.com/products/ikki68-aurora",
+      "description": "65% kit with a frosted, injection-moulded polycarbonate case measuring 13.6 x 4.4 inches with a 0.9 inch base height excluding rubber feet and a 6.5 degree typing angle, assembling to 800 g or 1120 g with the optional weight. Variable gasket mount whose gasket chips can be removed to move the board from firm to bouncy, shipping with both silicone and Poron gaskets. Anodised aluminium plate by default over the multi-layout hot-swap Fairbanks PCB running QMK/VIA, which supports split left shift, split right shift, split backspace, stepped caps lock and ISO enter without soldering. Badges are hot-swappable without opening the case, and a cutout above the right arrow key is lit from beneath for custom logo chips. Switches and keycaps are bought separately.",
+      "offers": [
+        {
+          "amount": 129,
+          "currency": "USD",
+          "kind": "kit",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "Kit as listed, before colour and wired or wireless PCB selection",
+          "observedAt": "2026-09-09",
+          "source": "https://shop.wuquestudio.com/products/ikki68-aurora"
+        }
+      ],
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "Case dimensions, typing angle and assembled weights are published; plate and PCB geometry are not."
+        ]
+      },
+      "notes": "Sold out when observed, so $129 is the last published listing price rather than an orderable one. Charcoal, Mint and the Aurora x Mizu edition are colourways of one model on a single listing, and wired and wireless are PCB options rather than separate models. Wireless editions need a standard LiPo battery that the kit does not include. The listing still carries its 2021 group-buy dates."
     }
   ]
 }
