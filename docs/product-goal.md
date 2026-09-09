@@ -39,7 +39,8 @@ Added September 8, 2026. Preserve the community direction while implementing the
 | PREMIUM-2 | Most expensive ordering | Comparable currency, offer configuration, kit/complete distinction, price basis, date and availability; unknown prices never become zero-priced claims | Sorting foundation in progress |
 | PREMIUM-3 | HATSU and charging ecosystem | Verified split keywell geometry, handed layout, wireless capabilities and generation-specific CYBERMAT accessory compatibility; preserve source evidence and configuration | Illustrative split 4×6 study in the studio; official CAD, tent angle, and CYBERMAT overlay still unpublished |
 | PREMIUM-4 | CYBERBOARD R2 and display keyboards | Correct model-specific display resolution, LED positions, supported lighting/animation controls and saved customization; browser preview distinguished from device firmware export | Illustrative 5×40 panel on a 75% study; firmware export and exact LED pitch still unpublished |
-| PREMIUM-5 | Accurate premium geometry | Each model has dimensional/layout reference evidence and visual comparison; generic previews never presented as exact models; unmodeled products remain discoverable | AM featured presets no longer reuse Bakeneko/Q1 Max; remaining catalog still unmodeled or illustrative |
+| PREMIUM-5 | Accurate premium geometry | Each model has dimensional/layout reference evidence and visual comparison; generic previews never presented as exact models; unmodeled products remain discoverable; CAD-twin copy is reserved for CAD-1 | AM featured presets no longer reuse Bakeneko/Q1 Max; remaining catalog still unmodeled or illustrative; CAD-twin gate shipped, no product is a CAD twin yet |
+| CAD-1 | CAD twin pipeline | A product is a CAD twin only when case, plate and PCB are `cad-derived` or `measured` from licensed STEP/STL or published millimetre solids; photos never promote grade; featured 3D copy matches the assembly grade | In progress: CadQuery STEP→GLB generator, per-part revisions, catalog/featured copy gates, and a manifest-gated studio overlay. A part displays a mesh only when its revision lists a hashed GLB and its grade earns it; no revision lists one, so nothing displays yet. Q1 knob is dimension-verified (16×14 mm). HATSU/R2 remain illustrative studies |
 
 ## Configurator completeness, in parallel
 
@@ -123,7 +124,7 @@ Use dedicated ingestion adapters feeding normalized products, variants, observat
 
 Prioritize manufacturer documentation, existing licensed sample packs, original sound-test embeds and documented community data. Creator recording equipment, microphone position, room, desk, processing, switches, caps, plate, foam and mounting all affect sound. Missing capture details remain unknown. A future measured impulse-response/modal model may help approximate combinations, but cannot be sold as exact sound for unmeasured products.
 
-Do not require the user to own keyboards or make recordings. Do not treat universal website ingestion, unverified sales rankings, accurate acoustic simulation or manufacturer CAD coverage as solved by a generic importer or an attractive render.
+Do not require the user to own keyboards or make recordings. Do not treat universal website ingestion, unverified sales rankings, accurate acoustic simulation or manufacturer CAD coverage as solved by a generic importer or an attractive render. A CAD twin is a licensed or measured solid stack, not a photo reconstruction.
 
 ## Progress
 

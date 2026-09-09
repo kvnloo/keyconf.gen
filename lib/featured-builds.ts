@@ -1,6 +1,7 @@
 import { assemblies } from './component-data.ts';
 import { defaultBuild, type Build, type Palette } from './build.ts';
 import { newDeck, type DeckBuild } from './control-deck.ts';
+import { sceneLabel } from './cad-twin.ts';
 
 export type FeaturedBuild =
   | {
@@ -111,7 +112,7 @@ export const featuredBuilds: FeaturedBuild[] = [
       space: '#1a1a1f',
     },
     '#0d0d10',
-    'Angry Miao · 75% LED-panel study · not CAD',
+    `Angry Miao · 75% LED-panel ${sceneLabel('illustrative')}`,
   ),
   keyboard(
     'am-hatsu',
@@ -125,7 +126,7 @@ export const featuredBuilds: FeaturedBuild[] = [
       space: '#7a8796',
     },
     '#4a5564',
-    'Angry Miao · split 4×6 study · not CAD',
+    `Angry Miao · split 4×6 ${sceneLabel('illustrative')}`,
   ),
   {
     kind: 'control-deck',

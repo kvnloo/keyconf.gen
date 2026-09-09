@@ -16,6 +16,7 @@ import { createSwitchAssembly, switchColors } from './switch-model';
 import { monitorTransform, type ScreenPoint } from './monitor-projection';
 import { createAccessoryPreview } from './accessory-model';
 import type { AccessorySelection } from './build-accessories';
+import { cadDisplayForKeyboard } from './cad-twin';
 
 // Steam contributes to the color pass, but must not cast rectangular occlusion.
 class RoomOcclusion extends GTAOPass {
@@ -76,6 +77,43 @@ function disposeModel(model: THREE.Object3D) {
   });
   geometries.forEach((geometry) => geometry.dispose());
   materials.forEach((material) => material.dispose());
+}
+
+/**
+ * Overlay the licensed meshes a revision lists over their study parts. The
+ * study stays in the graph, renamed and hidden, so teardown still disposes it
+ * and no shared material is released early.
+ */
+async function applyCadOverlay(
+  root: THREE.Group,
+  device: SceneOptions['device'],
+) {
+  const plan = cadDisplayForKeyboard(device);
+  let applied = 0;
+  for (const request of plan.requests) {
+    const study = root.getObjectByName(request.role);
+    const parent = study?.parent;
+    if (!study || !parent) continue;
+    try {
+      const part = (
+        await new GLTFLoader().loadAsync(
+          new URL(request.assetPath, document.baseURI).href,
+        )
+      ).scene;
+      part.position.copy(study.position);
+      part.quaternion.copy(study.quaternion);
+      part.scale.copy(study.scale);
+      study.name = `${request.role}_study`;
+      study.visible = false;
+      part.name = request.role;
+      parent.add(part);
+      applied += 1;
+    } catch {
+      // A missing or broken part keeps its study mesh, not an empty keyboard.
+    }
+  }
+  root.userData.cadParts = applied;
+  root.userData.cadTwin = plan.twin;
 }
 
 export function createKeyboardScene(
@@ -445,7 +483,7 @@ export function createKeyboardScene(
         .loadAsync(
           new URL(`models/${sourceGlb(modelId)}`, document.baseURI).href,
         )
-        .then((gltf) => {
+        .then(async (gltf) => {
           if (stopped) {
             disposeModel(gltf.scene);
             return gltf.scene;
@@ -454,6 +492,7 @@ export function createKeyboardScene(
             if (device.hatsu) adaptHatsuModel(gltf.scene);
             else if (device.cyberboard) adaptCyberboardR2Model(gltf.scene);
             else if (device.q1Max) adaptQ1MaxModel(gltf.scene);
+            await applyCadOverlay(gltf.scene, device);
             const positions: THREE.Vector3[] = [];
             gltf.scene.traverse((object) => {
               if (object.name.startsWith('key_'))
@@ -526,6 +565,8 @@ export function createKeyboardScene(
       );
       element.dataset.keyboardVariant = modelId;
       element.dataset.keyCount = String(keys.size);
+      element.dataset.cadParts = String(model.userData.cadParts ?? 0);
+      element.dataset.cadTwin = model.userData.cadTwin ? '1' : '0';
       scene.add(model);
       updateAccessories();
       appearance(true);

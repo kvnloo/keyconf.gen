@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { ArrowUpRight, Search } from 'lucide-react';
+import { geometryGrade, sceneLabel } from '../lib/cad-twin.ts';
 import data from '../data/premium-keyboards.json';
 
 export default function PremiumKeyboards() {
@@ -32,9 +33,10 @@ export default function PremiumKeyboards() {
       <h3>Premium keyboard discovery</h3>
       <p className="muted">
         Source-backed product references for high-price keyboard boards, kits,
-        and charging ecosystems. Illustrative studies are labeled; other
-        geometry stays unmodeled until verified CAD is released. Prices are from
-        official listings (2026-09-08) and may vary.
+        and charging ecosystems. A CAD twin requires licensed or measured case,
+        plate, and PCB solids. Illustrative studies are labeled; other geometry
+        stays unmodeled until that evidence exists. Prices are from official
+        listings (2026-09-08) and may vary.
       </p>
       <label className="catalog-search">
         <Search size={17} aria-hidden="true" />
@@ -87,12 +89,8 @@ export default function PremiumKeyboards() {
                   ? 'Available'
                   : best.availability === 'sold-out'
                     ? 'Sold out'
-                    : 'Unknown'}
-                {board.geometry.status === 'unmodeled'
-                  ? ' · Unmodeled'
-                  : board.geometry.fidelity === 'illustrative'
-                    ? ' · Illustrative study'
-                    : ''}
+                    : 'Unknown'}{' '}
+                · {sceneLabel(geometryGrade(board.geometry))}
               </span>
             </a>
           );
@@ -102,9 +100,9 @@ export default function PremiumKeyboards() {
         )}
       </div>
       <p className="catalog-provenance">
-        Source-backed 2026-09-08. Illustrative studies are not manufacturer CAD.
-        Unmodeled products stay listed until a licensed dimensioned source is
-        published.
+        Source-backed 2026-09-08. CAD twin means cad-derived or measured case,
+        plate, and PCB. Illustrative studies are not manufacturer CAD. Unmodeled
+        products stay listed until a licensed dimensioned source is published.
       </p>
     </section>
   );

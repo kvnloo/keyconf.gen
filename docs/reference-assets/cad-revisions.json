@@ -1,0 +1,79 @@
+{
+  "unitMm": 19.05,
+  "revisions": [
+    {
+      "id": "q1-max-ansi-encoder",
+      "parts": [
+        {
+          "role": "case_bottom",
+          "grade": "illustrative",
+          "source": "https://www.keychron.com/products/keychron-q1-max-qmk-via-wireless-custom-mechanical-keyboard",
+          "notes": "Outer enclosure is a scaled Keyconf 75% study. Layout bounds are 16.25u by 6.5u, not a measured case outline."
+        },
+        {
+          "role": "plate",
+          "grade": "layout-verified",
+          "source": "https://github.com/Keychron/qmk_firmware/blob/9ada9b7baecb9591c469b9b068146ac5891a480a/keyboards/keychron/q1_max/ansi_encoder/keyboard.json"
+        },
+        {
+          "role": "pcb",
+          "grade": "layout-verified",
+          "source": "https://github.com/Keychron/qmk_firmware/blob/9ada9b7baecb9591c469b9b068146ac5891a480a/keyboards/keychron/q1_max/ansi_encoder/keyboard.json"
+        },
+        {
+          "role": "control_dial",
+          "grade": "dimension-verified",
+          "source": "https://www.keychron.com/products/keychron-aluminum-knob",
+          "envelopeMm": {
+            "size": [
+              16,
+              16,
+              14
+            ]
+          },
+          "notes": "Published outer diameter 16 mm and height 14 mm. Inner cavity 13 mm is listed and reserved for the CadQuery solid; the live scene currently uses the outer envelope. Manufacturer STEP is not in the repository."
+        }
+      ]
+    },
+    {
+      "id": "am-hatsu",
+      "parts": [
+        {
+          "role": "case_bottom",
+          "grade": "illustrative",
+          "source": "https://store.angrymiao.com/products/am-hatsu"
+        },
+        {
+          "role": "plate",
+          "grade": "layout-verified",
+          "source": "https://store.angrymiao.com/products/am-hatsu"
+        },
+        {
+          "role": "pcb",
+          "grade": "illustrative",
+          "source": "https://store.angrymiao.com/products/am-hatsu"
+        }
+      ]
+    },
+    {
+      "id": "cyberboard-r2",
+      "parts": [
+        {
+          "role": "case_bottom",
+          "grade": "illustrative",
+          "source": "https://store.angrymiao.com/products/cyberboard-r2-1"
+        },
+        {
+          "role": "plate",
+          "grade": "illustrative",
+          "source": "https://store.angrymiao.com/products/cyberboard-r2-1"
+        },
+        {
+          "role": "pcb",
+          "grade": "illustrative",
+          "source": "https://store.angrymiao.com/products/cyberboard-r2-1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import type { CatalogGeometry } from './cad-twin.ts';
+
 export type KeyboardOffer = {
   amount: number;
   currency: string;
@@ -16,14 +18,7 @@ export type PremiumKeyboard = {
   source: string;
   description: string;
   offers: KeyboardOffer[];
-  geometry:
-    | { status: 'unmodeled' }
-    | {
-        status: 'modeled';
-        modelId: string;
-        fidelity: 'illustrative' | 'dimension-verified';
-        evidence: string[];
-      };
+  geometry: CatalogGeometry;
 };
 
 export type PriceScope = Pick<KeyboardOffer, 'currency' | 'kind' | 'basis'>;

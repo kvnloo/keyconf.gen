@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { adaptQ1MaxModel } from '../lib/q1-model.ts';
+import { UNIT_MM } from '../lib/cad-twin.ts';
 const layout = JSON.parse(
   readFileSync(
     new URL(
@@ -32,8 +33,8 @@ test('real generic GLB adapts to all Q1 cap positions with a separate measured k
     assert.ok(mesh.children.some((child) => child.name.startsWith('cap')));
   }
   const knob = scene.getObjectByName('control_dial');
-  assert.equal(knob.geometry.parameters.radiusTop * 2 * 19.05, 16);
-  assert.equal(knob.geometry.parameters.height * 19.05, 14);
+  assert.equal(knob.geometry.parameters.radiusTop * 2 * UNIT_MM, 16);
+  assert.equal(knob.geometry.parameters.height * UNIT_MM, 14);
   assert.equal(knob.position.x, layout.stockEncoder.x);
   assert.equal(scene.getObjectByName('key_End'), undefined);
 });

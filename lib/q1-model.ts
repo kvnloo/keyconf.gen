@@ -1,9 +1,19 @@
 import * as THREE from 'three';
 import { q1StockEncoderColor } from './keyboard-variant.ts';
+import {
+  cadRevisionById,
+  requiredEnvelope,
+  sceneUnitsFromMm,
+} from './cad-twin.ts';
 import layout from '../docs/reference-assets/keychron-q1-max-layout.json' with { type: 'json' };
 import genericLayouts from '../public/models/layouts.json' with { type: 'json' };
 
-/** Original illustrative enclosure; documented ANSI key positions and knob envelope. */
+const knobEnvelope = requiredEnvelope(
+  cadRevisionById('q1-max-ansi-encoder'),
+  'control_dial',
+);
+
+/** Scaled Keyconf 75% enclosure; QMK key positions; published knob millimetres. */
 export function adaptQ1MaxModel(model: THREE.Group): void {
   const templates = new Map(
     model.children
@@ -53,8 +63,8 @@ export function adaptQ1MaxModel(model: THREE.Group): void {
     child.scale.z *= 6.5 / 6;
   }
   model.add(...caps);
-  const radius = 8 / 19.05;
-  const height = 14 / 19.05;
+  const radius = sceneUnitsFromMm(knobEnvelope.size[0] / 2);
+  const height = sceneUnitsFromMm(knobEnvelope.size[2]);
   const knob = new THREE.Mesh(
     new THREE.CylinderGeometry(radius, radius, height, 64),
     new THREE.MeshStandardMaterial({
