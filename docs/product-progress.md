@@ -1328,3 +1328,30 @@ researched and not a survey of the premium market, so nobody reads a ranked
 list of nine as the top of a field. Widening past one brand is the remaining
 work, and now that the rules run on every commit, boards can be admitted
 without the ordering guarantees quietly rotting as the file grows.
+
+## Two more brands, read from their own storefronts
+
+With the admission rules enforced, the catalog could grow without the ordering
+guarantees quietly rotting, so it grew. It now holds 11 keyboards from three
+brands instead of nine from one.
+
+Norbauer & Co.'s Seneca is recorded at $3,900, which makes it the most
+expensive board on the page. Its listing publishes a range, $3,900 to $8,900,
+and does not say which configuration reaches the top, so only the low end is
+recorded and the entry says why. It is marked sold out because that is what the
+listing says: the board is unavailable for immediate shipment and a ten percent
+nonrefundable deposit reserves a slot in a queue the page estimates at nine
+months. Recording $8,900 and attributing it to nothing would have been the more
+impressive number and the less true one.
+
+Mode Designs' Sonnet is the first kit in the file, at $289 for the base kit
+before edition, PCB and plate options. That closes a gap that had been open
+since the ordering work: kit and full-board prices were never ranked against
+each other, but with no kit in the catalog the rule was untested. The browser
+check now reads the kit tab's amounts back against the data and asserts no
+full-board price appears among them, instead of asserting the tab is empty.
+
+Both are honestly unmodeled. The Sonnet publishes case measurements — 315 x 143
+mm, 19 mm front, 5.5 degrees — and the Seneca publishes none, and neither
+publishes CAD, so neither gets geometry. Three brands is not hundreds, and the
+count on the page still says so.

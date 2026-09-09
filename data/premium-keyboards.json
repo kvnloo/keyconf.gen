@@ -1,5 +1,5 @@
 {
-  "accessed_at": "2026-09-08",
+  "accessed_at": "2026-09-09",
   "boards": [
     {
       "id": "am-hatsu",
@@ -8,10 +8,35 @@
       "source": "https://store.angrymiao.com/products/am-hatsu",
       "description": "Wireless split ergonomic board, 4x6 layout, BLE 5.0, two 5,000 mAh batteries, 3 W Qi charging. 3D-curved metal halves, combined weight 1.54 kg. Two supported layers, white PCB lighting, proprietary low-frequency inter-half link.",
       "offers": [
-        { "amount": 1099, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "available", "configuration": "Standard", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/am-hatsu" },
-        { "amount": 2350, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "BATTLESHIP Limited Edition", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/am-hatsu-battleship" }
+        {
+          "amount": 1099,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "available",
+          "configuration": "Standard",
+          "observedAt": "2026-09-08",
+          "source": "https://store.angrymiao.com/products/am-hatsu"
+        },
+        {
+          "amount": 2350,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "BATTLESHIP Limited Edition",
+          "observedAt": "2026-09-08",
+          "source": "https://store.angrymiao.com/products/am-hatsu-battleship"
+        }
       ],
-      "geometry": { "status": "modeled", "modelId": "keyboard-hatsu", "fidelity": "illustrative", "evidence": ["Official 4x6 / 45% split ortho description. Scene uses two 4x6 1u halves with a gap; not manufacturer CAD, tent angle, or half footprint."] },
+      "geometry": {
+        "status": "modeled",
+        "modelId": "keyboard-hatsu",
+        "fidelity": "illustrative",
+        "evidence": [
+          "Official 4x6 / 45% split ortho description. Scene uses two 4x6 1u halves with a gap; not manufacturer CAD, tent angle, or half footprint."
+        ]
+      },
       "notes": "HATSU-to-CYBERMAT R2 compatibility is official (ten central coils designed for HATSU). Qi placement unverified without footprint."
     },
     {
@@ -21,12 +46,55 @@
       "source": "https://store.angrymiao.com/products/cyberboard-r2-1",
       "description": "75%-class board with 5 x 40 LED panel, 200 screen LEDs + 81 in-switch LEDs, BLE 5.0 + USB-C, Qi charging, 10-degree typing incline, gasket mount, hot-swap. Manual confirms R2/R3 shared controls.",
       "offers": [
-        { "amount": 799, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Jet Black / Bundle", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/cyberboard-r2-1" },
-        { "amount": 599, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Jet Black / Base Kit", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/cyberboard-r2-1" },
-        { "amount": 799, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Meteor Grey / Bundle", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/cyberboard-r2-1" },
-        { "amount": 635, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Psychedelic / Base Kit", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/cyberboard-r2-1" }
+        {
+          "amount": 799,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "Jet Black / Bundle",
+          "observedAt": "2026-09-08",
+          "source": "https://store.angrymiao.com/products/cyberboard-r2-1"
+        },
+        {
+          "amount": 599,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "Jet Black / Base Kit",
+          "observedAt": "2026-09-08",
+          "source": "https://store.angrymiao.com/products/cyberboard-r2-1"
+        },
+        {
+          "amount": 799,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "Meteor Grey / Bundle",
+          "observedAt": "2026-09-08",
+          "source": "https://store.angrymiao.com/products/cyberboard-r2-1"
+        },
+        {
+          "amount": 635,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "Psychedelic / Base Kit",
+          "observedAt": "2026-09-08",
+          "source": "https://store.angrymiao.com/products/cyberboard-r2-1"
+        }
       ],
-      "geometry": { "status": "modeled", "modelId": "keyboard-cyberboard-r2", "fidelity": "illustrative", "evidence": ["Official 5x40 / 200-LED panel count. Scene keeps a generic 75% key grid and adds an illustrative panel; exterior dimensions and LED pitch unpublished."] },
+      "geometry": {
+        "status": "modeled",
+        "modelId": "keyboard-cyberboard-r2",
+        "fidelity": "illustrative",
+        "evidence": [
+          "Official 5x40 / 200-LED panel count. Scene keeps a generic 75% key grid and adds an illustrative panel; exterior dimensions and LED pitch unpublished."
+        ]
+      },
       "notes": "40x5 RGB matrix is demonstrable; case silhouette must remain approximate until licensed dimensioned source appears."
     },
     {
@@ -36,9 +104,23 @@
       "source": "https://www.angrymiao.com/cybermat-r2/",
       "description": "Wireless charging mat: 900 x 340 mm, 4 zones, 6 Qi devices, 90 W charger, magnetic phone alignment. Manual documents 323x883 mm internal area, 4.2 kg, 2 mm cloth pad.",
       "offers": [
-        { "amount": 149, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "unavailable", "configuration": "Standard", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/cybermat-r2-wireless-charging-mat" }
+        {
+          "amount": 149,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "unavailable",
+          "configuration": "Standard",
+          "observedAt": "2026-09-08",
+          "source": "https://store.angrymiao.com/products/cybermat-r2-wireless-charging-mat"
+        }
       ],
-      "geometry": { "status": "unmodeled", "evidence": ["External dimensions 340x900 mm documented; coil-center coordinates and exact zone bounds unknown."] },
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "External dimensions 340x900 mm documented; coil-center coordinates and exact zone bounds unknown."
+        ]
+      },
       "notes": "HATSU-specific central coils explicitly named; R3 is materially different (foldable silicone base, 11 coils)."
     },
     {
@@ -48,9 +130,23 @@
       "source": "https://store.angrymiao.com/collections/by-scenarios",
       "description": "Ergonomic Alice-style 65%; Macross-inspired sculptural case. Sold out / limited.",
       "offers": [
-        { "amount": 544, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Regular", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/collections/by-scenarios" }
+        {
+          "amount": 544,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "Regular",
+          "observedAt": "2026-09-08",
+          "source": "https://store.angrymiao.com/collections/by-scenarios"
+        }
       ],
-      "geometry": { "status": "unmodeled", "evidence": ["No CAD or measurement published for this model."] }
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "No CAD or measurement published for this model."
+        ]
+      }
     },
     {
       "id": "am-relic-80",
@@ -59,10 +155,33 @@
       "source": "https://store.angrymiao.com/collections/by-scenarios",
       "description": "80% chalk-white or raw collector finish. Current listing; stock varies.",
       "offers": [
-        { "amount": 660, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "available", "configuration": "Chalk White", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/collections/by-scenarios" },
-        { "amount": 699, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "available", "configuration": "RAW", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/collections/by-scenarios" }
+        {
+          "amount": 660,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "available",
+          "configuration": "Chalk White",
+          "observedAt": "2026-09-08",
+          "source": "https://store.angrymiao.com/collections/by-scenarios"
+        },
+        {
+          "amount": 699,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "available",
+          "configuration": "RAW",
+          "observedAt": "2026-09-08",
+          "source": "https://store.angrymiao.com/collections/by-scenarios"
+        }
       ],
-      "geometry": { "status": "unmodeled", "evidence": ["No CAD or dimensioned source found."] }
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "No CAD or dimensioned source found."
+        ]
+      }
     },
     {
       "id": "cyberboard-r3",
@@ -71,10 +190,33 @@
       "source": "https://www.angrymiao.com/en/cyberboard-r3/",
       "description": "75% gasket mount; upgraded LED matrix with higher refresh/color reproduction; 256-level DC dimming; shared R2/R3 manual confirms same control family.",
       "offers": [
-        { "amount": 539, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Standard", "observedAt": "2026-09-08", "source": "https://www.angrymiao.com/en/cyberboard-r3/" },
-        { "amount": 620, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Reference price", "observedAt": "2026-09-08", "source": "https://www.angrymiao.com/en/cyberboard-r3/" }
+        {
+          "amount": 539,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "Standard",
+          "observedAt": "2026-09-08",
+          "source": "https://www.angrymiao.com/en/cyberboard-r3/"
+        },
+        {
+          "amount": 620,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "Reference price",
+          "observedAt": "2026-09-08",
+          "source": "https://www.angrymiao.com/en/cyberboard-r3/"
+        }
       ],
-      "geometry": { "status": "unmodeled", "evidence": ["No official CAD or dimensions published; R3 manual shared with R2."] }
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "No official CAD or dimensions published; R3 manual shared with R2."
+        ]
+      }
     },
     {
       "id": "cyberboard-terminal",
@@ -83,10 +225,33 @@
       "source": "https://www.angrymiao.com/en/products/",
       "description": "75% retro-futuristic RGB; translucent integrated gasket mount; mirror-PVD stainless weight. Engraved bundle $810 / base kit $528; both sold out.",
       "offers": [
-        { "amount": 528, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Base Kit", "observedAt": "2026-09-08", "source": "https://www.angrymiao.com/en/products/" },
-        { "amount": 810, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Engraved Bundle", "observedAt": "2026-09-08", "source": "https://www.angrymiao.com/en/products/" }
+        {
+          "amount": 528,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "Base Kit",
+          "observedAt": "2026-09-08",
+          "source": "https://www.angrymiao.com/en/products/"
+        },
+        {
+          "amount": 810,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "Engraved Bundle",
+          "observedAt": "2026-09-08",
+          "source": "https://www.angrymiao.com/en/products/"
+        }
       ],
-      "geometry": { "status": "unmodeled", "evidence": ["No CAD published; distinctive retro-futuristic profile."] }
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "No CAD published; distinctive retro-futuristic profile."
+        ]
+      }
     },
     {
       "id": "am-neon-80",
@@ -95,9 +260,23 @@
       "source": "https://www.angrymiao.com/products/",
       "description": "80% synthwave design, four-dimensional RGB matrix lighting, three-stage leaf spring. Product page current; no verified price.",
       "offers": [
-        { "amount": 0, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "unknown", "configuration": "Standard", "observedAt": "2026-09-08", "source": "https://www.angrymiao.com/products/" }
+        {
+          "amount": 0,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "unknown",
+          "configuration": "Standard",
+          "observedAt": "2026-09-08",
+          "source": "https://www.angrymiao.com/products/"
+        }
       ],
-      "geometry": { "status": "unmodeled", "evidence": ["No dimensioned source published."] }
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "No dimensioned source published."
+        ]
+      }
     },
     {
       "id": "am-rgb-65-r1-5",
@@ -106,9 +285,75 @@
       "source": "https://store.angrymiao.com/collections/by-scenarios",
       "description": "65% Game Boy-inspired DIY LED panel, adjustable leaf-spring mount. Limited / sold out variants; from $435 (regular $451).",
       "offers": [
-        { "amount": 435, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Standard", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/collections/by-scenarios" }
+        {
+          "amount": 435,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "Standard",
+          "observedAt": "2026-09-08",
+          "source": "https://store.angrymiao.com/collections/by-scenarios"
+        }
       ],
-      "geometry": { "status": "unmodeled", "evidence": ["No CAD published."] }
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "No CAD published."
+        ]
+      }
+    },
+    {
+      "id": "norbauer-seneca",
+      "brand": "Norbauer & Co.",
+      "name": "the Seneca",
+      "source": "https://www.norbauer.co/products/the-seneca",
+      "description": "Electrocapacitive board sold as the First Edition. Plasma-ceramic finished aluminium in Oxide Gray, Travertine or Heatshield, or bead-blasted Veracity Titanium, with a thick solid brass switch plate in matte silver chrome. Ships with an MTNU-profile R&D 1973 double-shot PBT set moulded by GMK. Designed for a flat typing position; an optional CNC walnut riser adds a 3 degree pitch.",
+      "offers": [
+        {
+          "amount": 3900,
+          "currency": "USD",
+          "kind": "complete",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "First Edition, lowest listed configuration of a $3,900-$8,900 range",
+          "observedAt": "2026-09-09",
+          "source": "https://www.norbauer.co/products/the-seneca"
+        }
+      ],
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "No CAD or dimensioned drawing published; the listing describes finishes and materials only."
+        ]
+      },
+      "notes": "The listing publishes only the endpoints of its price range, so the lowest is recorded and the configuration reaching $8,900 is not attributed here. Sold out for immediate shipment: a 10 percent nonrefundable deposit reserves a build slot, and the listing states a nine-month queue estimate."
+    },
+    {
+      "id": "mode-sonnet",
+      "brand": "Mode Designs",
+      "name": "Sonnet",
+      "source": "https://modedesigns.com/products/sonnet",
+      "description": "75% kit measuring 315 x 143 mm with a 19 mm front height, 24 mm back height and 5.5 degree typing angle, assembling to 4-7.5 lb. Media-blasted aluminium top and bottom with a maple accent and a stainless steel weight. The base kit is the case, PCB and daughterboard, mounting system, feet and fasteners; switches, keycaps and stabilisers are bought separately. QMK/VIA ARM PCB for 80-83 MX-style switches.",
+      "offers": [
+        {
+          "amount": 289,
+          "currency": "USD",
+          "kind": "kit",
+          "basis": "store-listing",
+          "availability": "available",
+          "configuration": "Base kit, before edition, PCB and plate options",
+          "observedAt": "2026-09-09",
+          "source": "https://modedesigns.com/products/sonnet"
+        }
+      ],
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "Case measurements are published, but no CAD or plate/PCB geometry is."
+        ]
+      },
+      "notes": "Priced from $289 with per-option costs added at build time (edition +$30 or +$40, hot-swap PCB +$5, plate +$10 to +$40), so an assembled price depends on choices not recorded here. Black Sesame, Forest Mocha and Steel Mushroom editions were sold out when observed."
     }
   ]
 }

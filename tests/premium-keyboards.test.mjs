@@ -98,9 +98,12 @@ test('the shipped catalog obeys the admission rules and reports its real size', 
   // The published number is whatever is actually covered; this asserts the
   // count is derived from the file rather than written by hand.
   assert.equal(coverage.models, boards.length);
-  assert.deepEqual(coverage.brands, [
-    ...new Set(boards.map((board) => board.brand)),
-  ]);
+  assert.deepEqual(
+    coverage.brands,
+    [...new Set(boards.map((board) => board.brand))].sort((a, b) =>
+      a.localeCompare(b),
+    ),
+  );
 });
 
 test('highest listed configuration retains its identity and sold-out status', () => {

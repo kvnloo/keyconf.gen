@@ -146,7 +146,27 @@ try {
   await expect(unrankedList.locator('.research-product')).toHaveCount(
     kit.unranked.length,
   );
-  assert.match(await section.innerText(), /No kit listing in USD/);
+  const kitAmounts = await rankedList
+    .locator('[data-premium-amount]')
+    .evaluateAll((nodes) =>
+      nodes.map((node) => Number(node.dataset.premiumAmount)),
+    );
+  assert.deepEqual(
+    kitAmounts,
+    kit.ranked.map((row) => row.offer.amount),
+  );
+  // The point of the scope: no full-board price may appear in the kit ranking.
+  const completeAmounts = new Set(
+    complete.ranked.map((row) => row.offer.amount),
+  );
+  for (const amount of kitAmounts)
+    assert.ok(
+      !completeAmounts.has(amount) ||
+        kit.ranked.some((row) => row.offer.amount === amount),
+      `kit ranking shows ${amount}, which is a full-board price`,
+    );
+  if (!kit.ranked.length)
+    assert.match(await section.innerText(), /No kit listing in USD/);
 
   await section.getByRole('button', { name: 'Full board' }).click();
   await expect(rankedList.locator('[data-premium-amount]')).toHaveCount(
