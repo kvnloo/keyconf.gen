@@ -69,13 +69,17 @@ try {
     });
   }
   await page.waitForFunction(() => {
-    const strip = document
-      .querySelector('.featured-cards')
-      .getBoundingClientRect();
-    const last = document
-      .querySelector('.featured-card:last-child')
-      .getBoundingClientRect();
-    return last.left >= strip.left - 1 && last.right <= strip.right + 1;
+    const strip = document.querySelector('.featured-cards');
+    const more = document.querySelector('[aria-label="More builds"]');
+    if (!strip || !more) return false;
+    const last = document.querySelector('.featured-card:last-child');
+    if (!last) return false;
+    const stripRect = strip.getBoundingClientRect();
+    const lastRect = last.getBoundingClientRect();
+    const atEnd = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 2;
+    const lastReachable =
+      lastRect.right <= stripRect.right + 1 && lastRect.left < stripRect.right;
+    return more.disabled && atEnd && lastReachable;
   });
   assert.equal(await more.isEnabled(), false);
   assert.equal(
@@ -186,16 +190,14 @@ try {
       );
     }
   }
-  await button('Preview CYBERBOARD R2').click();
-  assert.equal(
-    await button('Preview CYBERBOARD R2').getAttribute('aria-pressed'),
-    'true',
-  );
-  await button('Preview AM HATSU').click();
-  assert.equal(
-    await button('Preview AM HATSU').getAttribute('aria-pressed'),
-    'true',
-  );
+  await link(/^keyconf\b/).click();
+  await page.setViewportSize({ width: 1280, height: 900 });
+  for (const name of ['CYBERBOARD R2', 'AM HATSU']) {
+    const preview = button(`Preview ${name}`);
+    await preview.scrollIntoViewIfNeeded();
+    await preview.click();
+    assert.equal(await preview.getAttribute('aria-pressed'), 'true');
+  }
 
   console.log(
     'PASS: all eight presets reachable at 320px without changing selection; preview isolation, named customization and one-step undo, four-route persistence, volume control and muted reload; Angry Miao featured cards present.',
