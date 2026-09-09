@@ -31,7 +31,11 @@
               14
             ]
           },
-          "notes": "Published outer diameter 16 mm and height 14 mm. Inner cavity 13 mm is listed and reserved for the CadQuery solid; the live scene currently uses the outer envelope. Manufacturer STEP is not in the repository."
+          "notes": "Published outer diameter 16 mm and height 14 mm. Inner cavity 13 mm is listed and reserved for the CadQuery solid; the live scene currently uses the outer envelope. Manufacturer STEP is not in the repository.",
+          "scene": {
+            "glb": "public/models/cad/keychron-aluminum-knob.glb",
+            "sha256": "5c40c84b509d8747ac8d50d55feb8e72a1e2d177e5a9779ace0a0c010e091a03"
+          }
         }
       ]
     },

@@ -100,13 +100,27 @@ async function applyCadOverlay(
           new URL(request.assetPath, document.baseURI).href,
         )
       ).scene;
+      const seat = new THREE.Box3()
+        .setFromObject(study)
+        .getCenter(new THREE.Vector3());
       part.position.copy(study.position);
       part.quaternion.copy(study.quaternion);
       part.scale.copy(study.scale);
-      study.name = `${request.role}_study`;
-      study.visible = false;
       part.name = request.role;
       parent.add(part);
+      // A CAD file's origin is wherever its author left it, so place the part
+      // by the volume it occupies rather than trusting that origin.
+      part.updateWorldMatrix(true, true);
+      const landed = new THREE.Box3()
+        .setFromObject(part)
+        .getCenter(new THREE.Vector3());
+      part.position.copy(
+        parent.worldToLocal(
+          part.getWorldPosition(new THREE.Vector3()).add(seat.sub(landed)),
+        ),
+      );
+      study.name = `${request.role}_study`;
+      study.visible = false;
       applied += 1;
     } catch {
       // A missing or broken part keeps its study mesh, not an empty keyboard.

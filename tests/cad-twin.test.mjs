@@ -108,13 +108,25 @@ test('featured Angry Miao and Q1 boards are not labeled as CAD twins', () => {
   assert.equal(sceneUnitsFromMm(knob.size[0]) * UNIT_MM, 16);
 });
 
-test('no revision displays a mesh yet', () => {
-  for (const revision of revisions.revisions)
-    assert.deepEqual(
-      cadDisplayRequests(revision.parts),
-      [],
-      `${revision.id} would overlay CAD before a part earns it`,
+test('only the parts that earned a mesh display, and none implies a twin', () => {
+  const displayed = revisions.revisions.flatMap((revision) =>
+    cadDisplayRequests(revision.parts).map(
+      (request) => `${revision.id}:${request.role}`,
+    ),
+  );
+  assert.deepEqual(displayed, ['q1-max-ansi-encoder:control_dial']);
+  for (const revision of revisions.revisions) {
+    for (const request of cadDisplayRequests(revision.parts))
+      assert.ok(
+        !['case_bottom', 'plate', 'pcb'].includes(request.role),
+        `${revision.id} displays ${request.role}, which a study must not`,
+      );
+    assert.equal(
+      isCadTwin(assemblyGrade(revision.parts)),
+      false,
+      `${revision.id} became a twin by listing a mesh`,
     );
+  }
 });
 
 test('every listed mesh exists and matches its listed hash', () => {
@@ -200,10 +212,17 @@ test('keyboard flags select their revision, and none is a twin yet', () => {
   assert.equal(q1.revisionId, 'q1-max-ansi-encoder');
   assert.equal(hatsu.revisionId, 'am-hatsu');
   assert.equal(cyberboard.revisionId, 'cyberboard-r2');
-  for (const plan of [q1, hatsu, cyberboard]) {
-    assert.deepEqual(plan.requests, []);
-    assert.equal(plan.twin, false);
-  }
+  assert.deepEqual(
+    q1.requests.map((request) => request.role),
+    ['control_dial'],
+  );
+  assert.equal(
+    q1.requests[0].assetPath,
+    'models/cad/keychron-aluminum-knob.glb',
+  );
+  assert.deepEqual(hatsu.requests, []);
+  assert.deepEqual(cyberboard.requests, []);
+  for (const plan of [q1, hatsu, cyberboard]) assert.equal(plan.twin, false);
   assert.deepEqual(
     cadDisplayForKeyboard({ kind: 'keyboard', layout: '75' }),
     emptyPlan,

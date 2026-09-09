@@ -41,7 +41,11 @@ def require_cadquery():
 
 
 def write_glb(path: Path, name: str, vertices, triangles) -> None:
-    positions = [coord / UNIT_MM for vertex in vertices for coord in vertex]
+    # CadQuery models Z-up in millimetres; glTF is Y-up in scene units. The
+    # -90 degree turn about X keeps the winding, so the faces stay outward.
+    positions = [
+        coord / UNIT_MM for x, y, z in vertices for coord in (x, z, -y)
+    ]
     indices = [index for triangle in triangles for index in triangle]
     position_bytes = struct.pack(f"<{len(positions)}f", *positions)
     index_bytes = struct.pack(f"<{len(indices)}H", *indices)

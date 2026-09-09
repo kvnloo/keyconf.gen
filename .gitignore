@@ -47,3 +47,6 @@ next-env.d.ts
 /data/*.sqlite
 /data/*.sqlite-*
 /docs/report-source.md
+
+# Python bytecode from the CAD generator
+__pycache__/
