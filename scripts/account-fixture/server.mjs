@@ -116,6 +116,10 @@ export async function accountFixture() {
                   '/api/community/publications',
                   (request) => api.publications(request),
                 ],
+                [
+                  '/api/community/collections',
+                  (request) => api.collections(request),
+                ],
               ]);
               const records = new Map([
                 [
@@ -129,6 +133,10 @@ export async function accountFixture() {
                 [
                   '/api/community/publications/',
                   (request, id) => api.publication(request, id),
+                ],
+                [
+                  '/api/community/collections/',
+                  (request, id) => api.collection(request, id),
                 ],
               ]);
               const collection = collections.get(pathname);

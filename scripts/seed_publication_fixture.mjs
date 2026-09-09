@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { saveProfile, saveBuild } from '../db/community.ts';
 import { publishBuild, withdrawPublication } from '../db/publications.ts';
+import { createCollection } from '../db/collections.ts';
 import {
   createProposal,
   closeProposal,
@@ -169,6 +170,29 @@ for (const [index, geometry] of [
   });
   ids.thumbnails.push({ id: publication.id, geometry });
 }
+// A collection curating published builds, including one withdrawn afterwards
+// so the public page can be checked for dropping stale entries.
+const curatedSaved = await saveBuild(db, 'local-test-subject', {
+  operationId: 'local-fixture-save-curated',
+  build: { ...defaultBuild, name: 'Private fixture curated' },
+});
+const curated = await publishBuild(db, 'local-test-subject', {
+  operationId: 'local-fixture-publish-curated',
+  buildId: curatedSaved.id,
+  title: 'Local curated release',
+  note: 'Frozen release notes.',
+  kind: 'build',
+});
+const collection = await createCollection(db, 'local-test-subject', {
+  operationId: 'local-fixture-collection-1',
+  title: 'Boards I keep going back to',
+  note: 'Three published builds, chosen for quiet typing.',
+  publicationIds: [ids.active, curated.id, ids.thumbnails[0].id],
+});
+ids.collection = collection.id;
+ids.collectionWithdrawn = curated.id;
+await withdrawPublication(db, 'local-test-subject', curated.id);
+
 const quote = (value) =>
   value === null ? 'NULL' : "'" + String(value).replaceAll("'", "''") + "'";
 let sql = migrations + '\n';
@@ -179,6 +203,8 @@ for (const table of [
   'community_publication',
   'community_proposal',
   'community_proposal_rotation',
+  'community_collection',
+  'community_collection_item',
 ])
   for (const row of sqlite.prepare('SELECT * FROM ' + table).all())
     sql +=

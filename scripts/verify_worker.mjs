@@ -33,6 +33,7 @@ try {
       fixtures,
     );
     await import('./verify_publication.mjs');
+    await import('./verify_collection.mjs');
     await import('./verify_proposal.mjs');
   }
   if (focus === 'full' || focus === '--discovery') {

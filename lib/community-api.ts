@@ -4,6 +4,12 @@ import {
   withdrawPublication,
 } from '../db/publications.ts';
 import { parsePublicationRequest } from './publication.ts';
+import { parseCollectionRequest } from './collection.ts';
+import {
+  createCollection,
+  listOwnedCollections,
+  withdrawCollection,
+} from '../db/collections.ts';
 import { addFavorite, listFavorites, removeFavorite } from '../db/favorites.ts';
 import {
   listBuilds,
@@ -139,6 +145,48 @@ export function createCommunityApi({
           );
         await communityRequest(request);
         return communityResponse(await withdrawPublication(db, subject, id));
+      });
+    },
+    collections(request: Request) {
+      return authenticated(request, async (subject) => {
+        if (request.method === 'POST') {
+          const input = parseCollectionRequest(await communityRequest(request));
+          const created = await createCollection(db, subject, input);
+          return communityResponse({
+            ...created,
+            operationId: input.operationId,
+          });
+        }
+        if (request.method !== 'GET') return methodNotAllowed('GET, POST');
+        const params = new URL(request.url).searchParams;
+        const createdAt = params.get('before');
+        const id = params.get('id');
+        if ((createdAt === null) !== (id === null))
+          throw new CommunityError(
+            'invalid_request',
+            'This collection page cursor is invalid.',
+            400,
+          );
+        return communityResponse(
+          await listOwnedCollections(
+            db,
+            subject,
+            createdAt !== null && id !== null ? { createdAt, id } : undefined,
+          ),
+        );
+      });
+    },
+    collection(request: Request, id: string) {
+      return authenticated(request, async (subject) => {
+        if (request.method !== 'DELETE') return methodNotAllowed('DELETE');
+        if (!/^[a-zA-Z0-9_-]{16,100}$/.test(id))
+          throw new CommunityError(
+            'invalid_request',
+            'This collection identifier is invalid.',
+            400,
+          );
+        await communityRequest(request);
+        return communityResponse(await withdrawCollection(db, subject, id));
       });
     },
     favorites(request: Request) {

@@ -1355,3 +1355,43 @@ Both are honestly unmodeled. The Sonnet publishes case measurements — 315 x 14
 mm, 19 mm front, 5.5 degrees — and the Seneca publishes none, and neither
 publishes CAD, so neither gets geometry. Three brands is not hundreds, and the
 count on the page still says so.
+
+## Collections, and what a curator is allowed to claim
+
+COMMUNITY-5 asked for drops and collections. Drops shipped a while ago; the
+collections half had been sitting at "not implemented" ever since, so this adds
+it: a signed-in creator orders already-published builds into a named list with
+its own public page.
+
+The interesting question was not storage, it was attribution. A collection puts
+one person's name on top of other people's work, which is exactly the shape that
+invites a reader to assume the curator made, sells, or vouches for the contents.
+So the page says "Curated by" rather than a bare byline, credits every entry to
+the creator who published it, and closes by saying those creators published
+their own builds, can withdraw them at any time, and that Keyconf holds no
+stock, takes no payment and represents nobody named on the page. The browser
+check greps the rendered text for `add to cart`, `buy now`, `checkout` and
+`in stock` and fails if any of them ever appear, so the disclaimer cannot rot
+into decoration while the page quietly grows shop furniture.
+
+Withdrawal was the case worth getting right. A curator can point at a build and
+the creator can change their mind afterwards; the curator should not be able to
+keep displaying it. Entries are read through a join that requires the
+publication still be public, so a withdrawn build leaves every collection at
+once without anything having to notice or clean up. Curating a build that is
+already withdrawn is refused outright at 404 rather than silently stored as an
+entry that would never render. The fixture seeds a collection of three builds
+and withdraws one of them after curation, so the browser check asserts the page
+shows two entries and that the withdrawn title appears nowhere in the DOM.
+
+Ownership follows publications exactly: the account is resolved from the
+verified subject, never from a request field, and the three handlers were tested
+against a forged-identity request that reaches the database zero times. Repeating
+an operation id returns the first collection; reusing it for different content is
+a 409 rather than a second list.
+
+The tests were falsified before being trusted. Dropping the withdrawn-publication
+filter, removing the ownership clause from withdrawal, and accepting unavailable
+builds each fail the suite with the relevant test named. What is not built is a
+way to browse collections: they exist only at their own link, with no index and
+no listing on a profile, which is the next piece of this goal.
