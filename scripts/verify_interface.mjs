@@ -34,6 +34,16 @@ const reports = [];
 const page = await context.newPage();
 const button = (name) => page.getByRole('button', { name, exact: true });
 const tab = (name) => page.getByRole('tab', { name, exact: true });
+const MOBILE_WORKBENCH_MAX = 700;
+
+async function openResearch(viewportWidth) {
+  if (viewportWidth <= MOBILE_WORKBENCH_MAX) {
+    await tab('Components').click();
+    await button('Browse keyboard research').click();
+    return;
+  }
+  await button('Research & sources').click();
+}
 
 async function reflow(name) {
   const dimensions = await page.evaluate(() => ({
@@ -175,7 +185,7 @@ try {
       if (width === 320 || width === 1280) await audit(`${name}, ${width}px`);
       await page.keyboard.press('Escape');
     }
-    await button('Research & sources').click();
+    await openResearch(width);
     await reflow(`Research at ${width}px`);
     if (width === 320 || width === 1280) await audit(`Research, ${width}px`);
     await page.keyboard.press('Escape');
@@ -201,15 +211,14 @@ try {
     await reflow(`${name} at 200% browser zoom`);
     await button('Export your build').click({ trial: true });
   }
-  for (const name of [
-    'Share build',
-    'Import a website',
-    'Research & sources',
-  ]) {
+  for (const name of ['Share build', 'Import a website']) {
     await button(name).click();
     await reflow(`${name} at 200% browser zoom`);
     await button('Close dialog').click();
   }
+  await openResearch(1280);
+  await reflow('Research at 200% browser zoom');
+  await button('Close dialog').click();
   console.log(
     'PASS: actual 200% browser zoom reflows all primary panels and dialogs; export and close remain reachable.',
   );
