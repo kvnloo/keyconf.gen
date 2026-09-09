@@ -23,21 +23,39 @@ try {
   await cyber.waitFor();
   await hatsu.waitFor();
 
-  const readSurface = () =>
-    page.evaluate(() =>
-      getComputedStyle(document.documentElement)
-        .getPropertyValue('--surface')
-        .trim(),
+  const readToken = (name) =>
+    page.evaluate(
+      (token) =>
+        getComputedStyle(document.documentElement)
+          .getPropertyValue(token)
+          .trim(),
+      name,
     );
 
-  const forestSurface = await readSurface();
+  const forestSurface = await readToken('--surface');
+  const forestStage = await readToken('--palette-space');
   await cyber.click();
   assert.equal(
     await cyber.getAttribute('aria-pressed'),
     'true',
     'CYBERBOARD R2 must become the selected featured build',
   );
-  const cyberSurface = await readSurface();
+  await page.waitForFunction(
+    ([surface, stage]) => {
+      const root = getComputedStyle(document.documentElement);
+      const nextSurface = root.getPropertyValue('--surface').trim();
+      const nextStage = root.getPropertyValue('--palette-space').trim();
+      return nextSurface !== surface || nextStage !== stage;
+    },
+    [forestSurface, forestStage],
+  );
+  const cyberSurface = await readToken('--surface');
+  const cyberStage = await readToken('--palette-space');
+  assert.notEqual(
+    forestStage,
+    cyberStage,
+    'Selecting CYBERBOARD R2 must update landing stage color (--palette-space)',
+  );
   assert.notEqual(
     forestSurface,
     cyberSurface,
@@ -46,7 +64,22 @@ try {
 
   await hatsu.click();
   assert.equal(await hatsu.getAttribute('aria-pressed'), 'true');
-  const hatsuSurface = await readSurface();
+  await page.waitForFunction(
+    ([surface, stage]) => {
+      const root = getComputedStyle(document.documentElement);
+      const nextSurface = root.getPropertyValue('--surface').trim();
+      const nextStage = root.getPropertyValue('--palette-space').trim();
+      return nextSurface !== surface || nextStage !== stage;
+    },
+    [cyberSurface, cyberStage],
+  );
+  const hatsuSurface = await readToken('--surface');
+  const hatsuStage = await readToken('--palette-space');
+  assert.notEqual(
+    cyberStage,
+    hatsuStage,
+    'AM HATSU must change landing stage color again',
+  );
   assert.notEqual(
     cyberSurface,
     hatsuSurface,

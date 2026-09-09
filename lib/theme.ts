@@ -26,11 +26,8 @@ function blendColor(c1: string, c2: string, ratio = 0.35): string {
     g2 = p(c2, 3),
     b2 = p(c2, 5);
   const blend = (a: number, b: number) =>
-    Math.round(a * ratio + b * (1 - ratio)) / 255;
-  const toHex = (v: number) =>
-    Math.round(v * 255)
-      .toString(16)
-      .padStart(2, '0');
+    Math.round((a * ratio + b * (1 - ratio)) * 255);
+  const toHex = (v: number) => v.toString(16).padStart(2, '0');
   return `#${toHex(blend(r1, r2))}${toHex(blend(g1, g2))}${toHex(blend(b1, b2))}`;
 }
 
@@ -53,12 +50,31 @@ function readableOn(
   preferred: string,
   options: { light?: string; dark?: string } = {},
 ): string {
-  if (contrastRatio(preferred, background) >= MIN_UI_CONTRAST) return preferred;
-  const light = options.light ?? '#e9ede6';
-  const dark = options.dark ?? '#2a332d';
-  return contrastRatio(light, background) >= contrastRatio(dark, background)
-    ? light
-    : dark;
+  const candidates = [
+    preferred,
+    options.light ?? '#e9ede6',
+    options.dark ?? '#2a332d',
+    '#f8f8ef',
+    '#ffffff',
+    '#20251f',
+    '#000000',
+  ];
+  const passing = candidates.filter(
+    (candidate) => contrastRatio(candidate, background) >= MIN_UI_CONTRAST,
+  );
+  if (passing.length > 0) {
+    if (passing.includes(preferred)) return preferred;
+    return passing.reduce((best, candidate) =>
+      contrastRatio(candidate, background) > contrastRatio(best, background)
+        ? candidate
+        : best,
+    );
+  }
+  return candidates.reduce((best, candidate) =>
+    contrastRatio(candidate, background) > contrastRatio(best, background)
+      ? candidate
+      : best,
+  );
 }
 
 function pickInk(background: string) {

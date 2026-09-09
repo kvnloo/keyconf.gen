@@ -29,6 +29,11 @@ function paletteSources() {
 test('UI theme tokens stay readable on chrome surfaces', () => {
   for (const palette of paletteSources()) {
     const theme = computeTheme(palette);
+    assert.notEqual(
+      theme.uiSurface,
+      '#000000',
+      `${palette.name ?? 'palette'} uiSurface must not collapse to black`,
+    );
     assert.ok(
       contrastRatio(theme.ink, theme.uiSurface) >= MIN_UI_CONTRAST,
       `${palette.name ?? 'palette'} ink on surface`,
