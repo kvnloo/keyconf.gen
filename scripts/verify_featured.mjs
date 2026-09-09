@@ -47,7 +47,11 @@ try {
     () => !document.querySelector('[aria-label="More builds"]')?.disabled,
   );
   assert.equal(await button('Previous builds').isEnabled(), false);
-  for (let step = 0; step < 6 && (await more.isEnabled()); step++) {
+  for (
+    let step = 0;
+    step < featuredBuilds.length && (await more.isEnabled());
+    step++
+  ) {
     const before = await page
       .locator('.featured-cards')
       .evaluate((el) => el.scrollLeft);
