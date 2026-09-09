@@ -110,6 +110,13 @@
   font-size: 0.85rem;
   max-width: 62ch;
 }
+.community-collections-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  font-weight: 600;
+}
 .community-discovery h2:focus-visible {
   outline: 2px solid #bed3b5;
   outline-offset: 5px;

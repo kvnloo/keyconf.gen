@@ -176,6 +176,62 @@ export async function readPublicCollection(db: Database, id: string) {
   return collection(row, await entriesFor(db, id));
 }
 
+export async function listPublicCollections(
+  db: Database,
+  cursor?: { createdAt: string; id: string },
+) {
+  if (
+    cursor &&
+    (!/^[a-zA-Z0-9_-]{16,100}$/.test(cursor.id) ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(cursor.createdAt) ||
+      !Number.isFinite(Date.parse(cursor.createdAt)) ||
+      new Date(cursor.createdAt).toISOString() !== cursor.createdAt)
+  )
+    throw new CommunityError(
+      'invalid_request',
+      'This collection page cursor is invalid.',
+      400,
+    );
+  // A collection earns a place in the index only while something in it is still
+  // published, and it is listed by the entries that survive rather than by the
+  // curated list, so the index never advertises a withdrawn build.
+  const liveEntry =
+    'FROM community_collection_item i JOIN community_publication p ON p.id=i.publication_id WHERE i.collection_id=c.id AND p.withdrawn_at IS NULL';
+  const where = cursor
+    ? ' AND (c.created_at<? OR (c.created_at=? AND c.id<?))'
+    : '';
+  const statement = db.prepare(
+    `SELECT c.id, c.metadata, c.author, c.created_at AS createdAt, (SELECT COUNT(*) ${liveEntry}) AS liveCount ${joins} WHERE c.withdrawn_at IS NULL AND EXISTS (SELECT 1 ${liveEntry})${where} ORDER BY c.created_at DESC,c.id DESC LIMIT 26`,
+  );
+  const query = cursor
+    ? statement.bind(cursor.createdAt, cursor.createdAt, cursor.id)
+    : statement.bind();
+  const { results } = await query.all<
+    Pick<Row, 'id' | 'metadata' | 'author' | 'createdAt'> & {
+      liveCount: number;
+    }
+  >();
+  const items = results.slice(0, 25).map((row) => ({
+    id: row.id,
+    title: parseCollectionRequest(JSON.parse(row.metadata)).title,
+    author: parseCommunityProfile(JSON.parse(row.author)),
+    count: row.liveCount,
+    createdAt: row.createdAt,
+  }));
+  const last = items.at(-1);
+  return {
+    items,
+    next:
+      results.length > 25 && last
+        ? { createdAt: last.createdAt, id: last.id }
+        : null,
+  };
+}
+
+export type PublicCollectionIndex = Awaited<
+  ReturnType<typeof listPublicCollections>
+>;
+
 export async function withdrawCollection(
   db: Database,
   subject: string,

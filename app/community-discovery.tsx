@@ -132,6 +132,12 @@ export default function CommunityDiscovery() {
           Explore published builds and creator drops. Open one to hear it,
           inspect its parts, or make a copy.
         </p>
+        <a
+          className="community-collections-link"
+          href={`${origin}/collections`}
+        >
+          Browse collections <ArrowUpRight size={16} aria-hidden="true" />
+        </a>
       </div>
       <form
         className="community-search"

@@ -1395,3 +1395,39 @@ filter, removing the ownership clause from withdrawal, and accepting unavailable
 builds each fail the suite with the relevant test named. What is not built is a
 way to browse collections: they exist only at their own link, with no index and
 no listing on a profile, which is the next piece of this goal.
+
+## Letting a collection be found without its link
+
+A collection nobody can reach is not published, it is filed. The last piece of
+COMMUNITY-5 was a browsable index, so `/collections` now lists public
+collections newest first and the community section links to it.
+
+The question that shaped the query was what number to print beside each set. The
+curator's request records the builds they chose, and that count is stable and
+cheap to read — but it is the count at the moment of curation, and a creator can
+withdraw a build afterwards. Printing it would let the index advertise four
+builds and hand the reader a page showing three. So the index counts the entries
+that are still published, using the same join the collection page reads through,
+and a collection with nothing left to show is dropped from the listing by an
+`EXISTS` clause rather than left as an entry promising nothing. Its own link
+still answers and still explains that its builds were withdrawn; the index just
+stops recommending it.
+
+The page is server-rendered like the collection page it links to, so paging is a
+plain link carrying the cursor rather than a fetch loop, and the listing works
+without JavaScript. The cursor is validated with the same shape check as the
+owned-collections listing, and a malformed one is refused instead of being
+concatenated into SQL.
+
+Three tests cover the listing: that it orders newest first, names the curator and
+recounts after a withdrawal; that withdrawing the collection itself removes it;
+and that 26 collections page into 25 and 1 with every id appearing exactly once,
+with two malformed cursors rejected. The browser check loads the index, asserts
+the fixture collection lists as two builds rather than the three that were
+curated, follows the link to the collection it advertised, audits the page with
+axe, and confirms the withdrawn build's title appears nowhere in the index. The
+shop-language grep runs here too.
+
+What is still missing is a creator page. A reader who likes a curator's taste can
+only find their other sets by luck, because collections are indexed by recency
+and not by the person who made them.

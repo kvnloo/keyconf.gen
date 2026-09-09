@@ -119,6 +119,73 @@ try {
     );
   }
 
+  // The index makes a collection findable without being handed its link.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const index = await page.goto(new URL('collections', base).href);
+  assert.equal(index.status(), 200);
+  assert.equal(await page.title(), 'Collections | Keyconf');
+  const listed = page.locator('.collection-index-list li');
+  assert.equal(await listed.count(), 1, 'the fixture collection should list');
+  const entry = listed.first();
+  assert.equal(
+    await entry.getByRole('link').getAttribute('href'),
+    `/collections/${ids.collection}`,
+  );
+  assert.match(
+    await entry.innerText(),
+    /Curated by Local test creator\s+@local_test_creator/,
+  );
+  // Two of the three curated builds are still published, so the index has to
+  // count two rather than repeat the number the curator originally chose.
+  assert.match(await entry.innerText(), /\b2 builds\b/);
+  const indexText = await page.locator('.collection-index').innerText();
+  assert.equal(
+    indexText.includes('Local curated release'),
+    false,
+    'the withdrawn build should not surface through the index',
+  );
+  assert.match(
+    indexText,
+    /Keyconf does not hold stock, take payment, or represent anyone listed here\./,
+  );
+  for (const forbidden of [/add to cart/i, /\bbuy now\b/i, /\bcheckout\b/i])
+    assert.equal(
+      forbidden.test(indexText),
+      false,
+      `the collections index must not read like a shop: ${forbidden}`,
+    );
+  assert.equal(
+    (await page.content()).includes('local-test-subject'),
+    false,
+    'the index must not leak the owning account',
+  );
+  const indexAudit = await new AxeBuilder({ page })
+    .include('.collection-index')
+    .analyze();
+  assert.deepEqual(
+    indexAudit.violations.map((violation) => violation.id),
+    [],
+  );
+  await page.screenshot({ path: 'outputs/collection-index.png' });
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth,
+      ),
+      false,
+      `the collections index should fit ${width}px`,
+    );
+  }
+
+  // Following the index link lands on the collection it advertised.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(new URL('collections', base).href);
+  await page.locator('.collection-index-list a').first().click();
+  await page
+    .getByRole('heading', { name: 'Boards I keep going back to', exact: true })
+    .waitFor();
+
   // A withdrawn build's id is not a collection, and neither is a stranger's.
   for (const missing of [ids.collectionWithdrawn, 'missing-collection-000000'])
     assert.equal(

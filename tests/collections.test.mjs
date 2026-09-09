@@ -11,6 +11,7 @@ import {
   readPublicCollection,
   withdrawCollection,
   listOwnedCollections,
+  listPublicCollections,
 } from '../db/collections.ts';
 import { publishBuild, withdrawPublication } from '../db/publications.ts';
 
@@ -211,6 +212,94 @@ test('a build withdrawn after curation leaves the collection instead of showing 
     read.entries.map((entry) => entry.publicationId),
     [mine.id],
   );
+});
+
+test('the public index lists live collections newest first and counts what survives', async (t) => {
+  const { db, owner, other } = await withProfiles(t);
+  const mine = await publish(db, alice, owner, 'index-mine', 'My board');
+  const theirs = await publish(db, bob, other, 'index-theirs', 'Their board');
+  const first = await createCollection(db, alice, {
+    operationId: 'collection-index-0001',
+    title: 'Quiet boards',
+    note: '',
+    publicationIds: [mine.id, theirs.id],
+  });
+  const second = await createCollection(db, bob, {
+    operationId: 'collection-index-0002',
+    title: 'Loud boards',
+    note: '',
+    publicationIds: [theirs.id],
+  });
+  const page = await listPublicCollections(db);
+  assert.deepEqual(
+    page.items.map((item) => item.id),
+    [second.id, first.id],
+    'newest collection comes first',
+  );
+  assert.equal(page.next, null);
+  assert.equal(page.items[0].title, 'Loud boards');
+  assert.equal(page.items[0].author.handle, 'bob_keys');
+  assert.equal(page.items[1].count, 2);
+  // The curated list still names two builds, but only one is still published,
+  // so the index has to say one rather than repeat the original count.
+  await withdrawPublication(db, bob, theirs.id);
+  const after = await listPublicCollections(db);
+  assert.deepEqual(
+    after.items.map((item) => [item.id, item.count]),
+    [[first.id, 1]],
+    'an emptied collection leaves the index and the survivor is recounted',
+  );
+  assert.equal(
+    (await readPublicCollection(db, second.id)).entries.length,
+    0,
+    'the emptied collection still answers its own link',
+  );
+});
+
+test('a withdrawn collection leaves the public index', async (t) => {
+  const { db, owner } = await withProfiles(t);
+  const mine = await publish(db, alice, owner, 'index-gone', 'My board');
+  const collection = await createCollection(db, alice, {
+    operationId: 'collection-index-0003',
+    title: 'Quiet boards',
+    note: '',
+    publicationIds: [mine.id],
+  });
+  assert.equal((await listPublicCollections(db)).items.length, 1);
+  await withdrawCollection(db, alice, collection.id);
+  assert.deepEqual((await listPublicCollections(db)).items, []);
+});
+
+test('the public index pages through collections and refuses a malformed cursor', async (t) => {
+  const { db, owner } = await withProfiles(t);
+  const mine = await publish(db, alice, owner, 'index-page', 'My board');
+  const created = [];
+  for (let index = 0; index < 26; index += 1)
+    created.push(
+      await createCollection(db, alice, {
+        operationId: `collection-page-${String(index).padStart(6, '0')}`,
+        title: `Set ${index}`,
+        note: '',
+        publicationIds: [mine.id],
+      }),
+    );
+  const page = await listPublicCollections(db);
+  assert.equal(page.items.length, 25);
+  assert.ok(page.next);
+  const rest = await listPublicCollections(db, page.next);
+  assert.equal(rest.items.length, 1);
+  assert.equal(rest.next, null);
+  const seen = new Set([...page.items, ...rest.items].map((item) => item.id));
+  assert.equal(seen.size, 26, 'every collection appears once across the pages');
+  assert.equal(seen.size, created.length);
+  for (const cursor of [
+    { createdAt: 'yesterday', id: page.next.id },
+    { createdAt: page.next.createdAt, id: 'short' },
+  ])
+    await assert.rejects(
+      listPublicCollections(db, cursor),
+      (error) => error.code === 'invalid_request',
+    );
 });
 
 test('a repeated collection operation returns the first result and refuses different content', async (t) => {

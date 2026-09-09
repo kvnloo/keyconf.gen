@@ -59,3 +59,30 @@
   border-top: 0;
   padding-top: 0;
 }
+
+.collection-index-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.collection-index-list li {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.collection-index-list a {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.collection-index-meta {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.collection-index .button {
+  justify-self: start;
+}
