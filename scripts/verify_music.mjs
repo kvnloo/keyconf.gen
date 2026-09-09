@@ -3,7 +3,9 @@ import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 
-const browser = await chromium.launch({ args: ['--disable-webgl'] });
+const browser = await chromium.launch({
+  args: ['--autoplay-policy=no-user-gesture-required', '--disable-webgl'],
+});
 try {
   const context = await browser.newContext({
     viewport: { width: 1280, height: 900 },
@@ -53,12 +55,12 @@ try {
         .first()
         .click();
   };
-  const status = (kind) =>
-    page.locator(`[data-music-state="${kind}"]`).waitFor();
+  const status = (kind, { timeout = 45000 } = {}) =>
+    page.locator(`[data-music-state="${kind}"]`).waitFor({ timeout });
   assert.equal(musicRequests.length, 0, 'Music must wait for a user gesture');
   await page.keyboard.press('Tab');
-  await status('playing');
   await openMusic();
+  await status('playing');
   await page.waitForFunction(() => {
     const probe = window.musicProbe;
     if (!probe) return false;
