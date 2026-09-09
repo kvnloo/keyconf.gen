@@ -44,6 +44,12 @@ try {
       .getAttribute('href'),
     'https://example.com/enquire',
   );
+  const availability = await page.locator('.publication-drop').innerText();
+  assert.match(availability, /Availability, from the creator:/);
+  assert.match(
+    availability,
+    /Keyconf does not hold stock, take payment, or represent the seller, and that link leaves this site\./,
+  );
   await page.locator('[data-scene-status=ready]').waitFor({ state: 'visible' });
   await page.locator('.preview-hear:not([disabled])').waitFor();
   assert.equal(

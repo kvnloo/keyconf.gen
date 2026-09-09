@@ -30,13 +30,21 @@ export default function PublishedBuild({
         ))}
       </div>
       {release.kind === 'drop' && (
-        <div>
-          <p>{release.availability}</p>
+        <div className="publication-drop">
+          <p>
+            <strong>Availability, from the creator:</strong>{' '}
+            {release.availability}
+          </p>
           {release.externalUrl && (
             <a href={release.externalUrl} target="_blank" rel="noreferrer">
               Visit the creator ↗
             </a>
           )}
+          <p>
+            Those are the creator&rsquo;s own words about their own sale.
+            Keyconf does not hold stock, take payment, or represent the seller
+            {release.externalUrl ? ', and that link leaves this site.' : '.'}
+          </p>
         </div>
       )}
       <button
