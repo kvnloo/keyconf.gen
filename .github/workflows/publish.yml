@@ -22,10 +22,16 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Block deploy on high-severity dependency vulnerabilities
+        run: npm audit --audit-level=high
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run format:check
-      - run: npm test
+      - run: npm run test
+      - name: Verify theme mechanism (regression)
+        run: npm run verify:theme
+      - name: Mutation testing (Stryker)
+        run: npm run mutate
       - run: npx playwright install --with-deps chromium
       - name: Verify account interface against isolated identity fixtures
         run: npm run verify:account

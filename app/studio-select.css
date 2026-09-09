@@ -9,7 +9,7 @@
   padding: 10px 12px;
   border: 1px solid #425047;
   border-radius: 6px;
-  background: #222c26;
+  background: var(--surface);
   color: var(--ink, #c1d1ba);
   font: inherit;
   font-size: 14px;
@@ -32,7 +32,7 @@
 }
 
 .studio-select-trigger:disabled {
-  background: #222c26;
+  background: var(--surface);
   color: var(--muted, #c1d1ba);
   cursor: not-allowed;
   opacity: 0.65;
@@ -65,7 +65,7 @@
   overflow: hidden;
   border: 1px solid #425047;
   border-radius: 10px;
-  background: #222c26;
+  background: var(--surface);
   color: var(--ink, #c1d1ba);
   box-shadow:
     0 8px 28px #24311f24,
@@ -102,13 +102,13 @@
 }
 
 .studio-select-option[data-selected] {
-  background: #222c26;
+  background: var(--surface);
   color: var(--green, #c1d1ba);
   font-weight: 500;
 }
 
 .studio-select-option[data-highlighted] {
-  background: #222c26;
+  background: var(--surface);
   outline: none;
 }
 
