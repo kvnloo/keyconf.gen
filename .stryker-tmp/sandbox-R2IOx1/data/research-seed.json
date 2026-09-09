@@ -1,0 +1,783 @@
+{
+  "accessed_at": "2026-09-05",
+  "sources": [
+    {
+      "id": "qmk",
+      "title": "QMK keyboard API",
+      "publisher": "QMK",
+      "url": "https://api.qmk.fm/v1/keyboards/all",
+      "coverage": "Firmware targets, revisions, layouts, USB identities; not retail products",
+      "rights_status": "Review QMK API and underlying per-file firmware licensing before redistribution"
+    },
+    {
+      "id": "via",
+      "title": "VIA keyboard definitions",
+      "publisher": "VIA",
+      "url": "https://github.com/the-via/keyboards",
+      "coverage": "Definition-file inventory; files may describe variants of one product",
+      "rights_status": "Upstream repository GPL-3.0; preserve attribution and source license"
+    },
+    {
+      "id": "keebfinder",
+      "title": "Keyboard product catalog",
+      "publisher": "KeebFinder",
+      "url": "https://keeb-finder.com/keyboards",
+      "coverage": "Public retail comparison UI; no documented public API or bulk license found"
+    },
+    {
+      "id": "switchdb",
+      "title": "SwitchDB",
+      "publisher": "skwee357",
+      "url": "https://github.com/skwee357/switchdb",
+      "coverage": "Open TypeScript switch dataset; freshness and item coverage require verification",
+      "rights_status": "Upstream repository GPL-3.0"
+    },
+    {
+      "id": "force",
+      "title": "Switch force curves",
+      "publisher": "ThereminGoat",
+      "url": "https://github.com/ThereminGoat/force-curves",
+      "coverage": "Measurements, not sound predictions; underlying reuse rights unresolved"
+    },
+    {
+      "id": "kbd-july",
+      "title": "Best-selling keyboard switches of July 2026",
+      "publisher": "kbd.news",
+      "url": "https://kbd.news/Best-selling-keyboard-switches-of-July-2026-2895.html",
+      "coverage": "20 contributors, around 600,000 switches; aggregated vendor top lists, not global market share",
+      "published_at": "2026-08-06"
+    },
+    {
+      "id": "prosettings",
+      "title": "Most used VALORANT keyboards",
+      "publisher": "ProSettings",
+      "url": "https://prosettings.net/guides/valorant-keyboard/",
+      "coverage": "694 tracked players on parent-agent retrieval; live page differed from earlier 692-player retrieval"
+    },
+    {
+      "id": "cherry",
+      "title": "MX Standard switches",
+      "publisher": "CHERRY",
+      "url": "https://www.cherry.de/en-gb/products/switches/mx-standard",
+      "coverage": "Contact switch families and feel categories"
+    },
+    {
+      "id": "hhkb",
+      "title": "HHKB electrocapacitive mechanism",
+      "publisher": "PFU / HHKB",
+      "url": "https://hhkeyboard.us/about/history",
+      "coverage": "Topre capacitance detection, distinct stem ecosystem"
+    },
+    {
+      "id": "wooting",
+      "title": "Wooting 80HE",
+      "publisher": "Wooting",
+      "url": "https://wooting.io/wooting-80he",
+      "coverage": "Hall sensing and firmware features; manufacturer claims"
+    },
+    {
+      "id": "tmr",
+      "title": "5075 V5 TMR",
+      "publisher": "Akko",
+      "url": "https://en.akkogear.com/product/5075-v5-tmr-magnetic-switch-keyboard/",
+      "coverage": "Mixed magnetic/contact support on this specific PCB; polling by connection"
+    },
+    {
+      "id": "polarity",
+      "title": "Magnetic switch compatibility FAQ",
+      "publisher": "Akko",
+      "url": "https://en.akkogear.com/faq/compatible-magnetic-switches-for-akko-magnetic-keyboards/",
+      "coverage": "Model-specific magnet polarity restrictions",
+      "published_at": "2025-12-14"
+    },
+    {
+      "id": "optical",
+      "title": "Analog Optical Switches Gen-2",
+      "publisher": "Razer",
+      "url": "https://www.razer.com/newsroom/product-news/razer-analog-optical-switches-gen-2",
+      "coverage": "Optical analog detection and configurable actuation",
+      "published_at": "2024-04-17"
+    },
+    {
+      "id": "lowoptical",
+      "title": "Huntsman V3 Pro Low Profile TKL 8KHz",
+      "publisher": "Razer",
+      "url": "https://www.razer.com/newsroom/product-news/huntsman-v3-pro-low-profile-tenkeyless-8khz",
+      "coverage": "Low-profile analog optical product announcement",
+      "published_at": "2026-08-20"
+    },
+    {
+      "id": "choc",
+      "title": "Choc V2 switch specification",
+      "publisher": "Kailh",
+      "url": "https://www.kailh.net/products/kailh-choc-v2-low-profile-switch-set",
+      "coverage": "Low-profile linear/tactile/clicky options; conflicting lubrication text"
+    },
+    {
+      "id": "rtings",
+      "title": "Keyboard latency methodology",
+      "publisher": "RTINGS",
+      "url": "https://www.rtings.com/keyboard/tests/latency",
+      "coverage": "Solenoid/keycap contact to USB transmission; excludes game and display"
+    },
+    {
+      "id": "rtings80",
+      "title": "Wooting 80HE review",
+      "publisher": "RTINGS",
+      "url": "https://www.rtings.com/keyboard/reviews/wooting/80he",
+      "coverage": "Effective 8kHz verification; numeric latency values not available in this research",
+      "published_at": "2026-06-18"
+    },
+    {
+      "id": "debounce",
+      "title": "Debounce algorithms",
+      "publisher": "QMK",
+      "url": "https://docs.qmk.fm/feature_debounce_type",
+      "coverage": "Eager versus deferred; no universal 5 ms mechanical penalty"
+    },
+    {
+      "id": "redux",
+      "title": "Tofu60 Redux plate",
+      "publisher": "KBDfans",
+      "url": "https://kbdfans.com/products/tofu60-redux-plate",
+      "coverage": "Named case/PCB support and Durock screw-in exclusion"
+    },
+    {
+      "id": "bakeneko",
+      "title": "Bakeneko build guide",
+      "publisher": "CannonKeys",
+      "url": "https://docs.cannonkeys.com/bakeneko/",
+      "coverage": "O-ring stabilizer clearance and assembly guidance"
+    },
+    {
+      "id": "keychroncad",
+      "title": "Hardware CAD design repository",
+      "publisher": "Keychron",
+      "url": "https://github.com/Keychron/Keychron-Keyboards-Hardware-Design",
+      "coverage": "Source-available CAD; some placeholder directories; commercial rights need review"
+    },
+    {
+      "id": "cannoncad",
+      "title": "Resources and PCB STEP models",
+      "publisher": "CannonKeys",
+      "url": "https://docs.cannonkeys.com/resources/",
+      "coverage": "PCB STEP and plate files carry different licenses",
+      "rights_status": "PCB STEP CC BY 4.0; plate files CC BY-NC-ND 4.0"
+    },
+    {
+      "id": "shopify",
+      "title": "Storefront API",
+      "publisher": "Shopify",
+      "url": "https://shopify.dev/docs/api/storefront/latest",
+      "coverage": "Tokenless public products/collections, paginated queries; not full fit specifications"
+    },
+    {
+      "id": "jsonld",
+      "title": "Product variant structured data",
+      "publisher": "Google",
+      "url": "https://developers.google.com/search/docs/appearance/structured-data/product-variants",
+      "coverage": "ProductGroup/hasVariant normalization"
+    },
+    {
+      "id": "mechvibes",
+      "title": "Sound-pack configuration",
+      "publisher": "Mechvibes",
+      "url": "https://github.com/hainguyents13/mechvibes/wiki/Config-Versions",
+      "coverage": "Sample mapping, separate per-pack rights; no arbitrary build sound synthesis"
+    },
+    {
+      "id": "recording",
+      "title": "Recording keyboard sound tests",
+      "publisher": "Kinetic Labs",
+      "url": "https://kineticlabs.com/blog/tips-for-recording-a-good-keyboard-typing-sound-test",
+      "coverage": "Mic, desk and recording conditions affect sound"
+    },
+    {
+      "id": "taeha",
+      "title": "Taeha Types",
+      "publisher": "Taeha Types",
+      "url": "https://www.taehatypes.com/",
+      "coverage": "Craft and visual reference; no sound reuse permission obtained"
+    },
+    {
+      "id": "sqlite",
+      "title": "Appropriate uses for SQLite",
+      "publisher": "SQLite",
+      "url": "https://www.sqlite.org/whentouse.html",
+      "coverage": "Local catalog suitability versus concurrent multiwriter server workloads"
+    }
+  ],
+  "products": [
+    {
+      "id": "80he",
+      "name": "80HE",
+      "brand": "Wooting",
+      "category": "keyboard",
+      "source_id": "wooting"
+    },
+    {
+      "id": "60he",
+      "name": "60HE+",
+      "brand": "Wooting",
+      "category": "keyboard",
+      "source_id": "prosettings"
+    },
+    {
+      "id": "60hev2",
+      "name": "60HE V2",
+      "brand": "Wooting",
+      "category": "keyboard",
+      "source_id": "prosettings"
+    },
+    {
+      "id": "huntsman",
+      "name": "Huntsman V3 Pro TKL",
+      "brand": "Razer",
+      "category": "keyboard",
+      "source_id": "prosettings"
+    },
+    {
+      "id": "huntsman-mini",
+      "name": "Huntsman V3 Pro Mini",
+      "brand": "Razer",
+      "category": "keyboard",
+      "source_id": "prosettings"
+    },
+    {
+      "id": "5075",
+      "name": "5075 V5 TMR",
+      "brand": "Akko",
+      "category": "keyboard",
+      "source_id": "tmr"
+    },
+    {
+      "id": "hhkb",
+      "name": "HHKB Professional Hybrid",
+      "brand": "PFU",
+      "category": "keyboard",
+      "source_id": "hhkb"
+    },
+    {
+      "id": "razer-low",
+      "name": "Huntsman V3 Pro Low Profile TKL 8KHz",
+      "brand": "Razer",
+      "category": "keyboard",
+      "source_id": "lowoptical"
+    },
+    {
+      "id": "redux",
+      "name": "Tofu60 Redux",
+      "brand": "KBDfans",
+      "category": "case",
+      "source_id": "redux"
+    },
+    {
+      "id": "bakeneko",
+      "name": "Bakeneko60",
+      "brand": "CannonKeys",
+      "category": "case",
+      "source_id": "bakeneko"
+    },
+    {
+      "id": "july-switch-1",
+      "name": "Keygeek Y2",
+      "brand": "Keygeek",
+      "category": "switch",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-2",
+      "name": "Sillyworks x Gateron Type R",
+      "brand": "Gateron",
+      "category": "switch",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-3",
+      "name": "Keygeek Blue Cheese V2",
+      "brand": "Keygeek",
+      "category": "switch",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-4",
+      "name": "TTC Frozen V2 Silent",
+      "brand": "TTC",
+      "category": "switch",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-5",
+      "name": "HMX Yogurt S",
+      "brand": "HMX",
+      "category": "switch",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-6",
+      "name": "Gateron Oil King",
+      "brand": "Gateron",
+      "category": "switch",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-7",
+      "name": "TTC Bluish White V2 Silent",
+      "brand": "TTC",
+      "category": "switch",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-8",
+      "name": "Huano Sakura V2",
+      "brand": "Huano",
+      "category": "switch",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-9",
+      "name": "Gateron Milky Yellow Pro",
+      "brand": "Gateron",
+      "category": "switch",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-10",
+      "name": "Akko Cream Yellow Pro V5",
+      "brand": "Akko",
+      "category": "switch",
+      "source_id": "kbd-july"
+    }
+  ],
+  "claims": [
+    {
+      "id": "KeebFinder:keyboard_listing_count",
+      "subject": "KeebFinder",
+      "field": "keyboard_listing_count",
+      "value": 2207,
+      "source_id": "keebfinder",
+      "status": "documented",
+      "product_id": null,
+      "unit": null,
+      "conditions": ""
+    },
+    {
+      "id": "MX:sensing",
+      "subject": "MX",
+      "field": "sensing",
+      "value": "electrical_contact",
+      "source_id": "cherry",
+      "status": "documented",
+      "product_id": null,
+      "unit": null,
+      "conditions": ""
+    },
+    {
+      "id": "MX:feel_options",
+      "subject": "MX",
+      "field": "feel_options",
+      "value": [
+        "linear",
+        "tactile",
+        "clicky"
+      ],
+      "source_id": "cherry",
+      "status": "documented",
+      "product_id": null,
+      "unit": null,
+      "conditions": ""
+    },
+    {
+      "id": "Topre:sensing",
+      "subject": "Topre",
+      "field": "sensing",
+      "value": "electrocapacitive",
+      "source_id": "hhkb",
+      "status": "documented",
+      "product_id": null,
+      "unit": null,
+      "conditions": ""
+    },
+    {
+      "id": "Topre:construction",
+      "subject": "Topre",
+      "field": "construction",
+      "value": [
+        "rubber_dome",
+        "conical_spring"
+      ],
+      "source_id": "hhkb",
+      "status": "documented",
+      "product_id": null,
+      "unit": null,
+      "conditions": ""
+    },
+    {
+      "id": "80HE:sensing",
+      "subject": "80HE",
+      "field": "sensing",
+      "value": "hall_effect",
+      "source_id": "wooting",
+      "status": "documented",
+      "product_id": "80he",
+      "unit": null,
+      "conditions": ""
+    },
+    {
+      "id": "80HE:effective_update_hz",
+      "subject": "80HE",
+      "field": "effective_update_hz",
+      "value": 8000,
+      "source_id": "rtings80",
+      "status": "measured",
+      "product_id": "80he",
+      "unit": "Hz",
+      "conditions": "Tachyon mode; numeric latency values unavailable"
+    },
+    {
+      "id": "5075 V5 TMR:supported_sensing",
+      "subject": "5075 V5 TMR",
+      "field": "supported_sensing",
+      "value": [
+        "TMR_magnetic",
+        "MX_contact"
+      ],
+      "source_id": "tmr",
+      "status": "manufacturer_claim",
+      "product_id": "5075",
+      "unit": null,
+      "conditions": ""
+    },
+    {
+      "id": "5075 V5 TMR:usb_polling",
+      "subject": "5075 V5 TMR",
+      "field": "usb_polling",
+      "value": 8000,
+      "source_id": "tmr",
+      "status": "manufacturer_claim",
+      "product_id": "5075",
+      "unit": "Hz",
+      "conditions": ""
+    },
+    {
+      "id": "5075 V5 TMR:wireless_24ghz_polling",
+      "subject": "5075 V5 TMR",
+      "field": "wireless_24ghz_polling",
+      "value": 8000,
+      "source_id": "tmr",
+      "status": "manufacturer_claim",
+      "product_id": "5075",
+      "unit": "Hz",
+      "conditions": ""
+    },
+    {
+      "id": "5075 V5 TMR:bluetooth_polling",
+      "subject": "5075 V5 TMR",
+      "field": "bluetooth_polling",
+      "value": 125,
+      "source_id": "tmr",
+      "status": "manufacturer_claim",
+      "product_id": "5075",
+      "unit": "Hz",
+      "conditions": ""
+    },
+    {
+      "id": "5075 V5 TMR:scan_rate",
+      "subject": "5075 V5 TMR",
+      "field": "scan_rate",
+      "value": 16000,
+      "source_id": "tmr",
+      "status": "manufacturer_claim",
+      "product_id": "5075",
+      "unit": "Hz",
+      "conditions": ""
+    },
+    {
+      "id": "Razer analog optical:sensing",
+      "subject": "Razer analog optical",
+      "field": "sensing",
+      "value": "analog_optical",
+      "source_id": "optical",
+      "status": "documented",
+      "product_id": null,
+      "unit": null,
+      "conditions": ""
+    },
+    {
+      "id": "Razer low profile:total_travel",
+      "subject": "Razer low profile",
+      "field": "total_travel",
+      "value": 2.8,
+      "source_id": "lowoptical",
+      "status": "manufacturer_claim",
+      "product_id": "razer-low",
+      "unit": "mm",
+      "conditions": ""
+    },
+    {
+      "id": "Kailh Choc V2:travel",
+      "subject": "Kailh Choc V2",
+      "field": "travel",
+      "value": 3.2,
+      "source_id": "choc",
+      "status": "manufacturer_claim",
+      "product_id": null,
+      "unit": "mm",
+      "conditions": "\u00b10.25 mm"
+    },
+    {
+      "id": "RTINGS latency:measurement_boundary",
+      "subject": "RTINGS latency",
+      "field": "measurement_boundary",
+      "value": "Solenoid contact with keycap to intercepted USB report; not end-to-end display latency",
+      "source_id": "rtings",
+      "status": "documented",
+      "product_id": null,
+      "unit": null,
+      "conditions": ""
+    },
+    {
+      "id": "8kHz:report_interval",
+      "subject": "8kHz",
+      "field": "report_interval",
+      "value": 0.125,
+      "source_id": "wooting",
+      "status": "documented",
+      "product_id": null,
+      "unit": "ms",
+      "conditions": "Arithmetic 1000/8000; not total latency"
+    },
+    {
+      "id": "Mechanical debounce:fixed_5ms_universal",
+      "subject": "Mechanical debounce",
+      "field": "fixed_5ms_universal",
+      "value": false,
+      "source_id": "debounce",
+      "status": "documented",
+      "product_id": null,
+      "unit": null,
+      "conditions": ""
+    },
+    {
+      "id": "Magnetic compatibility:required_fields",
+      "subject": "Magnetic compatibility",
+      "field": "required_fields",
+      "value": [
+        "polarity",
+        "magnet_geometry",
+        "sensor",
+        "calibration",
+        "PCB_revision",
+        "firmware"
+      ],
+      "source_id": "polarity",
+      "status": "documented",
+      "product_id": null,
+      "unit": null,
+      "conditions": ""
+    },
+    {
+      "id": "Low profile:independent_of_sensing",
+      "subject": "Low profile",
+      "field": "independent_of_sensing",
+      "value": true,
+      "source_id": "lowoptical",
+      "status": "documented",
+      "product_id": null,
+      "unit": null,
+      "conditions": ""
+    },
+    {
+      "id": "Tofu60 Redux plate:excluded_stabilizers",
+      "subject": "Tofu60 Redux plate",
+      "field": "excluded_stabilizers",
+      "value": [
+        "Durock screw-in",
+        "Typeplus x YIKB screw-in"
+      ],
+      "source_id": "redux",
+      "status": "documented",
+      "product_id": null,
+      "unit": null,
+      "conditions": ""
+    },
+    {
+      "id": "Bakeneko60:stabilizer_mount",
+      "subject": "Bakeneko60",
+      "field": "stabilizer_mount",
+      "value": "clip-in; screw-ins interfere with O-ring",
+      "source_id": "bakeneko",
+      "status": "documented",
+      "product_id": null,
+      "unit": null,
+      "conditions": ""
+    },
+    {
+      "id": "Sound simulation:exact_arbitrary_build_library_verified",
+      "subject": "Sound simulation",
+      "field": "exact_arbitrary_build_library_verified",
+      "value": false,
+      "source_id": "mechvibes",
+      "status": "documented",
+      "product_id": null,
+      "unit": null,
+      "conditions": "Bounded research result, not proof no library exists"
+    },
+    {
+      "id": "Sound recording:required_metadata",
+      "subject": "Sound recording",
+      "field": "required_metadata",
+      "value": [
+        "build",
+        "microphone",
+        "distance",
+        "room",
+        "desk",
+        "processing",
+        "rights"
+      ],
+      "source_id": "recording",
+      "status": "documented",
+      "product_id": null,
+      "unit": null,
+      "conditions": ""
+    }
+  ],
+  "popularity": [
+    {
+      "id": "july-switch-1",
+      "product_id": "july-switch-1",
+      "metric": "aggregated_vendor_rank",
+      "value": 1,
+      "population": "20 contributors; vendor top lists representing around 600000 switches; cross-shop occurrence weighted",
+      "period": "2026-07",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-2",
+      "product_id": "july-switch-2",
+      "metric": "aggregated_vendor_rank",
+      "value": 2,
+      "population": "20 contributors; vendor top lists representing around 600000 switches; cross-shop occurrence weighted",
+      "period": "2026-07",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-3",
+      "product_id": "july-switch-3",
+      "metric": "aggregated_vendor_rank",
+      "value": 3,
+      "population": "20 contributors; vendor top lists representing around 600000 switches; cross-shop occurrence weighted",
+      "period": "2026-07",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-4",
+      "product_id": "july-switch-4",
+      "metric": "aggregated_vendor_rank",
+      "value": 4,
+      "population": "20 contributors; vendor top lists representing around 600000 switches; cross-shop occurrence weighted",
+      "period": "2026-07",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-5",
+      "product_id": "july-switch-5",
+      "metric": "aggregated_vendor_rank",
+      "value": 5,
+      "population": "20 contributors; vendor top lists representing around 600000 switches; cross-shop occurrence weighted",
+      "period": "2026-07",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-6",
+      "product_id": "july-switch-6",
+      "metric": "aggregated_vendor_rank",
+      "value": 6,
+      "population": "20 contributors; vendor top lists representing around 600000 switches; cross-shop occurrence weighted",
+      "period": "2026-07",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-7",
+      "product_id": "july-switch-7",
+      "metric": "aggregated_vendor_rank",
+      "value": 7,
+      "population": "20 contributors; vendor top lists representing around 600000 switches; cross-shop occurrence weighted",
+      "period": "2026-07",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-8",
+      "product_id": "july-switch-8",
+      "metric": "aggregated_vendor_rank",
+      "value": 8,
+      "population": "20 contributors; vendor top lists representing around 600000 switches; cross-shop occurrence weighted",
+      "period": "2026-07",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-9",
+      "product_id": "july-switch-9",
+      "metric": "aggregated_vendor_rank",
+      "value": 9,
+      "population": "20 contributors; vendor top lists representing around 600000 switches; cross-shop occurrence weighted",
+      "period": "2026-07",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "july-switch-10",
+      "product_id": "july-switch-10",
+      "metric": "aggregated_vendor_rank",
+      "value": 10,
+      "population": "20 contributors; vendor top lists representing around 600000 switches; cross-shop occurrence weighted",
+      "period": "2026-07",
+      "source_id": "kbd-july"
+    },
+    {
+      "id": "valorant-60he",
+      "product_id": "60he",
+      "metric": "tracked_player_count",
+      "value": 126,
+      "population": "694 tracked VALORANT players; not consumer sales; live snapshot",
+      "period": "2026-09-05",
+      "source_id": "prosettings"
+    },
+    {
+      "id": "valorant-60hev2",
+      "product_id": "60hev2",
+      "metric": "tracked_player_count",
+      "value": 113,
+      "population": "694 tracked VALORANT players; not consumer sales; live snapshot",
+      "period": "2026-09-05",
+      "source_id": "prosettings"
+    },
+    {
+      "id": "valorant-huntsman",
+      "product_id": "huntsman",
+      "metric": "tracked_player_count",
+      "value": 99,
+      "population": "694 tracked VALORANT players; not consumer sales; live snapshot",
+      "period": "2026-09-05",
+      "source_id": "prosettings"
+    },
+    {
+      "id": "valorant-80he",
+      "product_id": "80he",
+      "metric": "tracked_player_count",
+      "value": 56,
+      "population": "694 tracked VALORANT players; not consumer sales; live snapshot",
+      "period": "2026-09-05",
+      "source_id": "prosettings"
+    },
+    {
+      "id": "valorant-huntsman-mini",
+      "product_id": "huntsman-mini",
+      "metric": "tracked_player_count",
+      "value": 42,
+      "population": "694 tracked VALORANT players; not consumer sales; live snapshot",
+      "period": "2026-09-05",
+      "source_id": "prosettings"
+    }
+  ]
+}

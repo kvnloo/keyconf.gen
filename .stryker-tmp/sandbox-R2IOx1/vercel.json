@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build:pages",
+  "outputDirectory": "pages-dist",
+  "framework": null,
+  "analytics": {
+    "enabled": true
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

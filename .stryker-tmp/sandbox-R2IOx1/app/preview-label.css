@@ -1,0 +1,35 @@
+.preview-label,
+.studio-header .brand .preview-label {
+  display: inline-block;
+  align-self: flex-start;
+  border: 1px solid #8fbaa87d;
+  border-radius: 4px;
+  background: #15271fe6;
+  color: #cde9da;
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.studio-header .brand .preview-label {
+  align-self: center;
+}
+.deck-brand-copy:has(.preview-label) {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+@media (max-width: 520px) {
+  .studio-header .brand:has(.preview-label) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .studio-header .brand .preview-label {
+    align-self: flex-start;
+    padding: 2px 5px;
+  }
+}

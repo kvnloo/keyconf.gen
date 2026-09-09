@@ -1,0 +1,100 @@
+.music-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid #ffffff26;
+  border-radius: 10px;
+  background: #151b17d9;
+  color: #e3e7e2;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.music-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #7b837c;
+}
+.music-trigger[data-playing='true'] .music-status-dot {
+  background: #c6ed9c;
+}
+.music-positioner {
+  z-index: 100;
+}
+.music-popup {
+  width: min(290px, calc(100vw - 24px));
+  padding: 20px;
+  border: 1px solid #ffffff29;
+  border-radius: 16px;
+  background: #17211c;
+  color: #f2f4ee;
+  box-shadow: 0 16px 64px #0008;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.music-popup h2 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  font-weight: 500;
+}
+.music-popup p {
+  margin: 0 0 14px;
+}
+.music-popup p span {
+  display: block;
+  color: #b1beb5;
+}
+.music-popup button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  background: #dceacb;
+  border: 0;
+  border-radius: 8px;
+  color: #152015;
+  cursor: pointer;
+}
+.music-popup output {
+  display: block;
+  margin: 10px 0 18px;
+  color: #cbd9cc;
+}
+.music-popup label {
+  display: flex;
+  justify-content: space-between;
+}
+.music-popup input {
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  accent-color: #c8dcb6;
+}
+.music-popup .music-hint {
+  color: #b1beb5;
+}
+.music-popup a {
+  color: #d3e8c4;
+  text-underline-offset: 3px;
+}
+.music-popup :focus-visible,
+.music-trigger:focus-visible {
+  outline: 2px solid #d1ebcf;
+  outline-offset: 3px;
+}
+@media (max-width: 850px) {
+  .header-utilities .music-trigger {
+    width: 44px;
+    padding: 8px;
+  }
+  .header-utilities .music-trigger > span {
+    display: none;
+  }
+}

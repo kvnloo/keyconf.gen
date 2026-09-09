@@ -1,0 +1,1017 @@
+# Product progress
+
+## September 5, 2026: baseline audit
+
+The product goal is active. Baseline commit: `b3bea24`.
+
+Source inspected: `app/page.tsx`, `app/keyboard-scene.tsx`, `app/import-dialog.tsx`, `app/sound-references.tsx`, `app/globals.css`, `lib/catalog.ts`, `lib/audio.ts`, `lib/webmcp.ts`, current tests and deployment workflow. The repository has no project-specific AGENTS.md or interface design guide. Existing React, Three.js, native controls, CSS and design direction will be retained.
+
+| Priority | Finding                                                                                 | Evidence                                                                           | Action                                                             |
+| -------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| High     | Current build is lost on refresh; export cannot be restored in the UI                   | `Home` keeps all configuration in independent state; only imported parts persist   | Introduce validated portable build state, autosave, undo and share |
+| High     | Tab controls declare a tablist without arrow-key navigation or a tab/panel relationship | `.config-tabs` in `app/page.tsx`                                                   | Implement complete tab semantics                                   |
+| High     | Three.js motion ignores reduced motion                                                  | Render interpolation in `app/keyboard-scene.tsx`; CSS media query only affects CSS | Use the preference in scene transitions                            |
+| Medium   | Camera switches jump and the full scene is rebuilt when layout changes                  | View assignment and effect dependency in `app/keyboard-scene.tsx`                  | Interruptible camera transition; improve model/render lifecycle    |
+| Medium   | Render loop does repeated scene/material work every frame, including while idle         | Unconditional requestAnimationFrame and model traversal                            | Index animated objects/materials and render only while needed      |
+| Medium   | Import errors lack field association and requests continue after closing                | `preview` and URL input in `app/import-dialog.tsx`                                 | Abort stale requests and associate actionable errors               |
+| Medium   | Mobile hides the only Research entry                                                    | Header navigation hidden below 760 px                                              | Preserve access through a visible secondary action                 |
+| Medium   | Notifications mount only after an update                                                | Conditional `.toast` in `app/page.tsx`                                             | Stable status region and explicit dismiss                          |
+| Medium   | Small text and duplicate responsive overrides obscure intended layout                   | `app/globals.css`                                                                  | Consolidate relevant rules and improve text/control sizes          |
+
+All six interface domains were reviewed at source level: accessibility, layout, writing, typography, colors and UI polish. Rendered contrast, visual composition, zoom/reflow, screen-reader behavior and live animation quality are **not verified** by this audit. No approval verdict is implied.
+
+## Current work
+
+- [x] Create the active goal and write the product completion contract.
+- [x] Inspect the existing primary flow and identify source-level gaps.
+- [x] Implement reliable state, undo/redo, portable sharing and import recovery.
+- [x] Improve the scene and input lifecycle. Full device verification remains in the completion pass.
+- [x] Expose and expand useful product evidence. Full coverage and exact kit inventory remain data work.
+- [x] Refine the listening experience. Further recording coverage remains a data task.
+- [ ] Complete interaction and presentation verification.
+- [ ] Publish the finished release and record remaining data limits.
+
+## Reliable workbench implementation
+
+Implemented a versioned build document shared by configuration, history, browser autosave, file restore and portable links. The link contains only selected imported parts and does not require server accounts or a matching local library. Opening a shared link consumes its URL fragment so subsequent refreshes restore the edited local build. Audio enablement remains a user action.
+
+Added undo/redo with grouped color, volume and text gestures and a 60-edit history bound. Invalid imported parts cannot claim manufacturer compatibility or inject unsafe source URLs. Invalid saved builds retain a recovery copy before autosave can replace them; storage failure is visible. Added a share dialog, filename-independent JSON restore, accessible settings tabs, a stable notification region, mobile research access and cancellable import requests.
+
+Verified: 16 tests pass, including full portable round trips with selected imports, Unicode, malformed settings, unsafe links, forged compatibility evidence, wrong-category components, undo branching and grouped edits. Type checking and the Sites production build pass. Local route responds HTTP 200. Browser interaction, rendering quality, and storage-denial behavior remain unverified. The optional lint command also exposes existing React-compiler/accessibility issues and several new warnings; these are tracked for the completion pass and are not represented as passing.
+
+## Scene and first runtime checks
+
+The scene now keeps one renderer across layout changes and caches the three loaded models. Animated keys, component layers and materials are indexed once. Camera and key transitions use elapsed time, respond to reduced-motion changes, and stop requesting frames after settling. Hidden and offscreen rendering pauses. Async model loads ignore stale selections and dispose their resources on teardown. Added model retry, graphics-reset recovery, keyboard camera controls and a full-workbench Focus view with Escape exit.
+
+Changed the lighting to preserve more material color and adapted field of view to the viewport aspect ratio. A narrow-screen inspection found cropped keys; the revised framing shows the entire model at the 320 px viewport. Page Tab navigation is no longer intercepted by the simulated keyboard. The 3D engine loads as a separate chunk.
+
+Live checks in the existing in-app browser:
+
+- Selected 65%, Porcelain and Brass. Undo restored Aluminum; redo restored Brass. A reload restored 65%, Porcelain and Brass.
+- ArrowRight moved the settings selection from Design to Components.
+- Share produced a self-contained build link; Escape dismissed the dialog. Portable decoding on another browser origin is not yet verified. The attempted 127.0.0.1 preview is not forwarded by this environment.
+- Tab from the canvas reached the sound toggle instead of getting trapped.
+- Entered Focus on a narrow viewport; its Back to builder control was visible and Escape exited.
+- Inspected the default large viewport, 1280 × 900 and 320 × 780. At the narrow viewport, document scroll width matched client width, and the keyboard fit after the camera adjustment. Other widths, 200% zoom and reduced-motion rendering remain pending.
+- Read the actual renderer frame counter twice while idle; it stayed at 38. This verifies idle stopping in the observed state, not a general FPS or hardware-performance claim.
+- The runtime check exposed a pre-existing development asset-path failure. `index.html` hardcoded the GitHub Pages base path even for localhost, producing model and sample 404s. It now uses Vite's BASE_URL placeholder. The model loaded and sound became available after the fix.
+
+Remaining acceptance work: catalog and technology presentation, more deliberate sound interaction, complete responsive/accessibility review, remaining lint issues, source-format compatibility for legacy exports, complete published sharing tests, and a final deployment audit. The goal remains active.
+
+## Playback level correction
+
+The user reported quiet keyboard playback. The recorded path applied a fixed 0.22 gain before the volume slider, leaving the default 45% setting at 9.9% of source amplitude. Removed that extra gain node. Recordings now pass directly through the user's master level, raising output by 13.15 dB at every nonzero slider setting. Existing saved volume settings still apply. Sample bytes, pitch, timing and spectral balance are unchanged.
+
+Decoded all 78 MP3 files to inspect their levels, then measured actual browser playback of press/release sequences across all seven presets at 45% volume. Observed peaks ranged from approximately -19.5 to -12.1 dBFS with no clipping in those sequences. The 16 existing tests, type checking, Sites build and Pages build pass. This addresses playback attenuation; headphone listening quality and acoustic fidelity remain part of the wider listening work.
+
+## Component discovery and evidence
+
+Expanded the builder from 11 to 39 part references, with five named starting assemblies across 60%, 65% and 75%. Added a searchable component picker, technology filters, selected-part tiles, manufacturer links, recovery from empty searches, and a visible conflict shortcut. Choosing an assembly updates its layout, material and component selection in one undoable edit. Retired NK65 Entry records are labeled; bundled board components are not presented as independently purchasable offers.
+
+Compatibility now uses explicit assembly triples and documented electrical relationships, including Keychron's specific Double-Rail support and Jade/KS-20 exclusions. The Redux Durock exclusion no longer accidentally applies to every screw-in stabilizer. Mixed or unverified core parts and unverified magnetic combinations remain unknown. Keycap width/row coverage remains an explicit separate check.
+
+Added an inline switch/feel/gaming guide and exposed the existing 20 product observations through a searchable research browser. Manufacturer provenance and the scope of popularity rankings are visible. See [Catalog evidence](catalog.md) for sources and limitations.
+
+Verified 21 tests, including all assembly records, mechanical/magnetic conflicts, magnetic-family exclusions, mixed/unknown evidence, stabilizer exceptions, share round trips and whole-assembly undo. Type checking passes. In the live browser, selected Q1 HE, searched for Magnetic Jade, observed the conflict, and used Undo to restore Nebula. Verified empty-search recovery, NK65 selection, HHKB research search and mobile dialog close. Inspected the desktop, 390 px and 320 px layouts; scroll width matched document width at both narrow sizes. Found and fixed notification shrink-to-fit and a dialog close button that scrolled out of reach. Corrected Surprise me's palette identity comparison and replaced the deprecated Three.js shadow-map constant.
+
+The new catalog files have no lint findings. Existing lint issues elsewhere and the broader listening, import and complete-interface acceptance checks remain pending. The full product goal remains active.
+
+## Listening controls and recovery
+
+Added letter-key and spacebar audition buttons, a peak envelope calculated from the actual decoded press recording, duration and format details, and family filters for the original-video library. Waveform height is normalized for visual inspection only; playback is not normalized or processed. Recorded audio still preserves the original MP3 bytes and passes through the user's master level without pitch, EQ or reverb changes. Capture-build and microphone details remain unknown.
+
+The finite 16 ms master ramp reaches exact zero when muted. Changing presets, stopping playback and opening an original-video reference cancel scheduled native sources and visual timers. Enabling native sound closes the original player. Async actions are invalidated when the selected source changes. Typing a letter immediately after enabling audio now works even while that button retains focus; its Space/Enter activation and navigation keys remain native controls.
+
+Fixed the existing lint findings by making loading and save status follow their underlying state, keeping ref updates out of render, and using native control semantics. Older exported builds can now be restored through the validated current build model; exported compatibility claims and audio enablement are not trusted. Import previews retain observation dates and availability. Long imported names now survive the same boundary used for saved builds.
+
+Verification:
+
+- All 24 unit tests, type checking and full-repository lint pass. Added waveform/transient/format tests and legacy-export migration checks. The original sample hashes and licenses still pass.
+- Measured actual browser playback across all seven packs at 45%: observed sequence peaks were approximately -19.5 to -12.1 dBFS; mute reached zero. This is not a claim about arbitrary simultaneous key combinations or subjective headphone fidelity.
+- A fresh Chromium context restored a shared build containing an imported case, consumed its share fragment, retained subsequent edits after refresh and restored the actual downloaded file. Failed recording requests recovered on retry; preset changes and mute cancelled actual scheduled AudioBufferSourceNodes. Storage denial left a usable builder and visible export fallback. `npm run verify:browser` reproduces these checks and is included in CI. It deliberately disables WebGL; 3D appearance and performance are reviewed separately.
+- In the live 3D browser, a letter key responded directly after enabling audio; Space on the focused button muted it. The actual waveform and single-key controls were visible. Opening an Oil King reference loaded its original YouTube player and muted native audio; enabling native sound removed the iframe.
+- A live NovelKeys NK65 product URL returned six variants with availability and observation date; uncertain currency omitted the price. Added variants were searchable in the library, then undone. A rejected localhost URL recovered through pasted Product JSON-LD with SKU, USD price and stock status. The pasted fixture was previewed without adding it.
+
+Updated React/RSC to 19.2.8, Vinext to beta.9, Vite to 8.2.2 and their compatible Cloudflare/RSC tooling after the release audit identified affected older versions. Installation now reports zero known npm vulnerabilities. Type checking, lint, all 24 tests, the fresh-browser checks, and both Sites and Pages production builds pass on the updated dependencies. Public deployment and CI status are verified after pushing this unit.
+
+Still pending for the full product goal: the remaining viewport/zoom and reduced-motion review, graphics failure/recovery and rapid-change checks, the complete interaction/presentation acceptance matrix, and the final release audit. Catalog growth and measurement-backed acoustic modelling remain explicit ongoing data work.
+
+## Checkpoint before the new visual direction
+
+The user requested a commit and push before starting the supplied desk-scene redesign. This checkpoint preserves the current implementation; it is not a completed visual or release certification.
+
+- Replaced all seven native selects with styled, anchored Base UI menus. The implementation agent verified selection, typeahead, Escape, focus restoration, touch, viewport collision handling, and menus inside the import dialog. Existing browser recovery tests pass with the new controls.
+- Added interface checks for keyboard focus, dialog behavior, five widths from 320 to 1920 pixels, real 200% browser zoom, and automated accessibility checks. The implementation agent ran this suite successfully before the typing integration.
+- Fixed vertical touch scrolling over the 3D preview, focus/contrast issues, and per-key-group legend contrast. Regenerated the three original Blender models and moved to neutral tone mapping with neutral lights. This remains illustrative geometry and material treatment.
+- Added a Monkeytype guest iframe above the existing keyboard, using a pinned build of the actual GPLv3 frontend. Source, static inputs, license, integration patch, and regeneration instructions accompany the assets. The integration preserves the upstream typing/results engine and disables remote account services, analytics, ads, and service workers. Key events connect to the existing scene and sound engine. A complete typing test reached results in the local widget.
+- Added browser verification for typing, audio, keyboard response, restart, mobile layout and retry. The complete new suite is still pending a successful run. A compact-widget layout regression was found and corrected; the latest correction requires re-verification.
+
+The blind verifier wrote and froze its expectations before inspecting the candidate, without access to implementation. Its baseline confirmed native popup styling and missing typing mode. It did not reproduce the reported centered popup. Candidate runs encountered general rendering/interaction stalls in software-rendered Chromium, preventing a reliable independent pass. These stalls remain unresolved; build or unit-test success must not be treated as UX completion. The frozen evidence is retained in the working environment at `/tmp/keyconf-blind-ux/`.
+
+Next: finish renderer/typing verification, add a visible volume dial with gain above unity for quiet recordings, then implement the user-supplied landing/workshop/Sound/Play/Discover design with desk objects and plants while preserving all existing functionality. The redesign and volume dial have not started in this checkpoint. The product goal remains active.
+
+## Reference audit and control decks
+
+Read the two generated UI references against the actual build, catalog, audio and persistence code. [The component audit](ui-reference-audit.md) retains the desk atmosphere and task-based navigation while rejecting invented prices, compatibility, account state, acoustic controls and component variants. The landing must preview a featured build without replacing the working build; Customize makes that choice explicit. The desk landing, plants and conventional keyboard workshop redesign are still pending.
+
+Read Linear backlog card PER-786 and downloaded its attached Grok Bot video into the local reference library. It is a silent, 16-second concept demonstration. The companion OpenAI product is Codex Micro. [Reference notes](control-deck-references.md) record the source links, observations, video hash and distinction between a hypothetical device and a documented product.
+
+Added separate original Blender models and studio views for both devices. They have their own saved state, portable links/files, appearance controls, visual lighting, dial rotation, key feedback and exploded layers. Visiting a deck preserves the conventional keyboard. These studies have no keyboard part compatibility claims, live agent connection or verified hardware sound. Detailed manufacturer geometry remains unknown.
+
+The independent reviewer froze source-based expectations before seeing implementation. Headed Chromium checks covered both silhouettes, local key/touch feedback, color changes, save/reload, fresh-context sharing, file restore, focus navigation and 390 px layout. The reviewer found hidden-keyboard undo, missing mobile source links, and clipped/obscured Grok framing. Corrected shortcut ownership, retained source access in the narrow inspector and revised the camera. Supplemental rechecks confirmed deck undo/redo preserves the conventional keyboard. Visual captures were inspected separately from state tests. Headless software rendering remains unreliable locally and is not represented as a visual pass.
+
+Also fixed the Monkeytype result-transition race exposed by the previous GitHub Actions run: test completion cancels pending word-layout frames before removing the completed test's words. A controlled delayed-frame run reproduced the old failure and passed after the fix, including repeated finish/restart cycles. Rebuilt the guest frontend and its corresponding GPL source archive, and verified the patch against the pinned upstream checkout. The full typing journey remains a CI release gate.
+
+Type checking, repository lint, 29 unit/data/model tests and both production builds pass. The independent `verify:decks` browser regression passes and is now included in CI. It checks deck undo and both redo shortcuts, preservation of the conventional keyboard, fresh-context shared state and mobile source links with WebGL disabled. Headed rendering, canvas input and visual framing were verified separately. Public release status is recorded after deployment. The product goal remains active, including the requested volume dial and larger visual redesign.
+
+## Published control-deck checkpoint
+
+Published commit `29d40feb01797a9a16d1626c6b374b3fc11c8f35` to the existing public Sites URL and GitHub Pages. [GitHub Actions run 33994942445](https://github.com/kvnloo/keyconf.gen/actions/runs/33994942445) passed types, lint, 29 tests, portable/import/audio recovery, five-width/200% zoom accessibility, deck isolation and the complete real Monkeytype typing journey. The two models were inspected on the public Sites page. This closes the prior checkpoint's deployment and full typing-test uncertainty; local headless software graphics remain distinct from those successful runtime checks.
+
+## Desk landing, four destinations and volume dial — candidate
+
+Implemented the corrected reference mapping: six independently previewable featured builds, explicit Customize and Resume, a shared conventional build across Build/Sound/Play/Discover, a parts inspector, the actual Monkeytype widget above the keyboard, and waveform/audition controls below the Sound Lab object. Existing imports, compatibility, source references, files, sharing and undo remain accessible. Current-build history shortcuts are inactive while browsing the landing and Discover.
+
+The live desk uses original Three.js plants, ceramic pots and mug, books, notebook, pen, desk mat and textured wood under shared lighting. The workshop removes those objects for focused inspection. Gallery thumbnails are rendered from the actual Blender models and preset colors. The retired NK65 kit and illustrative geometry/palette scope are disclosed. No account avatar, fabricated price, acoustic room model or inert comparison control was copied from the generated images.
+
+Added a native range input styled as a rotary volume control. Vertical drag and keyboard actions set 0–200% gain; the shared Sound slider and portable build parser use the same range. Master gain retains its finite ramp, recordings retain their source bytes and original spectrum, and loading/restoring does not enable sound. Above-unity gain can clip with sufficiently loud or overlapping sources; this change does not establish a universal output peak limit.
+
+The independent reviewer froze expectations before seeing the candidate (acceptance SHA-256 `ac5a32dc8d6822c5af86da9bec841dd7b94e3d0f168489b69bf877f42a65efb0`). Its review and measured gain checks are underway. Types, lint, 32 unit/data/model tests and both production builds pass. Browser tests are being adapted to enter the explicit workshop route; an audio observation failure is still being investigated. This candidate has not been published, and the product goal remains active.
+
+### Corrected candidate verification
+
+The independent first pass found three regressions: hidden mobile page navigation, missing navigation/build utilities in Play, and a native range value of 46 while the default readout said 45%. Removed the obsolete navigation-hiding CSS and allowed every integer percentage in the range input. Added route/inspector scroll reset and kept transient notifications from intercepting controls. Targeted independent rechecks passed all three corrections, all four destination links at 320/390, desktop Play utilities, and mobile Customize/notification interaction. The review's frozen expectations are preserved in [desk-volume acceptance](verification/desk-volume-acceptance.md).
+
+Measured a branch from the actual WebAudio output using MediaRecorder. A sample at 100% had peak 0.225644; at 200%, 0.480223; at 0%, approximately 2e-34. These are directional gain checks, not calibrated loudness ratios: Opus encoding, sample variation and capture intervals differ. At a retained 120% level, mute produced no audio packets; no numerical muted RMS is claimed. Both single-key audition buttons produced sound. A provisional silence finding from a JavaScript analyser was withdrawn because main-thread delays caused it to miss short transients. Audio-thread recording superseded that measurement.
+
+The first-party audio regression now observes source starts across the whole sequence and performs mute/cancellation within the page while scheduled voices are active, avoiding transport delays that can outlast short recordings. Preview isolation, one-step customization undo, four-route persistence, muted reload and mobile/desktop navigation are now a dedicated CI journey. Existing portable/import/audio-retry and deck-isolation suites pass. Types, lint, 32 tests and both production builds pass. Final typing/interface release checks are recorded below when complete.
+
+The independent pass covered actual headed WebGL and narrow layouts, with a reflow equivalent rather than real browser zoom. The first-party suite performs real 200% browser zoom separately. The scene is stylized, not photoreal or a measured product scan. No second desk-light state or physical-phone/OS-audio test was performed. A local headless WebGL screenshot stalled; the same full typing journey is being retried headed and remains a release gate. No claim of exhaustive or flawless UX is made.
+
+### Typing transition corrections
+
+The full typing regression found an audio-startup race introduced by routing: changing to Play could invalidate pending audio startup. Start typing test now finishes that explicit startup action before navigating and ignores a stale action if the user leaves. The test deliberately delays AudioContext.resume to exercise this race. A separate plain Play navigation keeps a fresh session muted.
+
+The independent reviewer confirmed first-key recorded output at 45% (peak 0.105956, RMS 0.003421), completed a 15-second Monkeytype test at 100% accuracy, and verified that plain Play emitted no audio in a fresh muted session. It also reproduced the regression's Back focus failure. Focus restoration now runs after the Build view commits; an independent keyboard recheck confirmed a visible focus ring on Start typing test and Enter reopening Play. Original failing and corrected observations remain in the review evidence.
+
+The corrected five-width and actual 200% zoom accessibility suite passes. All reviewed desk/dial/navigation/focus findings are resolved within their tested cases. Final full-suite CI and publication remain release gates, not assumptions.
+
+The complete headed typing regression now passes with deliberately delayed audio startup: rendered key response, recorded audio, mute, ten-word result, restart, preserved build/focus on return, 390px settings/entry, failed-frame retry and repeated entry. GitHub's first desk run exposed a test observing Sound's selected state before the hash navigation had rendered. Tab and destination assertions now wait for the expected public selected/current state; they still fail if navigation does not complete. No arbitrary sleep or assertion removal was used.
+
+### Published desk and volume checkpoint
+
+Published commit `052506917ca4ecaefba57695bfc99cc278b180a4` to the public Sites URL as version 8 and to GitHub Pages. [Actions run 33999093432](https://github.com/kvnloo/keyconf.gen/actions/runs/33999093432) passed types, lint, 32 tests, the browser/interface/featured/deck/real-typing regressions, and deployment. Sites deployment `appgdep_6a9ca980090c8191be82cdcdb793aba7` succeeded on September 5, 2026 at 23:47 UTC. The subsequent public-site film capture loaded the keyboard and completed an active Monkeytype word-mode sequence without a page error. This closes the prior candidate's CI and publication gates.
+
+### Hyperframes launch film
+
+Created the 36-second launch film in [videos/keyconf-launch](../videos/keyconf-launch/README.md). It combines original Blender shots of the app model, real preset and inspector captures, the recorded Ink Black audition, and active Monkeytype footage from the public site. Hyperframes and its official production skills are installed locally. The portable project includes local assets, licensed sample attribution, a 24-bit audio master, and scripts to edit and render it again.
+
+The final MP4 contains all 1,080 frames at 1920×1080/30 fps with 36-second stereo audio. Its measured loudness is −17.9 LUFS with −4.5 dBTP; no limiter or compressor was used. Frame, runtime, layout, contrast, final decoding, and visual checks are recorded in the film's verification documentation. The launch film is complete. The broader product goal remains active, including catalog depth, ingestion coverage, and the limits of unmeasured keyboard acoustics.
+
+### Repository-based launch film revision
+
+Replaced the first cut with three continuous Three.js acts after studying Hyperframes' shipped launch sources, its documented 3D adapter and motion recipes, and Ordinary Folk's Spline, Webflow and Gemini production accounts. [The research and decision record](../videos/keyconf-launch/docs/references/launch-craft.md) explains the source-quality failures, camera/geometry changes, real-interface crops and visual review corrections. This supersedes the film description and audio measurements above.
+
+The revised 36-second MP4 contains 1,080 frames at 1920×1080/30 fps, 48 kHz stereo AAC, explicit Rec.709 color metadata, measured −19.08 LUFS and −1.19 dBTP. Final decoding and frame checks found no black intervals. Commit `9e0a1e5cc816beaab17ff4e2464469e8fd0c6c4b` is public; [Actions run 34005821024](https://github.com/kvnloo/keyconf.gen/actions/runs/34005821024) passed and deployed Pages. The film remains an original representative study, not manufacturer CAD or measured build acoustics.
+
+### Import price and variant accuracy
+
+Fixed aggregate offers being presented as exact prices, mixed-currency/stock ambiguity, lost ProductGroup identities and first-variant-only Shopify catalog results. The preview and saved part details now distinguish exact, starting, range and unverified prices. Variant names, SKUs and purchase links stay distinct; compatibility remains unknown. The API retains exact-only legacy price fields for already-open browser tabs.
+
+[Import verification](verification/import-fidelity.md) records five failing-before cases, six passing import tests, the 38-test full suite, passing type/lint checks and both production builds, and a passing 320 px import-to-download/share journey into a fresh desktop browser. The adjacent sharing/audio/recovery browser suite also passes. Live local-server requests returned both KBDfans plate options and 80 Divinikey options; oversized KBDfans/NovelKeys homepages failed explicitly. The CI workflow now runs the import journey. Publication outcomes follow the release checks.
+
+The broader goal remains active. Next ingestion work is collection-specific previews and pagination, followed by durable source observations and further catalog evidence. The current generic preview is not universal ingestion.
+
+### Published import checkpoint
+
+Published `b40e245cd17fb21ed0928c2106fcf555e37a544a` to Sites version 9 and GitHub Pages. [Actions run 34007099673](https://github.com/kvnloo/keyconf.gen/actions/runs/34007099673) passed all checks and deployed Pages. Sites deployment `appgdep_6a9cd44951a08191863a288f9bfe2be6` succeeded September 6, 2026 at 02:47:54 UTC. The complete import/mobile/download/share regression passed against the public Sites URL, and the production API returned 80 distinct Divinikey options with exact prices, variant links and explicit coverage. This closes the prior paragraph's publication gate.
+
+The source push took several minutes after its upload finished, then succeeded. A subsequent idempotent push confirmed it was current. No source rollback, force push or alternate Site was needed. The shipped runtime is the validated commit above; this progress note is a documentation follow-up.
+
+## Solarpunk room and monitor typing
+
+Expanded the live Three.js desk with an open architectural field notebook, original mechanical/botanical sketch texture, two detailed mechanical pencils, an etched brass ruler, a task lamp, a headphone stand, books, window joinery and an original conservatory view. Leaves move with slow independent stem and leaf motion; coffee steam rises through a noise shader. The room uses ambient occlusion, softened shadows and warm wood/brass materials. These accessories are original visual studies. The garden beyond the physical window is an image texture, not navigable geometry.
+
+Monkeytype now runs in the physical monitor. Its real same-origin iframe remains React-owned and is projected onto the monitor's four corners. The phone view changes monitor proportions and camera framing. Results remain scrollable and keyboard reachable. A dark display palette matches the room. Back to builder, source attribution, input/audio messages, mute, gain, results, restart and failed-load retry remain available. Typing locks the camera to keep the monitor usable; Back to builder restores orbit and assembly controls. WebGL failure leaves a normal readable typing viewport.
+
+Ambient motion has an explicit pause control, respects reduced motion, and stops offscreen or when the tab is hidden. Idle ambience is scheduled at up to 30 fps; key and camera interactions can wake immediately. Studio views still settle to an idle renderer. The scene disposes textures, render targets, materials and pending animation work on teardown. Steam is excluded from the ambient-occlusion pass so it cannot cast rectangular shadows.
+
+Verified locally: 40 unit/data/model checks, types, lint; headed Chromium typing journey with actual recorded sound and rendered key response, results/restart, mobile settings, retry, repeated entry and return focus. Room checks compare actual rendered pixels before/after motion, prove a paused image stays unchanged, prove offscreen rendering stops, and exercise live reduced-motion changes. Both generated textures load successfully with no shader/runtime errors. The typing test also works with WebGL disabled at 390px. The room journey is now a GitHub Actions release check. Production build and remaining shared-workbench checks are recorded with publication below.
+
+Original generated assets and exact prompts are documented in `docs/assets/room-assets.md`. The broader product goal remains active. Collection-aware import pagination work is parked in `work/import-pagination.test.mjs.pending` while this requested room update ships; catalog coverage and compatibility evidence remain separate product work.
+
+Release checks passed: types, lint, 40 unit/data/model tests, server and Pages builds, shared-build/import/audio recovery, all primary panels and dialogs at 320/390/768/1280/1920px and real 200% browser zoom, featured-build isolation and deck regressions. The final typing rerun uses Monkeytype's responsive settings menu at readable native sizing and verifies that returning restores the prior exploded builder view. Visual review included the landing room, desktop/phone monitor and WebGL-failure fallback. Publication status follows after the deployment completes.
+
+## Software rendering and release-check follow-up
+
+Sites version 10 published the solarpunk room at `8ccad2b8d406c69fc7c1f1a3eb49d26ab0253a20`. Public monitor typing and recorded audio passed. A public console check also caught an unlinked favicon; the existing SVG icon is now declared in server metadata.
+
+The initial GitHub release check stopped during screenshot capture. Software rendering receives smaller environment-light and shadow maps, a capped pixel ratio, and a direct render path without ambient occlusion. In software-rendered typing mode, the fixed room is cached; keypresses redraw the keyboard over that background. Room assets and resizing invalidate the cache. Ambient room motion stays available outside typing, while GPU rendering retains the complete effects pipeline and live typing-room motion. The graphics release checks now run the built Pages artifact in a full Chromium session under Xvfb, following [Playwright's Linux CI guidance](https://playwright.dev/docs/ci#running-headed). Development-server watching excludes generated builds, evidence and video work so exporting artifacts cannot reload a typing session.
+
+The typing fixture selects a word-count run and uses modifier keys for the rendering/audio captures before starting the scored test. Screenshot capture can stall software graphics long enough to activate Monkeytype's slow-timer protection; it must not run during the measured typing interval. The engine's protection remains enabled, and the real ten-word run must finish with 100% accuracy. Keyboard-image assertions crop below the monitor, so typed letters inside the iframe cannot produce a false pass. Leaf-motion assertions compare two frames after the control label has already changed. Cold graphics/iframe startup has its own bounded readiness allowance; ordinary interaction timeouts remain separate. The same audio, results, return-focus, motion-pause and failure-recovery assertions remain in place.
+
+## Local continuation and branch previews
+
+The user canceled the cloud continuation and requested local overnight work. Created `nightly` for new overnight development and `dev` for integration; the initial stable baseline includes the previously requested room release. Added independent `/main/`, `/dev/` and `/nightly/` Pages builds. Publishing preserves the other channels in a generated `gh-pages` branch, serializes deployments and records each tested source commit. The previous root URL redirects to main while retaining portable-build fragments. Environment rules now permit all three source branches. Subsequent overnight features stay on nightly and are not automatically promoted to stable or the Sites backend.
+
+The final software-rendered room check passes: actual pixels move, pause freezes them, offscreen frames stop, reduced motion disables ambience, and Monkeytype remains readable with WebGL disabled at 390px. The earlier resumed-frame capture stopped inside Playwright's element-stability wait. Instrumentation observed unchanged canvas/host bounds across eight samples; a viewport screenshot clipped to those measured bounds completes while retaining the actual pixel assertions. The committed check now uses that capture method and separately asserts unchanged bounds. No arbitrary timeout increase or graphics-workaround hypothesis was added. Software snap/damping changes from the handoff checkpoint are now exercised by this passing pause/resume check.
+
+Validation for deployment setup: 41 tests, type checking, lint, the server production build, and actionlint pass. The new filesystem-level deployment regression proves channel preservation, removal of obsolete assets only within the changed channel, rejection of a wrong base path, and refusal of stale/repeated releases. Public publication and CI results are recorded after they actually finish. The full product goal remains unfinished.
+
+Preview isolation regression: the first live `/nightly/` test inherited a seeded main build and failed at the expected assertion. Added scoped keys for preview keyboard/deck autosaves, legacy part reads and recovery copies; main's existing keys remain intact. The browser check edits both device types, reloads them, exercises a malformed preview-save recovery, and verifies the stable build, stable deck and stable recovery document are unchanged. The new check runs against built dev/nightly artifacts in CI. Initial deployment also waits for a valid main tree before changing the public root.
+
+Publication checkpoint: Sites version 11 deployed `70c8afafd4a6ecdb174d03f33d95c3a0ab406b61` successfully at 07:11:33 UTC on September 6. A fresh 390px public browser verified the efficient room, no horizontal overflow, projected Monkeytype, settings and Back with no page errors. The built `/nightly/` typing journey passed actual key pixels, recorded audio, mute, ten-word results, retry, mobile settings and return. The new preview-storage regression also passes after correcting its corruption fixture to run before app startup rather than being overwritten by the app's valid pagehide save.
+
+All three source branches are public. Main points to `70c8afa`; the initial dev/nightly baseline `74619e8` adds isolated preview saves. At this checkpoint GitHub runs main `34018381869`, nightly `34018874902`, and dev `34018875765` are queued for an `ubuntu-latest` runner. They have not executed or passed checks yet, and the three Pages paths are not claimed live. Continue by inspecting the actual runs, fixing any reported failures, then verifying each URL and its `release.json`. The existing Sites link is already updated.
+
+## Nightly collection pagination
+
+Implemented collection-scoped Shopify queries, explicit continuation through both product and variant pages, and a Load more flow that preserves selected rows through retry. New options start unselected; overlapping rows are removed; original observation dates survive later page loads and export. Missing collections, partial API failures and repeated cursors no longer become misleading complete previews. The source URL stays bound to its continuation even if the URL input is edited while browsing existing results.
+
+The four failing-before cases, six passing pagination/API tests, 47-test complete suite, type/lint/actionlint checks, both production builds, and 320px import/retry/export plus adjacent import/share/audio recovery checks are documented in [Import pagination verification](verification/import-pagination.md). Live Divinikey pages returned 12 and 11 distinct options with no overlap. This checkpoint stays on nightly; stable Sites, main and dev are unchanged. The public Pages previews still use the stable importer, so pagination activation awaits an isolated backend release. GitHub preview builds remain queued for runners at this checkpoint, with no executed check failure on these branch baselines.
+
+## Nightly landing composition and preset clarity
+
+Refined the landing camera so the keyboard stays clear of the headline actions and featured cards. Removed duplicate lettering on the idle monitor. Two independent image reviewers identified unclear customization entry points, small part details, an easily missed keycap-color qualification, and no obvious way to discover offscreen presets. Both entry buttons now name the selected build, decision details are larger, the color qualification sits beside Keycaps, and visible Previous/More buttons browse all six presets without changing selection.
+
+[Landing verification](verification/landing-composition.md) records the independent review, the scroll-padding regression found and fixed during the phone journey, passing featured/build/undo/navigation checks, five-width and 200% zoom checks, the real typing and room suites, 47 tests, types/lint and both builds. Desktop/phone captures cover the efficient renderer and a fresh native preview reporting full graphics. Native checks confirm the complete keyboard and on-screen gallery controls at 390px without horizontal overflow. Browser-command timeouts during an earlier inspection were not treated as proof of a driver problem. This work remains on nightly. Main and dev have now passed their complete GitHub check jobs; their deployment jobs are waiting for runners/serialization at this checkpoint. Public preview URLs are still pending deployment verification.
+
+Overnight release follow-up: frequent checkpoints were canceling nightly checks while GitHub kept them waiting for a runner. Nightly now lets its current check finish and coalesces newer pending checks; other branches keep cancellation of obsolete work. This preserves a path to publishing a tested checkpoint during a long queue. Actionlint passes; no release checks were removed.
+
+The first main preview is now public at `/keyconf.gen/main/`; its fetched release metadata matches `70c8afa`, workflow number 24. Dev's complete checks passed, but GitHub canceled its waiting deployment when another branch entered the publish group. The nightly publisher now gathers the latest checked candidate for every channel and preserves each channel's source identity, recovering canceled publications without a source merge. Eight focused tests, all 62 repository tests, types/lint/actionlint and local assembly of the three actual GitHub artifacts passed. [Publication recovery evidence](verification/pages-recovery.md) distinguishes these checks from the still-pending public dev/nightly verification. Main and dev source refs remain unchanged.
+
+## Nightly durable source observations
+
+Added a local SQLite catalog collector with stable run IDs, source-bound cursors, atomic page/option commits, original observation timestamps, preserved pricing kinds and append-only collection behavior. Repeated commands resume toward the same total page limit. Identical page replays do not duplicate data; conflicting writers, cursor cycles and changed stored payloads fail explicitly. Unsupported pagination is labeled preview-only rather than complete. Reviewed builder parts and browser-local saves are unchanged.
+
+[Catalog observation documentation](catalog-observations.md) records the command, schema, transaction behavior, limitations and evidence. Eight real-SQLite tests cover persistence, idempotence, conflicting writes, rollback and interrupted resume; the full 55-test suite passes on the development runtime and Node 22.13.1. Types, lint and both builds pass. A live three-page Divinikey run saved 35 distinct switch options with original timestamps and remained correctly resumable. An offline replay/export made no requests or duplicate writes. The database and evidence export remain local, outside Git and website assets; hosted ingestion and reviewed catalog expansion remain future work.
+
+## Preview identity
+
+Dev and nightly now identify themselves in the keyboard and control-deck headers, including narrow phone layouts. The label uses the same base-path decision as isolated saves; stable URLs retain their existing presentation. It introduces no audio or navigation action. The production preview-storage journey checks the visible label and overflow at 320, 390, 768 and 1280px while retaining its save/recovery assertions. Featured-build navigation, the complete five-width/200% zoom interface check, all 62 tests, types/lint and both builds pass. Rendered desktop and 320px keyboard/deck captures are retained as `outputs/preview-label-*.png`; they use software graphics and do not establish physical-phone performance.
+
+Publication checkpoint: the fetched public manifest now includes main `70c8afa` and nightly `dddbf8f`. Dev still awaits the publication repair's GitHub execution. The header label is a later local checkpoint and is not claimed live yet.
+
+## Daytime code quality audit
+
+The user requested continued local work and a comprehensive complexity/quality review. The expired overnight automation is paused. All three preview publications have completed; the latest checked public manifest contains main `70c8afa`, dev `74619e8` and nightly `3d0b5fd`. Run `34025776737` passed every check and its aggregate deployment recovered dev. The preceding `c1b238e` check was interrupted by a runner shutdown during room verification; the subsequent complete run passed.
+
+[The code quality audit](verification/code-quality-audit.md) records the review scope, accepted simplifications, warning triage and feature status. Removed 13 unused dependencies, a dead utility and unused generator configuration; runtime dependencies fell from 21 to 7. Consolidated audio reset behavior and study-tool options, removed an unchecked monitor tuple assertion, and made formatting/unused-variable checks enforceable. Eight video scripts were formatted with identical normalized JavaScript; the existing MP4 revalidated successfully.
+
+The boundary audit found and fixed an unbounded request-body read and character-based size check. Three cases failed before the fix; all four streaming/UTF-8 tests pass afterward. The actual local importer rejects oversized input with HTTP 413. A clean install, 66 tests, strict types, zero-warning lint, formatting, actionlint, both builds, all app browser journeys, production preview storage, actual typing/audio and room-motion/fallback checks pass. New CI/publication results are recorded after they finish. Backend fixes remain on nightly source until a separate backend release is selected; the public Pages clients still call stable Sites.
+
+Final audit checkpoint: GitHub run `34041169225` passed checks and deployment for `9a7e3a5`. A fresh public nightly phone-size journey confirmed that exact release at 15:12:53 UTC, including room rendering, projected Monkeytype, settings and Back, with no runtime errors or failed asset responses. Main and dev source versions remain unchanged. An earlier combined public run passed main then timed out on dev monitor projection; the cause is unconfirmed, and a fresh dev-only run passed. The audit retains both results. The existing Hyperframes composition also passed its 11 sampled frames and all eight text contrast checks, with one timeline organization warning. This documentation checkpoint does not alter the deployed application.
+
+## Import response cleanup
+
+The next backend review found response streams left open when a store returned an HTTP error, redirected, or declared an oversized page. The importer now cancels these bodies before rejecting or following a redirect. Four tests using real Web Streams failed before the change and pass afterward, including cancellation before the destination request and zero body reads for rejected responses. The full suite passes 70 tests; type checking and the server build pass. This is resource cleanup, not a DNS-rebinding defense or a production rate limit. It remains nightly backend source pending deployment; public import behavior is unchanged.
+
+## Separate nightly backend published
+
+Sites version 1 at https://keyconf-nightly.kvnloo.chatgpt.site deployed source `b473f150d4484c108c2ce488cbe7e6e0ec14f309` successfully at 15:37:25 UTC on September 6. Deployment `appgdep_6a9d887ebe6481918c24311cf59e7210` is succeeded. The initial source upload took about fourteen minutes; it completed without being restarted. [Nightly backend ownership](nightly-backend.md) documents the separate project and branch-specific manifest.
+
+Live HTTP verification at 15:37:37 UTC returned 12 and 11 Divinikey collection variants on successive pages with no overlap. Pages-origin preflight returned 204, allowed-origin headers were present on both responses, oversized UTF-8 requests returned 413 and an unrelated origin returned 403. These are actual hosted API responses. Collection pagination and response/request bounds are now active on the nightly backend; main and dev still use the stable backend. The connected Pages client awaits its own GitHub publication checkpoint.
+
+The source change passes 72 tests, strict types, lint, formatting, both builds and the local 320px import/retry/export journey. The prior response-cleanup GitHub run `34041815913` completed successfully, including deployment. CI for the new routing is recorded separately after execution.
+
+During the upload, a new local run `divinikey-switches-2026-09-06` retained 128 distinct variant URL/SKU pairs across 21 brands and twelve pages, observed from 15:34:05 to 15:34:19 UTC. More pagination remains. This was a fresh run, not a resume: the original `divinikey-switches-20260906-nightly` run and its 35 observations remain intact. SQLite integrity and foreign-key checks pass. The new evidence export is `work/divinikey-observations-expanded.json`; these observations have not been published as reviewed builder parts.
+
+## Discover store observations
+
+Added a separate, collapsible browser for the 128 source observations in Discover. Search covers brand, name and SKU; twelve options appear initially, with explicit expansion, empty states and reset. Cards preserve original variant links, pack names, observed prices, timestamps and historical availability. The interface explicitly identifies partial coverage, named-option pricing and unknown compatibility. These listings do not enter the builder's approved parts catalog.
+
+The committed snapshot retains complete normalized page evidence and hashes. A regression confirms all hashes, unique variant identities and original values; all 73 tests pass. Types, lint, formatting, actionlint and both builds pass. The actual browser journey passes at 320 and 1920 pixels in development and the production Pages build, covering search, expansion, links, keyboard disclosure, empty/reset and overflow. Captures were inspected, and this journey now runs in CI. Hosted ingestion and review remain unfinished.
+
+The preceding backend-routing release `c7c5121` passed GitHub run `34042941703` and is public on nightly Pages, confirmed by release metadata. The observation browser is a later source change; its public release is recorded only after CI and deployment complete.
+
+## Deferred catalog download
+
+The static observation snapshot initially added its data to the entry script. The disclosure now imports that data only when opened. It shows a loading status, keeps a failed download local to the observation browser, and offers an explicit page reload for recovery. Once loaded, closing and reopening retains the search and expanded results.
+
+The production Pages entry script fell from 550,687 to 510,068 bytes, or from 166,648 to 159,911 bytes using the same local gzip measurement. The separate snapshot module is 41,460 bytes, 6,141 gzipped. These are build-artifact sizes, not measured network timings or frame-rate claims. The browser regression verifies no snapshot request before opening, the existing search/expansion flows, deliberately blocked module download and successful reload recovery in development and production. Data hashes and original observation values remain unchanged.
+
+## Review discovered options in the importer
+
+Store observation cards now offer Review import alongside their retailer link. The action opens the existing importer with the selected variant URL and switch category. It makes no request until Preview and adds no parts until the user explicitly confirms their selection. Returned store variants still require review; this action does not promise that every store returns only the linked variant. Closing the dialog and starting a generic import resets the URL. Seeded imports focus the URL field, including when opened from the research dialog.
+
+The 320/1920px browser journey now checks source transfer, no automatic import request, explicit preview, switch category, add confirmation, focus and generic-import reset. It passes in development and the built Pages app. All 73 tests, types, lint, formatting and both builds pass. A cropped element capture appeared to show the skip link over content; a fresh viewport capture and measured bounds placed it entirely above the viewport while the search field held focus. No CSS change was made from that unconfirmed screenshot artifact.
+
+The preceding deferred-download release `ce2db47` passed all GitHub checks and deployment in run `34043561034`. Public nightly release metadata confirms that source. The new review-import action is a later checkpoint and is not claimed public until its own publication completes.
+
+## Q1 HE 8K assembly reference
+
+Added six sourced component references and a separate starting assembly, bringing the builder catalog to 45 parts and six assemblies. [Evidence and source conflicts](verification/q1-he-8k.md) explain the documented Lime pairing and why Jade remains unresolved. The scene continues to represent an illustrative layout, not product CAD. No new sound recording or measured latency is implied.
+
+The new magnetic family exposed a duplicated family list in the component filter. The filter now uses the same interface classification as compatibility, so Lime appears under Magnetic and not Contact. The full 74-test suite, types, lint, formatting and both builds pass. Browser checks verify selection at 390px, technology filtering, documented limitations, no overflow and clean-page share restoration in development and production. The full import/share/audio-recovery browser regression also passes and now includes the 8K selection/filter check in CI.
+
+The preceding Review import release `5443971` passed check and deploy in GitHub run `34043949842`. Public nightly metadata confirms that source, and its actual public observation journey passes, including deferred download, failed-download recovery and the explicit review/import flow. The 8K assembly is a later source checkpoint awaiting its own CI/publication.
+
+## Supplied keycap relationship
+
+The Q1 HE 8K reference now identifies its supplied keycaps as documented only with the original documented assembly, original switch, supplied caps and matching layout. Changing caps, switches, plate, layout or evidence removes that status. Other kit coverage stays unknown. The UI still asks users to match the exact regional variant and revision. A failing-before regression demonstrated the earlier blanket unknown result; all 75 tests now pass.
+
+Browser verification checks the factory relationship and its removal after choosing a different switch. The first broader browser run later failed at an unrelated audio readiness check: a JavaScript click followed visibility alone. A controlled delayed-sample experiment confirmed that a visible disabled play button does nothing when clicked through JavaScript. The verifier now waits for Playwright actionability before the in-page click. The original scheduled-voice and mute assertions and deadline remain intact; the full browser regression passes. Application playback code is unchanged.
+
+Strict types, lint, formatting and both builds pass. The production phone/share journey also passes with the supplied-keycap relationship. The preceding assembly release `bda3575` completed check and deploy in GitHub run `34044373374`; this keycap change is a later source checkpoint.
+
+## Selected-switch listening context
+
+The sound panel now names the selected hardware switch and explains that the chosen recording is independent of component changes. The reference library has an explicit Search selected switch action. It uses the selected name, clears a conflicting family filter and leaves native playback and the video player unchanged. It does not infer an acoustic match, automatically select a recording, or synthesize missing coverage.
+
+The browser regression searches Oil King after selecting a different family, finds its indexed reference, and confirms the native sound choice and unopened video player are unchanged. It retains the playback retry, cancellation and mute checks. A 320px journey searches Ultra-Fast Lime, verifies the honest no-results state, resets the search and checks overflow; the touch-sized action was visually inspected. No audio assets or processing changed. The full 75-test suite, types, lint and formatting pass; build/publication checkpoints follow after execution.
+
+Both builds and the production phone journey pass. The preceding supplied-keycap release `c5e35e3` passed check and deploy in run `34044756586`, and public nightly metadata confirms it. The listening-context update is a later source checkpoint awaiting its own publication.
+
+## Audit release follow-up
+
+The selected-switch release was blocked by CI run `34045112167`: production typing measured a phone monitor below 300px. The phone verifier waited for iframe readiness but not renderer projection. It now waits for both renderer-ready and projected states, keeps the same minimum width, and reports the measured value on failure. A delayed-renderer experiment confirmed independent readiness but did not reproduce the original narrow measurement, so the original failure remains inconclusive. The full rendered production typing journey passes locally after the correction. All 75 tests, strict types, lint, formatting, actionlint, server build and full dependency audit pass. Public nightly remains `c5e35e3` pending a successful subsequent deployment. The audit's feature table now reflects the separately deployed nightly import backend and current catalog counts.
+
+## Extractor provenance
+
+The local catalog now stores a content-addressed archive of extraction source and Node version for each newly collected page. The importer and pricing parser are archived once per hash; page links commit atomically with observations. Exports verify archive integrity, and historical pages remain explicitly unknown instead of inheriting current source on replay. This addresses extractor-version evidence, not raw-response archiving or hosted ingestion.
+
+All 78 tests, strict types, lint and formatting pass. A real twelve-option Divinikey observation retained its archive, and a no-network replay returned identical evidence. The earlier 128 observations remained intact with unknown extractor provenance. Public snapshot contents and application behavior are unchanged. The previous phone-readiness release remains under GitHub verification and has not yet been claimed deployed.
+
+## Hosted catalog publication in progress
+
+Added D1 schema/migrations, credential-restricted snapshot publication, public readback and a publication CLI. The parser verifies original page hashes, source, ordering and counts. The existing bounded request reader is shared with the import route without changing its limit or cleanup behavior. All 81 tests, types, lint, formatting and the Worker build pass. A scoped migration-tool dependency override retains a clean audit and working migration generation.
+
+Actual local D1 publication/readback succeeds, but the rapid rejected-upload verification crashes Wrangler's proxy with `Network connection lost`. Isolated unauthorized and oversized requests return their expected statuses; the sequence remains unresolved. [Hosted catalog status](hosted-catalog.md) records the reproducer, experiments and remaining deployment/UI work. This backend is deliberately not deployed or claimed finished.
+
+Both preceding GitHub releases passed. Public nightly metadata confirms `7bc90ecd636c93414e5e0d803593a6ae2f43ab46`, run 45, published September 6 at 16:39:47 UTC. Stable main/dev source versions remain unchanged.
+
+## Hosted catalog deployed and verified
+
+Isolated the failing local rejection sequence to Wrangler's front proxy: entry tracing showed the second request never reached the app handler, while the identical sequence passed against the same internal Worker/D1 endpoint. A controlled worker restart preserved the original 128 observations. The earlier claimed Node 22 comparison was invalid because the command selected Node 26; a verified Node 24 run also reproduced the proxy failure. No application workaround or assertion weakening was retained.
+
+Sites version 2 deployed `3ea24f52b1b3b0c38c7055e6b50316a54d7c7622` at 16:56:14 UTC. The actual nightly gateway passes the complete rejection/publication/readback/replay verifier, and the publication CLI independently confirms the original snapshot bytes. [Hosted catalog documentation](hosted-catalog.md) records the exact deployment, source and data hash. Discover still uses its bundled snapshot pending hosted-reader integration. Main/dev and the stable Sites project remain unchanged.
+
+## Discover hosted reader
+
+Connected the observation browser to the published catalog. Opening the disclosure starts a bounded, timed fetch and validates the returned page evidence and safe product URLs. Failures visibly use the bundled snapshot; retry preserves the user's search/results. New requests cancel stale ones, and unmount aborts loading. Store options still require explicit import review and are not promoted to verified builder parts.
+
+All 82 tests, strict types, lint, formatting and both builds pass. Development and production browser checks cover 320/1920px loading, fallback/retry, original variant links, search/expansion, import review, failed-module recovery and overflow. A hosted-only fixture proves the server result is used. A separate 390px built reader loaded the real hosted catalog via a local redirect, verified 128 observations and searched them successfully. The test redirect initially retained the preview port; it was corrected without changing app routing. The new frontend awaits GitHub publication. Existing nightly Sites version 2 continues serving the durable catalog.
+
+## Hosted reader failure audit
+
+Added real-HTTP coverage for damaged/oversized/non-JSON catalog responses, externally canceled loading and stalled bodies. The stalled transfer falls back at the eight-second deadline and closes its unfinished response; external cancellation rejects instead of returning stale fallback data. All 85 tests, strict types, lint and formatting pass. The initial cancellation fixture observed an incoming request's close/error instead of response closure; the fixture was corrected before accepting results. Application behavior did not change.
+
+The reader release `c94a80f` passed its GitHub check job and is in deployment. The public Pages reader will be verified against the hosted catalog after its release metadata confirms that source.
+
+## September 6: accessory build planning and reference reconciliation
+
+The build model previously supported one choice per original component category. Dedicated control-deck presets did not make their knobs/screens configurable keyboard parts. Added a separate accessory collection to the existing build document, with legacy files defaulting to an empty collection. The Components panel now accepts sourced knobs, encoders, displays, button modules, macropads and individual artisan caps. Selected items retain placement through local persistence, portable links, export, undo and redo without replacing the base keyset.
+
+Initial coverage is eight maker references, including three Jelly Key sizes. Compatibility requires product/location-specific evidence; missing mount, clearance, electrical or firmware facts remain unknown. Duplicate artisan assignments flag a conflict. The UI currently plans accessory selections; it does not yet render accessory geometry or establish fit for the existing board catalog. Full maker variants, board slot inventories, per-key visual placement and electrical budgets remain open requirements in `docs/accessory-configurator.md`.
+
+Validation: build round trips and legacy recovery pass; eight accessory-domain tests cover evidence scoping, conflicts and malformed input. A live browser flow verifies add, valid/invalid placement editing, share decoding, reload and removal at 320, 390 and 1280 CSS pixels. The browser check deliberately disables WebGL to isolate the configuration flow; it does not constitute accessory render evidence.
+
+The reference audit also confirmed the three keyboard GLBs contained case, PCB, plate and keycaps but no switch node. A dormant explosion offset could not display absent geometry. The renderer now adds a separate instanced switch layer beneath each key, and a dedicated `#switch=<id>` page provides an interactive illustrative switch, sourced specifications, existing reference recordings, fit information and explicit Add to build. Original maker links remain visible; exported builds also include selected accessory references. No checkout was added.
+
+Switch verification passed with zero browser errors and zero axe violations at 1440, 390 and 320 pixels. It covers inspection without selection changes, add/undo/redo, keyboard orbit and separation, Back/reload, invalid IDs, missing recordings and WebGL fallback. Rendered evidence confirms 61 separate switch instances in the 60% exploded model; geometry tests cover all three layouts. Both accessory and switch browser checks are now CI gates. These models remain original illustrative geometry, not manufacturer CAD or measured replicas.
+
+## September 6: renderer-backed accessory placement
+
+The artisan key picker now reads the same `public/models/layouts.json` produced with the keyboard GLBs. It lists actual key codes and widths, disables width mismatches and already assigned keys, and preserves a missing saved key as an explicit unavailable option after layout changes. Selection still does not certify physical stem/profile/clearance compatibility. Original product links remain alongside each selection.
+
+The previous source release's CI production typing check exposed a projection-readiness race in its test: Monkeytype initially sees a wide fallback iframe, then receives the narrower monitor projection and changes its responsive controls. The verifier must choose the settings control after projection settles. Investigation and correction are recorded in the subsequent verification evidence; no force-click should bypass the real interaction.
+
+A stricter result review found a second typing-test gap: Monkeytype can display 100% accuracy and the configured word count after aborting for a slow timer. The verifier now rejects `failed` and `invalid` result markers. The observed software-rendered run failed this stronger requirement, so earlier result-text assertions did not prove successful completion. Renderer performance is under investigation; upstream timer protection remains enabled.
+
+Rendered accessory verification passed for artisan replacement, a twelve-key macropad on each desk side, explosion, all-key-layout restoration, mismatched/duplicate rejection, removal and mobile reflow. Visual inspection found overlapping layer links and volume controls on phones; spacing was corrected and intersection assertions now cover 320, 390 and 1280 widths. All 105 unit tests pass. Exact manufacturer geometry and embedded-module fit remain unimplemented.
+
+The strengthened typing verifier completed successfully in GitHub run 34050454518 at 18:06:01 UTC, including actual successful 10-word result, mobile and recovery. That job was later canceled during the separate room verifier; its overall conclusion does not establish a typing failure. Local Xvfb/software-rendered probes still encountered slow-timer failures, even after individually disabling redraws, key messages, screenshots and projection transforms. No speculative renderer changes were made. Retain the strict assertion and treat this local/CI divergence as an unresolved environment/performance limit, not a proven app regression or universal performance pass.
+
+## Provider-neutral account storage; Google setup deferred
+
+The user selected Google sign-in and explicitly deferred creating its Google Cloud project. Added private account/profile/immutable build tables, a generated migration and shared request/response parsers. Eight real SQLite tests pass for owner isolation, operation retries/conflicts, unique chosen handles, source evidence retention, validation and bounded list/query behavior. No emails or identity names become public automatically.
+
+Removed the unshipped ChatGPT account/API drafts. No account route is exposed. Google configuration, Sites cookie/browser-policy verification and the public community experience remain open. This is storage groundwork, not a shipped sign-in feature.
+
+## Opt-in studio music and keyboard priority
+
+Added a compact Music popover and Focus-mode access. Lofi again by OMF-Games is sourced under CC0 with original-file attribution; the original mono Vorbis is retained with an MP3 compatibility transcode. No music auto-start or pre-opt-in fetch. User volume is independent of keyboard build data. Native keyboard audio and mounted sound references suppress music completely; paused user intent is never undone by clearing a blocker. Recovery has a short delay and fade, and page hiding/disposal cancel pending playback.
+
+Local checks passed: five controller/asset tests, browser decoding and nonzero output, zero gain/paused music at keyboard source starts, mounted-reference suppression, overlapping priorities, late promises, pause/recovery, reload, and 320/390/1280 px accessibility/bounds. The reference iframe was stubbed and the visibility event simulated; live mobile/YouTube and subjective listening remain unverified. Production/CI/publish evidence follows separately.
+
+## Shared configuration previews (2026-09-06)
+
+New share links open an isolated `#preview=` page with the real keyboard scene,
+exploded view, sound controls, compatibility notes and original maker links.
+“Customize a copy” explicitly imports the configuration; Undo restores the saved
+build loaded at that moment. Legacy `#build=` links retain their import behavior.
+Preview visits do not create or persist a device draft. Clean studio instances
+also no longer write their captured build on exit, preventing a stale tab from
+overwriting newer saved work. Pending edits still flush on exit.
+
+This is the portable-preview portion of COMMUNITY-3. There is no verified creator
+identity, immutable server publication, client feedback, favorites or profile UI
+yet. Google setup remains deferred at the user's request. Returning from a
+preview remounts the studio and restores its saved build; earlier in-memory
+undo/redo history does not survive that route change.
+
+Validation includes 120 passing unit tests, type checking, lint, and the existing
+browser restoration/audio/storage-denial journey. The dedicated preview verifier
+covers source links, rendered geometry, responsive accessibility, cross-tab
+storage isolation, explicit copy/Undo, malformed URLs and a cold visitor. Audio
+startup regression observes real AudioParam ramp commands while delaying the
+resume promise; it does not claim human listening or headphone verification.
+
+The preview browser check uses software rendering and reduced motion, as the
+existing accessory rendering check does. Screenshot capture follows a fresh
+preview load, separate from the delayed audio-resume test.
+
+### Release confirmation
+
+GitHub Actions run [34055025269](https://github.com/kvnloo/keyconf.gen/actions/runs/34055025269)
+passed all checks and deployment for `96775ffe4dc68e0ea4c86e18ea121deeb8f8d000`.
+The nightly Pages release marker confirms that revision, run 56, published at
+2026-09-06T19:34:57.884Z. The correction after the initial preview release only
+updates the imported-build browser journey to choose “Customize a copy.” The
+Sites nightly runtime remains the validated preview implementation from
+`d582c2386eb2a1a101a3e88d8784ef5763e9d76f`, version 6; its deployment and a
+fresh-visitor preview check succeeded. Main and dev were not promoted.
+
+## Unified studio search (September 6, 2026)
+
+The header search and Ctrl/Command K open one searchable list of current catalog
+parts, selected-session imported products, accessories and existing studio
+workspaces. Searches match all words across maker, product, description and
+category; common terms such as dials, displays and switches are included. Empty
+queries offer workspace destinations. No creator profiles or community activity
+are invented.
+
+Opening a product shows its existing description and original source before an
+explicit Use in build or Add to plan action. Selection uses the existing Undo
+history. Accessories retain the 100-selection boundary and open their placement
+plan after addition. Search navigation exits focus mode when configuration is
+needed. Esc closes search without leaving the underlying focus mode; focus
+returns to the opener. The same shortcut works inside the same-origin Monkeytype
+frame through the parent integration, without modifying the vendored engine.
+
+Independent read-only review identified the focus-mode and iframe shortcut gaps;
+both now have browser regression coverage. Search verification covers keyboard
+navigation, explicit mutations and Undo, original sources, accessory selection,
+empty results, 320/390/1440 widths, accessibility, focus and typing navigation.
+Runtime search uses existing catalog records; it adds no remote queries or
+account data. Creator search, favorites and attributed feedback remain pending.
+
+## Search release and first knob host evidence
+
+Search release `dbc3917d362875253df177bbe80a0752843e79b8` passed full CI and
+GitHub Pages deployment in run
+[34056332605](https://github.com/kvnloo/keyconf.gen/actions/runs/34056332605).
+The nightly release marker confirms run 58, published September 6, 2026 at
+20:00:43.039Z. Sites nightly version 7 and its full search browser check also
+succeeded. The suite contains 124 passing tests.
+
+Manufacturer research now supports a first specific knob-host implementation:
+the Keychron replacement cap on a stock Q1 Max knob. A reusable STEP inspector
+verified three CAD solids and the cap's 16 × 16 × 14 mm envelope. The firmware
+layout differs from the existing generic 75% model, so adding a cylinder on an
+arbitrary key would be incorrect. `docs/accessory-host-evidence.md` records the
+source links, immutable firmware revision, CAD hash, measured results and required
+layout/compatibility integration. Installed knob rendering is still pending.
+
+## Q1 Max layout and first documented knob host
+
+Nightly Sites version 8 is deployed from
+`c0ab9d29c72d3b9512b93d12b8b4866a23ed16d4` at
+https://keyconf-nightly.kvnloo.chatgpt.site/ (September 6, 2026, 20:56:45 UTC).
+The matching Q1 Max case, PCB and plate now select the reviewed ANSI layout:
+81 normal keycaps, correct function-row gaps and right Ctrl, with a separate
+stock knob. The knob follows keycaps in exploded mode. Geometry remains an
+original visual study, with manufacturer-derived knob envelope dimensions;
+this is not a complete manufacturer enclosure or encoder CAD assembly.
+
+The accessory picker uses the documented keys and offers a stock-knob slot.
+Keychron's replacement-cap compatibility applies only to that slot on the
+matching assembly. Mixed assemblies stay unverified; duplicate caps conflict;
+an added encoder does not inherit the cap claim. Shared previews and private
+account snapshot evidence use the same resolver. Source links remain visible.
+
+All 127 tests, type checking, lint, formatting and production builds pass.
+The headed production-browser verifier passes assembled/exploded captures and
+shared-preview model/fit checks. Visual inspection caught and corrected the
+knob being obscured beneath raised caps. GitHub run 34059013222 passed for the
+initial implementation. Follow-up run 34059354855 and the deployed-site browser
+check remain in progress at this checkpoint. Main and dev were not promoted.
+
+Remaining priorities include account-backed creator publishing, favorites,
+proposals and attributed feedback once the deferred Google setup is available;
+further specific accessory hosts and geometry; and broader licensed native
+sound coverage. Shared portable previews are available now, but do not supply
+verified creator identity or a feedback inbox. No complete-community claim is
+made by this release.
+
+Q1 release confirmation: GitHub run 34059354855 completed successfully for
+`c0ab9d29c72d3b9512b93d12b8b4866a23ed16d4`. The deployed Sites browser check
+passed, including real stock-slot dropdown changes from confirmed to unknown
+and back, assembled/exploded captures, shared preview, and usable customization
+with no horizontal overflow at 390 and 320 CSS pixels. This does not establish
+exact manufacturer enclosure fidelity, measured latency or human listening
+quality. The browser coverage is retained in `scripts/verify_q1.mjs`.
+
+Independent Q1 review found no actionable issues in the scoped implementation.
+The reviewer inspected the real GLB adaptation, cap widths and legend
+transforms, enclosure bounds, knob dimensions, model selection, placement
+compatibility and shared/private evidence integration; 18 focused tests passed.
+It did not independently repeat live-browser interaction or manufacturer-source
+research. Root performed the published-site browser checks described above.
+
+## Creator-profile link storage
+
+The private profile model now stores up to five labeled HTTPS links, suitable
+for a creator's channel, shop or commission page. URLs are normalized and
+validated; duplicate URLs and embedded credentials are rejected. Links are
+outbound references, not verified ownership claims. The additive migration
+preserves existing profile identity and bio with an empty link-list default.
+Real SQLite tests cover persistence, owner isolation, replacement/removal and
+upgrading a database containing an older profile. All 130 tests, type checking and the production build passed. This shipped in
+nightly version 9, and its GitHub CI passed. Google setup,
+account routes and public profile UI remain deferred or unfinished.
+
+## Creator publication storage and library
+
+Nightly version 10 contains immutable creator publication storage and owner-only
+withdrawal, from commit `3db9424`. All 137 tests, type checking, lint, the
+production build and GitHub CI passed for that checkpoint. No account or
+publication endpoints are exposed yet.
+
+The owner library now reads 25 summaries per page using publication time and ID
+for stable ordering. Withdrawn releases remain manageable, while saved 3D
+payloads stay out of the list. Real SQLite coverage checks timestamp ties,
+complete traversal, owner isolation, withdrawal visibility and use of the owner
+index. Google sign-in, public profiles, favorites, publication review UI and
+client feedback remain unfinished.
+
+## Feedback from a shared preview
+
+Shared previews now have a collapsed feedback panel. A visitor writes notes and
+copies them with the exact portable build preview link to paste into their
+conversation with the builder. A denied clipboard exposes a selectable message;
+empty notes cannot be copied. Notes are ephemeral and nothing is sent or stored
+as a community comment. This supports existing creator/client conversations
+while authenticated proposals and durable feedback remain unfinished.
+
+The real browser check covers successful copy, restoration of the included
+build link, denied-clipboard recovery and selection, empty-note handling, no
+page errors and no horizontal overflow at 390 CSS pixels. It runs in CI through
+`verify:feedback`. Type checking and lint passed for the component.
+
+## Private favorite storage
+
+Favorites reference published releases, never private drafts. The additive
+`0004_common_tag.sql` migration enforces one favorite per account and release.
+Adding is repeatable, removal is scoped to the trusted account, and list pages
+use creation time plus publication ID for stable traversal. Withdrawn items
+return only an unavailable marker and the favorite identifiers/timestamp.
+Neither private build payloads nor withdrawn release metadata are selected.
+
+Real SQLite checks cover 27 favorites across timestamp ties, repeat additions,
+owner isolation, repeat removal, missing/private/withdrawn rejection, withdrawal
+redaction, invalid cursors and use of the owner list index. All 18 community
+tests passed. No favorite endpoint or UI is exposed; Google setup and hosted
+identity verification remain deferred.
+
+Favorite storage shipped in nightly version 12 from `5772fa9`; the live database
+contains `community_favorite` with account, publication and timestamp columns.
+All 139 tests, types, lint and the production build passed locally. The prior
+feedback CI failed because its headed browser command lacked a virtual display;
+`5772fa9` adds the wrapper used by the other headed checks. Its CI is pending.
+
+## Public creator pages
+
+Nightly version 16 serves `/builds/[id]` with creator attribution, source-backed
+parts, frozen compatibility explanations, recorded-sound scope, explicit copy
+customization and download recovery. Retired items retain their evidence;
+missing and withdrawn releases return 404. Creator details sit beside the
+keyboard, which is visible in the first desktop viewport. This has been checked
+against a built Worker and isolated local D1 fixtures, including phone layouts
+and automated accessibility checks. Test creators were not published.
+
+The initial CI Worker connection failure did not recur after process-group
+cleanup and retained diagnostics were added; the public-page CI step passed on
+`6156d0d`. Root-cause certainty remains limited by missing logs from the first
+run. Full CI for that run passed. Version 17 from `82daccb` adds release titles and unavailable-page indexing protection; its check and deployment jobs also passed in run `34064484037`. Accounts and a
+creator publishing UI remain unfinished, so visitors cannot yet publish their
+own releases through the site.
+
+
+## Community implementation reconciliation
+
+The architecture now matches the deployed immutable snapshot model, public
+`/builds/[id]` route and publication/favorite storage. It no longer instructs
+future work to add duplicate revision tables or describes shipped storage as
+unimplemented. Account UI and the complete two-person proposal workflow remain
+required. Google setup stays deferred. The installed Sites authentication
+guidance requires confirmation of the external-provider integration before
+implementation; no available Sites tool establishes a Google session flow.
+This limits authentication work, not the remaining account-independent work.
+
+## Feedback on retired releases
+
+Archived public builds now retain the same copyable feedback panel as supported
+builds. A client can ask the creator about replacements using the original
+publication link without trying to import retired parts. Feedback remains an
+explicit copy action, not a submitted account comment. The publication browser
+check covers denied-clipboard recovery, exact archived link retention, unchanged
+local storage, phone overflow and accessibility with the feedback panel open.
+
+
+## Complete saved-build traversal
+
+Private build storage now returns 25-summary pages and a continuation cursor,
+replacing the 100-item cutoff. The query uses the existing owner/date/ID index
+and never selects full build payloads. Real SQLite verification traverses 106
+snapshots across timestamp ties, checks uniqueness and exact ordering, rejects
+invalid cursors, and proves another account cannot read the owner's page. All
+20 community tests passed. This prepares the account library; it does not expose
+an account UI or change the deferred Google setup.
+
+## Shared-build comparison
+
+Shared previews and archived public releases now include a collapsed comparison
+panel. Visitors can choose an exported Keyconf keyboard file and inspect changes
+to selected parts, visual settings, accessories and saved audio settings without
+importing it into their device draft. It supports both the standard export
+wrapper and plain build files through the existing reader. Files stay local;
+there is no upload or automatic feedback submission. Names, palette names,
+unused imported parts and accessory record IDs are excluded from comparison.
+Unsupported retired files retain the existing import validation limitation.
+
+The browser check loads a revision with one layout change, verifies both values,
+rejects malformed JSON while preserving the previous comparison, checks local
+storage is unchanged, clears the result and runs mobile overflow/accessibility
+checks. All 144 unit tests, type checking, lint and the production build passed.
+
+Comparison review found that display labels alone could conceal different
+imported part IDs, and integer percentage formatting could conceal small saved
+volume changes. Comparison now also checks part, recording and accessory
+identity, and retains precise volume values. Identical labels include the
+underlying identity when it is the only difference. A regression test first
+reproduced the missed imported-part change, then passed after the correction;
+all four comparison tests, type checking and lint passed.
+
+
+## Revocable proposal storage
+
+The additive `0005_client_proposals.sql` migration adds owned proposals with an
+immutable base snapshot, frozen chosen identity, a private token digest and
+closure state. Create retries are idempotent; conflicting content returns 409.
+Only the winning concurrent create receives a usable raw token. Preview reads
+exclude private snapshot names, account subjects and token hashes. Closing is
+owner-only and works even when snapshot data is damaged.
+
+Real SQLite tests cover concurrent identical/conflicting operations, chosen
+profile requirements, bounded input, token syntax/digest storage, owner
+isolation, immutable previews, retired catalog parts, token-index use, damaged
+evidence rejection, repeat closure and no reopening through retries. A separate
+read-only review found no concrete blocker within this storage scope.
+
+No account endpoint or proposal page is exposed. Google integration, token
+rotation, owner lists, client response storage and the complete two-person
+proposal experience remain unfinished.
+
+
+## Creator proposal library storage
+
+Owner proposal lists now return 25-item pages containing only title, ID, creation
+time and closure time. The additive `0006_proposal_library.sql` migration adds
+the owner/date/ID index for this query. Closed proposals remain manageable, and
+listing does not depend on parsing the original snapshot. No token, brief,
+source evidence or full build payload is selected.
+
+All 26 community tests passed. The new SQLite check traverses 28 proposals
+across tied timestamps, verifies ownership and closed-item retention, rejects
+invalid cursors, and confirms index use after deliberately damaging the base
+snapshot. This is internal storage; the creator's account interface is still
+unimplemented.
+
+
+## Replaceable proposal links
+
+Proposal-link rotation now stores an issuance record and replaces the active
+digest in a single conditional transaction. The immutable keyboard proposal
+stays unchanged. Old links stop resolving; old operation retries never restore
+them. A competing or stale operation cannot overwrite the winning digest, and
+a closed proposal cannot be reopened. Only the winning invocation receives
+the new raw token. Owner lists expose the current version for explicit retries.
+
+SQLite tests cover sequential replacement, identical/conflicting concurrent
+requests, replay after later rotations and closure, owner isolation, rollback
+when the parent update fails, closing before a pending batch, and preservation
+of existing links through migration. A separate read-only review found no
+concrete blocker. Account routes, rotation controls and client responses remain
+unimplemented; this is storage preparation, not a shipped account workflow.
+
+
+## Client response storage
+
+Client responses now have immutable keyboard snapshots, server-derived evidence,
+chosen author identity, notes and the accepted proposal-link version. Submission
+checks the current token and open state inside the insert. Concurrent identical
+requests return one receipt; conflicting reuse cannot replace accepted content.
+The original proposal and the client's account build library remain untouched.
+
+Creator and response author can privately read accepted responses after closure.
+Other link holders cannot. Their paginated lists load only response identifiers,
+author identity, time and link version. An uncertain submission can be recovered
+through that private list even after its invitation token is invalidated.
+
+SQLite checks cover frozen identity/evidence, unused-import stripping, one-row
+retries, conflicting concurrent requests, closing/rotation during submission,
+retired catalog parts, rejected inputs without orphan builds, private reads,
+29-response pagination across timestamp ties, index use and rejection of
+client-supplied author/evidence/version claims. A separate read-only review found
+no concrete blocker. This remains storage work; no Google account API or
+response interface is exposed yet.
+
+## Isolated preview variations
+
+Shared previews and supported public releases now offer a collapsed Try changes
+panel for switches, independent recording references, keycap palettes and case
+colors. Edits stay in component state until the user explicitly opens a copy in
+the studio. Reset restores the original; a variation file can be downloaded.
+Feedback links and studio navigation carry the edited build. Published variation
+links target the root preview route, while unchanged release feedback keeps its
+canonical URL. Changes use current compatibility evidence and are labeled as the
+visitor's variation. Original publication evidence returns on reset.
+
+Changing a recording invalidates readiness and turns sound off before replacing
+the audio engine. Switch selection never silently chooses a recording. Colors
+remain labeled as visual studies rather than maker-confirmed finishes.
+
+This is a usable preview-editing flow without sign-in. Account-backed proposal
+pages, response submission and creator review remain unfinished; feedback here
+is copied or downloaded for the user's existing conversation, not sent.
+
+Validation for this change: 160 unit tests, typecheck, lint, formatting and the
+production build passed. Browser checks against the built Worker passed for
+private-field exclusion, original and edited release links, archived releases,
+withdrawn/missing pages, variation reset, recording changes, explicit studio
+handoff, local-storage isolation before handoff, clipboard fallback and expanded
+mobile controls with no WCAG A/AA violations detected. Independent review found
+three issues in the first implementation; all were corrected before publishing.
+
+## Proposal invitation viewer
+
+A read-only `/proposal#token=…` page now resolves a creator's invitation through
+`POST /api/proposal-preview`. It shows the chosen creator and brief with the
+existing keyboard, sound and isolated variation controls. Historical proposals
+retain their original parts, provenance and file export when the editor can no
+longer support them. Closed and replaced invitations show an unavailable page;
+load failures offer retry. Copied feedback uses a portable keyboard link or a
+build file and never includes the invitation bearer token.
+
+The page and endpoint send no-store, no-referrer and noindex headers. The POST
+requires the same origin and a bounded JSON body. Superseded reads are aborted
+and cannot populate a different invitation. These are read-only capabilities;
+creation, closure, rotation and response submission still await account UI and
+hosted Google identity. No public test proposals are seeded.
+
+Validation: 160 unit tests, strict types, lint, formatting and the production
+build passed. The compiled Worker/D1 rejection sequence and both publication and
+proposal browser suites passed. Coverage includes the real saved-draft key,
+explicit studio handoff and Undo, private-field/token exclusion, mobile
+accessibility, archived file feedback, superseded requests and source links.
+Independent review found no remaining application blocker.
+
+The known Wrangler front-proxy rejection crash recurred during verification.
+CI now uses Wrangler's installed createTestHarness API with fresh real D1 and the
+compiled production configuration. Rejection tests call the Worker directly;
+browser tests still use its served HTTP pages. No application assertion was
+removed. Hosted-gateway behavior is checked separately. Typed lint now recognizes
+only Node's test registrations as runner-managed promises in test files; other
+floating promises remain errors. The query recorder has an explicit string-array
+type so index checks retain precise SQL values.
+
+
+## September 6, 2026: shared comparison evidence and maker links
+
+Shared publication and proposal comparisons now use the original saved product, accessory and recording names while that original is being previewed. A locally edited variation uses current catalog details. The comparison explains this distinction and provides separate clickable original-maker links for both builds, including accessories. Source URL changes remain visible even when product labels match.
+
+Validation: 161 unit tests passed, strict TypeScript, lint and formatting passed. The real local browser feedback journey passed, including two maker links for a changed case, mobile overflow, accessibility, unchanged local storage, malformed file recovery and sound/variation controls. GitHub run 34070756706 for the preceding version 27 release finished successfully. This comparison increment is not yet published to Sites.
+
+Still outstanding: clearer before/after review for inline changes, creator-facing proposal creation and authenticated client response submission. Google setup remains deferred by the user.
+
+
+## September 6, 2026: current-build feedback confirmations
+
+The comparison evidence release is live as Sites version 28, from 40a1482. Production build and the compiled Worker browser feedback journey passed before deployment; deployment appgdep_6a9e0c826c688191863f1431e33e23f0 succeeded. GitHub run 34071368689 completed its check job successfully; its Pages deploy job was still running when inspected.
+
+Feedback receipts and manual-copy messages now belong to the exact build, notes and link mode used by their copy operation. Editing notes invalidates pending copy results; newer copy requests supersede older ones. Changing keyboard settings hides obsolete confirmations and manual-copy text while preserving the notes. No clipboard content is changed automatically after a keyboard edit; users explicitly copy the new version.
+
+Local browser coverage exercises delayed clipboard completion after note edits, fallback-message removal after a build change, and preserved notes. The initial journey, type check, lint and formatting passed. The strengthened delayed-completion browser assertion and production build also passed. This feedback increment is committed for nightly but not yet deployed to Sites.
+
+
+## September 6, 2026: compatibility beside preview controls
+
+Shared preview adjustments now expose known incompatibilities beside the switch selector, including the reason and original documentation link. Unknown checks remain explicitly unconfirmed, rather than being presented as a pass. The summary consumes the same checks as the detailed compatibility section, preserving saved creator evidence until a variation is made.
+
+The real browser journey selected Gateron Magnetic Jade for the default contact PCB, verified the electrical-interface warning and documentation URL at phone width, then reset and verified the warning disappeared. Existing feedback, audio, storage isolation and accessibility checks also passed. Strict types, lint and formatting passed. This increment is not yet deployed.
+
+The preceding feedback confirmation fix is live as Sites version 29, source d25780a; deployment appgdep_6a9e0e05998c8191b3d99f0fdfa11637 succeeded. Its GitHub run 34071806886 was still running at the latest inspection.
+
+
+## September 6, 2026: before/after variation review
+
+Try changes now includes a collapsed review with original and variation values, clickable maker links for changed parts, and color swatches beside hex values. The existing file comparison uses the same rendering component. The original side uses creator snapshot evidence where present; rows are restricted to actual client setting changes, so catalog description updates alone do not become client edits.
+
+The full local feedback/browser journey passed with the review expanded: changed switch values, original and replacement source links, mobile overflow, reset, feedback copying, storage isolation and accessibility. Types, lint and formatting passed. A targeted visual check covers the later-added color swatches. The production build completed before that final swatch polish and must be rebuilt before publication.
+
+The compatibility-control update is live as Sites version 30, source eec87c1; deployment appgdep_6a9e0f9d1e288191b3958b813476902b succeeded. Full creator account and response submission controls remain unfinished; Google setup is still deferred.
+
+
+## September 6, 2026: visible unmounted electronics
+
+Selected embedded OLED, NeoKey button PCB and encoder modules now appear on separate parts trays beside the keyboard. The encoder study includes a separate cap; the NeoKey is a bare board rather than an assembled controller, and the screen is unpowered. One illustrative module is shown per selection, capped at six; quantities and all selections remain in the plan. No mounting, wiring, firmware or physical-fit claims were added.
+
+Studio and shared-build parts explain unmounted scope and identify selections beyond the tray limit. Camera framing and resize include the new geometry. The same geometry/material disposal mechanism owns all new objects.
+
+Validation: 162 unit tests passed, strict types, lint and formatting passed. The browser accessory journey passed with desktop and 390px shared tray screenshots, exploded view, source notes, removal and no horizontal overflow. Both screenshots were visually inspected. A separate high-effort read-only reviewer found no blocker and verified trays clear macropads at left/right/above across the actual 60/65/75% GLBs. Product dimensions and integrated host fit remain unverified. This increment is not yet deployed.
+
+The before/after review release is live as Sites version 31, source 3b7bf5f. Deployment appgdep_6a9e1176ed60819191f84134dd4457e7 succeeded and GitHub run 34072579000 passed.
+
+
+## September 6, 2026: editable accessory quantities
+
+Non-artisan accessory cards now expose quantities from 1 to 100. Enter or leaving the field commits a valid whole number. Invalid or blank values restore the previous quantity with an explanation; Escape cancels. A quantity edit uses the existing build history and persistence path. The scene remains one illustration per selection and never creates geometry proportional to quantity.
+
+The local browser journey passed: edit to three, reject 101 and blank, cancel eight, share-link quantity, reload persistence, source/placement checks and three viewport widths. Types, lint and formatting passed. This increment has not yet been published.
+
+The parts-tray release is live as Sites version 32 from 7834a3a; deployment appgdep_6a9e143e5c608191b613d29d557b6326 succeeded.
+
+
+## September 6, 2026: actionable artisan preview placement
+
+Studio and shared-build parts now explain when an artisan cannot be shown because its target is unassigned, absent, the wrong width, or occupied by another artisan selection. Matching visual placement remains explicitly separate from verified stem/profile/clearance. No new fit claims were added.
+
+The existing parser already rejects multiple artisan units on one key. An initially proposed repair for that impossible UI state was removed after a real browser restore rejected the test input. Recovery coverage instead uses a valid saved 1u cap assigned to the spacebar: the editor explains the mismatch, the user selects Escape, and the shared link retains the corrected key.
+
+Validation: the full suite passed at 163 tests during implementation; the final focused placement test, strict types, lint, formatting and complete accessory browser journey passed after removing the unreachable quantity branch. Browser coverage includes the wrong-width repair and existing quantity, source, share, reload, removal and responsive paths. This increment is not deployed yet.
+
+Quantity controls are live as Sites version 33, source a65776c. Deployment appgdep_6a9e157468f48191b2e65cd4497f2fed succeeded. The preceding tray release CI 34073198794 passed.
+
+
+## September 6, 2026: imported accessory reference boundary
+
+Implemented the first internal PART-6 layer in `lib/imported-accessories.ts`: allowlisted source/variant metadata, canonical public URLs, bounded text and timestamps, deterministic short variant IDs, duplicate rejection, and explicit unknown fit/unavailable geometry. Imported IDs cannot shadow built-in identities. Caller-supplied compatibility claims are discarded and fit escalation is rejected. A shared catalog-plus-custom resolver is available for the next integration step.
+
+Artisan width now supports an explicit unknown value. Unknown width cannot replace a rendered key or become a width mismatch; the preview explains that dimensions must be confirmed first. Existing built-in widths are unchanged.
+
+Validation: 165 unit tests, strict types, lint and formatting passed. New tests cover deterministic identity, variant changes, original source retention, malformed/unsafe data, unknown dimensions, duplicate identities and fake fit. The deployed artisan-placement release CI 34073993001 is green.
+
+This boundary is not exposed in the importer and is not a complete accessory-import feature. Build-owned persistence, canonical serialization/pruning, server evidence checks, safe geometry fallback and reviewed atomic addition are still required by the accessory import contract. Do not publish an accessory import control until those paths are verified together.
+
+## September 6, 2026: reviewed accessory imports and release verification
+
+Imported accessories now retain original source/variant identity through the editor, search, file export, portable previews, immutable evidence and database publication reads. Explicit review distinguishes keycap, replacement knob, encoder, embedded/external screen or buttons, and external macropad. Addition updates the reference library and selections in one history action. Reimport refreshes an existing reference without duplicating its selection. Unknown artisan dimensions remain unknown; unavailable product geometry uses neutral placement markers, not another maker's product model.
+
+Local evidence: 168 unit tests passed before the additional database regression; all 36 community tests subsequently passed with that regression. Type/lint/format checks passed. The reviewed accessory import browser flow passed at phone width with Undo/Redo, reload, export, SKU/source preservation, search and clean-device shared preview. Core-part import regression and desktop/mobile imported rendering/removal checks passed. The production Worker build passed, followed by proposal API, published-page and private-preview browser/privacy/accessibility checks.
+
+Source `eca693d75f1f03c977422e3b2b0328b422e52edb` is saved as Sites version 35 and awaits GitHub run 34075823394 before publication. The later `0c641b4` changes only database regression coverage. Version 34 remains public at this checkpoint. Do not report version 35 as deployed until its deployment succeeds.
+
+Remaining: hosted identity and account UI are deferred pending Google setup; creator publishing/proposal management, authenticated client feedback and account favorites are unfinished. Public discovery and creator/drop presentation still need implementation. Exact accessory geometry, embedded host support and broad catalog coverage remain incomplete.
+
+## September 6, 2026: accessory imports published
+
+Sites version 35 is now live at https://keyconf-nightly.kvnloo.chatgpt.site from source `eca693d75f1f03c977422e3b2b0328b422e52edb`. GitHub run 34075823394 completed successfully. Deployment `appgdep_6a9e212050bc8191abb13fe7ef0737dd` succeeded at 2026-09-07T02:28:03.705805+00:00. The public release includes reviewed accessory imports, source-preserving persistence/search/export and neutral geometry. The subsequent database test and discovery foundation are not part of that deployed version.
+
+Public discovery storage/query validation, index migration and anonymous read endpoint are committed as `7b989bd`. All 37 community tests and type/lint/format checks passed. Gallery UI, compiled Worker endpoint coverage and discovery publication remain pending. Browser handoff was skipped for this automatic background continuation; the existing user view was preserved.
+
+## September 6, 2026: community gallery implementation checkpoint
+
+The unpublished Discover gallery now browses deliberate publications, searches frozen titles/creator names, filters build/drop releases and loads additional pages. Client reads are bounded, timed out and cancellable; new searches abort older requests. Empty and error/retry states are explicit. Cards link to the existing immersive publication page on the configured serving Sites origin. No public data was seeded.
+
+Independent high-effort review identified pagination focus loss and SQLite ASCII-only search. The UI now retains its loading control, announces result counts and focuses newly appended cards. The database uses a derived Unicode FTS5 index with SQL backfill/maintenance triggers and quoted phrase/final-word-prefix queries. The SQL-export limitation and rebuild procedure are recorded in the discovery contract.
+
+Evidence at this checkpoint: 172 unit tests, types, lint, formatting and the production build pass. The current full Worker run has loaded migrations and passed proposal API and published-page browser checks; proposal/gallery browser checks are still running. The new gallery script includes 29 releases, privacy exclusions, Unicode search, final-page focus, retry, mobile accessibility and publication navigation. Do not claim those new browser assertions pass until the run finishes. A focused `npm run verify:worker -- --discovery` mode is available for subsequent local iterations; default CI coverage remains complete.
+
+## September 6, 2026: gallery browser verification and release fixes
+
+The focused compiled-Worker gallery journey passes after correcting a fixture expectation: searching “Local” also matched the copied creator handle, so the fixture now searches the specific release title. GitHub run 34077367123 reproduced that obsolete assertion and failed without publishing.
+
+Further browser coverage verifies 29-release pagination, Unicode search across two pages, final-page focus, and focus through a failed page load and retry. Native `disabled` removed focus in Chrome; the pagination control now uses `aria-disabled` plus an action guard while loading. New searches still abort previous reads. Desktop search controls now share a row, mobile controls fit, and singular counts use “build”. Both final screenshots were inspected.
+
+Final type/lint/format checks and production build passed, followed by `verify:worker -- --discovery` against actual D1 fixtures. The preceding full Worker run passed proposal API, published-page and proposal-preview checks before reaching the obsolete gallery assertion; the focused final run covers the corrected gallery. CI and public gallery deployment remain pending. Nightly Sites remains version 35 with accessory imports.
+
+## September 6, 2026: reviewed imported-artisan specifications
+
+The importer now accepts optional artisan width in key units and MX/Choc stem values entered from the maker's listing. Unknown remains the default, and a new source preview resets these fields. The form explicitly applies the reviewed values to all selected caps and marks supplied dimensions as user-entered in the retained reference details. Fit remains unknown and geometry unavailable; a known matching width enables a neutral key-placement marker rather than a fabricated artisan sculpt.
+
+Local verification passed at 320px: unknown defaults, invalid-width rejection/recovery, reviewed stem, matching key assignment and exported specification/source preservation. The real-GLB test confirms a reviewed 1u imported cap replaces only its target with neutral geometry and restores the original objects on removal. Types, all nine accessory-model tests, corrected lint and formatting passed. The browser check is included in CI. This increment has not been production-built or deployed yet.
+
+The prior gallery release remains saved as Sites version 36 from `3e983092b5e27c59f88a2f49106773370d3475d5`, awaiting GitHub run 34077882776. These artisan controls are separate from that prepared archive.
+
+## September 6, 2026: community discovery published
+
+Sites version 36 is live at https://keyconf-nightly.kvnloo.chatgpt.site from source `3e983092b5e27c59f88a2f49106773370d3475d5`. GitHub run 34077882776 passed. Deployment `appgdep_6a9e29d1a2a881919927a94d9c63c7a9` succeeded at 2026-09-07T03:05:07.897310+00:00 with the recent-publication and Unicode-search migrations.
+
+Live public API reads returned 200 for the gallery and an accented-name search, both with zero real publications and `Cache-Control: no-store`. An invalid private release filter returned 400. No test fixtures were published. The empty gallery is intentional until creators deliberately publish real releases. Google sign-in setup, authenticated profile/publishing/favorite/proposal controls and cross-account workflows remain unfinished.
+
+The browser handoff was skipped for this automatic background continuation, preserving the user's existing view. The optional artisan width/stem controls in b51431b are separate and not included in this release.
+
+## September 6, 2026: artisan production verification
+
+The production build completed successfully. The compiled Worker browser journey passed at 320px, including invalid-width recovery, user-entered width/stem preservation, assignment to KeyA, export, reload and a clean-browser shared preview with the original maker link and unavailable-geometry notice. The same journey now runs in the default Worker verification suite; a focused `--artisan-imports` option supports local iteration. Lint and formatting checks passed.
+
+These controls remain unpublished at this checkpoint. Nightly is still version 36 while the new release's GitHub checks run. Known width enables a neutral placement marker; it does not establish physical fit or provide the maker's sculpt geometry.
+
+## September 6, 2026: artisan controls published and account handlers prepared
+
+Sites version 37 is live at https://keyconf-nightly.kvnloo.chatgpt.site from source `77c2c9d2f4c7ec505755b9006fb842da93a7cabf`. Deployment `appgdep_6a9e2d98c9bc8191b3c9b13ff1c8401f` succeeded at 2026-09-07T03:21:12.199060+00:00. The 320px artisan import, assignment, export, reload and clean-browser sharing journey also passed against this public release. The app code passed GitHub checks in b51431b; run 34078910770 for the expanded production regression remains in progress at this checkpoint. The background continuation preserved the user's existing browser view.
+
+The next account increment adds provider-neutral request handlers for profile read/update and private keyboard save/list/read. A caller-supplied verified identity resolver runs before database access. The handlers reuse existing origin/body checks, ownership queries, immutable idempotent saves and private error responses. They are not exposed as production routes and do not implement Google identity or sessions.
+
+Seven new SQLite integration tests cover anonymous requests with forged identity fields, ownership, rejected origins, repeated/conflicting saves, tied pagination, invalid requests and private errors. All 179 unit tests passed. Typecheck, focused lint and formatting passed. Real Google sign-in, hosted account routing, account UI and cross-device browser verification remain required; Google setup is still deferred.
+
+## September 6, 2026: account interface and retry verification
+
+GitHub runs 34078910770 and 34079475747 both succeeded. The public artisan release remains Sites version 37 from 77c2c9d. The later account-handler code does not expose public routes.
+
+The account panel and typed same-origin client now implement chosen profile editing, private keyboard snapshots, paginated saved builds and reopening through the studio's existing Undo history. The panel is not imported into the public app while Google setup is deferred. Its isolated localhost fixture uses real request handlers and SQLite migrations with test-only identities.
+
+Independent review found and corrected a pagination overwrite of newly saved rows, busy controls surviving reauthentication, a rejected-save recovery trap and focus loss during overlapping pagination/open requests. The final browser journey passes those timing cases, a lost acknowledgement after a successful database save, owner isolation, profile/source-link reload, corrected-draft recovery and mobile accessibility. Desktop and phone screenshots were inspected. The client adds ten unit tests; all 189 unit tests pass. Production build, typecheck, final lint and formatting passed.
+
+The account fixture does not prove Google sign-in, hosted identity, cross-device persistence or pending-operation recovery across a full sign-in redirect. These remain activation gates in [Account interface contract](account-interface-contract.md). The account browser check now runs in CI. No real users, profiles or publications were seeded.
+
+## September 6, 2026: account retry ordering
+
+Confirming an older save now keeps account snapshots in creation order instead of moving that snapshot above newer builds. The browser fixture creates a newer snapshot from another device while an earlier acknowledgement is interrupted, then verifies that retrying the earlier save does not reorder it. The account browser journey, types, lint and formatting pass. GitHub run 34080633952 for the account interface remains in progress at this checkpoint; the account UI is still not exposed publicly.
+
+## September 6, 2026: community build illustrations verified
+
+Community cards now illustrate frozen published layouts and colors using lightweight SVGs. Generic 60/65/75 layouts and the matching Q1 Max ANSI assembly have separate geometry; the Q1 stock encoder shares its color constant with the studio model. Cards explicitly describe illustration limits and omit accessories. Older API responses show an unavailable preview instead of inventing appearance. Public summaries exclude private snapshot names and palette labels.
+
+Discover's skip link now focuses the community heading without leaving Discover. Its text contrast is corrected, and the filter and Search button share a row at 320px. The compiled Worker browser journey passed recipe/color checks, all four layouts, privacy exclusions, search, pagination, retries, keyboard navigation, mobile accessibility and publication navigation. The phone screenshot was inspected. All 195 unit tests passed; production build, types, lint and formatting passed. These changes are committed for release but are not yet deployed at this checkpoint; public nightly remains version 37. Google setup and account activation remain deferred.
+
+## September 6, 2026: community illustrations published
+
+Sites version 38 is live at https://keyconf-nightly.kvnloo.chatgpt.site from source `67dd3c17a5aaf9f75b1bfd28b49ae10c1c99ce2e`. Deployment `appgdep_6a9e39ea2bb88191a7f8817082abb993` succeeded at 2026-09-07T04:13:48.861603+00:00. The live public publications endpoint returns an empty list successfully; no sample publications were inserted into production. Layout/color illustrations appear when actual publications exist. The user's browser view was preserved during this background deployment. GitHub run 34082155164 is still running at this checkpoint. The private account panel remains unexposed pending Google setup.
+
+## September 6, 2026: favorites request handlers
+
+Added private favorites list/add/remove methods to the provider-neutral account API factory. Real-SQLite integration checks prove verified ownership, repeat-add receipts, isolated removal, withdrawn-title redaction, anonymous rejection, cross-origin rejection and malformed cursor/identifier rejection. All nine account API tests pass, and typecheck passes. The factory remains unexposed in production; favorite controls and client integration remain unfinished, and Google setup is deferred.
+
+## September 6, 2026: favorites client preparation
+
+The account client now lists favorites with validated pagination and sends explicit PUT/DELETE state changes. It verifies acknowledgement identity, rejects repeated or malformed pages, and projects unavailable entries without old titles or extra fields. Three new client tests pass alongside the ten existing client tests. Typecheck, lint and targeted formatting pass. This is not yet a user-facing favorites workflow: the account component, fixture routing and browser journey still need integration, and hosted identity remains deferred.
+
+## September 6, 2026: favorites interface verified locally
+
+Added a private favorites panel and reusable add/remove control, still isolated from public navigation. Confirmed mutations update the list; unavailable publications retain a removable entry without their former title. Requests abort on unmount or refresh, and completed removals are filtered from overlapping page responses.
+
+The browser fixture now routes favorites through the actual account handlers and SQLite. Its dedicated journey passes add/remove, repeated mutations, withdrawal redaction, 27-item pagination, account isolation, 320px overflow and accessibility checks. The mobile list screenshot was inspected. The existing account browser regression also passes, including interrupted saves and pagination races. Favorites verification is now included in CI. Public Google authentication and discovery-page favorite integration remain unfinished. The deployed gallery release's GitHub run 34082155164 succeeded.
+
+## September 6, 2026: favorites keyboard pagination recovery
+
+Favorites pagination now transfers focus to the first newly loaded row, including when the final Load more button disappears. Failed pagination focuses Try again. A keyboard-only failed-request/retry browser regression passes alongside the existing favorites checks. Typecheck and focused formatting pass. The verifier now explicitly selects PUT or DELETE for mutation fetches to satisfy the fetch-options lint rule.
+
+## September 6, 2026: creator publication request preparation
+
+The provider-neutral account factory now supports owned publication listing, explicit publication of a saved revision and owner withdrawal. It reuses frozen publication storage and existing same-origin JSON boundaries. Eleven account API integration tests pass, including profile requirements, cross-account snapshot rejection, retry deduplication, conflicting retries, isolated withdrawal and anonymous/cross-origin rejection. This introduces no hosted route or public publishing control. The review screen, client integration, actual Google identity and end-to-end creator publishing remain required.
+
+## September 6, 2026: typing performance regression reproduced
+
+GitHub run 34082704266 failed the production typing journey because Monkeytype reported `failed (slow timer)`, despite 100% accuracy. A local headless SwiftShader run against localhost:3000 reproduced the same failure (`/tmp/keyconf-typing-reproduce-headless.log`). This is an unresolved software-rendering performance issue, not a reason to relax Monkeytype's result-validity assertion. Renderer profiling is in progress, with concurrent browser measurements avoided. Creator UI work is paused while this regression is investigated.
+
+The typing verifier now writes `outputs/typing-performance.json` before result-validity assertions, containing the result and up to 100 recent long-task entries from both the parent and Monkeytype frame. Existing CI failure artifacts retain this file. This instrumentation does not alter timer validation or rendering. Focused lint and formatting pass; renderer profiling remains inconclusive and no performance fix is claimed.
+
+## September 6, 2026: per-key React work isolated
+
+Profiling found varying keys updated `lastKey` on the entire studio component, producing repeated parent main-thread tasks while repeated Shift presses avoided most work. A dedicated subscribed last-key display now owns that update; the value remains in a studio-scoped store for remounts. No geometry, shadow, audio or Monkeytype timer behavior is changed.
+
+The custom probe reduced long-task entries from 44 to 3 but still failed timer validation, so that probe alone does not prove resolution. The full verifier subsequently produced a valid desktop result (109 WPM, 100% accuracy, no failed/invalid result), with remaining mobile/recovery scenarios still running at this checkpoint. Focused lint and formatting pass. The change is not yet committed or deployed.
+
+The full local typing run passed desktop result validation but then timed out capturing `typing-results.png`; mobile/recovery scenarios were not reached. A separate live-browser check passed last-key updates while Sound is mounted, updates while unmounted and Sound navigation persistence. A headed software-rendering rerun is being prepared to distinguish the screenshot failure from typing correctness. No claim of complete verification or public deployment is made.
+
+The last-key persistence regression is now part of the maintained typing verifier. Typecheck and focused lint/format pass. Headed verification could not launch because the local X display was inaccessible; the complete headed journey remains a CI verification gate. The renderer is unchanged, and no failing timer result is allowed by the test.
+
+## September 6, 2026: typing fix release build
+
+The production build for f500fec completed successfully. GitHub run 34083815159 for the preceding diagnostics commit succeeded; run 34084317722 containing the isolated last-key update is still in progress. Public nightly remains Sites version 38. The product checklist now reflects the locally verified favorites controls without claiming hosted account integration.
+
+## September 6, 2026: typing performance update published
+
+GitHub run 34084317722 succeeded, including the complete rendered-production journey and Pages deployment. Sites version 39 is live at https://keyconf-nightly.kvnloo.chatgpt.site from source `f2d2058270babb8df1468a54bb1ba281a370f1ba`. Deployment `appgdep_6a9e43492d8c81918ac2ea300895fe8d` succeeded at 2026-09-07T04:53:45.928431+00:00. This publishes isolated last-key rendering without weakening Monkeytype result checks. The later publication-date boundary fix is not included in this saved release. Account and creator controls remain unexposed pending hosted identity. The user's existing browser view was preserved during the background deployment.
+
+## September 6, 2026: creator client and HTTP integration
+
+Added validated creator list/publish/withdraw client methods and seven client tests; all 20 client tests pass. Typecheck and focused lint/format pass. The isolated HTTP fixture now exposes the real creator handlers; publish/retry/list/withdraw passed against SQLite and runs in CI through `verify:creator`. Fixture routing uses explicit collection/record mappings rather than a growing nested conditional.
+
+Publishing receipts currently validate metadata and snapshot evidence but do not echo operation/build IDs, so client receipt matching does not prove the saved-revision identity. Resolve that protocol gap before relying on receipts in the review screen. The creator UI and hosted identity remain unfinished; no public route is activated.
+
+## September 6, 2026: publication receipt identity
+
+Private publishing responses now include the validated operation ID and saved-build ID after the owned storage operation succeeds. The client requires both to match the original request, including replay after withdrawal, and still returns only its minimal receipt. Public publication reads are unchanged. This closes the receipt-identity gap recorded above. All 33 client/API tests, real HTTP creator verification, typecheck and focused lint/format pass. The review screen and hosted identity remain unfinished.
+
+## September 7, 2026: creator review and saved evidence
+
+The isolated creator review now loads an owned saved revision/profile, shows saved parts/source/compatibility/recording evidence, supports build/drop details and an explicit review/publish decision. An uncertain response retains the exact publication request for retry. Saved-build responses now include validated persisted evidence; legacy responses remain readable, but the review will not publish without that evidence. Current catalog metadata is not substituted.
+
+The real browser/SQLite journey passes cancellation without publication, historical evidence display, lost-acknowledgement retry producing one release, unchanged device draft, creator-drop link/availability preservation, 320px overflow and accessibility checks. Seventy-four related database/API/client tests, types and scoped lint pass. The review journey is included in CI. Profile changes between review and publication are not yet bound atomically, visual screenshot review remains outstanding, and hosted identity/public activation remain unfinished.
+
+## September 7, 2026: creator review visual pass
+
+Inspected phone and desktop review screenshots from the real browser fixture. Limited the desktop keyboard illustration to 440px and made Edit/Cancel visually secondary to Publish. Detailed source evidence remains expandable. The browser workflow and mobile accessibility/overflow checks pass after the change; focused lint and formatting pass. Screenshots are now captured by the maintained review verifier. Profile consistency and hosted activation remain unfinished.

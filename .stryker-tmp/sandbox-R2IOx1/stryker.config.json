@@ -1,0 +1,25 @@
+{
+  "testRunner": "node",
+  "testRunnerNodeArgs": ["--experimental-strip-types", "--test"],
+  "mutate": ["lib/*.ts", "app/*.tsx", "tests/*.test.mjs"],
+  "ignorePatterns": [
+    "node_modules/**",
+    "public/**",
+    "db/**",
+    "drizzle/**",
+    "scripts/**",
+    "videos/**",
+    "pages-dist/**"
+  ],
+  "reporters": ["html", "clear-text", "progress"],
+  "mutator": {
+    "plugins": ["typescript", "javascript"]
+  },
+  "timeoutMS": 60000,
+  "maxConcurrentTestRunners": 4,
+  "break": false,
+  "thresholds": {
+    "high": 100,
+    "low": 85
+  }
+}

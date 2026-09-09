@@ -1,0 +1,80 @@
+.build-accessories {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #ffffff24;
+}
+.build-accessories summary {
+  cursor: pointer;
+  font-size: 14px;
+  padding-block: 10px;
+}
+.build-accessories > summary span {
+  float: right;
+  color: #c8d6c3;
+  font-size: 12px;
+}
+.build-accessories p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #bdc4be;
+}
+.build-accessories h4 {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.accessory-selections,
+.accessory-options {
+  display: grid;
+  gap: 12px;
+}
+.build-accessories article {
+  padding: 14px;
+  border: 1px solid #ffffff24;
+  border-radius: 12px;
+  background: #ffffff04;
+  min-width: 0;
+}
+.accessory-heading {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.build-accessories a {
+  font-size: 12px;
+  color: #d3dfcf;
+  text-underline-offset: 3px;
+}
+.build-accessories .accessory-placement {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+}
+.build-accessories input {
+  box-sizing: border-box;
+  width: 100%;
+  color: #f2f3ee;
+  background: #141c19;
+  border: 1px solid #647467;
+  border-radius: 8px;
+  padding: 10px;
+}
+.build-accessories .accessory-fit {
+  color: #d9caa9;
+}
+.accessory-picker {
+  margin-top: 16px;
+}
+.build-accessories .text-button {
+  min-height: 44px;
+}
+
+.build-accessories > output {
+  display: block;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #d3dfcf;
+  margin-top: 12px;
+}

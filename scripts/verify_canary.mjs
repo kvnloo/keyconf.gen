@@ -5,6 +5,7 @@ const mutation = JSON.parse(readFileSync('stryker.config.json', 'utf8'));
 console.log(JSON.stringify({
   repo: 'keyconf.gen',
   branch: 'nightly',
+  vercelProject: 'keyconf-nightly',
   mutationFiles: mutation.mutate?.length ?? 0,
   mutationConfig: 'stryker.config.json',
   themeRegressionScript: 'scripts/verify_theme.mjs',

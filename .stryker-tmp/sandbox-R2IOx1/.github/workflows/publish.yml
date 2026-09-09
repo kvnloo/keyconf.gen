@@ -1,0 +1,210 @@
+name: Check and publish keyboard studio
+on:
+  push:
+    branches: [main, dev, nightly]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    concurrency:
+      group: keyconf-check-${{ github.ref }}
+      cancel-in-progress: ${{ github.ref_name != 'nightly' }}
+    env:
+      CHANNEL: ${{ contains(fromJSON('["main","dev","nightly"]'), github.ref_name) && github.ref_name || 'main' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Block deploy on high-severity dependency vulnerabilities
+        run: npm audit --audit-level=high
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run test
+      - name: Verify theme mechanism (regression)
+        run: npm run verify:theme
+      - name: Mutation testing (Stryker)
+        run: npm run mutate
+      - run: npx playwright install --with-deps chromium
+      - name: Verify account interface against isolated identity fixtures
+        run: npm run verify:account
+      - name: Verify favorites
+        run: npm run verify:favorites
+      - name: Verify creator transport
+        run: npm run verify:creator
+      - name: Verify creator review
+        run: npm run verify:creator-review
+      - name: Verify browser journeys and accessibility
+        shell: bash
+        run: |
+          setsid npm run dev > /tmp/keyconf-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill -- -"$preview_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..60}; do
+            if curl --fail --silent http://localhost:3000/ > /dev/null; then break; fi
+            sleep 1
+          done
+          if ! curl --fail --silent http://localhost:3000/ > /dev/null; then
+            cat /tmp/keyconf-preview.log
+            exit 1
+          fi
+          npm run verify:browser
+          npm run verify:imports
+          node scripts/verify_accessory_imports.mjs
+          node scripts/verify_artisan_import_specs.mjs
+          npm run verify:import-pages
+          npm run verify:interface
+          npm run verify:featured
+          npm run verify:accessories
+          npm run verify:switches
+          npm run verify:music
+          npm run verify:search
+          npm run verify:observations
+          npm run verify:decks
+      - name: Verify published build pages against local D1
+        run: |
+          npm run build
+          KEYCONF_HEADED=1 xvfb-run -a npm run verify:worker
+      - name: Build this branch's preview
+        run: npm run build:pages -- --base "/${{ github.event.repository.name }}/${CHANNEL}/"
+      - name: Verify rendered production experience
+        shell: bash
+        run: |
+          npx vite preview --config vite.pages.config.ts --base "/${{ github.event.repository.name }}/${CHANNEL}/" --host 127.0.0.1 --port 4173 > /tmp/keyconf-production.log 2>&1 &
+          production_pid=$!
+          trap 'kill "$production_pid" || true' EXIT
+          export KEYCONF_BASE_URL="http://127.0.0.1:4173/${{ github.event.repository.name }}/${CHANNEL}/"
+          for attempt in {1..30}; do
+            if curl --fail --silent "$KEYCONF_BASE_URL" > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent "$KEYCONF_BASE_URL" > /dev/null
+          if [[ "$CHANNEL" != main ]]; then
+            node --experimental-strip-types scripts/verify_preview_storage.mjs
+          fi
+          export KEYCONF_HEADED=1
+          export KEYCONF_SOFTWARE=1
+          xvfb-run -a npm run verify:typing
+          xvfb-run -a npm run verify:room
+          npm run verify:accessory-rendering
+          node --experimental-strip-types scripts/verify_imported_accessory_rendering.mjs
+          xvfb-run -a npm run verify:q1
+          npm run verify:shared-preview
+          xvfb-run -a npm run verify:feedback
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request' && contains(fromJSON('["main","dev","nightly"]'), github.ref_name)
+        with:
+          name: pages-candidate
+          path: pages-dist
+          retention-days: 7
+      - name: Keep failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-failure
+          path: |
+            outputs/*.json
+            outputs/*.png
+            /tmp/keyconf-preview.log
+            /tmp/keyconf-production.log
+          retention-days: 7
+  deploy:
+    if: github.event_name != 'pull_request' && contains(fromJSON('["main","dev","nightly"]'), github.ref_name)
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: keyconf-pages-publish
+      cancel-in-progress: false
+    permissions:
+      actions: read
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}${{ github.ref_name }}/
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Find the latest checked build for every branch
+        id: candidates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/select-pages-candidates.mjs "$GITHUB_REPOSITORY" "$RUNNER_TEMP/pages-candidates.json"
+      - name: Download checked main
+        if: fromJSON(steps.candidates.outputs.candidates).main
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ fromJSON(steps.candidates.outputs.candidates).main.artifactId }}
+          run-id: ${{ fromJSON(steps.candidates.outputs.candidates).main.runId }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/candidates/main
+          merge-multiple: true
+      - name: Download checked dev
+        if: fromJSON(steps.candidates.outputs.candidates).dev
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ fromJSON(steps.candidates.outputs.candidates).dev.artifactId }}
+          run-id: ${{ fromJSON(steps.candidates.outputs.candidates).dev.runId }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/candidates/dev
+          merge-multiple: true
+      - name: Download checked nightly
+        if: fromJSON(steps.candidates.outputs.candidates).nightly
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ fromJSON(steps.candidates.outputs.candidates).nightly.artifactId }}
+          run-id: ${{ fromJSON(steps.candidates.outputs.candidates).nightly.runId }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/candidates/nightly
+          merge-multiple: true
+      - name: Publish checked candidates and preserve other previews
+        id: assembly
+        env:
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          pages_tree="$RUNNER_TEMP/pages-tree"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*'
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git worktree add --detach "$pages_tree" origin/gh-pages
+          else
+            git worktree add --detach "$pages_tree" HEAD
+            git -C "$pages_tree" checkout --orphan gh-pages
+            git -C "$pages_tree" rm -rf . > /dev/null
+          fi
+          node scripts/assemble-pages.mjs --candidates "$RUNNER_TEMP/pages-candidates.json" "$RUNNER_TEMP/candidates" "$pages_tree" "$REPOSITORY"
+          git -C "$pages_tree" config user.name 'github-actions[bot]'
+          git -C "$pages_tree" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C "$pages_tree" add --all
+          if ! git -C "$pages_tree" diff --cached --quiet; then
+            git -C "$pages_tree" commit -m 'Publish latest checked branch previews'
+            git -C "$pages_tree" push origin HEAD:gh-pages
+          fi
+          mkdir "$RUNNER_TEMP/pages-site"
+          rsync -a --exclude=.git "$pages_tree/" "$RUNNER_TEMP/pages-site/"
+          if [[ -f "$pages_tree/main/index.html" ]]; then
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.assembly.outputs.ready == 'true'
+        with:
+          path: ${{ runner.temp }}/pages-site
+      - name: Deploy all three previews to GitHub Pages
+        if: steps.assembly.outputs.ready == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4
