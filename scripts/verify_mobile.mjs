@@ -10,9 +10,16 @@ const browser = await chromium.launch({
     '--enable-unsafe-swiftshader',
   ],
 });
-try {
+
+// The workbench layout is scoped to max-width 700px, so these are the widths
+// where the persistent-preview promise actually applies. 320 is the narrowest
+// phone worth supporting and shares a stylesheet block with 390, which is where
+// a horizontal overflow would surface first.
+const PHONES = [{ label: '390px', width: 390, height: 844 }];
+
+async function workbench({ label, width, height }) {
   const page = await browser.newPage({
-    viewport: { width: 390, height: 844 },
+    viewport: { width, height },
     reducedMotion: 'reduce',
   });
   const errors = [];
@@ -79,145 +86,234 @@ try {
     });
     assert.ok(
       view.scrollHeight <= view.clientHeight + 1,
-      `${name}: document scrolls vertically (${view.scrollHeight} > ${view.clientHeight})`,
+      `${label} ${name}: document scrolls vertically (${view.scrollHeight} > ${view.clientHeight})`,
     );
     assert.ok(
       view.scrollWidth <= view.clientWidth + 1,
-      `${name}: horizontal overflow (${view.scrollWidth} > ${view.clientWidth})`,
+      `${label} ${name}: horizontal overflow (${view.scrollWidth} > ${view.clientWidth})`,
     );
     if (preview) {
       const share = view.visible / view.viewport;
       assert.ok(
         share >= 0.15,
-        `${name}: preview is not visible (${(share * 100).toFixed(1)}% of the viewport)`,
+        `${label} ${name}: preview is not visible (${(share * 100).toFixed(1)}% of the viewport)`,
       );
     }
     return view;
   }
 
-  await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await page.locator('[data-keyboard-variant]').waitFor({ timeout: 120000 });
-  await settle();
-  // The landing is a scrolling page by design; the workbench is what must not.
-  const customize = page.getByRole('button', { name: /^Customize / }).first();
-  await customize.click();
-  await customize.waitFor({ state: 'hidden', timeout: 30000 });
-  await settle();
-  const start = await inspect('workbench');
-  assert.equal(start.state, 'editing');
+  try {
+    await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.locator('[data-keyboard-variant]').waitFor({ timeout: 120000 });
+    await settle();
+    // The landing is a scrolling page by design; the workbench is what must not.
+    const customize = page.getByRole('button', { name: /^Customize / }).first();
+    await customize.click();
+    await customize.waitFor({ state: 'hidden', timeout: 30000 });
+    await settle();
+    const start = await inspect('workbench');
+    assert.equal(start.state, 'editing');
 
-  // Without a static scene, "the pixels changed" would prove nothing below.
-  const idle = await canvas.screenshot();
-  assert.ok(
-    (await canvas.screenshot()).equals(idle),
-    'the settled scene still repaints, so pixel comparison cannot prove anything',
-  );
+    // Without a static scene, "the pixels changed" would prove nothing below.
+    const idle = await canvas.screenshot();
+    assert.ok(
+      (await canvas.screenshot()).equals(idle),
+      `${label}: the settled scene still repaints, so pixel comparison cannot prove anything`,
+    );
 
-  await tab('Design').click();
-  const swatch = page
-    .locator('button[aria-label$=" case"][aria-pressed="false"]')
-    .first();
-  const swatchName = await swatch.getAttribute('aria-label');
-  await swatch.click();
-  await settle();
-  assert.ok(
-    !(await canvas.screenshot()).equals(idle),
-    `choosing ${swatchName} did not change the render`,
-  );
-  const painted = await inspect(`after ${swatchName}`);
-  assert.equal(painted.scrollY, 0, 'appearance edit scrolled the document');
-  console.log(`PASS: ${swatchName} repaints the visible preview in place.`);
+    await tab('Design').click();
+    const swatch = page
+      .locator('button[aria-label$=" case"][aria-pressed="false"]')
+      .first();
+    const swatchName = await swatch.getAttribute('aria-label');
+    await swatch.click();
+    await settle();
+    assert.ok(
+      !(await canvas.screenshot()).equals(idle),
+      `${label}: choosing ${swatchName} did not change the render`,
+    );
+    const painted = await inspect(`after ${swatchName}`);
+    assert.equal(
+      painted.scrollY,
+      0,
+      `${label}: appearance edit scrolled the document`,
+    );
+    console.log(`PASS ${label}: ${swatchName} repaints the visible preview.`);
 
-  await tab('Components').click();
-  await inspect('components tab');
-  const part = page
-    .locator('button[aria-label^="Use "][aria-pressed="false"]')
-    .first();
-  const partName = await part.getAttribute('aria-label');
-  await part.click();
-  await settle();
-  await page
-    .locator(`button[aria-label="${partName}"][aria-pressed="true"]`)
-    .waitFor({ timeout: 30000 });
-  const swapped = await inspect(`after ${partName}`);
-  assert.equal(swapped.scrollY, 0, 'component edit scrolled the document');
-  console.log(`PASS: ${partName} applies with the preview still on screen.`);
+    await tab('Components').click();
+    await inspect('components tab');
+    const part = page
+      .locator('button[aria-label^="Use "][aria-pressed="false"]')
+      .first();
+    const partName = await part.getAttribute('aria-label');
+    await part.click();
+    await settle();
+    await page
+      .locator(`button[aria-label="${partName}"][aria-pressed="true"]`)
+      .waitFor({ timeout: 30000 });
+    const swapped = await inspect(`after ${partName}`);
+    assert.equal(
+      swapped.scrollY,
+      0,
+      `${label}: component edit scrolled the document`,
+    );
+    console.log(
+      `PASS ${label}: ${partName} applies with the preview on screen.`,
+    );
 
-  await button('Collapse').click();
-  const collapsed = await inspect('collapsed');
-  assert.equal(collapsed.state, 'collapsed');
-  assert.ok(
-    collapsed.visible >= start.visible,
-    'collapsing the inspector did not give the preview at least as much room',
-  );
-  assert.equal(
-    await button('Edit').getAttribute('aria-expanded'),
-    'false',
-    'the collapsed inspector still reports itself expanded',
-  );
-  await button('Edit').click();
-  assert.equal((await inspect('editing')).state, 'editing');
-  await button('Catalog').click();
-  // The catalog is a deliberate full-height browse, so the preview may yield.
-  assert.equal(
-    (await inspect('expanded', { preview: false })).state,
-    'expanded',
-  );
-  await button('Compact').click();
-  assert.equal((await inspect('compact')).state, 'editing');
-  console.log(
-    'PASS: collapsed, editing and expanded are explicit and reversible.',
-  );
+    await button('Collapse').click();
+    const collapsed = await inspect('collapsed');
+    assert.equal(collapsed.state, 'collapsed');
+    assert.ok(
+      collapsed.visible >= start.visible,
+      `${label}: collapsing the inspector did not give the preview at least as much room`,
+    );
+    assert.equal(
+      await button('Edit').getAttribute('aria-expanded'),
+      'false',
+      `${label}: the collapsed inspector still reports itself expanded`,
+    );
+    await button('Edit').click();
+    assert.equal((await inspect('editing')).state, 'editing');
+    await button('Catalog').click();
+    // The catalog is a deliberate full-height browse, so the preview may yield.
+    assert.equal(
+      (await inspect('expanded', { preview: false })).state,
+      'expanded',
+    );
+    await button('Compact').click();
+    assert.equal((await inspect('compact')).state, 'editing');
+    console.log(
+      `PASS ${label}: collapsed, editing and expanded are explicit and reversible.`,
+    );
 
-  await tab('Design').click();
-  await tab('Design').focus();
-  await page.keyboard.press('ArrowRight');
-  await tab('Components').and(page.locator('[aria-selected="true"]')).waitFor();
-  assert.equal(
-    await page.evaluate(() => document.activeElement?.id),
-    'tab-parts',
-    'arrow keys move selection without moving focus',
-  );
+    await tab('Design').click();
+    await tab('Design').focus();
+    await page.keyboard.press('ArrowRight');
+    await tab('Components')
+      .and(page.locator('[aria-selected="true"]'))
+      .waitFor();
+    assert.equal(
+      await page.evaluate(() => document.activeElement?.id),
+      'tab-parts',
+      `${label}: arrow keys move selection without moving focus`,
+    );
 
-  const footer = await page.evaluate(() => {
-    const element = document.querySelector('.config-footer');
-    return element ? getComputedStyle(element).paddingBottom : null;
+    const footer = await page.evaluate(() => {
+      const element = document.querySelector('.config-footer');
+      return element ? getComputedStyle(element).paddingBottom : null;
+    });
+    assert.ok(
+      footer && Number.parseFloat(footer) >= 12,
+      `${label}: footer does not reserve the bottom safe area (${footer})`,
+    );
+    console.log(`PASS ${label}: roving tab focus and bottom safe area.`);
+
+    // The viewport-height shell must not reach screens that scroll their content.
+    await tab('Components').click();
+    await page
+      .getByRole('link', { name: /^Inspect / })
+      .first()
+      .click();
+    await page.waitForFunction(
+      () =>
+        document
+          .querySelector('.studio-shell')
+          ?.classList.contains('screen-switch'),
+      null,
+      { timeout: 30000 },
+    );
+    const reach = await page.evaluate(() => {
+      const shell = document.querySelector('.studio-shell');
+      return {
+        overflowY: getComputedStyle(shell).overflowY,
+        scrollHeight: shell.scrollHeight,
+        clientHeight: shell.clientHeight,
+      };
+    });
+    assert.ok(
+      reach.overflowY !== 'hidden' ||
+        reach.scrollHeight <= reach.clientHeight + 1,
+      `${label}: the switch page hides ${reach.scrollHeight - reach.clientHeight}px it cannot scroll to`,
+    );
+    assert.deepEqual(errors, [], `${label}: page errors`);
+    console.log(`PASS ${label}: the switch page keeps its content reachable.`);
+  } finally {
+    await page.close();
+  }
+}
+
+/**
+ * Past 700px the workbench stylesheet no longer applies, so the persistent
+ * inspector is not the promise being made. What must still hold on a tablet is
+ * that the studio fits its width and the preview is on screen when editing
+ * begins, so this is deliberately a layout check rather than the phone flow.
+ */
+async function tablet() {
+  const page = await browser.newPage({
+    viewport: { width: 768, height: 1024 },
+    reducedMotion: 'reduce',
   });
-  assert.ok(
-    footer && Number.parseFloat(footer) >= 12,
-    `footer does not reserve the bottom safe area (${footer})`,
-  );
-  console.log('PASS: roving tab focus and bottom safe area at 390px.');
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  try {
+    await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.locator('[data-keyboard-variant]').waitFor({ timeout: 120000 });
+    await page.waitForFunction(
+      () => document.querySelector('[data-render-state="idle"]'),
+      null,
+      { timeout: 120000 },
+    );
+    const customize = page.getByRole('button', { name: /^Customize / }).first();
+    await customize.click();
+    await customize.waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForFunction(
+      () => document.querySelector('[data-render-state="idle"]'),
+      null,
+      { timeout: 120000 },
+    );
+    const view = await page.evaluate(() => {
+      const doc = document.documentElement;
+      const rect = document
+        .querySelector('[data-keyboard-variant] canvas')
+        .getBoundingClientRect();
+      const width = Math.max(
+        0,
+        Math.min(rect.right, innerWidth) - Math.max(rect.left, 0),
+      );
+      const height = Math.max(
+        0,
+        Math.min(rect.bottom, innerHeight) - Math.max(rect.top, 0),
+      );
+      return {
+        workbench: !!document.querySelector('.mobile-workbench-inspector'),
+        scrollWidth: doc.scrollWidth,
+        clientWidth: doc.clientWidth,
+        visible: width * height,
+        viewport: innerWidth * innerHeight,
+      };
+    });
+    assert.ok(
+      view.scrollWidth <= view.clientWidth + 1,
+      `768px: horizontal overflow (${view.scrollWidth} > ${view.clientWidth})`,
+    );
+    const share = view.visible / view.viewport;
+    assert.ok(
+      share >= 0.15,
+      `768px: preview is not on screen when editing begins (${(share * 100).toFixed(1)}%)`,
+    );
+    assert.deepEqual(errors, [], '768px: page errors');
+    console.log(
+      `PASS 768px: desktop layout fits its width with the preview ${(share * 100).toFixed(0)}% on screen (workbench inspector present: ${view.workbench}).`,
+    );
+  } finally {
+    await page.close();
+  }
+}
 
-  // The viewport-height shell must not reach screens that scroll their content.
-  await tab('Components').click();
-  await page
-    .getByRole('link', { name: /^Inspect / })
-    .first()
-    .click();
-  await page.waitForFunction(
-    () =>
-      document
-        .querySelector('.studio-shell')
-        ?.classList.contains('screen-switch'),
-    null,
-    { timeout: 30000 },
-  );
-  const reach = await page.evaluate(() => {
-    const shell = document.querySelector('.studio-shell');
-    return {
-      overflowY: getComputedStyle(shell).overflowY,
-      scrollHeight: shell.scrollHeight,
-      clientHeight: shell.clientHeight,
-    };
-  });
-  assert.ok(
-    reach.overflowY !== 'hidden' ||
-      reach.scrollHeight <= reach.clientHeight + 1,
-    `the switch page hides ${reach.scrollHeight - reach.clientHeight}px it cannot scroll to`,
-  );
-  assert.deepEqual(errors, [], 'page errors');
-  console.log('PASS: the switch page keeps its content reachable.');
+try {
+  for (const phone of PHONES) await workbench(phone);
+  await tablet();
 } finally {
   await browser.close();
 }

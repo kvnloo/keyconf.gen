@@ -1251,3 +1251,39 @@ Coverage is the honest limit. All nine boards are USD full-board store listings,
 so the cross-currency guard and the kit ordering are implemented and unit-tested
 but have no real data exercising them, the Kit view is legitimately empty, and
 every price is a single observation from one day rather than a tracked history.
+## What 320px says that 390px could not
+
+The mobile check only ever ran at one width, so extending it meant deciding
+what the promise even is at other sizes. Past 700px the workbench stylesheet
+stops applying, so a tablet is not making the persistent-inspector promise at
+all; 768px therefore gets a layout check instead of the phone flow, and asks
+only that the studio fits its width and the preview is on screen when editing
+begins. It is, at 36%.
+
+320x568 fails, and the failure is worth writing down because the document never
+scrolls, which is the thing the original check was watching. Applying a
+component moves focus to the control that was tapped, the browser scrolls that
+control into view, and the workbench — which is `overflow: hidden` and so still
+scrolls programmatically — slides down by 92px. The preview goes with it,
+outside the clipped box, and the scene's IntersectionObserver correctly stops
+rendering something nobody can see. The renderer sits in `paused` and the
+keyboard is simply gone, with no scrollbar and no page movement to show for it.
+
+The arithmetic behind it is not a tuning mistake. The header leaves the
+workbench 276px at that size. The stage floor is 160px, which is not greedy:
+the canvas inside it is 86px, and 86px is 15.1% of a 320x568 viewport, barely
+over the 15% bar the check already used. That leaves 116px for the inspector,
+whose fixed chrome — a 4px handle, a 38px title, 46px of tabs and a 71px footer
+— needs 159px before any content. 160 plus 159 is 319 in a 276px box, so
+something has to give no matter how the space is distributed. Making the
+workbench a flex column and letting the inspector take the remainder was tried
+and rejected: it left 390px unchanged and moved 320px from 92px of overflow to
+104px, because the overflow is now inside the inspector rather than between it
+and the stage.
+
+So the real choice is which of three things gives: the preview floor, the
+inspector's chrome, or the 293px of header sitting above the workbench on a
+568px screen. That is a design decision about what a small phone shows, not a
+stylesheet tweak, so the width is recorded as a measured defect and left out of
+the guarded set rather than papered over with a lower threshold. The status row
+says so.
