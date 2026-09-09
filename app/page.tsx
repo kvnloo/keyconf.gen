@@ -374,12 +374,16 @@ function KeyboardStudio({
               space: featured.build.colors.wide,
             }
           : build.palette;
-    applyPaletteTheme({
-      alpha: p.alpha,
-      mod: p.mod,
-      accent: p.accent,
-      space: p.space,
-    });
+    applyPaletteTheme(
+      {
+        alpha: p.alpha,
+        mod: p.mod,
+        accent: p.accent,
+        space: p.space,
+      },
+      document,
+      { chrome: landing },
+    );
     document.documentElement.setAttribute(
       'data-palette',
       JSON.stringify({

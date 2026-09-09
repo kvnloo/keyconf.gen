@@ -7,6 +7,15 @@ type PaletteLike = {
 
 const MIN_UI_CONTRAST = 4.5;
 
+const DEFAULT_CHROME = {
+  surface: '#222c26',
+  paper: '#161d19',
+  ink: '#e9ede6',
+  muted: '#b3bdb2',
+  focus: '#bdd9c0',
+  green: '#c5d9c5',
+} as const;
+
 function blendColor(c1: string, c2: string, ratio = 0.35): string {
   const p = (hex: string, offset: number) =>
     parseInt(hex.slice(offset, offset + 2), 16) / 255;
@@ -81,7 +90,17 @@ function computeTheme(p: PaletteLike) {
   };
 }
 
-export function applyPaletteTheme(p: PaletteLike, target: Document = document) {
+export type PaletteThemeOptions = {
+  /** Sync UI chrome tokens (--surface, --ink, …). Landing only; studio keeps defaults. */
+  chrome?: boolean;
+};
+
+export function applyPaletteTheme(
+  p: PaletteLike,
+  target: Document = document,
+  options: PaletteThemeOptions = {},
+) {
+  const syncChrome = options.chrome ?? true;
   const { theme, ink, paper, uiSurface, muted, accent, paletteSpace } =
     computeTheme(p);
   const style =
@@ -90,13 +109,25 @@ export function applyPaletteTheme(p: PaletteLike, target: Document = document) {
   style.id = 'keyconf-theme';
   style.textContent = theme;
   if (!style.isConnected) target.head.appendChild(style);
-  target.documentElement.style.setProperty('--surface', uiSurface);
   target.documentElement.style.setProperty('--palette-space', paletteSpace);
-  target.documentElement.style.setProperty('--paper', paper);
-  target.documentElement.style.setProperty('--ink', ink);
-  target.documentElement.style.setProperty('--muted', muted);
-  target.documentElement.style.setProperty('--focus', accent);
-  target.documentElement.style.setProperty('--green', accent);
+  if (syncChrome) {
+    target.documentElement.style.setProperty('--surface', uiSurface);
+    target.documentElement.style.setProperty('--paper', paper);
+    target.documentElement.style.setProperty('--ink', ink);
+    target.documentElement.style.setProperty('--muted', muted);
+    target.documentElement.style.setProperty('--focus', accent);
+    target.documentElement.style.setProperty('--green', accent);
+  } else {
+    target.documentElement.style.setProperty(
+      '--surface',
+      DEFAULT_CHROME.surface,
+    );
+    target.documentElement.style.setProperty('--paper', DEFAULT_CHROME.paper);
+    target.documentElement.style.setProperty('--ink', DEFAULT_CHROME.ink);
+    target.documentElement.style.setProperty('--muted', DEFAULT_CHROME.muted);
+    target.documentElement.style.setProperty('--focus', DEFAULT_CHROME.focus);
+    target.documentElement.style.setProperty('--green', DEFAULT_CHROME.green);
+  }
   return style;
 }
 
