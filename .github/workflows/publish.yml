@@ -34,6 +34,12 @@ jobs:
       - name: Mutation testing (Stryker)
         continue-on-error: true
         run: npm run mutate
+      # --with-deps runs apt-get update across every configured source, and the
+      # runner preinstalls Google's Chrome repository, which intermittently
+      # serves an index disagreeing with its own Release file. Only Playwright's
+      # bundled Chromium and Ubuntu's own libraries are needed here.
+      - name: Drop the preinstalled Google Chrome apt repository
+        run: sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.sources
       - run: npx playwright install --with-deps chromium
       - name: Verify account interface against isolated identity fixtures
         run: npm run verify:account
