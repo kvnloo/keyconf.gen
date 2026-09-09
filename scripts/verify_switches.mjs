@@ -2,20 +2,12 @@ import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-const run = promisify(execFile);
+import { pixelVariation } from './png_variation.mjs';
 // A sized WebGL canvas can still be blank, so the isolated layer is
 // measured for pixel variation rather than trusted to have drawn.
 async function drawnVariation(locator, file) {
   await locator.screenshot({ path: file });
-  const { stdout } = await run('magick', [
-    file,
-    '-format',
-    '%[fx:standard_deviation]',
-    'info:',
-  ]);
-  return Number(stdout.trim());
+  return pixelVariation(file);
 }
 const base = process.env.KEYCONF_BASE_URL ?? 'http://localhost:3000/';
 const evidence = 'work/switch-evidence';

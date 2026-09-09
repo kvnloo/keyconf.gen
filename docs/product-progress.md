@@ -1188,9 +1188,15 @@ asset gaining a part that no inspection shows.
 
 Verification measures the picture rather than trusting it. A sized WebGL canvas
 can still be blank, so `verify:switches` screenshots each isolated view and
-requires real pixel variation; the four come in between 0.11 and 0.23 standard
+requires real pixel variation; the four come in between 0.11 and 0.24 standard
 deviation against a threshold of 0.01, and they differ from each other, with
-the plate and the PCB closest as two flat boards should be. Node counts are
+the plate and the PCB closest as two flat boards should be. The first attempt
+measured them with ImageMagick, which is installed here and absent on the
+runner, so the check passed locally and failed in continuous integration on a
+missing binary. The reader now decodes the screenshot itself with nothing but
+zlib, and because a hand-written PNG reader is exactly the kind of code that
+can be quietly wrong, seven tests encode PNGs that exercise each scanline
+filter and assert the deviation it should produce. Node counts are
 pinned exactly at 61 keycaps, one plate, one PCB and six case solids on the 60%
 board. 240 tests, type checking, lint and formatting pass, and the run reports
 no accessibility violations at 1440, 390 and 320 and no page errors.

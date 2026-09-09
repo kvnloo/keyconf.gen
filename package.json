@@ -10,7 +10,7 @@
     "build": "vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint --max-warnings 0",
-    "format": "oxfmt",
+    "format": "oxfmt app lib db scripts tests videos/keyconf-launch/scripts drizzle.config.ts next.config.ts vite.config.ts vite.pages.config.ts tsconfig.json .oxlintrc.json .github/workflows/publish.yml package.json",
     "format:check": "oxfmt --check app lib db scripts tests videos/keyconf-launch/scripts drizzle.config.ts next.config.ts vite.config.ts vite.pages.config.ts tsconfig.json .oxlintrc.json .github/workflows/publish.yml package.json",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "mutate": "stryker run",
