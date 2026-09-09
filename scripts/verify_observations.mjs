@@ -163,9 +163,7 @@ try {
     .waitFor();
   assert.equal(
     await recovery
-      .locator('.research-products')
-      .first()
-      .getByRole('searchbox', { name: 'Search research products' })
+      .getByRole('searchbox', { name: 'Search research products', exact: true })
       .count(),
     1,
   );
