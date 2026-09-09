@@ -1,0 +1,114 @@
+{
+  "accessed_at": "2026-09-08",
+  "boards": [
+    {
+      "id": "am-hatsu",
+      "brand": "Angry Miao",
+      "name": "AM HATSU",
+      "source": "https://store.angrymiao.com/products/am-hatsu",
+      "description": "Wireless split ergonomic board, 4x6 layout, BLE 5.0, two 5,000 mAh batteries, 3 W Qi charging. 3D-curved metal halves, combined weight 1.54 kg. Two supported layers, white PCB lighting, proprietary low-frequency inter-half link.",
+      "offers": [
+        { "amount": 1099, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "available", "configuration": "Standard", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/am-hatsu" },
+        { "amount": 2350, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "BATTLESHIP Limited Edition", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/am-hatsu-battleship" }
+      ],
+      "geometry": { "status": "unmodeled", "evidence": ["Manual documents 4x6 split layout; no CAD or exact body dimensions published."] },
+      "notes": "HATSU-to-CYBERMAT R2 compatibility is official (ten central coils designed for HATSU). Qi placement unverified without footprint."
+    },
+    {
+      "id": "cyberboard-r2",
+      "brand": "Angry Miao",
+      "name": "CYBERBOARD R2",
+      "source": "https://store.angrymiao.com/products/cyberboard-r2-1",
+      "description": "75%-class board with 5 x 40 LED panel, 200 screen LEDs + 81 in-switch LEDs, BLE 5.0 + USB-C, Qi charging, 10-degree typing incline, gasket mount, hot-swap. Manual confirms R2/R3 shared controls.",
+      "offers": [
+        { "amount": 799, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Jet Black / Bundle", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/cyberboard-r2-1" },
+        { "amount": 599, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Jet Black / Base Kit", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/cyberboard-r2-1" },
+        { "amount": 799, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Meteor Grey / Bundle", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/cyberboard-r2-1" },
+        { "amount": 635, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Psychedelic / Base Kit", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/cyberboard-r2-1" }
+      ],
+      "geometry": { "status": "unmodeled", "evidence": ["No official CAD/STEP/STL/DWG found; 40x5 pixel matrix documented; exterior dimensions unknown."] },
+      "notes": "40x5 RGB matrix is demonstrable; case silhouette must remain approximate until licensed dimensioned source appears."
+    },
+    {
+      "id": "cybermat-r2",
+      "brand": "Angry Miao",
+      "name": "CYBERMAT R2",
+      "source": "https://www.angrymiao.com/cybermat-r2/",
+      "description": "Wireless charging mat: 900 x 340 mm, 4 zones, 6 Qi devices, 90 W charger, magnetic phone alignment. Manual documents 323x883 mm internal area, 4.2 kg, 2 mm cloth pad.",
+      "offers": [
+        { "amount": 149, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "unavailable", "configuration": "Standard", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/products/cybermat-r2-wireless-charging-mat" }
+      ],
+      "geometry": { "status": "unmodeled", "evidence": ["External dimensions 340x900 mm documented; coil-center coordinates and exact zone bounds unknown."] },
+      "notes": "HATSU-specific central coils explicitly named; R3 is materially different (foldable silicone base, 11 coils)."
+    },
+    {
+      "id": "am-afa-r2",
+      "brand": "Angry Miao",
+      "name": "AM AFA R2",
+      "source": "https://store.angrymiao.com/collections/by-scenarios",
+      "description": "Ergonomic Alice-style 65%; Macross-inspired sculptural case. Sold out / limited.",
+      "offers": [
+        { "amount": 544, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Regular", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/collections/by-scenarios" }
+      ],
+      "geometry": { "status": "unmodeled", "evidence": ["No CAD or measurement published for this model."] }
+    },
+    {
+      "id": "am-relic-80",
+      "brand": "Angry Miao",
+      "name": "AM Relic 80",
+      "source": "https://store.angrymiao.com/collections/by-scenarios",
+      "description": "80% chalk-white or raw collector finish. Current listing; stock varies.",
+      "offers": [
+        { "amount": 660, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "available", "configuration": "Chalk White", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/collections/by-scenarios" },
+        { "amount": 699, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "available", "configuration": "RAW", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/collections/by-scenarios" }
+      ],
+      "geometry": { "status": "unmodeled", "evidence": ["No CAD or dimensioned source found."] }
+    },
+    {
+      "id": "cyberboard-r3",
+      "brand": "Angry Miao",
+      "name": "CYBERBOARD R3",
+      "source": "https://www.angrymiao.com/en/cyberboard-r3/",
+      "description": "75% gasket mount; upgraded LED matrix with higher refresh/color reproduction; 256-level DC dimming; shared R2/R3 manual confirms same control family.",
+      "offers": [
+        { "amount": 539, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Standard", "observedAt": "2026-09-08", "source": "https://www.angrymiao.com/en/cyberboard-r3/" },
+        { "amount": 620, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Reference price", "observedAt": "2026-09-08", "source": "https://www.angrymiao.com/en/cyberboard-r3/" }
+      ],
+      "geometry": { "status": "unmodeled", "evidence": ["No official CAD or dimensions published; R3 manual shared with R2."] }
+    },
+    {
+      "id": "cyberboard-terminal",
+      "brand": "Angry Miao",
+      "name": "CYBERBOARD Terminal",
+      "source": "https://www.angrymiao.com/en/products/",
+      "description": "75% retro-futuristic RGB; translucent integrated gasket mount; mirror-PVD stainless weight. Engraved bundle $810 / base kit $528; both sold out.",
+      "offers": [
+        { "amount": 528, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Base Kit", "observedAt": "2026-09-08", "source": "https://www.angrymiao.com/en/products/" },
+        { "amount": 810, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Engraved Bundle", "observedAt": "2026-09-08", "source": "https://www.angrymiao.com/en/products/" }
+      ],
+      "geometry": { "status": "unmodeled", "evidence": ["No CAD published; distinctive retro-futuristic profile."] }
+    },
+    {
+      "id": "am-neon-80",
+      "brand": "Angry Miao",
+      "name": "AM Neon 80",
+      "source": "https://www.angrymiao.com/products/",
+      "description": "80% synthwave design, four-dimensional RGB matrix lighting, three-stage leaf spring. Product page current; no verified price.",
+      "offers": [
+        { "amount": 0, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "unknown", "configuration": "Standard", "observedAt": "2026-09-08", "source": "https://www.angrymiao.com/products/" }
+      ],
+      "geometry": { "status": "unmodeled", "evidence": ["No dimensioned source published."] }
+    },
+    {
+      "id": "am-rgb-65-r1-5",
+      "brand": "Angry Miao",
+      "name": "AM RGB 65 R1.5",
+      "source": "https://store.angrymiao.com/collections/by-scenarios",
+      "description": "65% Game Boy-inspired DIY LED panel, adjustable leaf-spring mount. Limited / sold out variants; from $435 (regular $451).",
+      "offers": [
+        { "amount": 435, "currency": "USD", "kind": "complete", "basis": "store-listing", "availability": "sold-out", "configuration": "Standard", "observedAt": "2026-09-08", "source": "https://store.angrymiao.com/collections/by-scenarios" }
+      ],
+      "geometry": { "status": "unmodeled", "evidence": ["No CAD published."] }
+    }
+  ]
+}

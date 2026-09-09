@@ -1,4 +1,5 @@
 'use client';
+import '../components/analytics-setup';
 import { isQ1MaxAssembly } from '../lib/keyboard-variant';
 import {
   useCallback,

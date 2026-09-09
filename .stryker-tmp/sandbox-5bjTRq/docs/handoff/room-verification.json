@@ -1,0 +1,7 @@
+{
+  "base": "http://localhost:3000/",
+  "evidence": [
+    "Actual room pixels animate, pause freezes them, offscreen frames stop, return resumes, and live reduced-motion changes stop ambient work. Both original texture assets load without runtime or shader errors.",
+    "Monkeytype settings and return to builder remain usable at 390px when WebGL creation fails."
+  ]
+}

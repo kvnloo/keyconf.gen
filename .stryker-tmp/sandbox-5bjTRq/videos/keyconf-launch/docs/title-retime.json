@@ -1,0 +1,8 @@
+{
+  "method": "Hyperframes snapshot at each exact frame time, replacing only the title reveal interval in the completed lossless frame sequence. Future complete renders use the same retimed source.",
+  "firstTime": 3.1,
+  "lastTime": 5.366666666666666,
+  "replacedFrames": 69,
+  "firstBoundaryPixelsIdentical": true,
+  "lastBoundaryPixelsIdentical": true
+}

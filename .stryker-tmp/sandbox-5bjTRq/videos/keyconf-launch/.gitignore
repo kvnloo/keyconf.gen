@@ -1,0 +1,13 @@
+node_modules/
+.venv/
+.hyperframes/
+*.log
+capture/
+assets/footage/*take.webm
+assets/keyconf-product.blend
+renders/
+snapshots/
+
+/node_modules
+
+.thumbnails/

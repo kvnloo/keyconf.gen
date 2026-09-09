@@ -1,0 +1,296 @@
+{
+  "ok": true,
+  "strict": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 1,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "timeline_track_too_dense",
+        "severity": "warning",
+        "message": "Track 3 has 4 timed elements in this HTML file. Smaller sub-compositions keep timelines easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/home/kvn/workspace/keyconf.gen/videos/keyconf-launch/compositions/frames/act-one.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move coherent scene groups into smaller .html files and mount them from the parent with data-composition-src so the timeline stays easier to inspect, revise, and validate."
+      }
+    ],
+    "filesScanned": 4
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 5,
+    "findings": [
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 3.8,
+        "selector": "#act-one-make-it",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 100,
+          "top": 333.8,
+          "right": 720,
+          "bottom": 482.7,
+          "width": 620,
+          "height": 148.91
+        },
+        "containerSelector": "div.act-one-mask",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 100,
+          "top": 170,
+          "right": 720,
+          "bottom": 327,
+          "width": 620,
+          "height": 157
+        },
+        "overflow": {
+          "bottom": 155.7
+        },
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/act-one.html",
+        "bbox": {
+          "x": 100,
+          "y": 333.8,
+          "width": 620,
+          "height": 148.91
+        },
+        "firstSeen": 3.8,
+        "lastSeen": 3.8,
+        "occurrences": 1
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 3.8,
+        "selector": "#act-one-yours",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 100,
+          "top": 490.8,
+          "right": 720,
+          "bottom": 639.7,
+          "width": 620,
+          "height": 148.91
+        },
+        "containerSelector": "div.act-one-mask",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 100,
+          "top": 327,
+          "right": 720,
+          "bottom": 484,
+          "width": 620,
+          "height": 157
+        },
+        "overflow": {
+          "bottom": 155.7
+        },
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/act-one.html",
+        "bbox": {
+          "x": 100,
+          "y": 490.8,
+          "width": 620,
+          "height": 148.91
+        },
+        "firstSeen": 3.8,
+        "lastSeen": 3.8,
+        "occurrences": 1
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 4.6,
+        "selector": "#act-one-yours",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 100,
+          "top": 344.46,
+          "right": 720,
+          "bottom": 493.37,
+          "width": 620,
+          "height": 148.91
+        },
+        "containerSelector": "div.act-one-mask",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 100,
+          "top": 327,
+          "right": 720,
+          "bottom": 484,
+          "width": 620,
+          "height": 157
+        },
+        "overflow": {
+          "bottom": 9.37
+        },
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/act-one.html",
+        "bbox": {
+          "x": 100,
+          "y": 344.46,
+          "width": 620,
+          "height": 148.91
+        },
+        "firstSeen": 4.6,
+        "lastSeen": 4.6,
+        "occurrences": 1
+      },
+      {
+        "code": "canvas_overflow",
+        "severity": "info",
+        "time": 23,
+        "selector": "#act-three-play-label",
+        "message": "Text extends outside the composition canvas.",
+        "rect": {
+          "left": 1906.47,
+          "top": 94,
+          "right": 1990,
+          "bottom": 133,
+          "width": 83.53,
+          "height": 39
+        },
+        "containerSelector": "#root",
+        "text": "PLAY",
+        "fixHint": "Move the text inward, reduce its size, or mark intentional off-canvas animation with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 0,
+          "top": 0,
+          "right": 1920,
+          "bottom": 1080,
+          "width": 1920,
+          "height": 1080
+        },
+        "overflow": {
+          "right": 70
+        },
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/act-three.html",
+        "bbox": {
+          "x": 1906.47,
+          "y": 94,
+          "width": 83.53,
+          "height": 39
+        },
+        "firstSeen": 23,
+        "lastSeen": 23,
+        "occurrences": 1
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 23,
+        "selector": "#act-three-play",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 170,
+          "top": 0,
+          "right": 2090,
+          "bottom": 1080,
+          "width": 1920,
+          "height": 1080
+        },
+        "containerSelector": "#scene-act-three > div:nth-of-type(1)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 0,
+          "top": 0,
+          "right": 1920,
+          "bottom": 1080,
+          "width": 1920,
+          "height": 1080
+        },
+        "overflow": {
+          "right": 170
+        },
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/act-three.html",
+        "bbox": {
+          "x": 170,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        },
+        "firstSeen": 23,
+        "lastSeen": 23,
+        "occurrences": 1
+      }
+    ],
+    "duration": 36,
+    "samples": [
+      0,
+      3.8,
+      4.6,
+      5.3,
+      10.1,
+      14.8,
+      19.1,
+      23,
+      27,
+      31,
+      36
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 5,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      0,
+      4.6,
+      14.8,
+      23,
+      36
+    ],
+    "checked": 8,
+    "passed": 8
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  },
+  "_meta": {
+    "version": "0.8.29",
+    "latestVersion": "0.8.29",
+    "updateAvailable": false
+  }
+}

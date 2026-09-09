@@ -1,0 +1,213 @@
+{
+  "intro": [
+    {
+      "t": 0.35,
+      "code": "KeyF",
+      "sample": "press_key1.mp3"
+    },
+    {
+      "t": 1,
+      "code": "KeyG",
+      "sample": "press_key2.mp3"
+    },
+    {
+      "t": 1.65,
+      "code": "KeyH",
+      "sample": "press_key3.mp3"
+    },
+    {
+      "t": 2.15,
+      "code": "Space",
+      "sample": "press_space.mp3"
+    }
+  ],
+  "audition": [
+    {
+      "t": 19.62,
+      "code": "KeyF",
+      "sample": "press_key1.mp3"
+    },
+    {
+      "t": 19.810000000000002,
+      "code": "KeyJ",
+      "sample": "press_key2.mp3"
+    },
+    {
+      "t": 20.03,
+      "code": "KeyD",
+      "sample": "press_key3.mp3"
+    },
+    {
+      "t": 20.25,
+      "code": "KeyK",
+      "sample": "press_key4.mp3"
+    },
+    {
+      "t": 20.490000000000002,
+      "code": "KeyG",
+      "sample": "press_key5.mp3"
+    },
+    {
+      "t": 20.71,
+      "code": "Space",
+      "sample": "press_space.mp3"
+    },
+    {
+      "t": 21.110000000000003,
+      "code": "KeyJ",
+      "sample": "press_key2.mp3"
+    },
+    {
+      "t": 21.34,
+      "code": "KeyD",
+      "sample": "press_key3.mp3"
+    },
+    {
+      "t": 21.540000000000003,
+      "code": "KeyK",
+      "sample": "press_key4.mp3"
+    },
+    {
+      "t": 21.770000000000003,
+      "code": "KeyG",
+      "sample": "press_key5.mp3"
+    },
+    {
+      "t": 22.020000000000003,
+      "code": "KeyF",
+      "sample": "press_key1.mp3"
+    },
+    {
+      "t": 22.25,
+      "code": "Space",
+      "sample": "press_space.mp3"
+    },
+    {
+      "t": 22.5,
+      "code": "KeyD",
+      "sample": "press_key3.mp3"
+    },
+    {
+      "t": 22.790000000000003,
+      "code": "KeyK",
+      "sample": "press_key4.mp3"
+    }
+  ],
+  "typing": [
+    {
+      "t": 23.103,
+      "code": "KeyL",
+      "sample": "press_key1.mp3"
+    },
+    {
+      "t": 23.288,
+      "code": "KeyI",
+      "sample": "press_key2.mp3"
+    },
+    {
+      "t": 23.498,
+      "code": "KeyK",
+      "sample": "press_key3.mp3"
+    },
+    {
+      "t": 23.653000000000002,
+      "code": "KeyE",
+      "sample": "press_key4.mp3"
+    },
+    {
+      "t": 23.848,
+      "code": "Space",
+      "sample": "press_space.mp3"
+    },
+    {
+      "t": 24.031000000000002,
+      "code": "KeyW",
+      "sample": "press_key1.mp3"
+    },
+    {
+      "t": 24.197,
+      "code": "KeyH",
+      "sample": "press_key2.mp3"
+    },
+    {
+      "t": 24.34,
+      "code": "KeyE",
+      "sample": "press_key3.mp3"
+    },
+    {
+      "t": 24.491,
+      "code": "KeyN",
+      "sample": "press_key4.mp3"
+    },
+    {
+      "t": 24.661,
+      "code": "Space",
+      "sample": "press_space.mp3"
+    },
+    {
+      "t": 24.818,
+      "code": "KeyN",
+      "sample": "press_key1.mp3"
+    },
+    {
+      "t": 24.98,
+      "code": "KeyU",
+      "sample": "press_key2.mp3"
+    },
+    {
+      "t": 25.128,
+      "code": "KeyM",
+      "sample": "press_key3.mp3"
+    },
+    {
+      "t": 25.298000000000002,
+      "code": "KeyB",
+      "sample": "press_key4.mp3"
+    },
+    {
+      "t": 25.473,
+      "code": "KeyE",
+      "sample": "press_key5.mp3"
+    },
+    {
+      "t": 25.647000000000002,
+      "code": "KeyR",
+      "sample": "press_key1.mp3"
+    },
+    {
+      "t": 25.798000000000002,
+      "code": "Space",
+      "sample": "press_space.mp3"
+    },
+    {
+      "t": 25.962,
+      "code": "KeyH",
+      "sample": "press_key3.mp3"
+    },
+    {
+      "t": 26.168,
+      "code": "KeyE",
+      "sample": "press_key4.mp3"
+    },
+    {
+      "t": 26.326,
+      "code": "KeyA",
+      "sample": "press_key5.mp3"
+    },
+    {
+      "t": 26.518,
+      "code": "KeyD",
+      "sample": "press_key1.mp3"
+    },
+    {
+      "t": 26.693,
+      "code": "Space",
+      "sample": "press_space.mp3"
+    },
+    {
+      "t": 26.894000000000002,
+      "code": "KeyB",
+      "sample": "press_key3.mp3"
+    }
+  ]
+}

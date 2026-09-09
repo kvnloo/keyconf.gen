@@ -1,0 +1,47 @@
+.exploded-layer-guide > dialog.layer-inspector {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(560px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 28px;
+  border: 1px solid #617262;
+  border-radius: 20px;
+  background: #17231e;
+  color: #eeeae0;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.layer-inspector::backdrop {
+  background: #070d0bbd;
+  backdrop-filter: blur(6px);
+}
+.layer-inspector h2 {
+  font-size: 28px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.layer-inspector form {
+  margin-bottom: 28px;
+}
+.layer-inspector dl {
+  display: grid;
+  gap: 8px;
+}
+.layer-inspector dd {
+  margin: 0 0 16px;
+}
+.exploded-layer-guide button {
+  cursor: pointer;
+  border-color: #b8cca0;
+  font-family: inherit;
+}
+.exploded-layer-guide > .layer-inspector {
+  display: revert;
+}
+.exploded-layer-guide > .layer-inspector:not([open]) {
+  display: none;
+}

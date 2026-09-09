@@ -35,7 +35,6 @@
     "verify:switches": "node scripts/verify_switches.mjs",
     "verify:accessory-rendering": "node --experimental-strip-types scripts/verify_accessory_rendering.mjs",
     "verify:shared-preview": "node scripts/verify_shared_preview.mjs",
-    "verify:search": "node scripts/verify_search.mjs",
     "verify:q1": "node --experimental-strip-types scripts/verify_q1.mjs",
     "verify:feedback": "node --experimental-strip-types scripts/verify_feedback.mjs",
     "verify:publication": "node scripts/verify_publication.mjs",
@@ -48,6 +47,7 @@
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
+    "@vercel/analytics": "^2.0.1",
     "lucide-react": "1.31.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
