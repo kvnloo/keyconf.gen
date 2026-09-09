@@ -61,6 +61,40 @@ try {
   await page.keyboard.press('Tab');
   await openMusic();
   await status('playing');
+  await page.waitForFunction(() => !!window.musicProbe);
+  // The 3% default has to arrive through a three-second fade, not a jump.
+  const fade = await page.evaluate(async () => {
+    const probe = window.musicProbe;
+    const started = performance.now();
+    const samples = [];
+    while (performance.now() - started < 4000) {
+      samples.push({
+        at: Math.round(performance.now() - started),
+        gain: probe.gain.gain.value,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    return samples;
+  });
+  const quietest = fade.reduce((low, item) => Math.min(low, item.gain), 1);
+  const loudest = fade.reduce((high, item) => Math.max(high, item.gain), 0);
+  const settled = fade.find((item) => item.gain >= 0.0285);
+  assert.ok(
+    fade.some((item) => item.gain > 0.0005 && item.gain < 0.027),
+    `music must fade in rather than jump; samples ran ${quietest} to ${loudest}`,
+  );
+  assert.ok(
+    Math.abs(fade[fade.length - 1].gain - 0.03) < 0.0015,
+    `music must settle at the 3% default, reached ${fade[fade.length - 1].gain}`,
+  );
+  assert.ok(
+    loudest <= 0.0315,
+    `music must never overshoot its default, peaked at ${loudest}`,
+  );
+  assert.ok(
+    settled && settled.at >= 2400,
+    `fade must last about three seconds, hit the default at ${settled?.at}ms`,
+  );
   await page.waitForFunction(() => {
     const probe = window.musicProbe;
     if (!probe) return false;

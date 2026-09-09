@@ -1065,3 +1065,21 @@ animated endpoints and the assertion compares against the separated view it
 names. A repeated assembly is also checked. All seven flows pass with no Axe
 violations at 1440, 390 and 320 px and no page errors, alongside 236 unit
 tests, types, lint and formatting.
+
+## September 9, 2026: music fade verified in a browser
+
+The 3% default and three-second fade-in were implemented and unit-tested on
+September 8, but `verify:music` never looked at them, so the browser evidence
+behind COMMUNITY-8 stopped at "music plays". The verifier already taps the real
+`GainNode`, so it now samples that node every 100 ms for four seconds after
+playback starts and checks four separate things: some sample falls strictly
+between silence and the default, so the level arrives through a fade rather
+than a jump; the last sample sits at the 3% default; no sample overshoots it;
+and the default is not reached before 2.4 s.
+
+The assertions were confirmed to fail before being trusted. Shortening the
+ramp to 0.2 s makes every sample read 0.03 and trips the fade check, whose
+message reports the observed range. Restoring the ramp leaves `lib/music.ts`
+byte-identical and the full music journey passes again, including decoded
+output, keyboard-source priority, pause intent, recovery, reload and the
+320/390/1280 px accessibility checks.
