@@ -42,6 +42,19 @@ test('expensive ordering never compares unlike currencies, kits or historical la
   assert.equal(boards[0].id, 'unknown');
   assert.equal(comparableOffer(boards[1], scope), null);
 });
+test('an unrecorded price is uncomparable rather than a zero-priced board', () => {
+  const unpriced = keyboard('unpriced', [offer(0)]);
+  assert.equal(comparableOffer(unpriced, scope), null);
+  const ordered = mostExpensiveFirst(
+    [unpriced, keyboard('priced', [offer(1)])],
+    scope,
+  );
+  assert.deepEqual(
+    ordered.map((board) => board.id),
+    ['priced', 'unpriced'],
+  );
+});
+
 test('highest listed configuration retains its identity and sold-out status', () => {
   const board = keyboard('board', [
     offer(600),

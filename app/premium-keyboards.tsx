@@ -2,28 +2,65 @@
 import { useState, useMemo } from 'react';
 import { ArrowUpRight, Search } from 'lucide-react';
 import { geometryGrade, sceneLabel } from '../lib/cad-twin.ts';
+import {
+  comparableOffer,
+  mostExpensiveFirst,
+  type KeyboardOffer,
+  type PremiumKeyboard,
+} from '../lib/premium-keyboards.ts';
 import data from '../data/premium-keyboards.json';
+
+// Ordering only means something inside one currency and one price basis, so the
+// ranking is scoped rather than run over every number in the file.
+const SCOPE_CURRENCY = 'USD';
+const SCOPE_BASIS = 'store-listing';
+
+const KIND_LABEL = { complete: 'Full board', kit: 'Kit' } as const;
+const AVAILABILITY_LABEL = {
+  available: 'Available',
+  'sold-out': 'Sold out',
+  unavailable: 'Unavailable',
+  unknown: 'Availability unknown',
+} as const;
+
+function money(offer: KeyboardOffer) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: offer.currency,
+    maximumFractionDigits: 0,
+  }).format(offer.amount);
+}
 
 export default function PremiumKeyboards() {
   const [query, setQuery] = useState('');
-  const [kindFilter, setKindFilter] = useState<'all' | 'complete' | 'kit'>(
-    'all',
-  );
-  const boards = data.boards;
+  const [kind, setKind] = useState<'complete' | 'kit'>('complete');
+  const boards = data.boards as PremiumKeyboard[];
 
-  const filtered = useMemo(() => {
+  const { ranked, unranked } = useMemo(() => {
+    const scope = {
+      currency: SCOPE_CURRENCY,
+      kind,
+      basis: SCOPE_BASIS,
+    } as const;
     const q = query.toLowerCase().trim();
-    return boards.filter((b) => {
-      const match =
+    const matched = boards.filter(
+      (b) =>
         !q ||
         b.brand.toLowerCase().includes(q) ||
         b.name.toLowerCase().includes(q) ||
-        b.description.toLowerCase().includes(q);
-      if (!match) return false;
-      if (kindFilter === 'all') return true;
-      return b.offers.some((o) => o.kind === kindFilter);
-    });
-  }, [boards, query, kindFilter]);
+        b.description.toLowerCase().includes(q),
+    );
+    // Every match stays on the page. A board with no listing in this scope is
+    // moved below the ranking rather than dropped or given a placeholder price.
+    const ordered = mostExpensiveFirst(matched, scope);
+    const priced = ordered
+      .map((board) => ({ board, offer: comparableOffer(board, scope) }))
+      .filter((row) => row.offer);
+    return {
+      ranked: priced as { board: PremiumKeyboard; offer: KeyboardOffer }[],
+      unranked: ordered.filter((board) => !comparableOffer(board, scope)),
+    };
+  }, [boards, query, kind]);
 
   return (
     <section
@@ -35,8 +72,7 @@ export default function PremiumKeyboards() {
         Source-backed product references for high-price keyboard boards, kits,
         and charging ecosystems. A CAD twin requires licensed or measured case,
         plate, and PCB solids. Illustrative studies are labeled; other geometry
-        stays unmodeled until that evidence exists. Prices are from official
-        listings (2026-09-08) and may vary.
+        stays unmodeled until that evidence exists.
       </p>
       <label className="catalog-search">
         <Search size={17} aria-hidden="true" />
@@ -48,61 +84,88 @@ export default function PremiumKeyboards() {
           onChange={(e) => setQuery(e.target.value)}
         />
       </label>
-      <fieldset className="catalog-filters" aria-label="Premium type filter">
-        {[
-          ['all', 'All'],
-          ['complete', 'Full'],
-          ['kit', 'Kit'],
-        ].map(([value, name]) => (
+      <fieldset className="catalog-filters" aria-label="Price comparison scope">
+        {(['complete', 'kit'] as const).map((value) => (
           <button
             key={value}
-            aria-pressed={kindFilter === value}
-            onClick={() => setKindFilter(value as typeof kindFilter)}
+            aria-pressed={kind === value}
+            onClick={() => setKind(value)}
           >
-            {name}
+            {KIND_LABEL[value]}
           </button>
         ))}
       </fieldset>
+      <p className="muted" data-premium-scope={kind}>
+        Ordered by highest {KIND_LABEL[kind].toLowerCase()} store listing in{' '}
+        {SCOPE_CURRENCY}. Kit and full-board prices are never ranked against
+        each other, and a keyboard whose price is unrecorded is listed without
+        one instead of being treated as free.
+      </p>
       <div className="research-product-list">
-        {filtered.map((board) => {
-          const best = board.offers.reduce((a, b) =>
-            b.amount > a.amount ? b : a,
-          );
-          return (
+        {ranked.map(({ board, offer }) => (
+          <a
+            key={board.id}
+            href={board.source}
+            target="_blank"
+            rel="noreferrer"
+            className="research-product"
+            data-premium-amount={offer.amount}
+            aria-label={`${board.brand} ${board.name}: ${money(offer)} ${offer.currency}, ${offer.configuration}, ${AVAILABILITY_LABEL[offer.availability]}`}
+          >
+            <span className="catalog-brand">
+              {board.brand} · {KIND_LABEL[offer.kind]}
+            </span>
+            <strong>
+              {board.name} <ArrowUpRight size={14} />
+            </strong>
+            <span>
+              {money(offer)} · {offer.configuration} ·{' '}
+              {AVAILABILITY_LABEL[offer.availability]} ·{' '}
+              {sceneLabel(geometryGrade(board.geometry))}
+            </span>
+            <span className="catalog-basis">
+              Highest listed configuration, observed {offer.observedAt}
+            </span>
+          </a>
+        ))}
+        {!ranked.length && (
+          <p>
+            No {KIND_LABEL[kind].toLowerCase()} listing in {SCOPE_CURRENCY}{' '}
+            matches that search.
+          </p>
+        )}
+      </div>
+      {unranked.length > 0 && (
+        <div className="research-product-list" data-premium-unranked="">
+          <p className="muted">
+            No {KIND_LABEL[kind].toLowerCase()} price recorded for these, so
+            they are listed without a position in the ordering.
+          </p>
+          {unranked.map((board) => (
             <a
               key={board.id}
               href={board.source}
               target="_blank"
               rel="noreferrer"
               className="research-product"
-              aria-label={`${board.brand} ${board.name}: ${best.amount} USD, ${best.availability}`}
+              aria-label={`${board.brand} ${board.name}: price unverified`}
             >
-              <span className="catalog-brand">
-                {board.brand} · {best.kind === 'complete' ? 'Full' : 'Kit'}
-              </span>
+              <span className="catalog-brand">{board.brand}</span>
               <strong>
                 {board.name} <ArrowUpRight size={14} />
               </strong>
               <span>
-                {best.amount > 0 ? `$${best.amount}` : 'Price unverified'} ·{' '}
-                {best.availability === 'available'
-                  ? 'Available'
-                  : best.availability === 'sold-out'
-                    ? 'Sold out'
-                    : 'Unknown'}{' '}
-                · {sceneLabel(geometryGrade(board.geometry))}
+                Price unverified · {sceneLabel(geometryGrade(board.geometry))}
               </span>
             </a>
-          );
-        })}
-        {!filtered.length && (
-          <p>No premium keyboards match. Try a different search.</p>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
       <p className="catalog-provenance">
-        Source-backed 2026-09-08. CAD twin means cad-derived or measured case,
-        plate, and PCB. Illustrative studies are not manufacturer CAD. Unmodeled
-        products stay listed until a licensed dimensioned source is published.
+        Observed {data.accessed_at} from official listings and subject to
+        change. CAD twin means cad-derived or measured case, plate, and PCB.
+        Illustrative studies are not manufacturer CAD. Unmodeled products stay
+        listed until a licensed dimensioned source is published.
       </p>
     </section>
   );

@@ -34,6 +34,7 @@
     "verify:catalog": "node scripts/verify_catalog.mjs",
     "verify:search": "node scripts/verify_search.mjs",
     "verify:theme": "node scripts/verify_theme.mjs",
+    "verify:premium": "node scripts/verify_premium.mjs",
     "verify:music": "node scripts/verify_music.mjs",
     "verify:canary": "node scripts/verify_canary.mjs",
     "verify:angrymiao-featured": "node scripts/verify_angrymiao_featured.mjs",

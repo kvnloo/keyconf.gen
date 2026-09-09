@@ -7,8 +7,12 @@ import {
 } from '../lib/premium-keyboards.ts';
 
 const offerArb = fc.record({
-  amount: fc.integer({ min: 0, max: 1_000_000 }),
-  currency: fc.string({ minLength: 1, maxLength: 4 }),
+  // Zero is the sentinel for a price nobody recorded, so it needs real weight
+  // rather than the one-in-a-million chance a plain integer range gives it.
+  amount: fc.oneof(fc.constant(0), fc.integer({ min: 1, max: 1_000_000 })),
+  // Drawn from a small set so the in-scope branch is actually reached; a free
+  // string is almost never "USD", which left the comparison untested.
+  currency: fc.constantFrom('USD', 'JPY', 'EUR'),
   kind: fc.constantFrom('complete', 'kit'),
   basis: fc.constantFrom('store-listing', 'historical-launch'),
   availability: fc.constantFrom('available', 'sold-out', 'unknown'),
@@ -29,7 +33,8 @@ test('comparableOffer returns the highest amount within scope', () => {
         (o) =>
           o.currency === 'USD' &&
           o.kind === 'complete' &&
-          o.basis === 'store-listing',
+          o.basis === 'store-listing' &&
+          o.amount > 0,
       );
       const result = comparableOffer({ offers }, scope);
       if (filtered.length === 0) {

@@ -1204,3 +1204,50 @@ no accessibility violations at 1440, 390 and 320 and no page errors.
 One caution carried over from the panel: this is the illustrative studio
 geometry, not manufacturer CAD. Isolating a part makes it easier to study and
 does not make it more accurate, and the copy in the dialog still says so.
+## Ordering premium boards by a price that says what it is for
+
+The premium list had a sorting foundation nobody called. `mostExpensiveFirst`
+and `comparableOffer` existed and were tested, while the page rendered the
+catalog in file order and reduced each board to its single largest number. That
+number was the misleading part: the AM HATSU showed $2350, which is the
+BATTLESHIP Limited Edition, not the $1099 board a reader would assume they were
+being quoted. Each row now names the configuration the price belongs to, that
+offer's availability and the date it was observed.
+
+Ordering only means something inside one comparable scope, so the ranking is
+confined to USD store listings and the kit/full-board choice selects a scope
+rather than filtering the list. Kit and full-board prices are never sorted
+against each other. No board disappears when it has no listing in the selected
+scope; it moves to a group below the ranking, which keeps the nine recorded
+boards discoverable in either view.
+
+The foundation also had a real defect. A price nobody recorded is stored as
+zero, and `comparableOffer` returned it as the highest offer in scope, so the
+AM Neon 80 sorted as a known $0 board — ranked below every real price but above
+the boards with no offer at all, which is precisely the zero-priced claim the
+contract forbids. A zero amount is now uncomparable, and that board is listed
+without a position and without a number.
+
+Both of the tests covering this were weaker than they looked. The property test
+drew its currency from a free string of one to four characters, so it almost
+never produced "USD" and the in-scope comparison it claimed to check was
+effectively never reached; its amounts came from a plain integer range, giving
+zero a one-in-a-million chance when zero is the sentinel the rule turns on.
+Drawing the currency from a small set and giving zero real weight makes the
+property fail against the old implementation, which it did not before. Every
+new assertion was run against the previous code first: the unit test, the
+property and the browser check each fail without the fix.
+
+`npm run verify:premium` computes the expected ranking from the source data
+rather than hard-coding it, so a catalog edit moves the check with it, and
+asserts the rendered order matches, that the top card carries its configuration
+and observation date, that no `$0` appears, that the unpriced board sits outside
+the ranking, that every board remains listed somewhere, and that search narrows
+without disturbing the order. Replacing the sort with source order fails it. 248
+tests, type checking, lint and formatting pass, with no accessibility violations
+in the section and no page errors.
+
+Coverage is the honest limit. All nine boards are USD full-board store listings,
+so the cross-currency guard and the kit ordering are implemented and unit-tested
+but have no real data exercising them, the Kit view is legitimately empty, and
+every price is a single observation from one day rather than a tracked history.

@@ -1759,6 +1759,9 @@ button:disabled {
   color: var(--muted);
   line-height: 1.5;
 }
+.research-product .catalog-basis {
+  font-size: 11px;
+}
 .research-product:hover {
   border-color: #47744e;
   background: var(--surface);

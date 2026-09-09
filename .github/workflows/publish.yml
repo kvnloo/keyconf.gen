@@ -74,6 +74,7 @@ jobs:
           npm run verify:switches
           npm run verify:music
           npm run verify:search
+          npm run verify:premium
           npm run verify:observations
           npm run verify:decks
       - name: Verify published build pages against local D1

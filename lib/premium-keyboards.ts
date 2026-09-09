@@ -29,7 +29,10 @@ export function comparableOffer(keyboard: PremiumKeyboard, scope: PriceScope) {
       (offer) =>
         offer.currency === scope.currency &&
         offer.kind === scope.kind &&
-        offer.basis === scope.basis,
+        offer.basis === scope.basis &&
+        // A price nobody recorded is stored as zero. Ranking that number would
+        // publish a free keyboard, so an unrecorded price stays uncomparable.
+        offer.amount > 0,
     )
     .reduce<KeyboardOffer | null>(
       (highest, offer) =>
