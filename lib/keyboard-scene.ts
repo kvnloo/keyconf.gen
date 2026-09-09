@@ -106,6 +106,19 @@ async function applyCadOverlay(
       part.position.copy(study.position);
       part.quaternion.copy(study.quaternion);
       part.scale.copy(study.scale);
+      // A CAD file carries shape, not finish. Wearing the study's material
+      // keeps the part inside the palette and appearance system rather than
+      // leaving it on whatever default the loader supplies.
+      if (study instanceof THREE.Mesh)
+        part.traverse((object) => {
+          if (!(object instanceof THREE.Mesh)) return;
+          const supplied = object.material;
+          object.material = study.material;
+          for (const material of Array.isArray(supplied)
+            ? supplied
+            : [supplied])
+            material.dispose();
+        });
       part.name = request.role;
       parent.add(part);
       // A CAD file's origin is wherever its author left it, so place the part

@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import struct
 import sys
 from pathlib import Path
@@ -40,20 +41,64 @@ def require_cadquery():
     return cq
 
 
+def vertex_normals(points, triangles):
+    """Average the facet normals meeting at each vertex.
+
+    OpenCascade tessellates face by face, so a point on a sharp edge is
+    emitted once per face and averaging never crosses that edge: the knob's
+    wall stays smooth, its caps stay flat and its rim stays sharp. That is a
+    property of the tessellator rather than a guarantee, so a vertex whose
+    facets genuinely disagree fails the export instead of being rounded off.
+    """
+    incident = [[] for _ in points]
+    for a, b, c in triangles:
+        pa, pb, pc = points[a], points[b], points[c]
+        u = [pb[axis] - pa[axis] for axis in range(3)]
+        v = [pc[axis] - pa[axis] for axis in range(3)]
+        cross = (
+            u[1] * v[2] - u[2] * v[1],
+            u[2] * v[0] - u[0] * v[2],
+            u[0] * v[1] - u[1] * v[0],
+        )
+        length = math.sqrt(sum(value * value for value in cross))
+        if not length:
+            continue
+        unit = tuple(value / length for value in cross)
+        for index in (a, b, c):
+            incident[index].append(unit)
+
+    normals = []
+    for index, facets in enumerate(incident):
+        for i in range(len(facets)):
+            for j in range(i + 1, len(facets)):
+                dot = sum(x * y for x, y in zip(facets[i], facets[j]))
+                if dot < 0.5:
+                    raise SystemExit(
+                        f"vertex {index} spans a "
+                        f"{math.degrees(math.acos(max(-1.0, min(1.0, dot)))):.0f} "
+                        "degree edge; smooth normals would round it off"
+                    )
+        total = [sum(axis) for axis in zip(*facets)] if facets else [0.0, 1.0, 0.0]
+        length = math.sqrt(sum(value * value for value in total)) or 1.0
+        normals.append(tuple(value / length for value in total))
+    return normals
+
+
 def write_glb(path: Path, name: str, vertices, triangles) -> None:
     # CadQuery models Z-up in millimetres; glTF is Y-up in scene units. The
     # -90 degree turn about X keeps the winding, so the faces stay outward.
-    positions = [
-        coord / UNIT_MM for x, y, z in vertices for coord in (x, z, -y)
-    ]
+    points = [(x / UNIT_MM, z / UNIT_MM, -y / UNIT_MM) for x, y, z in vertices]
+    positions = [coord for point in points for coord in point]
+    # Without these the renderer has no surface direction to light, and the
+    # part reads as a flat silhouette next to the study it replaces.
+    normals = [coord for normal in vertex_normals(points, triangles) for coord in normal]
     indices = [index for triangle in triangles for index in triangle]
     position_bytes = struct.pack(f"<{len(positions)}f", *positions)
+    normal_bytes = struct.pack(f"<{len(normals)}f", *normals)
     index_bytes = struct.pack(f"<{len(indices)}H", *indices)
-    while len(position_bytes) % 4:
-        position_bytes += b"\x00"
     while len(index_bytes) % 4:
         index_bytes += b"\x00"
-    binary = position_bytes + index_bytes
+    binary = position_bytes + normal_bytes + index_bytes
     gltf = {
         "asset": {"version": "2.0", "generator": "keyconf cad_twin.py"},
         "buffers": [{"byteLength": len(binary)}],
@@ -67,6 +112,12 @@ def write_glb(path: Path, name: str, vertices, triangles) -> None:
             {
                 "buffer": 0,
                 "byteOffset": len(position_bytes),
+                "byteLength": len(normal_bytes),
+                "target": 34962,
+            },
+            {
+                "buffer": 0,
+                "byteOffset": len(position_bytes) + len(normal_bytes),
                 "byteLength": len(index_bytes),
                 "target": 34963,
             },
@@ -82,6 +133,12 @@ def write_glb(path: Path, name: str, vertices, triangles) -> None:
             },
             {
                 "bufferView": 1,
+                "componentType": 5126,
+                "count": len(vertices),
+                "type": "VEC3",
+            },
+            {
+                "bufferView": 2,
                 "componentType": 5123,
                 "count": len(indices),
                 "type": "SCALAR",
@@ -90,7 +147,12 @@ def write_glb(path: Path, name: str, vertices, triangles) -> None:
         "meshes": [
             {
                 "name": name,
-                "primitives": [{"attributes": {"POSITION": 0}, "indices": 1}],
+                "primitives": [
+                    {
+                        "attributes": {"POSITION": 0, "NORMAL": 1},
+                        "indices": 2,
+                    }
+                ],
             }
         ],
         "nodes": [{"name": name, "mesh": 0}],
