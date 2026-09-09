@@ -7,7 +7,9 @@
     "public/**",
     "db/**",
     "drizzle/**",
-    "scripts/**"
+    "scripts/**",
+    "videos/**",
+    "pages-dist/**"
   ],
   "reporters": ["html", "clear-text", "progress"],
   "mutator": {
