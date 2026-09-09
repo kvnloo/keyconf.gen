@@ -6,12 +6,24 @@
 }
 
 @media (max-width: 700px) {
+  /* The workbench takes the height the header and build bar leave it, so the
+     editor never pushes the preview off a screen the page cannot scroll. */
+  .studio-shell:not(.screen-home):not(.screen-discover):not(.typing-mode):not(
+      .focus-mode
+    ):has(.mobile-workbench) {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
   .studio-shell:not(.screen-home):not(.screen-discover):not(.typing-mode):not(
       .focus-mode
     )
     .mobile-workbench {
     display: block;
-    height: calc(100dvh - 182px - env(safe-area-inset-top));
+    flex: 1;
     min-height: 0;
     padding: 0;
     overflow: hidden;
@@ -301,13 +313,6 @@
 }
 
 @media (max-width: 390px) {
-  .studio-shell:not(.screen-home):not(.screen-discover):not(.typing-mode):not(
-      .focus-mode
-    )
-    .mobile-workbench {
-    height: calc(100dvh - 226px - env(safe-area-inset-top));
-  }
-
   .studio-shell:not(.screen-home):not(.screen-discover):not(.typing-mode):not(
       .focus-mode
     )

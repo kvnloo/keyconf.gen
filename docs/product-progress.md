@@ -1083,3 +1083,33 @@ message reports the observed range. Restoring the ramp leaves `lib/music.ts`
 byte-identical and the full music journey passes again, including decoded
 output, keyboard-source priority, pause intent, recovery, reload and the
 320/390/1280 px accessibility checks.
+
+## Mobile workbench height
+
+The compact workbench sized itself with a hard-coded guess at the chrome above
+it, `calc(100dvh - 226px)` at 390px and `calc(100dvh - 182px)` below 700px. The
+header and build bar actually measure 253px, so the shell rendered 871px tall in
+an 844px viewport and the whole page scrolled 27px underneath a layout that is
+supposed to hold the preview and its controls on screen together. The shell is
+now a viewport-height flex column and the workbench takes the space its siblings
+leave, so no constant can drift again. The rule is scoped with
+`:has(.mobile-workbench)` so screens that legitimately scroll, such as the
+focused switch page, keep their own layout.
+
+`npm run verify:mobile` is the evidence, at 390px against a real browser with
+software WebGL. It enters the workbench, then asserts that the document never
+scrolls, that the preview keeps at least 15% of the viewport, that choosing a
+case colour repaints those pixels, that selecting a component applies with the
+preview still on screen, that Collapse/Edit/Catalog/Compact move through the
+three inspector states and give the preview at least as much room when
+collapsed, that arrow keys move tab selection along with focus, and that the
+footer reserves the bottom safe area. Two negative controls keep it honest: the
+scene is captured twice while settled and must be byte-identical before any
+"the pixels changed" claim is trusted, and removing the `:has()` scope makes the
+check fail with 3097px of switch-page content hidden behind `overflow: hidden`.
+The check ran red on the 27px overflow before the fix and green after.
+
+Verified: 236 tests, type checking, lint and formatting pass, and the new check
+passes against the dev server. It now runs in CI beside the other scene checks.
+Physical-device behaviour, 320px and 768px are not covered by this check; the
+existing five-width interface check still covers layout and accessibility there.

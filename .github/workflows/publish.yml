@@ -104,6 +104,7 @@ jobs:
           npm run verify:accessory-rendering
           node --experimental-strip-types scripts/verify_imported_accessory_rendering.mjs
           xvfb-run -a npm run verify:q1
+          xvfb-run -a npm run verify:mobile
           npm run verify:shared-preview
           xvfb-run -a npm run verify:feedback
           xvfb-run -a npm run verify:angrymiao-featured
