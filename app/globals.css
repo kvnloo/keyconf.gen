@@ -4,6 +4,7 @@
 :root {
   color-scheme: dark;
   --surface: #222c26;
+  --palette-space: #222c26;
   --ink: #e9ede6;
   --muted: #b3bdb2;
   --focus: #bdd9c0;
@@ -125,8 +126,8 @@ nav {
   position: relative;
   background: radial-gradient(
     ellipse at 45% 48%,
-    var(--surface) 0,
-    var(--surface) 85%
+    var(--palette-space) 0,
+    var(--palette-space) 85%
   );
   min-height: 760px;
   overflow: hidden;

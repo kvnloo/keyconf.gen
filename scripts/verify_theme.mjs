@@ -20,6 +20,10 @@ assert.ok(
   globalsCss.includes('--surface'),
   'CSS variable --surface must exist',
 );
+assert.ok(
+  globalsCss.includes('--palette-space'),
+  'CSS variable --palette-space must exist for stage theming',
+);
 
 const data = JSON.parse(readFileSync('data/premium-keyboards.json', 'utf8'));
 assert.ok(

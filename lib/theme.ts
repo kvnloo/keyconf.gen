@@ -5,6 +5,8 @@ type PaletteLike = {
   space: string;
 };
 
+const MIN_UI_CONTRAST = 4.5;
+
 function blendColor(c1: string, c2: string, ratio = 0.35): string {
   const p = (hex: string, offset: number) =>
     parseInt(hex.slice(offset, offset + 2), 16) / 255;
@@ -37,31 +39,65 @@ function contrastRatio(ink: string, background: string): number {
   return Math.max(L1, L2) / Math.min(L1, L2);
 }
 
+function readableOn(
+  background: string,
+  preferred: string,
+  options: { light?: string; dark?: string } = {},
+): string {
+  if (contrastRatio(preferred, background) >= MIN_UI_CONTRAST) return preferred;
+  const light = options.light ?? '#e9ede6';
+  const dark = options.dark ?? '#2a332d';
+  return contrastRatio(light, background) >= contrastRatio(dark, background)
+    ? light
+    : dark;
+}
+
+function pickInk(background: string) {
+  return contrastRatio('#f8f8ef', background) >
+    contrastRatio('#20251f', background)
+    ? '#f8f8ef'
+    : '#20251f';
+}
+
 function computeTheme(p: PaletteLike) {
   const paper = blendColor(p.space, '#161d19', 0.35);
-  const ink =
-    contrastRatio('#f8f8ef', p.space) > contrastRatio('#20251f', p.space)
-      ? '#f8f8ef'
-      : '#20251f';
-  const theme = `:root { --bg-color: ${p.space} !important; --main-color: ${p.alpha} !important; --text-color: ${ink} !important; --sub-color: ${p.mod} !important; --caret-color: ${p.accent} !important; --sub-alt-color: ${paper} !important; --error-color: #f29581 !important; --error-extra-color: #c95d4b !important; }`;
-  return { theme, ink, paper };
+  const uiSurface = blendColor(p.space, '#161d19', 0.58);
+  const typingInk = pickInk(p.space);
+  const ink = pickInk(uiSurface);
+  const muted = readableOn(uiSurface, p.mod);
+  const accent = readableOn(uiSurface, p.accent, {
+    light: '#d4e8d4',
+    dark: '#6a946a',
+  });
+  const theme = `:root { --bg-color: ${p.space} !important; --main-color: ${p.alpha} !important; --text-color: ${typingInk} !important; --sub-color: ${p.mod} !important; --caret-color: ${p.accent} !important; --sub-alt-color: ${paper} !important; --error-color: #f29581 !important; --error-extra-color: #c95d4b !important; }`;
+  return {
+    theme,
+    ink,
+    paper,
+    uiSurface,
+    muted,
+    accent,
+    paletteSpace: p.space,
+  };
 }
 
 export function applyPaletteTheme(p: PaletteLike, target: Document = document) {
-  const { theme, ink, paper } = computeTheme(p);
+  const { theme, ink, paper, uiSurface, muted, accent, paletteSpace } =
+    computeTheme(p);
   const style =
     target.head.querySelector<HTMLStyleElement>('#keyconf-theme') ??
     target.createElement('style');
   style.id = 'keyconf-theme';
   style.textContent = theme;
   if (!style.isConnected) target.head.appendChild(style);
-  target.documentElement.style.setProperty('--surface', p.space);
+  target.documentElement.style.setProperty('--surface', uiSurface);
+  target.documentElement.style.setProperty('--palette-space', paletteSpace);
   target.documentElement.style.setProperty('--paper', paper);
   target.documentElement.style.setProperty('--ink', ink);
-  target.documentElement.style.setProperty('--muted', p.mod);
-  target.documentElement.style.setProperty('--focus', p.accent);
-  target.documentElement.style.setProperty('--green', p.accent);
+  target.documentElement.style.setProperty('--muted', muted);
+  target.documentElement.style.setProperty('--focus', accent);
+  target.documentElement.style.setProperty('--green', accent);
   return style;
 }
 
-export { computeTheme, blendColor, contrastRatio };
+export { computeTheme, blendColor, contrastRatio, readableOn };
