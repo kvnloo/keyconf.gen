@@ -16,7 +16,6 @@ export function createSwitchScene(
     'aria-label',
     'Illustrative switch model. Arrow keys rotate; plus and minus zoom.',
   );
-  renderer.domElement.style.touchAction = 'pan-y pinch-zoom';
   element.appendChild(renderer.domElement);
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 30);

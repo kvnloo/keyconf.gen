@@ -15,6 +15,7 @@ import {
   createCommunityClient,
   type SavedBuildPage,
 } from '../../lib/community-client';
+import PublicationsPanel from './publications-panel';
 import './account-panel.css';
 
 const PublicationReview = lazy(() => import('./publication-review'));
@@ -329,6 +330,7 @@ export default function AccountPanel({
             )}
             <output>{notice}</output>
           </section>
+          <PublicationsPanel />
           {reviewId && (
             <Suspense fallback={<output>Loading publication review…</output>}>
               <PublicationReview

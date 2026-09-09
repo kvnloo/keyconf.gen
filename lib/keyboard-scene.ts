@@ -144,7 +144,6 @@ export function createKeyboardScene(
   camera.position.set(7, 15, 19);
   camera.layers.enable(1);
   const controls = new OrbitControls(camera, renderer.domElement);
-  renderer.domElement.style.touchAction = 'pan-y pinch-zoom';
   controls.enableDamping = !reduced && !software;
   controls.dampingFactor = 0.1;
   controls.minDistance = 12;

@@ -107,6 +107,45 @@ try {
   report.flows.push(
     'keyboard orbit, zoom, Tab and housing toggle work with reduced motion',
   );
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const separated = await canvas.screenshot();
+  await page
+    .getByRole('button', { name: 'Assemble switch', exact: true })
+    .click();
+  await page.waitForTimeout(800);
+  const assembled = await canvas.screenshot();
+  assert.equal(
+    assembled.equals(separated),
+    false,
+    'assembly must change the rendered switch',
+  );
+  await page
+    .getByRole('button', { name: 'Separate housing', exact: true })
+    .click();
+  await page.waitForTimeout(120);
+  await page
+    .getByRole('button', { name: 'Assemble switch', exact: true })
+    .click();
+  await page.waitForTimeout(800);
+  const reversed = await canvas.screenshot();
+  assert.equal(
+    reversed.equals(assembled),
+    true,
+    'mid-transition reversal must restore the same geometry and camera',
+  );
+  await page
+    .getByRole('button', { name: 'Separate housing', exact: true })
+    .click();
+  await page.waitForTimeout(800);
+  assert.equal(
+    (await canvas.screenshot()).equals(separated),
+    true,
+    'separation must preserve the inspected camera',
+  );
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  report.flows.push(
+    'normal-motion assembly and mid-transition reversal restore identical rendered endpoints without a camera reset',
+  );
   for (const width of [1440, 390, 320]) {
     await page.setViewportSize({ width, height: 1000 });
     const dimensions = await page.evaluate(() => ({
@@ -168,7 +207,7 @@ try {
     const dialog = page.getByRole('dialog');
     await dialog.waitFor();
     assert.equal(
-      await dialog.getByRole('link', { name: 'Visit original source' }).count(),
+      await dialog.getByRole('link', { name: 'View source evidence' }).count(),
       1,
     );
     await page.keyboard.press('Escape');

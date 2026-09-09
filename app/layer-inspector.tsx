@@ -45,8 +45,8 @@ export default function LayerInspector({
               <dt>Evidence</dt>
               <dd>
                 {part.evidence === 'documented'
-                  ? 'Documented catalog reference'
-                  : 'Compatibility not verified'}
+                  ? 'Catalog documentation reference (fit not guaranteed)'
+                  : 'Catalog reference; compatibility and fit not verified'}
               </dd>
               <dt>Assembly family</dt>
               <dd>{part.family}</dd>
@@ -57,7 +57,7 @@ export default function LayerInspector({
               target="_blank"
               rel="noopener noreferrer"
             >
-              Visit original source ↗
+              View source evidence ↗
             </a>
             <p>
               The studio geometry is illustrative. Check the maker’s dimensions,
