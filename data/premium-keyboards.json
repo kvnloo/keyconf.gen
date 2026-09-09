@@ -461,6 +461,78 @@
         ]
       },
       "notes": "Sold out when observed, so $129 is the last published listing price rather than an orderable one. Charcoal, Mint and the Aurora x Mizu edition are colourways of one model on a single listing, and wired and wireless are PCB options rather than separate models. Wireless editions need a standard LiPo battery that the kit does not include. The listing still carries its 2021 group-buy dates."
+    },
+    {
+      "id": "keycult-no-1-65",
+      "brand": "Keycult",
+      "name": "No. 1/65",
+      "source": "https://keycult.com/products/no-1-65",
+      "description": "65% kit at an 8 degree typing angle, with a 6063 aluminium top, bottom and accent piece in an isolated gasket sandwich mount. The switch plate is a leaf spring design, seated on PTFE plate-alignment pins. The kit takes the VIA-compatible WT65-G solderable or WT65-H1 hot-swap PCB with a USB-C daughterboard designed by wilba.tech. Boxed contents are the chassis, plate, PCB, vibration-damping gaskets, bumpon feet, case screws, hex drivers and the alignment pins. Switches and keycaps are bought separately.",
+      "offers": [
+        {
+          "amount": 550,
+          "currency": "USD",
+          "kind": "kit",
+          "basis": "store-listing",
+          "availability": "available",
+          "configuration": "A-stock kit, in one of three colour combinations: anodized black and gold, rose gold and charcoal, or green and black",
+          "observedAt": "2026-09-09",
+          "source": "https://keycult.com/products/no-1-65"
+        },
+        {
+          "amount": 480,
+          "currency": "USD",
+          "kind": "kit",
+          "basis": "store-listing",
+          "availability": "available",
+          "configuration": "B-stock kit, same three colour combinations",
+          "observedAt": "2026-09-09",
+          "source": "https://keycult.com/products/no-1-65"
+        }
+      ],
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "Form factor and typing angle are published; case dimensions, weight and plate geometry are not."
+        ]
+      },
+      "notes": "The three colour combinations are one listing at one price, so they are recorded as configurations of a single model rather than separate boards. A-stock and B-stock are separate prices on that listing and are both recorded; the listing does not say what makes a unit B-stock beyond pointing at the maker's quality disclosure. A matching wrist rest and spare switch plates are sold as separate products and are not counted here."
+    },
+    {
+      "id": "keycult-no-2-65",
+      "brand": "Keycult",
+      "name": "No. 2/65",
+      "source": "https://keycult.com/products/no-2-65",
+      "description": "65% kit at an 8 degree typing angle, described by the maker as the first Keycult kit manufactured in-house at its workshop and finished in the USA. Three-part case with hidden-screw construction: powder-coated white top, matte silver anodized middle and an unfinished silver anodized bottom, in an isolated gasket sandwich mount. Silver anodized aluminium leaf spring switch plate on PTFE alignment pins. The kit takes the VIA-compatible WT65-G solderable or WT65-H1 hot-swap PCB with a USB-C daughterboard designed by wilba.tech, though this batch shipped with the solderable PCB only. Switches and keycaps are bought separately.",
+      "offers": [
+        {
+          "amount": 610,
+          "currency": "USD",
+          "kind": "kit",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "A-stock kit, in powder white with unfinished silver or matte anodized blue with unfinished silver",
+          "observedAt": "2026-09-09",
+          "source": "https://keycult.com/products/no-2-65"
+        },
+        {
+          "amount": 570,
+          "currency": "USD",
+          "kind": "kit",
+          "basis": "store-listing",
+          "availability": "sold-out",
+          "configuration": "B-stock kit, same two colour combinations",
+          "observedAt": "2026-09-09",
+          "source": "https://keycult.com/products/no-2-65"
+        }
+      ],
+      "geometry": {
+        "status": "unmodeled",
+        "evidence": [
+          "Form factor, typing angle and case construction are published; case dimensions, weight and plate geometry are not."
+        ]
+      },
+      "notes": "Every variant on the listing read as out of stock when observed. The maker sells these in batches by raffle and states the next draw date on the page, so the recorded price is what a winning entrant pays rather than a price anyone can pay on the day. Later revisions and colourways of the No. 2 are separate listings at other prices and are not recorded here."
     }
   ]
 }

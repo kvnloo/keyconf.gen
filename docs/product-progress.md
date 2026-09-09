@@ -1504,3 +1504,15 @@ the total still far short of the hundreds the contract asks for. The count on
 the page moved on its own because it is derived from the file, and
 `npm run verify:premium` now reports 9 ranked and 6 unpriced against the new
 data.
+
+## An eighth brand, read from the storefront's own product feed
+
+The search provider that had been supplying candidates for PREMIUM-1 hit its usage limit, which stopped the way brands were being found but not the way they were being admitted. Every entry in this catalog already has to link the maker's own listing as its evidence, so the listing itself was always the source; search was only the index. Storefronts running Shopify publish that same catalogue as JSON at `/products.json`, which is the shop's own feed rather than a third-party summary, so candidates were read from there instead.
+
+That read named Keycult, whose listings carry the sort of detail this catalog wants: the No. 1/65 and No. 2/65 each publish form factor, typing angle, case material, mount type, plate design and the specific PCBs they accept. Both are recorded as kits, since neither ships with switches or keycaps. Colour combinations stay configurations of one model, as the admission rules require; `admissionFaults` would reject them as separate boards, and it reports no faults on the file as it now stands.
+
+Two things on those listings are recorded rather than smoothed over. Both boards list an A-stock and a B-stock price, and the listing does not say what makes a unit B-stock beyond pointing at the maker's quality disclosure, so both prices are stored with that stated plainly and the higher one carries the ranking. Every No. 2/65 variant read as out of stock, and the page says the kit sells in batches by raffle, so its price is what a winning entrant pays rather than a price anyone can pay on the day; the entry says so.
+
+The catalog now holds 17 keyboards from 8 brands. Angry Miao still supplies 8 of the 17, so the skew this work set out to correct is smaller but not gone, and 17 is still not the hundreds the requirement asks for. Meletrix was read from the same kind of feed and left out: its product records carry empty descriptions and the specifications live in page scripts, so an entry would have been a price and a name with the detail invented around it.
+
+Verified: 262 unit tests pass, lint and type checking are clean, and `npm run verify:premium` pins the rendered order, configuration attribution, kit separation and accessibility in a browser against the data file.
