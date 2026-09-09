@@ -230,12 +230,30 @@ test('the public index lists live collections newest first and counts what survi
     note: '',
     publicationIds: [theirs.id],
   });
+  // Both were created in the same millisecond, which is not what recency
+  // ordering is about, so the timestamps are separated before it is asserted.
+  const createdAt = async (id, value) =>
+    db
+      .prepare('UPDATE community_collection SET created_at=? WHERE id=?')
+      .bind(value, id)
+      .run();
+  await createdAt(first.id, '2026-01-01T00:00:00.000Z');
+  await createdAt(second.id, '2026-01-02T00:00:00.000Z');
   const page = await listPublicCollections(db);
   assert.deepEqual(
     page.items.map((item) => item.id),
     [second.id, first.id],
     'newest collection comes first',
   );
+  // On a tie the order still has to be total, or paging could repeat or skip a
+  // collection, so it falls back to the id rather than to whatever came back.
+  await createdAt(second.id, '2026-01-01T00:00:00.000Z');
+  assert.deepEqual(
+    (await listPublicCollections(db)).items.map((item) => item.id),
+    [first.id, second.id].sort((left, right) => (left < right ? 1 : -1)),
+    'collections sharing a timestamp order by id, descending',
+  );
+  await createdAt(second.id, '2026-01-02T00:00:00.000Z');
   assert.equal(page.next, null);
   assert.equal(page.items[0].title, 'Loud boards');
   assert.equal(page.items[0].author.handle, 'bob_keys');
