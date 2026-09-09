@@ -15,7 +15,10 @@ const browser = await chromium.launch({
 // where the persistent-preview promise actually applies. 320 is the narrowest
 // phone worth supporting and shares a stylesheet block with 390, which is where
 // a horizontal overflow would surface first.
-const PHONES = [{ label: '390px', width: 390, height: 844 }];
+const PHONES = [
+  { label: '320px', width: 320, height: 568 },
+  { label: '390px', width: 390, height: 844 },
+];
 
 async function workbench({ label, width, height }) {
   const page = await browser.newPage({

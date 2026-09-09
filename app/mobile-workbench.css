@@ -328,3 +328,38 @@
     min-height: 250px;
   }
 }
+
+/* A 568px-tall phone spends 293px on the header and build bar before the
+   workbench is given anything, leaving the preview and the editor to fight over
+   276px they do not both fit in. On a screen this short the chrome gives up its
+   comfortable spacing rather than the preview giving up its floor. Taller
+   phones keep the roomier header, which is why this also tests the height. */
+@media (max-width: 700px) and (max-height: 700px) {
+  .studio-shell:has(.mobile-workbench) .studio-header.header {
+    padding-block: 4px;
+    gap: 2px 14px;
+  }
+
+  .studio-shell:has(.mobile-workbench) .studio-header .brand {
+    font-size: 22px;
+    gap: 10px;
+  }
+
+  .studio-shell:has(.mobile-workbench) .studio-header nav a {
+    min-height: 34px;
+  }
+
+  .studio-shell:has(.mobile-workbench) .studio-header nav {
+    gap: 22px;
+  }
+
+  .studio-shell:has(.mobile-workbench) .build-bar {
+    padding-block: 4px;
+    gap: 2px 12px;
+  }
+
+  .studio-shell:has(.mobile-workbench) .build-name input {
+    padding-block: 5px;
+    font-size: 14px;
+  }
+}

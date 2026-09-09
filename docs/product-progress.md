@@ -1281,9 +1281,18 @@ and rejected: it left 390px unchanged and moved 320px from 92px of overflow to
 104px, because the overflow is now inside the inspector rather than between it
 and the stage.
 
-So the real choice is which of three things gives: the preview floor, the
+So the real choice was which of three things gives: the preview floor, the
 inspector's chrome, or the 293px of header sitting above the workbench on a
-568px screen. That is a design decision about what a small phone shows, not a
-stylesheet tweak, so the width is recorded as a measured defect and left out of
-the guarded set rather than papered over with a lower threshold. The status row
-says so.
+568px screen. The header was the right one to take it from, because it was the
+only one whose cost was spacing rather than function. Under 700px of height the
+studio header and build bar drop their comfortable padding, the brand shrinks
+and the nav rows tighten, which returns 60px and takes the workbench from 276px
+to 336px — past the 319px the stage floor and the inspector chrome need. The
+preview keeps its 86px canvas and its 15.1%, and the editor keeps every control.
+
+The rule tests height as well as width, which is what makes it safe. 390x844
+measures byte-for-byte identical before and after, and every other narrow check
+in the suite runs at 800px of height or more, so none of them can match a rule
+that requires 700 or less. The fix was falsified before being believed: with the
+block reverted, 320x568 fails again at exactly the same place, the settle after
+a component swap, and with it restored all three widths pass.
