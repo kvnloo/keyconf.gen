@@ -33,6 +33,8 @@
     "public/monkeytype/**",
     "third_party/**",
     "pages-dist/**",
+    ".stryker-tmp/**",
+    "reports/**",
     "videos/keyconf-launch/assets/cinematic-stage.js"
   ],
   "rules": {

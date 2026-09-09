@@ -123,7 +123,11 @@ nav {
 }
 .stage {
   position: relative;
-  background: radial-gradient(ellipse at 45% 48%, var(--surface) 0, var(--surface) 85%);
+  background: radial-gradient(
+    ellipse at 45% 48%,
+    var(--surface) 0,
+    var(--surface) 85%
+  );
   min-height: 760px;
   overflow: hidden;
   display: flex;

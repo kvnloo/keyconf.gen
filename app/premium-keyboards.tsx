@@ -5,7 +5,9 @@ import data from '../data/premium-keyboards.json';
 
 export default function PremiumKeyboards() {
   const [query, setQuery] = useState('');
-  const [kindFilter, setKindFilter] = useState<'all' | 'complete' | 'kit'>('all');
+  const [kindFilter, setKindFilter] = useState<'all' | 'complete' | 'kit'>(
+    'all',
+  );
   const boards = data.boards;
 
   const filtered = useMemo(() => {
@@ -23,7 +25,10 @@ export default function PremiumKeyboards() {
   }, [boards, query, kindFilter]);
 
   return (
-    <section className="research-products" aria-label="Premium keyboard catalog">
+    <section
+      className="research-products"
+      aria-label="Premium keyboard catalog"
+    >
       <h3>Premium keyboard discovery</h3>
       <p className="muted">
         Source-backed product references for high-price keyboard boards, kits,
@@ -58,7 +63,7 @@ export default function PremiumKeyboards() {
       <div className="research-product-list">
         {filtered.map((board) => {
           const best = board.offers.reduce((a, b) =>
-            (b.amount > a.amount ? b : a),
+            b.amount > a.amount ? b : a,
           );
           return (
             <a
@@ -70,8 +75,7 @@ export default function PremiumKeyboards() {
               aria-label={`${board.brand} ${board.name}: ${best.amount} USD, ${best.availability}`}
             >
               <span className="catalog-brand">
-                {board.brand} ·{' '}
-                {best.kind === 'complete' ? 'Full' : 'Kit'}
+                {board.brand} · {best.kind === 'complete' ? 'Full' : 'Kit'}
               </span>
               <strong>
                 {board.name} <ArrowUpRight size={14} />

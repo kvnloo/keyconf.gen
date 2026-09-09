@@ -38,6 +38,8 @@ next-env.d.ts
 /work/
 
 /pages-dist/
+/.stryker-tmp/
+/reports/
 *.tsbuildinfo
 
 *.blend1

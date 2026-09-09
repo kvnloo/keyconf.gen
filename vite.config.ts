@@ -64,9 +64,9 @@ export default defineConfig(async () => {
       vinext(),
       sites(),
       cloudflare({
-        viteEnvironment: { name: 'rsc', childEnvironments: ['ssr'] },
+        viteEnvironment: { name: 'rsc' },
         config: localBindingConfig,
-      }),
+      } as import('@cloudflare/vite-plugin').PluginConfig),
     ],
   };
 });

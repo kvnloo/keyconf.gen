@@ -19,23 +19,27 @@ const offerArb = fc.record({
 
 test('comparableOffer returns the highest amount within scope', () => {
   fc.assert(
-    fc.property(
-      fc.array(offerArb, { maxLength: 10 }),
-      (offers) => {
-        const scope = { currency: 'USD', kind: 'complete', basis: 'store-listing' };
-        const filtered = offers.filter(
-          (o) => o.currency === 'USD' && o.kind === 'complete' && o.basis === 'store-listing',
-        );
-        const result = comparableOffer({ offers }, scope);
-        if (filtered.length === 0) {
-          assert.equal(result, null);
-          return;
-        }
-        assert.ok(result);
-        const max = Math.max(...filtered.map((o) => o.amount));
-        assert.equal(result.amount, max);
-      },
-    ),
+    fc.property(fc.array(offerArb, { maxLength: 10 }), (offers) => {
+      const scope = {
+        currency: 'USD',
+        kind: 'complete',
+        basis: 'store-listing',
+      };
+      const filtered = offers.filter(
+        (o) =>
+          o.currency === 'USD' &&
+          o.kind === 'complete' &&
+          o.basis === 'store-listing',
+      );
+      const result = comparableOffer({ offers }, scope);
+      if (filtered.length === 0) {
+        assert.equal(result, null);
+        return;
+      }
+      assert.ok(result);
+      const max = Math.max(...filtered.map((o) => o.amount));
+      assert.equal(result.amount, max);
+    }),
   );
 });
 
@@ -55,7 +59,11 @@ test('mostExpensiveFirst preserves all boards and never throws on empty input', 
         { maxLength: 20 },
       ),
       (boards) => {
-        const scope = { currency: 'USD', kind: 'complete', basis: 'store-listing' };
+        const scope = {
+          currency: 'USD',
+          kind: 'complete',
+          basis: 'store-listing',
+        };
         const ordered = mostExpensiveFirst(boards, scope);
         assert.equal(ordered.length, boards.length);
         const ids = new Set(boards.map((b) => b.id));
