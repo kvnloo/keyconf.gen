@@ -143,6 +143,19 @@ async function applyCadOverlay(
   root.userData.cadTwin = plan.twin;
 }
 
+export function modelIdFor(device: SceneOptions['device']) {
+  if (device.kind !== 'keyboard') return device.model;
+  if (device.hatsu) return 'keyboard-hatsu';
+  if (device.cyberboard) return 'keyboard-cyberboard-r2';
+  if (device.q1Max) return 'keyboard-q1-max';
+  return `keyboard-${device.layout}`;
+}
+export function sourceGlb(modelId: string) {
+  if (modelId === 'keyboard-hatsu') return 'keyboard-60.glb';
+  if (modelId === 'keyboard-q1-max' || modelId === 'keyboard-cyberboard-r2')
+    return 'keyboard-75.glb';
+  return `${modelId}.glb`;
+}
 export function createKeyboardScene(
   element: HTMLElement,
   initial: SceneOptions,
@@ -450,19 +463,6 @@ export function createKeyboardScene(
       cameraTarget.clone().sub(target).normalize().multiplyScalar(extra),
     );
     controls.maxDistance = Math.max(46, cameraTarget.distanceTo(target) * 1.15);
-  }
-  function modelIdFor(device: SceneOptions['device']) {
-    if (device.kind !== 'keyboard') return device.model;
-    if (device.hatsu) return 'keyboard-hatsu';
-    if (device.cyberboard) return 'keyboard-cyberboard-r2';
-    if (device.q1Max) return 'keyboard-q1-max';
-    return `keyboard-${device.layout}`;
-  }
-  function sourceGlb(modelId: string) {
-    if (modelId === 'keyboard-hatsu') return 'keyboard-60.glb';
-    if (modelId === 'keyboard-q1-max' || modelId === 'keyboard-cyberboard-r2')
-      return 'keyboard-75.glb';
-    return `${modelId}.glb`;
   }
   function updateAccessories() {
     const hadExternal = !!(

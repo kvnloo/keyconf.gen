@@ -2,6 +2,21 @@ import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+const run = promisify(execFile);
+// A sized WebGL canvas can still be blank, so the isolated layer is
+// measured for pixel variation rather than trusted to have drawn.
+async function drawnVariation(locator, file) {
+  await locator.screenshot({ path: file });
+  const { stdout } = await run('magick', [
+    file,
+    '-format',
+    '%[fx:standard_deviation]',
+    'info:',
+  ]);
+  return Number(stdout.trim());
+}
 const base = process.env.KEYCONF_BASE_URL ?? 'http://localhost:3000/';
 const evidence = 'work/switch-evidence';
 await mkdir(evidence, { recursive: true });
@@ -217,6 +232,8 @@ try {
   await page.waitForFunction(
     () => document.querySelector('.scene-host')?.dataset.renderState === 'idle',
   );
+  // The 60% board carries 61 keycaps, one plate, one pcb and six case solids.
+  const isolatedNodes = { Keycaps: 61, Plate: 1, PCB: 1, Case: 6 };
   for (const label of ['Keycaps', 'Plate', 'PCB', 'Case']) {
     const trigger = page
       .getByRole('navigation', { name: 'Exploded keyboard layers' })
@@ -224,6 +241,22 @@ try {
     await trigger.click();
     const dialog = page.getByRole('dialog');
     await dialog.waitFor();
+    const isolated = dialog.locator('.layer-canvas');
+    await page.waitForFunction(
+      () =>
+        document.querySelector('.layer-inspector .layer-canvas')?.dataset
+          .layerStatus === 'ready',
+    );
+    assert.equal(
+      await isolated.getAttribute('data-layer-nodes'),
+      String(isolatedNodes[label]),
+      `${label} isolated the wrong number of nodes`,
+    );
+    const drawn = await drawnVariation(
+      isolated,
+      `${evidence}/isolated-${label.toLowerCase()}.png`,
+    );
+    assert.ok(drawn > 0.01, `${label} isolated view looks blank (${drawn})`);
     assert.equal(
       await dialog.getByRole('link', { name: 'View source evidence' }).count(),
       1,
@@ -236,7 +269,7 @@ try {
     assert.equal(await selection(), 'oil-king');
   }
   report.flows.push(
-    'all exploded layers open source details, Escape returns focus, and inspection preserves selection',
+    'all exploded layers open source details and an isolated 3D view of that layer alone, Escape returns focus, and inspection preserves selection',
   );
   const count = Number(
     await page.locator('.scene-host').getAttribute('data-switch-count'),

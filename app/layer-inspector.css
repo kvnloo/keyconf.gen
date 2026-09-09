@@ -45,3 +45,30 @@
 .exploded-layer-guide > .layer-inspector:not([open]) {
   display: none;
 }
+.layer-inspector .layer-canvas {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin: 0 0 8px;
+  border: 1px solid #3b4a3f;
+  border-radius: 14px;
+  background: #101a15;
+  overflow: hidden;
+}
+.layer-inspector .layer-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+.layer-inspector .layer-status {
+  display: block;
+  margin: 0 0 16px;
+  color: #b9c4b5;
+  font-size: 13px;
+}
+.layer-inspector .layer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}

@@ -1185,6 +1185,8 @@ function KeyboardStudio({
                 >
                   <LayerInspector
                     label="Keycaps"
+                    layer="keycaps"
+                    appearance={options}
                     part={parts.find(
                       (part) =>
                         part.category === 'keycaps' &&
@@ -1198,6 +1200,8 @@ function KeyboardStudio({
                   </a>
                   <LayerInspector
                     label="Plate"
+                    layer="plate"
+                    appearance={options}
                     part={parts.find(
                       (part) =>
                         part.category === 'plate' &&
@@ -1206,6 +1210,8 @@ function KeyboardStudio({
                   />
                   <LayerInspector
                     label="PCB"
+                    layer="pcb"
+                    appearance={options}
                     part={parts.find(
                       (part) =>
                         part.category === 'pcb' &&
@@ -1214,6 +1220,8 @@ function KeyboardStudio({
                   />
                   <LayerInspector
                     label="Case"
+                    layer="case"
+                    appearance={options}
                     part={parts.find(
                       (part) =>
                         part.category === 'case' &&

@@ -1155,3 +1155,46 @@ What was actually missing sat at the other end, on the page a visitor reads. The
 Collections remain unimplemented, and the status now says so rather than leaving "Drops and collections" to imply both. A creator can publish one curated drop; there is no way to group several into a named collection, and nothing in the codebase pretends otherwise.
 
 One correction to the record. The commit message for 555ddd7 credits the CAD knob's normals and material inheritance to "the other writer in this shared checkout". There was no other writer. I made those changes myself in the preceding step, through two patch scripts I wrote and then deleted during cleanup, and I misread their freshness as evidence of a second agent. `hub` reports no peers, every commit touching `scripts/cad_twin.py` is mine in an unbroken reflog, and the code matches those scripts. The commit message is wrong and stays wrong, because rewriting a pushed history to fix a sentence costs more than the sentence is worth; this note is the correction.
+
+## A layer you can actually look at
+
+Opening a layer from the exploded view used to give you words about a part and
+nothing to look at. The identity, evidence and source link were all there, and
+browser checks already held Escape, focus return and unchanged selection, but
+the row promised a focused inspection and delivered a text panel. That was the
+last open item on PART-2A.
+
+Each layer now opens with that layer on its own in 3D: the keycap field, the
+plate, the PCB, and the case, which is six separate solids in the source model
+rather than one node named "case". The view takes the build's own case colour,
+finish and keycap palette, so what you inspect matches what you just left,
+including the way Polycarbonate turns the case translucent. Switches keep
+opening the focused switch page they already had.
+
+Two details are worth recording. The studio keeps one shared model per
+keyboard and hands the same object to every caller, so this view loads its own
+copy of the asset; isolating a layer by deleting the others out of the shared
+model would have emptied the board still on screen behind the dialog. And the
+canvas only exists while the dialog is open, so a closed inspection holds no
+WebGL context. Framing follows each layer's own bounding radius, because a
+plate and a PCB are nearly flat and a distance tuned to the keycap field would
+put them off screen.
+
+The asset rule that turns a build into a file name now lives in one place and
+is exported, so the isolated view and the board cannot drift onto different
+models. Four tests read the shipped GLBs and assert that every root node
+belongs to exactly one inspected layer, which is what would catch a future
+asset gaining a part that no inspection shows.
+
+Verification measures the picture rather than trusting it. A sized WebGL canvas
+can still be blank, so `verify:switches` screenshots each isolated view and
+requires real pixel variation; the four come in between 0.11 and 0.23 standard
+deviation against a threshold of 0.01, and they differ from each other, with
+the plate and the PCB closest as two flat boards should be. Node counts are
+pinned exactly at 61 keycaps, one plate, one PCB and six case solids on the 60%
+board. 240 tests, type checking, lint and formatting pass, and the run reports
+no accessibility violations at 1440, 390 and 320 and no page errors.
+
+One caution carried over from the panel: this is the illustrative studio
+geometry, not manufacturer CAD. Isolating a part makes it easier to study and
+does not make it more accurate, and the copy in the dialog still says so.
