@@ -12,6 +12,12 @@ A keyboard configurator built with React, Three.js, and original Blender geometr
 
 The active [product goal](docs/product-goal.md) defines release acceptance criteria. [Product progress](docs/product-progress.md) records verified work and remaining gaps.
 
+## Keyboard asset licensing
+
+The original keyboard models, Blender source and generation script are **not licensed for general reuse**. A purchased Keyconf keyboard asset license is required to use them in your own personal or commercial projects. The license supplied with your purchase defines permitted use.
+
+You can use the official configurator for free. Public GitHub access does not grant general asset reuse rights. GitHub's viewing and forking permissions remain unaffected. See [Keyboard asset terms](KEYBOARD-ASSET-LICENSE.md) for the exact files, preview permissions and exclusions. Third-party components retain their existing licenses.
+
 ## Development
 
 Node 22.18+ is required.
