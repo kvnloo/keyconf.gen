@@ -597,7 +597,6 @@ run. Full CI for that run passed. Version 17 from `82daccb` adds release titles 
 creator publishing UI remain unfinished, so visitors cannot yet publish their
 own releases through the site.
 
-
 ## Community implementation reconciliation
 
 The architecture now matches the deployed immutable snapshot model, public
@@ -617,7 +616,6 @@ publication link without trying to import retired parts. Feedback remains an
 explicit copy action, not a submitted account comment. The publication browser
 check covers denied-clipboard recovery, exact archived link retention, unchanged
 local storage, phone overflow and accessibility with the feedback panel open.
-
 
 ## Complete saved-build traversal
 
@@ -653,7 +651,6 @@ underlying identity when it is the only difference. A regression test first
 reproduced the missed imported-part change, then passed after the correction;
 all four comparison tests, type checking and lint passed.
 
-
 ## Revocable proposal storage
 
 The additive `0005_client_proposals.sql` migration adds owned proposals with an
@@ -673,7 +670,6 @@ No account endpoint or proposal page is exposed. Google integration, token
 rotation, owner lists, client response storage and the complete two-person
 proposal experience remain unfinished.
 
-
 ## Creator proposal library storage
 
 Owner proposal lists now return 25-item pages containing only title, ID, creation
@@ -687,7 +683,6 @@ across tied timestamps, verifies ownership and closed-item retention, rejects
 invalid cursors, and confirms index use after deliberately damaging the base
 snapshot. This is internal storage; the creator's account interface is still
 unimplemented.
-
 
 ## Replaceable proposal links
 
@@ -704,7 +699,6 @@ when the parent update fails, closing before a pending batch, and preservation
 of existing links through migration. A separate read-only review found no
 concrete blocker. Account routes, rotation controls and client responses remain
 unimplemented; this is storage preparation, not a shipped account workflow.
-
 
 ## Client response storage
 
@@ -786,7 +780,6 @@ only Node's test registrations as runner-managed promises in test files; other
 floating promises remain errors. The query recorder has an explicit string-array
 type so index checks retain precise SQL values.
 
-
 ## September 6, 2026: shared comparison evidence and maker links
 
 Shared publication and proposal comparisons now use the original saved product, accessory and recording names while that original is being previewed. A locally edited variation uses current catalog details. The comparison explains this distinction and provides separate clickable original-maker links for both builds, including accessories. Source URL changes remain visible even when product labels match.
@@ -794,7 +787,6 @@ Shared publication and proposal comparisons now use the original saved product, 
 Validation: 161 unit tests passed, strict TypeScript, lint and formatting passed. The real local browser feedback journey passed, including two maker links for a changed case, mobile overflow, accessibility, unchanged local storage, malformed file recovery and sound/variation controls. GitHub run 34070756706 for the preceding version 27 release finished successfully. This comparison increment is not yet published to Sites.
 
 Still outstanding: clearer before/after review for inline changes, creator-facing proposal creation and authenticated client response submission. Google setup remains deferred by the user.
-
 
 ## September 6, 2026: current-build feedback confirmations
 
@@ -804,7 +796,6 @@ Feedback receipts and manual-copy messages now belong to the exact build, notes 
 
 Local browser coverage exercises delayed clipboard completion after note edits, fallback-message removal after a build change, and preserved notes. The initial journey, type check, lint and formatting passed. The strengthened delayed-completion browser assertion and production build also passed. This feedback increment is committed for nightly but not yet deployed to Sites.
 
-
 ## September 6, 2026: compatibility beside preview controls
 
 Shared preview adjustments now expose known incompatibilities beside the switch selector, including the reason and original documentation link. Unknown checks remain explicitly unconfirmed, rather than being presented as a pass. The summary consumes the same checks as the detailed compatibility section, preserving saved creator evidence until a variation is made.
@@ -813,7 +804,6 @@ The real browser journey selected Gateron Magnetic Jade for the default contact 
 
 The preceding feedback confirmation fix is live as Sites version 29, source d25780a; deployment appgdep_6a9e0e05998c8191b3d99f0fdfa11637 succeeded. Its GitHub run 34071806886 was still running at the latest inspection.
 
-
 ## September 6, 2026: before/after variation review
 
 Try changes now includes a collapsed review with original and variation values, clickable maker links for changed parts, and color swatches beside hex values. The existing file comparison uses the same rendering component. The original side uses creator snapshot evidence where present; rows are restricted to actual client setting changes, so catalog description updates alone do not become client edits.
@@ -821,7 +811,6 @@ Try changes now includes a collapsed review with original and variation values, 
 The full local feedback/browser journey passed with the review expanded: changed switch values, original and replacement source links, mobile overflow, reset, feedback copying, storage isolation and accessibility. Types, lint and formatting passed. A targeted visual check covers the later-added color swatches. The production build completed before that final swatch polish and must be rebuilt before publication.
 
 The compatibility-control update is live as Sites version 30, source eec87c1; deployment appgdep_6a9e0f9d1e288191b3958b813476902b succeeded. Full creator account and response submission controls remain unfinished; Google setup is still deferred.
-
 
 ## September 6, 2026: visible unmounted electronics
 
@@ -833,7 +822,6 @@ Validation: 162 unit tests passed, strict types, lint and formatting passed. The
 
 The before/after review release is live as Sites version 31, source 3b7bf5f. Deployment appgdep_6a9e1176ed60819191f84134dd4457e7 succeeded and GitHub run 34072579000 passed.
 
-
 ## September 6, 2026: editable accessory quantities
 
 Non-artisan accessory cards now expose quantities from 1 to 100. Enter or leaving the field commits a valid whole number. Invalid or blank values restore the previous quantity with an explanation; Escape cancels. A quantity edit uses the existing build history and persistence path. The scene remains one illustration per selection and never creates geometry proportional to quantity.
@@ -841,7 +829,6 @@ Non-artisan accessory cards now expose quantities from 1 to 100. Enter or leavin
 The local browser journey passed: edit to three, reject 101 and blank, cancel eight, share-link quantity, reload persistence, source/placement checks and three viewport widths. Types, lint and formatting passed. This increment has not yet been published.
 
 The parts-tray release is live as Sites version 32 from 7834a3a; deployment appgdep_6a9e143e5c608191b613d29d557b6326 succeeded.
-
 
 ## September 6, 2026: actionable artisan preview placement
 
@@ -852,7 +839,6 @@ The existing parser already rejects multiple artisan units on one key. An initia
 Validation: the full suite passed at 163 tests during implementation; the final focused placement test, strict types, lint, formatting and complete accessory browser journey passed after removing the unreachable quantity branch. Browser coverage includes the wrong-width repair and existing quantity, source, share, reload, removal and responsive paths. This increment is not deployed yet.
 
 Quantity controls are live as Sites version 33, source a65776c. Deployment appgdep_6a9e157468f48191b2e65cd4497f2fed succeeded. The preceding tray release CI 34073198794 passed.
-
 
 ## September 6, 2026: imported accessory reference boundary
 
@@ -1031,7 +1017,7 @@ Verified: 235 tests, type checking, lint and formatting pass, including new cove
 ## September 9, 2026: switch study dimensions and normal-motion framing
 
 Reviewed the focused switch page against its source, which is the gap PART-2
-recorded on September 7. The study was MX-*style* rather than MX-dimensioned:
+recorded on September 7. The study was MX-_style_ rather than MX-dimensioned:
 its housing measured 12.19 mm against a published 15.6 mm, and its cross stem
 5.72 mm against a published 4.1 mm, so the part a reader inspects most closely
 was 40% oversized. The geometry is now built from the Cherry MX Series
@@ -1204,6 +1190,7 @@ no accessibility violations at 1440, 390 and 320 and no page errors.
 One caution carried over from the panel: this is the illustrative studio
 geometry, not manufacturer CAD. Isolating a part makes it easier to study and
 does not make it more accurate, and the copy in the dialog still says so.
+
 ## Ordering premium boards by a price that says what it is for
 
 The premium list had a sorting foundation nobody called. `mostExpensiveFirst`
@@ -1251,6 +1238,7 @@ Coverage is the honest limit. All nine boards are USD full-board store listings,
 so the cross-currency guard and the kit ordering are implemented and unit-tested
 but have no real data exercising them, the Kit view is legitimately empty, and
 every price is a single observation from one day rather than a tracked history.
+
 ## What 320px says that 390px could not
 
 The mobile check only ever ran at one width, so extending it meant deciding
@@ -1516,3 +1504,24 @@ Two things on those listings are recorded rather than smoothed over. Both boards
 The catalog now holds 17 keyboards from 8 brands. Angry Miao still supplies 8 of the 17, so the skew this work set out to correct is smaller but not gone, and 17 is still not the hundreds the requirement asks for. Meletrix was read from the same kind of feed and left out: its product records carry empty descriptions and the specifications live in page scripts, so an entry would have been a price and a name with the detail invented around it.
 
 Verified: 262 unit tests pass, lint and type checking are clean, and `npm run verify:premium` pins the rendered order, configuration attribution, kit separation and accessibility in a browser against the data file.
+
+## November 22, 2026: the landing becomes a lit studio with liquid-glass chrome
+
+The landing now shows a front-facing studio modelled on Meng To's Studio Glass demo, in place of the top-down desk. A teal wall, a window on the left with a half-lowered blind, a forest outside and diagonal light shafts frame the keyboard, which sits on a walnut desk. A studio display, a mushroom lamp and books stand around it. A draggable "Studio lighting" glass panel switches between Morning, Afternoon, Sunset, Thunderstorm and Night, and has a 0–100 brightness slider. Each preset moves the sun direction, colour and intensity, the sky fill, ambient light, exposure, the lamp, the monitor wallpaper, the window tint and the shaft density together over about 1.2 s. Under reduced motion the change is instant. Thunderstorm adds rain on the glass and occasional soft lightning, with no lightning under reduced motion. The choice persists in localStorage, and `window.__studio` exposes `setPreset`, `setBrightness` and `state` for tests. The header, search, Music, Import, gallery cards, parts panel, toolbar and exploded layer guide are restyled as glass on the landing. Studio and workbench screens keep their default chrome.
+
+Verified in this pass:
+
+- Rendered screenshots of every preset at 1440×900 and 390×844, brightness low and high, a tile mid-press, the panel dragged, Top view, Explode, Focus and the phone workbench, with 0 page errors.
+- The software-GL path reports quality `efficient` with visible striped shafts and no errors.
+- `npm run verify:room` now also checks that a preset changes the rendered pixels, that brightness raises exposure, that both survive a reload, and that reduced motion applies a preset with no transition. The window-garden texture wait was dropped because the room no longer loads it.
+- `verify:theme`, `verify:mobile` (no document scroll), `verify:interface`, `verify:typing`, 266 unit tests, lint, type checking and the Pages build all pass.
+- Glass text contrast is unit-tested with WCAG ratios (white 6.1:1, secondary 4.7:1 at worst). The tests run against the brightest and darkest backdrops measured inside every glass element's box across all presets, at brightness 0 and 100.
+- In a headed Chrome for Testing window on this Mac (Metal, full quality, 1440×900), the scene rendered about 61–62 frames per second during preset transitions at device pixel ratios 1 and 2. Headless Chrome caps animation frames at about 14 per second even on a blank page, so headless numbers are not meaningful.
+
+Not verified or known gaps:
+
+- Desk objects other than the keyboard are not interactive.
+- The real-time glass is checked against sampled extremes, not every pixel of every possible camera orbit.
+- The existing `contrastRatio` in `lib/theme.ts` leaves out WCAG's 0.05 flare term, so it overstates contrast on dark colours. Correcting it fails existing palette chrome checks, so only the new glass checks use the corrected `wcagContrast`. The palette check still needs fixing.
+- No screen-reader pass was made on the new panel beyond its native buttons with `aria-pressed` and a native range input.
+- No real phone or Safari device was tested. Phone shots are Chrome emulation.
