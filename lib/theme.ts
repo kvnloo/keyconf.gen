@@ -190,6 +190,26 @@ export function glassContrast() {
   };
 }
 
+/**
+ * The glass chrome's surface token: the build's palette surface tinted toward
+ * smoked glass, so choosing a build still re-themes the page, then darkened
+ * until glass ink and muted text keep MIN_UI_CONTRAST on it.
+ */
+export function glassSurface(paletteSurface: string) {
+  let surface = blendColor(paletteSurface, GLASS.tint, 0.55);
+  for (
+    let i = 0;
+    i < 12 &&
+    Math.min(
+      wcagContrast(GLASS.ink, surface),
+      wcagContrast(GLASS.muted, surface),
+    ) < MIN_UI_CONTRAST;
+    i++
+  )
+    surface = blendColor(surface, GLASS.tint, 0.7);
+  return surface;
+}
+
 export type PaletteThemeOptions = {
   /**
    * Sync UI chrome tokens (--surface, --ink, …). `true` derives them from the
@@ -216,7 +236,10 @@ export function applyPaletteTheme(
   target.documentElement.style.setProperty('--palette-space', paletteSpace);
   if (syncChrome === 'glass') {
     const worst = glassComposite(GLASS.brightestBlurred);
-    target.documentElement.style.setProperty('--surface', worst);
+    target.documentElement.style.setProperty(
+      '--surface',
+      glassSurface(uiSurface),
+    );
     target.documentElement.style.setProperty('--paper', DEFAULT_CHROME.paper);
     target.documentElement.style.setProperty('--ink', GLASS.ink);
     target.documentElement.style.setProperty('--muted', GLASS.muted);

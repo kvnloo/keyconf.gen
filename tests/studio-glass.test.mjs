@@ -6,6 +6,8 @@ import {
   wcagContrast as contrastRatio,
   glassComposite,
   glassContrast,
+  glassSurface,
+  computeTheme,
   lensComposite,
 } from '../lib/theme.ts';
 import {
@@ -31,6 +33,35 @@ test('glass ink and muted text pass over the brightest and darkest room', () => 
   for (const backdrop of [GLASS.brightestSharp, GLASS.darkest]) {
     assert.ok(
       contrastRatio(GLASS.muted, lensComposite(backdrop)) >= MIN_UI_CONTRAST,
+    );
+  }
+});
+
+test('glass surface follows the build palette and keeps glass text readable', () => {
+  const spaces = [
+    '#2f4a3a',
+    '#565d5f',
+    '#d8c7a8',
+    '#f2f2f2',
+    '#101010',
+    '#7a2e8f',
+  ];
+  const surfaces = spaces.map((space) =>
+    glassSurface(
+      computeTheme({
+        alpha: '#ffffff',
+        mod: '#999999',
+        accent: '#88cc88',
+        space,
+      }).uiSurface,
+    ),
+  );
+  assert.equal(new Set(surfaces).size, spaces.length, surfaces.join(' '));
+  for (const s of surfaces) {
+    assert.ok(contrastRatio(GLASS.ink, s) >= MIN_UI_CONTRAST, `ink on ${s}`);
+    assert.ok(
+      contrastRatio(GLASS.muted, s) >= MIN_UI_CONTRAST,
+      `muted on ${s}`,
     );
   }
 });
