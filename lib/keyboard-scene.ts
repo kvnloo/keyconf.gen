@@ -11,7 +11,15 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import type { Build, Palette } from './build';
 import { legendInk } from './appearance';
-import { createDeskScene } from './desk-scene';
+import { blindOpening, createDeskScene } from './desk-scene';
+import { createShaftPass } from './shaft-pass';
+import { createGlassPass } from './glass-pass';
+import { glassRegistry } from './glass-registry';
+import {
+  exposeStudioHook,
+  studioLighting,
+  studioReport,
+} from './studio-lighting';
 import { createSwitchAssembly, switchColors } from './switch-model';
 import { monitorTransform, type ScreenPoint } from './monitor-projection';
 import { createAccessoryPreview } from './accessory-model';
@@ -51,6 +59,8 @@ export type SceneOptions = Pick<Build, 'caseColor' | 'finish' | 'profile'> &
     view: string;
     environment: 'desk' | 'studio' | 'typing';
     roomMotion?: boolean;
+    /** Focus mode on the landing: frame the keyboard instead of the room. */
+    closeUp?: boolean;
     accessories?: readonly AccessorySelection[];
     customAccessories?: Build['customAccessories'];
   };
@@ -178,6 +188,7 @@ export function createKeyboardScene(
   let focusDepth = 0;
   let ambientTime = 0;
   let assembledDistance = 11;
+  let framedAspect = 0;
   const models = new Map<string, Promise<THREE.Group>>();
   const loaded = new Set<THREE.Group>();
   const keys = new Map<string, THREE.Object3D>();
@@ -252,7 +263,8 @@ export function createKeyboardScene(
   scene.add(light);
   const fill = new THREE.DirectionalLight('#ffffff', 0.8);
   fill.position.set(8, 5, -5);
-  scene.add(fill, new THREE.AmbientLight('#ffffff', 0.25));
+  const ambientLight = new THREE.AmbientLight('#ffffff', 0.25);
+  scene.add(fill, ambientLight);
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(200, 200),
     new THREE.ShadowMaterial({ color: '#524c3c', opacity: 0.22 }),
@@ -261,11 +273,24 @@ export function createKeyboardScene(
   ground.position.y = -0.22;
   ground.receiveShadow = true;
   scene.add(ground);
-  const desk = createDeskScene(() => {
+  const desk = createDeskScene(
+    () => {
+      deskCacheDirty = true;
+      wake();
+    },
+    { software },
+  );
+  scene.add(desk.group);
+  desk.setShaftMode(software ? 'geometry' : 'raymarch');
+  exposeStudioHook();
+  studioReport.quality = software ? 'efficient' : 'full';
+  studioReport.shafts = software ? 'geometry' : 'raymarch';
+  studioReport.glass = software ? 'css' : 'webgl';
+  const unsubscribeLighting = studioLighting.subscribe((state) => {
+    desk.setLighting(state, reduced);
     deskCacheDirty = true;
     wake();
   });
-  scene.add(desk.group);
   const effects = software
     ? null
     : (() => {
@@ -284,14 +309,21 @@ export function createKeyboardScene(
         });
         occlusion.blendIntensity = 0.7;
         composer.addPass(occlusion);
+        const shafts = createShaftPass(occlusion.depthTexture);
+        composer.addPass(shafts);
         const output = new OutputPass();
         composer.addPass(output);
-        return { composer, occlusion, output };
+        return { composer, occlusion, shafts, output };
       })();
   const deskCache = software
     ? new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType })
     : null;
+  // Software GL keeps the CSS glass fallback; copying and re-shading the frame
+  // for every panel would cost more than the room itself there.
+  const glass = software ? null : createGlassPass(renderer);
+  const glassHost = { wake: () => wake(), enabled: !!glass };
   let deskCacheDirty = true;
+  desk.setLighting(studioLighting.get(), true);
   const grain = new Uint8Array(128 * 128 * 4);
   for (let i = 0; i < grain.length; i += 4) {
     const value = 150 + Math.floor(Math.random() * 80);
@@ -330,11 +362,18 @@ export function createKeyboardScene(
     light.color.set(
       lighting === 'Daylight' || desk.group.visible ? '#fff1db' : '#ffffff',
     );
-    light.intensity =
-      lighting === 'After hours' ? 0.7 : desk.group.visible ? 0.9 : 2.2;
-    fill.intensity = lighting === 'After hours' ? 0.3 : 0.8;
+    // In the room the window sun, sky and lamp light the keyboard; the studio
+    // rig only serves the plain configurator backdrop.
+    const room = desk.group.visible;
+    light.intensity = room ? 0 : lighting === 'After hours' ? 0.7 : 2.2;
+    light.castShadow = !room;
+    fill.intensity = room ? 0 : lighting === 'After hours' ? 0.3 : 0.8;
+    ambientLight.intensity = room ? 0 : 0.25;
     scene.environmentIntensity =
-      lighting === 'After hours' ? 0.35 : desk.group.visible ? 0.72 : 0.7;
+      lighting === 'After hours' ? 0.35 : room ? desk.light.environment : 0.7;
+    glassRegistry.attach(
+      room && options.environment === 'desk' ? glassHost : null,
+    );
     const colors = new Map([
       ['case', options.caseColor],
       ['alpha', options.alpha],
@@ -426,8 +465,45 @@ export function createKeyboardScene(
               ? new THREE.Vector3(-7, 25, 18)
               : new THREE.Vector3(-7, 18, 21);
     cameraTarget.multiplyScalar(distance);
+    const roomView =
+      options.environment === 'desk' &&
+      !options.closeUp &&
+      (options.view === 'perspective' || options.view === 'reset');
+    controls.maxDistance = options.environment === 'desk' ? 95 : 46;
+    controls.minAzimuthAngle =
+      options.environment === 'desk' ? -0.85 : -Infinity;
+    controls.maxAzimuthAngle = options.environment === 'desk' ? 0.85 : Infinity;
+    if (roomView) {
+      const framing = roomFraming(deck);
+      cameraTarget = framing.position;
+      focusX = framing.target.x;
+      focusHeight = framing.target.y;
+      focusDepth = framing.target.z;
+    }
+    framedAspect = camera.aspect;
     fitAccessories();
     wake();
+  }
+  /**
+   * The landing's room composition: seated eye height, looking at the back
+   * wall slightly left of centre so the window and its shafts sit at the left
+   * and the keyboard reads in the lower middle. Narrow screens move in until
+   * the keyboard fills the width, keeping the window at the top left.
+   */
+  function roomFraming(deck: boolean) {
+    const t = THREE.MathUtils.smoothstep(camera.aspect, 0.75, 1.45);
+    const position = new THREE.Vector3().lerpVectors(
+      new THREE.Vector3(1.2, 12.5, 19.5),
+      new THREE.Vector3(7.5, 22, 55),
+      t,
+    );
+    const target = new THREE.Vector3().lerpVectors(
+      new THREE.Vector3(-0.4, 3.4, -3),
+      new THREE.Vector3(1.5, 10, -6),
+      t,
+    );
+    if (deck) position.sub(target).multiplyScalar(0.7).add(target);
+    return { position, target };
   }
   function accessoryCorners() {
     if (!(accessories?.counts.external || accessories?.counts.planned))
@@ -683,7 +759,34 @@ export function createKeyboardScene(
       !reduced &&
       !(software && options.environment === 'typing');
     if (ambient) ambientTime += delta;
-    if (desk.group.visible) desk.updateAmbient(ambientTime, camera);
+    if (desk.group.visible) {
+      desk.updateAmbient(ambientTime, camera);
+      if (desk.step(delta, ambient, reduced)) {
+        moving = true;
+        deskCacheDirty = true;
+      }
+      renderer.toneMappingExposure =
+        desk.light.exposure * desk.gain * (1 + desk.flash * 0.25);
+      scene.environmentIntensity = desk.light.environment;
+    } else renderer.toneMappingExposure = 1;
+    studioReport.transition = desk.progress;
+    studioReport.exposure = renderer.toneMappingExposure;
+    if (effects) {
+      const shafts = effects.shafts.uniforms;
+      shafts.invProjection.value.copy(camera.projectionMatrixInverse);
+      shafts.cameraWorld.value.copy(camera.matrixWorld);
+      shafts.travel.value.copy(desk.travel);
+      shafts.shaftColor.value.copy(desk.light.shaftColor);
+      shafts.density.value = desk.group.visible
+        ? desk.light.shaftDensity * desk.light.sunIntensity
+        : 0;
+      shafts.opening.value = blindOpening(
+        desk.light.blindTilt,
+        desk.light.sunElevation,
+      );
+      shafts.time.value = ambientTime;
+      effects.shafts.enabled = desk.group.visible;
+    }
     if (deskCache && options.environment === 'typing') {
       if (deskCacheDirty) {
         if (model) model.visible = false;
@@ -704,6 +807,22 @@ export function createKeyboardScene(
       ground.visible = false;
     } else if (desk.group.visible && effects) effects.composer.render(delta);
     else renderer.render(scene, camera);
+    studioReport.lenses = 0;
+    if (
+      glass &&
+      desk.group.visible &&
+      options.environment === 'desk' &&
+      glassRegistry.entries().size
+    ) {
+      const drawn = glass.draw(
+        renderer.domElement,
+        glassRegistry.entries(),
+        delta,
+        reduced,
+      );
+      studioReport.lenses = drawn.count;
+      if (drawn.animating) moving = true;
+    }
     projectMonitor();
     if (moving || orbiting) wake();
     else if (ambient)
@@ -907,10 +1026,12 @@ export function createKeyboardScene(
       Math.round(height * 0.75),
     );
     camera.aspect = aspect;
+    // The room reads through a slightly wider lens than the studio close-up.
+    const lens = options.environment === 'desk' && !options.closeUp ? 40 : 34;
     camera.fov = THREE.MathUtils.radToDeg(
       2 *
         Math.atan(
-          Math.tan(THREE.MathUtils.degToRad(34) / 2) *
+          Math.tan(THREE.MathUtils.degToRad(lens) / 2) *
             Math.max(1, 1.5 / aspect),
         ),
     );
@@ -929,6 +1050,16 @@ export function createKeyboardScene(
       cameraTarget = null;
     } else {
       camera.updateProjectionMatrix();
+      if (
+        options.environment === 'desk' &&
+        framedAspect &&
+        Math.abs(Math.log(aspect / framedAspect)) > 0.15
+      ) {
+        framedAspect = aspect;
+        window.setTimeout(() => {
+          if (!stopped) setView();
+        });
+      }
       if (accessories?.counts.external || accessories?.counts.planned) {
         cameraTarget ??= camera.position.clone();
         fitAccessories();
@@ -996,6 +1127,8 @@ export function createKeyboardScene(
   window.addEventListener('pointerup', pointerup);
   window.addEventListener('pointercancel', pointerup);
   window.addEventListener('keyconf-demo', demo);
+  // Glass lenses follow their DOM boxes, so a scrolled page needs a fresh frame.
+  window.addEventListener('scroll', wake, { passive: true });
   document.addEventListener('visibilitychange', visibility);
   preference.addEventListener('change', motion);
   renderer.domElement.addEventListener('pointerdown', pointerdown);
@@ -1012,7 +1145,8 @@ export function createKeyboardScene(
       const viewChanged =
         next.view !== options.view ||
         modelChanged ||
-        next.environment !== options.environment;
+        next.environment !== options.environment ||
+        next.closeUp !== options.closeUp;
       const assemblyChanged = next.exploded !== options.exploded;
       const accessoriesChanged =
         JSON.stringify(next.accessories) !==
@@ -1027,11 +1161,20 @@ export function createKeyboardScene(
       else if (assemblyChanged) {
         const offset = camera.position.clone().sub(controls.target);
         if (next.exploded) assembledDistance = offset.length();
-        focusHeight = next.exploded ? 1.35 : 0.4;
+        if (next.environment === 'desk') {
+          // Keep the room composition; lift the aim a little to fit the layers.
+          focusHeight += next.exploded ? 1.2 : -1.2;
+        } else {
+          focusHeight = next.exploded ? 1.35 : 0.4;
+          focusX = 0;
+          focusDepth = 0;
+        }
         offset.setLength(
           next.exploded ? Math.max(14, offset.length()) : assembledDistance,
         );
-        cameraTarget = offset.add(new THREE.Vector3(0, focusHeight, 0));
+        cameraTarget = offset.add(
+          new THREE.Vector3(focusX, focusHeight, focusDepth),
+        );
       }
       if (changed) appearance();
     },
@@ -1056,7 +1199,12 @@ export function createKeyboardScene(
       renderer.domElement.removeEventListener('webglcontextlost', contextLost);
       accessories?.dispose();
       loaded.forEach(disposeModel);
+      unsubscribeLighting();
+      glassRegistry.attach(null);
+      glass?.dispose();
+      window.removeEventListener('scroll', wake);
       desk.dispose();
+      effects?.shafts.dispose();
       effects?.occlusion.dispose();
       effects?.output.dispose();
       effects?.composer.dispose();

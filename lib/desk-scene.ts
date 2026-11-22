@@ -1,7 +1,102 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import {
+  ROOM_LIGHT,
+  brightnessGain,
+  type LightingState,
+  type RoomLight,
+} from './studio-lighting';
+import {
+  forestLayerCanvas,
+  plasterCanvas,
+  seeded,
+  skyCanvas,
+  walnutCanvas,
+  wallpaperCanvas,
+  type Wallpaper,
+} from './room-textures';
 
-export function createDeskScene(invalidate: () => void) {
+/**
+ * A front-facing studio room built around the keyboard, which stays at the
+ * origin. Scene units follow the keyboard model: one unit is one 19.05 mm key
+ * pitch, so the desk top sits at y = -0.22, the floor 74 cm below it and the
+ * back wall 33 cm behind the monitor.
+ */
+export const ROOM = {
+  deskTop: -0.22,
+  floor: -39,
+  ceiling: 96,
+  backWall: -17.5,
+  /** Window opening in the back wall, left of the monitor. */
+  window: { x0: -62, x1: -16, y0: 2.2, y1: 40, mullion: -39 },
+  /** The lowered blind covers the opening from here to the top. */
+  blindBottom: 23,
+  slatSpacing: 1.3,
+  slatDepth: 1.1,
+  desk: { x0: -30, x1: 50, z0: -17.2, z1: 12 },
+} as const;
+
+/** The sun's travel direction for a preset (pointing from the sun into the room). */
+export function sunTravel(
+  light: Pick<RoomLight, 'sunElevation' | 'sunAzimuth'>,
+) {
+  const elevation = THREE.MathUtils.degToRad(light.sunElevation);
+  const heading = THREE.MathUtils.degToRad(66 + light.sunAzimuth * 0.3);
+  return new THREE.Vector3(
+    Math.cos(elevation) * Math.sin(heading),
+    -Math.sin(elevation),
+    Math.cos(elevation) * Math.cos(heading),
+  ).normalize();
+}
+
+/** Fraction of the blind's pitch that lets light through at a slat tilt. */
+export function blindOpening(tilt: number, elevationDegrees: number) {
+  const blocked =
+    (ROOM.slatDepth *
+      Math.abs(Math.sin(tilt + THREE.MathUtils.degToRad(elevationDegrees))) +
+      0.08) /
+    ROOM.slatSpacing;
+  return THREE.MathUtils.clamp(1 - blocked, 0.08, 0.92);
+}
+
+type Mixed = {
+  [K in keyof RoomLight]: RoomLight[K] extends string ? THREE.Color : number;
+};
+const colorKeys = [
+  'sunColor',
+  'skyColor',
+  'groundColor',
+  'outside',
+  'shaftColor',
+  'wall',
+] as const;
+const numberKeys = [
+  'sunElevation',
+  'sunAzimuth',
+  'sunIntensity',
+  'skyIntensity',
+  'environment',
+  'exposure',
+  'lampIntensity',
+  'screenGain',
+  'outsideGain',
+  'shaftDensity',
+  'blindTilt',
+  'rain',
+  'keyFill',
+] as const;
+
+function mixedFrom(light: RoomLight) {
+  const result = {} as Record<string, THREE.Color | number>;
+  for (const key of colorKeys) result[key] = new THREE.Color(light[key]);
+  for (const key of numberKeys) result[key] = light[key];
+  return result as unknown as Omit<Mixed, 'screen'>;
+}
+
+export function createDeskScene(
+  invalidate: () => void,
+  { software = false }: { software?: boolean } = {},
+) {
   const group = new THREE.Group();
   group.name = 'desk-environment';
   const geometries = new Set<THREE.BufferGeometry>();
@@ -35,72 +130,474 @@ export function createDeskScene(invalidate: () => void) {
     parent.add(item);
     return item;
   }
-  const wood = material('#b4a68e', 0.84);
-  const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 512;
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    ctx.fillStyle = '#79694f';
-    ctx.fillRect(0, 0, 1024, 512);
-    for (let i = 0; i < 450; i++) {
-      const y = (i * 512) / 450;
-      ctx.strokeStyle = i % 3 === 0 ? '#282a2216' : '#ded6bb12';
-      ctx.lineWidth = i % 7 === 0 ? 1.3 : 0.5;
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.bezierCurveTo(
-        300,
-        y + Math.sin(i * 0.25) * 8,
-        750,
-        y - 5,
-        1024,
-        y + 3,
-      );
-      ctx.stroke();
-    }
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(3, 3);
-    wood.map = texture;
-    wood.bumpMap = texture;
-    wood.bumpScale = 0.035;
+  function canvasTexture(source: HTMLCanvasElement, srgb = true) {
+    const texture = new THREE.CanvasTexture(source);
+    if (srgb) texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = software ? 1 : 8;
     textures.add(texture);
+    return texture;
   }
-  mesh(new RoundedBoxGeometry(52, 0.7, 46, 3, 0.25), wood, group, 0, -0.59, -3);
-  const felt = material('#343e37', 0.97);
-  mesh(new THREE.BoxGeometry(20, 0.035, 9.2), felt, group, 0, -0.218, 0);
+  const random = seeded(2211);
 
-  const paper = material('#d7cdb3', 0.9),
-    cover = material('#28342c', 0.78),
-    brass = material('#a58d57', 0.45, 0.6);
-  const books = new THREE.Group();
-  books.position.set(8, -0.2, -7.4);
-  books.rotation.y = -0.16;
-  group.add(books);
-  mesh(new THREE.BoxGeometry(5, 0.08, 6.8), cover, books, 0, 0.07, 0);
-  mesh(new THREE.BoxGeometry(4.85, 0.56, 6.62), paper, books, 0.03, 0.38, 0);
-  mesh(new THREE.BoxGeometry(5, 0.08, 6.8), cover, books, 0, 0.71, 0);
-  const upper = mesh(
-    new THREE.BoxGeometry(4.5, 0.42, 5.4),
-    material('#79715e'),
-    books,
-    -0.25,
-    0.99,
-    0.14,
+  // ---------------------------------------------------------------- shell
+  const plasterMap = canvasTexture(plasterCanvas(), false);
+  plasterMap.wrapS = plasterMap.wrapT = THREE.RepeatWrapping;
+  plasterMap.repeat.set(5, 3);
+  const plaster = new THREE.MeshStandardMaterial({
+    color: ROOM_LIGHT.afternoon.wall,
+    roughness: 0.94,
+    roughnessMap: plasterMap,
+    bumpMap: plasterMap,
+    bumpScale: 0.6,
+  });
+  materials.add(plaster);
+  const { x0, x1, y0, y1 } = ROOM.window;
+  const wallDepth = 6;
+  const wallZ = ROOM.backWall - wallDepth / 2;
+  const span = { left: -170, right: 170 };
+  // The back wall is four boxes around the window opening, so the opening has
+  // real reveals that cast the sun's edges.
+  mesh(
+    new THREE.BoxGeometry(x0 - span.left, ROOM.ceiling - ROOM.floor, wallDepth),
+    plaster,
+    group,
+    (span.left + x0) / 2,
+    (ROOM.ceiling + ROOM.floor) / 2,
+    wallZ,
   );
-  upper.rotation.y = 0.15;
-  for (let i = 0; i < 8; i++)
-    mesh(
-      new THREE.BoxGeometry(4.86, 0.01, 6.63),
-      material(i % 2 ? '#a69b83' : '#bdb19a'),
-      books,
-      0.03,
-      0.12 + i * 0.065,
-      0,
-    );
+  mesh(
+    new THREE.BoxGeometry(
+      span.right - x1,
+      ROOM.ceiling - ROOM.floor,
+      wallDepth,
+    ),
+    plaster,
+    group,
+    (span.right + x1) / 2,
+    (ROOM.ceiling + ROOM.floor) / 2,
+    wallZ,
+  );
+  mesh(
+    new THREE.BoxGeometry(x1 - x0, ROOM.ceiling - y1, wallDepth),
+    plaster,
+    group,
+    (x0 + x1) / 2,
+    (ROOM.ceiling + y1) / 2,
+    wallZ,
+  );
+  mesh(
+    new THREE.BoxGeometry(x1 - x0, y0 - ROOM.floor, wallDepth),
+    plaster,
+    group,
+    (x0 + x1) / 2,
+    (y0 + ROOM.floor) / 2,
+    wallZ,
+  );
+  // Ceiling and floor close the box so sunlight only enters through the glass.
+  mesh(
+    new THREE.BoxGeometry(span.right - span.left, 2, 200),
+    material('#2a3431', 0.95),
+    group,
+    0,
+    ROOM.ceiling + 1,
+    ROOM.backWall + 99,
+  );
+  const floorWood = material('#2b1e16', 0.78);
+  mesh(
+    new THREE.BoxGeometry(span.right - span.left, 1, 200),
+    floorWood,
+    group,
+    0,
+    ROOM.floor - 0.5,
+    ROOM.backWall + 99,
+  );
+  // Skirting board.
+  mesh(
+    new THREE.BoxGeometry(span.right - span.left, 4, 0.6),
+    material('#1f2a27', 0.8),
+    group,
+    0,
+    ROOM.floor + 2,
+    ROOM.backWall + 0.3,
+  );
 
+  // --------------------------------------------------------------- window
+  const frame = material('#171a19', 0.55, 0.2);
+  const windowGroup = new THREE.Group();
+  windowGroup.name = 'studio-window';
+  group.add(windowGroup);
+  const frameDepth = 1.4,
+    glassZ = ROOM.backWall - 3.2;
+  for (const x of [x0 + 0.6, ROOM.window.mullion, x1 - 0.6])
+    mesh(
+      new THREE.BoxGeometry(
+        x === ROOM.window.mullion ? 1 : 1.2,
+        y1 - y0,
+        frameDepth,
+      ),
+      frame,
+      windowGroup,
+      x,
+      (y0 + y1) / 2,
+      glassZ,
+    );
+  for (const y of [y0 + 0.6, y1 - 0.6])
+    mesh(
+      new THREE.BoxGeometry(x1 - x0, 1.2, frameDepth),
+      frame,
+      windowGroup,
+      (x0 + x1) / 2,
+      y,
+      glassZ,
+    );
+  // Sill: a deep ledge inside the room, at desk height.
+  const sillWood = material('#2a2421', 0.62);
+  mesh(
+    new THREE.BoxGeometry(x1 - x0 + 3, 1, wallDepth + 2.5),
+    sillWood,
+    windowGroup,
+    (x0 + x1) / 2,
+    y0 - 0.5,
+    ROOM.backWall - wallDepth / 2 + 1.25,
+  );
+  // Rain-capable glass pane.
+  const glassUniforms = {
+    time: { value: 0 },
+    rain: { value: 0 },
+    tint: { value: new THREE.Color('#cfe0da') },
+    flash: { value: 0 },
+  };
+  const glassMaterial = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    uniforms: glassUniforms,
+    vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+    fragmentShader: `
+      varying vec2 vUv; uniform float time, rain, flash; uniform vec3 tint;
+      float hash(float n){ return fract(sin(n)*43758.5453); }
+      void main(){
+        vec2 uv = vUv*vec2(46.0, 58.0);
+        float streaks = 0.0;
+        for (int layer = 0; layer < 2; layer++) {
+          float scale = layer == 0 ? 1.0 : 1.9;
+          vec2 p = uv*scale;
+          float column = floor(p.x);
+          float speed = 2.0 + hash(column*3.1 + float(layer))*4.0;
+          float y = fract(p.y*0.08 + time*speed*0.12 + hash(column));
+          float x = abs(fract(p.x) - 0.5);
+          float drop = smoothstep(0.12, 0.0, x) * smoothstep(0.0, 0.05, y) * smoothstep(0.55, 0.05, y);
+          streaks += drop * step(0.55, hash(column*7.7 + float(layer)*13.0));
+        }
+        float beads = step(0.985, hash(floor(uv.x*3.0)*91.0 + floor(uv.y*3.0)*17.0)) * 0.6;
+        float wet = clamp(streaks + beads, 0.0, 1.0) * rain;
+        vec3 color = tint * (0.12 + 0.5*wet + flash*0.6);
+        gl_FragColor = vec4(color, 0.04 + wet*0.32 + rain*0.1);
+        #include <colorspace_fragment>
+      }`,
+  });
+  materials.add(glassMaterial);
+  const pane = mesh(
+    new THREE.PlaneGeometry(x1 - x0, y1 - y0),
+    glassMaterial,
+    windowGroup,
+    (x0 + x1) / 2,
+    (y0 + y1) / 2,
+    glassZ - 0.2,
+  );
+  pane.name = 'window-glass';
+  pane.castShadow = pane.receiveShadow = false;
+
+  // Forest beyond the window: three painted layers at increasing depth so the
+  // view shifts as the camera moves, plus a soft sky.
+  const outsideMaterials: THREE.MeshBasicMaterial[] = [];
+  const skyMaterial = new THREE.MeshBasicMaterial({
+    map: canvasTexture(skyCanvas()),
+    fog: false,
+  });
+  materials.add(skyMaterial);
+  outsideMaterials.push(skyMaterial);
+  const outside = new THREE.Group();
+  outside.name = 'forest-backdrop';
+  group.add(outside);
+  const sky = mesh(
+    new THREE.PlaneGeometry(700, 420),
+    skyMaterial,
+    outside,
+    -120,
+    60,
+    -240,
+  );
+  sky.castShadow = sky.receiveShadow = false;
+  [
+    { z: -200, w: 620, h: 300, y: 10 },
+    { z: -120, w: 380, h: 190, y: 2 },
+    { z: -55, w: 210, h: 110, y: 8 },
+  ].forEach((spec, layer) => {
+    const surface = new THREE.MeshBasicMaterial({
+      map: canvasTexture(forestLayerCanvas(layer)),
+      transparent: true,
+      alphaTest: 0.02,
+      fog: false,
+    });
+    materials.add(surface);
+    outsideMaterials.push(surface);
+    const plane = mesh(
+      new THREE.PlaneGeometry(spec.w, spec.h),
+      surface,
+      outside,
+      -60 - layer * 10,
+      spec.y + spec.h / 2 - 40,
+      spec.z,
+    );
+    plane.castShadow = plane.receiveShadow = false;
+  });
+
+  // Blinds: instanced slats lowered over the top third of the window.
+  const slatCount = Math.floor((y1 - ROOM.blindBottom) / ROOM.slatSpacing);
+  const slatGeometry = new THREE.BoxGeometry(
+    x1 - x0 - 1.2,
+    0.08,
+    ROOM.slatDepth,
+  );
+  geometries.add(slatGeometry);
+  const slatMaterial = material('#cbbfa9', 0.7);
+  const slats = new THREE.InstancedMesh(slatGeometry, slatMaterial, slatCount);
+  slats.name = 'blind-slats';
+  slats.castShadow = slats.receiveShadow = true;
+  windowGroup.add(slats);
+  const slatPose = new THREE.Object3D();
+  function placeSlats(tilt: number) {
+    for (let i = 0; i < slatCount; i++) {
+      slatPose.position.set(
+        (x0 + x1) / 2,
+        y1 - 1 - i * ROOM.slatSpacing,
+        ROOM.backWall - 1.2,
+      );
+      slatPose.rotation.set(tilt, 0, 0);
+      slatPose.updateMatrix();
+      slats.setMatrixAt(i, slatPose.matrix);
+    }
+    slats.instanceMatrix.needsUpdate = true;
+  }
+  placeSlats(ROOM_LIGHT.afternoon.blindTilt);
+  mesh(
+    new THREE.BoxGeometry(x1 - x0 - 0.6, 0.5, 1.5),
+    material('#b9ad97', 0.6),
+    windowGroup,
+    (x0 + x1) / 2,
+    ROOM.blindBottom - 0.4,
+    ROOM.backWall - 1.2,
+  );
+  for (const x of [x0 + 9, x1 - 9]) {
+    const cord = mesh(
+      new THREE.CylinderGeometry(0.05, 0.05, y1 - ROOM.blindBottom, 5),
+      material('#e0d8c8', 0.8),
+      windowGroup,
+      x,
+      (y1 + ROOM.blindBottom) / 2,
+      ROOM.backWall - 0.55,
+    );
+    cord.castShadow = false;
+  }
+
+  // ----------------------------------------------------------------- desk
+  const walnutTexture = canvasTexture(walnutCanvas());
+  walnutTexture.wrapS = walnutTexture.wrapT = THREE.RepeatWrapping;
+  const walnut = new THREE.MeshStandardMaterial({
+    map: walnutTexture,
+    roughness: 0.46,
+    bumpMap: walnutTexture,
+    bumpScale: 0.05,
+  });
+  materials.add(walnut);
+  const desk = ROOM.desk;
+  const deskWidth = desk.x1 - desk.x0,
+    deskDepth = desk.z1 - desk.z0;
+  const top = mesh(
+    new RoundedBoxGeometry(deskWidth, 1.9, deskDepth, 3, 0.45),
+    walnut,
+    group,
+    (desk.x0 + desk.x1) / 2,
+    ROOM.deskTop - 0.95,
+    (desk.z0 + desk.z1) / 2,
+  );
+  top.name = 'walnut-desk';
+  const apron = material('#5c2f1b', 0.55);
+  // Drawer bank under the right of the desk and a slim apron drawer.
+  const drawers = new THREE.Group();
+  drawers.name = 'desk-drawers';
+  group.add(drawers);
+  mesh(
+    new THREE.BoxGeometry(deskWidth - 2, 4.2, 1),
+    apron,
+    drawers,
+    (desk.x0 + desk.x1) / 2,
+    ROOM.deskTop - 4,
+    desk.z1 - 1.6,
+  );
+  const brassPull = material('#b59a62', 0.35, 0.8);
+  for (const x of [-12, 14, 34]) {
+    mesh(
+      new RoundedBoxGeometry(17, 3.4, 0.5, 2, 0.15),
+      walnut,
+      drawers,
+      x,
+      ROOM.deskTop - 4,
+      desk.z1 - 1,
+    );
+    mesh(
+      new RoundedBoxGeometry(3.2, 0.35, 0.5, 2, 0.15),
+      brassPull,
+      drawers,
+      x,
+      ROOM.deskTop - 4,
+      desk.z1 - 0.6,
+    );
+  }
+  for (const x of [desk.x0 + 2, desk.x1 - 2])
+    for (const z of [desk.z0 + 2, desk.z1 - 2.5])
+      mesh(
+        new THREE.BoxGeometry(2.2, -ROOM.floor + ROOM.deskTop - 2, 2.2),
+        apron,
+        group,
+        x,
+        (ROOM.floor + ROOM.deskTop - 2) / 2,
+        z,
+      );
+
+  // ---------------------------------------------------------------- chair
+  const chair = new THREE.Group();
+  chair.name = 'office-chair';
+  chair.position.set(-21, 2.5, 17.5);
+  chair.rotation.y = 0.18;
+  group.add(chair);
+  const mesh_ = material('#1b2022', 0.62);
+  const steelDark = material('#2a2d2f', 0.3, 0.85);
+  const back = mesh(
+    new RoundedBoxGeometry(15, 12, 1.1, 5, 0.55),
+    mesh_,
+    chair,
+    0,
+    -3.5,
+    0,
+  );
+  back.rotation.x = -0.12;
+  // A thin frame around the mesh back catches the window light.
+  const rim = new THREE.CatmullRomCurve3(
+    [
+      new THREE.Vector3(-7.6, -9.5, 0.2),
+      new THREE.Vector3(-7.8, 1.6, -0.9),
+      new THREE.Vector3(0, 2.9, -1.1),
+      new THREE.Vector3(7.8, 1.6, -0.9),
+      new THREE.Vector3(7.6, -9.5, 0.2),
+    ],
+    false,
+  );
+  mesh(new THREE.TubeGeometry(rim, 40, 0.32, 8, false), steelDark, chair);
+  mesh(new RoundedBoxGeometry(18, 1.6, 17, 3, 0.6), mesh_, chair, 0, -16, -8);
+  for (const side of [-1, 1]) {
+    const arm = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(side * 9.2, -16, -14),
+      new THREE.Vector3(side * 9.6, -9, -9),
+      new THREE.Vector3(side * 9.4, -8.5, -2),
+      new THREE.Vector3(side * 8.8, -12, 0.6),
+      new THREE.Vector3(side * 8.6, 2, 0.6),
+    ]);
+    mesh(new THREE.TubeGeometry(arm, 32, 0.32, 8, false), steelDark, chair);
+  }
+  mesh(
+    new THREE.CylinderGeometry(0.9, 0.9, 14, 12),
+    steelDark,
+    chair,
+    0,
+    -24,
+    -8,
+  );
+
+  // -------------------------------------------------------------- monitor
+  // Keep the screen plane and group placement the typing test projects onto.
+  const monitor = new THREE.Group();
+  monitor.name = 'studio-display';
+  monitor.position.set(0, -0.2, -10.5);
+  group.add(monitor);
+  const aluminium = material('#b4b7ba', 0.3, 0.9);
+  mesh(
+    new RoundedBoxGeometry(8, 0.28, 5.4, 3, 0.12),
+    aluminium,
+    monitor,
+    0,
+    0.16,
+    0.4,
+  );
+  const neck = mesh(
+    new RoundedBoxGeometry(2.6, 8.6, 0.3, 2, 0.1),
+    aluminium,
+    monitor,
+    0,
+    4.3,
+    -1.3,
+  );
+  neck.rotation.x = -0.2;
+  mesh(
+    new RoundedBoxGeometry(20.3, 12, 0.5, 4, 0.22),
+    aluminium,
+    monitor,
+    0,
+    9,
+    -0.05,
+  );
+  mesh(
+    new RoundedBoxGeometry(19.82, 11.52, 0.06, 2, 0.02),
+    material('#050606', 0.25),
+    monitor,
+    0,
+    9,
+    0.24,
+  );
+  const wallpapers = new Map<Wallpaper, THREE.CanvasTexture>();
+  function wallpaper(kind: Wallpaper) {
+    let texture = wallpapers.get(kind);
+    if (!texture) {
+      texture = canvasTexture(wallpaperCanvas(kind));
+      wallpapers.set(kind, texture);
+    }
+    return texture;
+  }
+  const screenUniforms = {
+    mapA: { value: wallpaper('day') },
+    mapB: { value: wallpaper('day') },
+    mixT: { value: 0 },
+    gain: { value: 1 },
+  };
+  const screenMaterial = new THREE.ShaderMaterial({
+    uniforms: screenUniforms,
+    toneMapped: false,
+    vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+    fragmentShader: `
+      varying vec2 vUv; uniform sampler2D mapA, mapB; uniform float mixT, gain;
+      void main(){
+        vec3 color = mix(texture2D(mapA, vUv).rgb, texture2D(mapB, vUv).rgb, mixT) * gain;
+        gl_FragColor = vec4(color, 1.0);
+        #include <colorspace_fragment>
+      }`,
+  });
+  materials.add(screenMaterial);
+  const screen = mesh(
+    new THREE.PlaneGeometry(19.12, 10.82),
+    screenMaterial,
+    monitor,
+    0,
+    9,
+    0.322,
+  );
+  screen.name = 'monitor-screen';
+  screen.castShadow = screen.receiveShadow = false;
+  // Screen spill onto the desk and wall.
+  const screenLight = new THREE.PointLight('#cfdcf0', 0, 40, 2);
+  screenLight.position.set(0, 7, 5);
+  monitor.add(screenLight);
+
+  // -------------------------------------------------------- desk objects
   const leafGeometry = new THREE.BufferGeometry();
   const positions: number[] = [];
   const indices: number[] = [];
@@ -160,22 +657,26 @@ export function createDeskScene(invalidate: () => void) {
       }
     }
     leafInk.stroke();
-    const texture = new THREE.CanvasTexture(leafCanvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
+    const texture = canvasTexture(leafCanvas);
     leaves.map = texture;
     leaves.bumpMap = texture;
     leaves.bumpScale = 0.014;
-    textures.add(texture);
   }
   leaves.side = THREE.DoubleSide;
   const stem = material('#516444', 0.8),
     soil = material('#292a1f', 1);
-  function plant(x: number, z: number, scale: number, base: number) {
+  function plant(
+    x: number,
+    z: number,
+    scale: number,
+    base: number,
+    pot = '#9d9680',
+  ) {
     const plant = new THREE.Group();
     plant.position.set(x, base, z);
     plant.scale.setScalar(scale);
     group.add(plant);
-    const ceramic = material('#9d9680', 0.9);
+    const ceramic = material(pot, 0.9);
     const profile = [
       new THREE.Vector2(0.8, 0),
       new THREE.Vector2(0.94, 0.08),
@@ -184,9 +685,9 @@ export function createDeskScene(invalidate: () => void) {
       new THREE.Vector2(1.02, 1.73),
       new THREE.Vector2(0.9, 0.16),
     ];
-    mesh(new THREE.LatheGeometry(profile, 48), ceramic, plant);
+    mesh(new THREE.LatheGeometry(profile, 40), ceramic, plant);
     const top = mesh(
-      new THREE.CircleGeometry(1.04, 40),
+      new THREE.CircleGeometry(1.04, 32),
       soil,
       plant,
       0,
@@ -229,8 +730,8 @@ export function createDeskScene(invalidate: () => void) {
         i,
         new THREE.Color().setHSL(
           0.26 + (i % 4) * 0.012,
-          0.26,
-          0.075 + (i % 5) * 0.018,
+          0.3,
+          0.09 + (i % 5) * 0.02,
         ),
       );
       const curve = new THREE.QuadraticBezierCurve3(
@@ -238,15 +739,104 @@ export function createDeskScene(invalidate: () => void) {
         new THREE.Vector3(start.x * 0.2, height, start.z * 0.2),
         start,
       );
-      mesh(new THREE.TubeGeometry(curve, 10, 0.027, 5, false), stem, crown);
+      mesh(new THREE.TubeGeometry(curve, 8, 0.027, 5, false), stem, crown);
     }
     flutter.push({ mesh: instanced, poses });
+    return plant;
   }
-  plant(8, -7.3, 0.85, 1.04);
-  plant(-11, 5.8, 1.1, -0.22);
+  // Sill plants, one each side of the mullion, and a tall one on the floor.
+  plant(-24, ROOM.backWall - 1.2, 2.2, y0, '#6f6a5c');
+  plant(-50, ROOM.backWall - 1.6, 2.8, y0, '#8e7f69');
+  plant(-34, 2, 4.2, ROOM.floor, '#3b3c35');
 
+  // Pencil cup with pencils.
+  const pencilCup = new THREE.Group();
+  pencilCup.name = 'pencil-cup';
+  pencilCup.position.set(-12.5, ROOM.deskTop, -6.5);
+  group.add(pencilCup);
+  mesh(
+    new THREE.LatheGeometry(
+      [
+        new THREE.Vector2(0, 0),
+        new THREE.Vector2(1.35, 0),
+        new THREE.Vector2(1.4, 3.6),
+        new THREE.Vector2(1.28, 3.6),
+        new THREE.Vector2(1.22, 0.25),
+        new THREE.Vector2(0, 0.25),
+      ],
+      32,
+    ),
+    material('#5a5148', 0.85),
+    pencilCup,
+  );
+  const pencilPaint = ['#c8a24a', '#30353a', '#9b4a35', '#c8a24a'];
+  pencilPaint.forEach((color, i) => {
+    const pencil = new THREE.Group();
+    const angle = i * 1.7;
+    pencil.position.set(Math.cos(angle) * 0.55, 0.3, Math.sin(angle) * 0.55);
+    pencil.rotation.set(Math.sin(angle) * 0.16, 0, -Math.cos(angle) * 0.16);
+    pencilCup.add(pencil);
+    const lead = material(color, 0.5);
+    mesh(
+      new THREE.CylinderGeometry(0.15, 0.15, 6.2, 6),
+      lead,
+      pencil,
+      0,
+      3.1,
+      0,
+    );
+    mesh(
+      new THREE.ConeGeometry(0.15, 0.6, 6),
+      material('#d9c39a', 0.8),
+      pencil,
+      0,
+      6.5,
+      0,
+    );
+  });
+
+  // Mouse.
+  const mouse = mesh(
+    new THREE.SphereGeometry(1, 32, 16),
+    material('#3a3532', 0.48, 0.1),
+    group,
+    12.4,
+    ROOM.deskTop + 0.18,
+    1,
+  );
+  mouse.name = 'desk-mouse';
+  mouse.scale.set(1.15, 0.62, 1.9);
+
+  // Small notepad and pen, front left.
+  const notepad = new THREE.Group();
+  notepad.name = 'notepad';
+  notepad.position.set(-15, ROOM.deskTop, 4.5);
+  notepad.rotation.y = 0.32;
+  group.add(notepad);
+  mesh(
+    new RoundedBoxGeometry(5.2, 0.24, 7, 2, 0.05),
+    material('#dcd3c1', 0.92),
+    notepad,
+    0,
+    0.12,
+    0,
+  );
+  const pen = mesh(
+    new THREE.CylinderGeometry(0.13, 0.1, 6.4, 10),
+    material('#1d2227', 0.35, 0.5),
+    notepad,
+    1.1,
+    0.38,
+    0,
+  );
+  pen.rotation.x = Math.PI / 2;
+  pen.rotation.z = 0.2;
+  pen.name = 'pen';
+
+  // Coffee mug with steam (kept from the earlier desk; the room ambience checks rely on it).
   const mug = new THREE.Group();
-  mug.position.set(-11, -0.2, -6.4);
+  mug.position.set(21, ROOM.deskTop, -2.5);
+  mug.scale.setScalar(0.9);
   group.add(mug);
   const cup = material('#b6afa0', 0.36);
   mesh(
@@ -258,14 +848,14 @@ export function createDeskScene(invalidate: () => void) {
         new THREE.Vector2(0.99, 1.71),
         new THREE.Vector2(0.92, 0.22),
       ],
-      48,
+      40,
     ),
     cup,
     mug,
   );
-  mesh(new THREE.TorusGeometry(0.6, 0.13, 12, 40), cup, mug, 1.14, 0.9, 0);
+  mesh(new THREE.TorusGeometry(0.6, 0.13, 10, 32), cup, mug, 1.14, 0.9, 0);
   const coffee = mesh(
-    new THREE.CircleGeometry(0.99, 40),
+    new THREE.CircleGeometry(0.99, 32),
     material('#241910', 0.22),
     mug,
     0,
@@ -273,15 +863,6 @@ export function createDeskScene(invalidate: () => void) {
     0,
   );
   coffee.rotation.x = -Math.PI / 2;
-  mesh(
-    new THREE.CylinderGeometry(1.48, 1.48, 0.09, 48),
-    material('#756c54'),
-    mug,
-    0,
-    0.02,
-    0,
-  );
-
   const steamMaterial = new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
@@ -320,10 +901,14 @@ export function createDeskScene(invalidate: () => void) {
   steam.layers.set(1);
   steam.castShadow = steam.receiveShadow = false;
 
+  // Open sketchbook to the right (the existing original illustration).
+  const paper = material('#d7cdb3', 0.9),
+    cover = material('#28342c', 0.78);
   const notebook = new THREE.Group();
   notebook.name = 'architect-field-notebook';
-  notebook.position.set(11.5, -0.16, 5.8);
-  notebook.rotation.y = -0.22;
+  notebook.position.set(25, ROOM.deskTop + 0.04, 3);
+  notebook.rotation.y = -0.3;
+  notebook.scale.setScalar(0.85);
   group.add(notebook);
   mesh(
     new RoundedBoxGeometry(9.25, 0.09, 7.02, 3, 0.04),
@@ -333,7 +918,7 @@ export function createDeskScene(invalidate: () => void) {
     0.05,
     0,
   );
-  for (const side of [-1, 1]) {
+  for (const side of [-1, 1])
     mesh(
       new RoundedBoxGeometry(4.46, 0.22, 6.8, 2, 0.06),
       paper,
@@ -342,17 +927,7 @@ export function createDeskScene(invalidate: () => void) {
       0.17,
       0,
     );
-    for (let i = 0; i < 7; i++)
-      mesh(
-        new THREE.BoxGeometry(4.44, 0.008, 6.79),
-        paper,
-        notebook,
-        side * 2.26,
-        0.085 + i * 0.027,
-        0,
-      );
-  }
-  const pageGeometry = new THREE.PlaneGeometry(9, 6.75, 72, 12);
+  const pageGeometry = new THREE.PlaneGeometry(9, 6.75, 48, 8);
   const vertices = pageGeometry.getAttribute('position');
   for (let i = 0; i < vertices.count; i++) {
     const x = vertices.getX(i),
@@ -385,404 +960,408 @@ export function createDeskScene(invalidate: () => void) {
       invalidate();
     },
   );
-  const ribbon = mesh(
-    new THREE.BoxGeometry(0.16, 0.015, 2.1),
-    material('#958356', 0.96),
-    notebook,
-    0.13,
-    0.07,
-    3.9,
-  );
-  ribbon.rotation.y = 0.14;
 
-  const graphite = material('#202822', 0.34, 0.55),
-    steel = material('#b9bbb0', 0.29, 0.88);
-  function pencil(
-    parent: THREE.Object3D,
+  // ----------------------------------------------- right: books and lamp
+  const bookColors = [
+    '#6d4a33',
+    '#2f3d3a',
+    '#8b6b45',
+    '#43302a',
+    '#a08a68',
+    '#273330',
+  ];
+  function bookStack(
     x: number,
+    y: number,
     z: number,
-    angle: number,
-    color: string,
+    count: number,
+    angle = 0,
   ) {
-    const pencil = new THREE.Group();
-    pencil.name = 'precision-mechanical-pencil';
-    pencil.position.set(x, 0.59, z);
-    pencil.rotation.set(Math.PI / 2, 0, angle);
-    parent.add(pencil);
-    const barrel = material(color, 0.34, 0.72);
-    mesh(
-      new THREE.CylinderGeometry(0.115, 0.115, 3.55, 6),
-      barrel,
-      pencil,
-      0,
-      0.7,
-      0,
-    );
-    mesh(
-      new THREE.CylinderGeometry(0.128, 0.128, 1.45, 32),
-      steel,
-      pencil,
-      0,
-      -1.83,
-      0,
-    );
-    // Crossed grip cuts are real geometry, so highlights survive a close view.
-    const knurlGeometry = new THREE.TorusGeometry(0.129, 0.008, 3, 24);
-    const grip = new THREE.InstancedMesh(knurlGeometry, graphite, 28);
-    geometries.add(knurlGeometry);
-    const pose = new THREE.Object3D();
-    for (let i = 0; i < 28; i++) {
-      pose.position.y = -2.5 + i * 0.05;
-      pose.rotation.set(Math.PI / 2, i % 2 ? 0.12 : -0.12, 0);
-      pose.updateMatrix();
-      grip.setMatrixAt(i, pose.matrix);
-    }
-    pencil.add(grip);
-    mesh(
-      new THREE.CylinderGeometry(0.115, 0.035, 0.42, 24),
-      steel,
-      pencil,
-      0,
-      -2.76,
-      0,
-    );
-    mesh(
-      new THREE.CylinderGeometry(0.027, 0.027, 0.32, 16),
-      steel,
-      pencil,
-      0,
-      -3.12,
-      0,
-    );
-    mesh(
-      new THREE.CylinderGeometry(0.012, 0.012, 0.16, 8),
-      graphite,
-      pencil,
-      0,
-      -3.35,
-      0,
-    );
-    mesh(
-      new THREE.CylinderGeometry(0.137, 0.137, 0.17, 24),
-      steel,
-      pencil,
-      0,
-      2.55,
-      0,
-    );
-    mesh(
-      new THREE.CylinderGeometry(0.08, 0.08, 0.34, 24),
-      barrel,
-      pencil,
-      0,
-      2.77,
-      0,
-    );
-    mesh(
-      new THREE.CylinderGeometry(0.125, 0.125, 0.08, 24),
-      steel,
-      pencil,
-      0,
-      2.97,
-      0,
-    );
-    const clipCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0.1, 2.57, 0),
-      new THREE.Vector3(0.2, 2.47, 0),
-      new THREE.Vector3(0.21, 1.38, 0),
-      new THREE.Vector3(0.15, 1.26, 0),
-    ]);
-    mesh(new THREE.TubeGeometry(clipCurve, 18, 0.025, 7, false), steel, pencil);
-  }
-  pencil(notebook, 3.65, 0.35, 0.13, '#4c6054');
-  pencil(group, 8.9, 6.75, -0.32, '#b79b61');
-
-  const ruler = new THREE.Group();
-  ruler.position.set(11.5, -0.12, -0.5);
-  ruler.rotation.y = -0.08;
-  group.add(ruler);
-  mesh(new THREE.BoxGeometry(7, 0.08, 0.55), brass, ruler);
-  for (let i = 0; i < 55; i++)
-    mesh(
-      new THREE.BoxGeometry(0.012, 0.004, i % 5 === 0 ? 0.38 : 0.2),
-      graphite,
-      ruler,
-      -3.2 + i * 0.117,
-      0.044,
-      0.06,
-    );
-
-  const monitor = new THREE.Group();
-  monitor.name = 'solarpunk-monitor';
-  monitor.position.set(0, -0.2, -10.5);
-  group.add(monitor);
-  mesh(
-    new RoundedBoxGeometry(6, 0.25, 3.5, 3, 0.12),
-    graphite,
-    monitor,
-    0,
-    0.14,
-    0.8,
-  );
-  mesh(
-    new RoundedBoxGeometry(1.2, 4.5, 0.7, 3, 0.18),
-    brass,
-    monitor,
-    0,
-    2.4,
-    -0.15,
-  );
-  mesh(
-    new RoundedBoxGeometry(20, 12, 0.62, 4, 0.25),
-    graphite,
-    monitor,
-    0,
-    9,
-    0,
-  );
-  mesh(
-    new RoundedBoxGeometry(20.06, 0.32, 0.67, 3, 0.1),
-    wood,
-    monitor,
-    0,
-    3.15,
-    0,
-  );
-  const idleCanvas = document.createElement('canvas');
-  idleCanvas.width = 1600;
-  idleCanvas.height = 900;
-  const idle = idleCanvas.getContext('2d');
-  if (idle) {
-    idle.fillStyle = '#14221c';
-    idle.fillRect(0, 0, 1600, 900);
-    const glow = idle.createRadialGradient(1050, 250, 0, 900, 340, 850);
-    glow.addColorStop(0, '#2e5140');
-    glow.addColorStop(1, '#13201b');
-    idle.fillStyle = glow;
-    idle.fillRect(0, 0, 1600, 900);
-  }
-  const idleTexture = new THREE.CanvasTexture(idleCanvas);
-  idleTexture.colorSpace = THREE.SRGBColorSpace;
-  textures.add(idleTexture);
-  const screenMaterial = new THREE.MeshBasicMaterial({
-    map: idleTexture,
-    toneMapped: false,
-  });
-  materials.add(screenMaterial);
-  const screen = mesh(
-    new THREE.PlaneGeometry(19.12, 10.82),
-    screenMaterial,
-    monitor,
-    0,
-    9,
-    0.322,
-  );
-  screen.name = 'monitor-screen';
-  screen.castShadow = screen.receiveShadow = false;
-  mesh(
-    new THREE.SphereGeometry(0.045, 8, 6),
-    material('#b4cdb2', 0.4),
-    monitor,
-    9.25,
-    3.2,
-    0.35,
-  );
-  for (let i = 0; i < 16; i++)
-    mesh(
-      new THREE.BoxGeometry(0.35, 0.045, 0.08),
-      brass,
-      monitor,
-      -3.75 + i * 0.5,
-      3.16,
-      0.36,
-    );
-
-  const lamp = new THREE.Group();
-  lamp.position.set(-14, -0.2, -11);
-  group.add(lamp);
-  mesh(
-    new THREE.CylinderGeometry(1.6, 1.75, 0.22, 48),
-    graphite,
-    lamp,
-    0,
-    0.12,
-    0,
-  );
-  const arm = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0, 0.2, 0),
-    new THREE.Vector3(-0.3, 5.6, 0),
-    new THREE.Vector3(1.6, 8.6, 0),
-    new THREE.Vector3(3.4, 8.2, 0.5),
-  ]);
-  mesh(new THREE.TubeGeometry(arm, 40, 0.095, 12, false), brass, lamp);
-  const shade = mesh(
-    new THREE.ConeGeometry(1.5, 1.2, 48, 1, true),
-    graphite,
-    lamp,
-    3.4,
-    7.9,
-    0.5,
-  );
-  shade.rotation.z = -0.12;
-  const diffuser = mesh(
-    new THREE.CircleGeometry(1.43, 48),
-    new THREE.MeshBasicMaterial({ color: '#f0d7a2' }),
-    lamp,
-    3.4,
-    7.32,
-    0.5,
-  );
-  materials.add(diffuser.material);
-  diffuser.rotation.x = -Math.PI / 2;
-  const lampLight = new THREE.PointLight('#ffddb0', 16, 18, 2);
-  lampLight.position.set(-10.6, 6.8, -10.5);
-  group.add(lampLight);
-
-  const headphoneStand = new THREE.Group();
-  headphoneStand.position.set(15, -0.2, -10.7);
-  headphoneStand.rotation.y = -0.35;
-  group.add(headphoneStand);
-  mesh(
-    new RoundedBoxGeometry(3, 0.2, 2.8, 3, 0.1),
-    wood,
-    headphoneStand,
-    0,
-    0.15,
-    0,
-  );
-  mesh(
-    new RoundedBoxGeometry(0.48, 5, 0.5, 2, 0.1),
-    brass,
-    headphoneStand,
-    0,
-    2.7,
-    0,
-  );
-  mesh(
-    new RoundedBoxGeometry(2, 0.35, 1.4, 3, 0.16),
-    wood,
-    headphoneStand,
-    0,
-    5.3,
-    0,
-  );
-  const band = new THREE.EllipseCurve(0, 3.65, 2.04, 2.02, 0, Math.PI, false, 0)
-    .getPoints(40)
-    .map((p) => new THREE.Vector3(p.x, p.y, 0.1));
-  mesh(
-    new THREE.TubeGeometry(
-      new THREE.CatmullRomCurve3(band),
-      40,
-      0.22,
-      10,
-      false,
-    ),
-    graphite,
-    headphoneStand,
-  );
-  for (const side of [-1, 1]) {
-    const cupGroup = new THREE.Group();
-    cupGroup.position.set(side * 1.97, 3.45, 0.1);
-    cupGroup.rotation.z = side * 0.1;
-    headphoneStand.add(cupGroup);
-    const ear = mesh(
-      new THREE.CylinderGeometry(1, 1, 0.5, 48),
-      steel,
-      cupGroup,
-    );
-    ear.rotation.z = Math.PI / 2;
-    const cushion = mesh(
-      new THREE.TorusGeometry(0.78, 0.21, 12, 48),
-      graphite,
-      cupGroup,
-      -side * 0.37,
-      0,
-      0,
-    );
-    cushion.rotation.y = Math.PI / 2;
-    for (let i = 0; i < 6; i++) {
-      const ring = mesh(
-        new THREE.TorusGeometry(0.22 + i * 0.11, 0.014, 4, 40),
-        graphite,
-        cupGroup,
-        side * 0.265,
-        0,
+    const stack = new THREE.Group();
+    stack.position.set(x, y, z);
+    stack.rotation.y = angle;
+    group.add(stack);
+    let height = 0;
+    for (let i = 0; i < count; i++) {
+      const thickness = 0.8 + random() * 0.7;
+      const book = mesh(
+        new RoundedBoxGeometry(
+          7.5 + random() * 2,
+          thickness,
+          5.2 + random() * 1.2,
+          2,
+          0.08,
+        ),
+        material(bookColors[Math.floor(random() * bookColors.length)], 0.82),
+        stack,
+        (random() - 0.5) * 0.6,
+        height + thickness / 2,
         0,
       );
-      ring.rotation.y = Math.PI / 2;
+      book.rotation.y = (random() - 0.5) * 0.18;
+      height += thickness;
     }
+    return { stack, height };
+  }
+  const lampStack = bookStack(19, ROOM.deskTop, -12, 3, 0.08);
+  bookStack(30, ROOM.deskTop, -10.5, 4, -0.2);
+  // Mushroom lamp: frosted cap glowing warm over a stem.
+  const lamp = new THREE.Group();
+  lamp.name = 'mushroom-lamp';
+  lamp.position.set(19, ROOM.deskTop + lampStack.height, -12);
+  group.add(lamp);
+  const glow = new THREE.MeshStandardMaterial({
+    color: '#f3d9b0',
+    emissive: '#ffb468',
+    emissiveIntensity: 1.6,
+    roughness: 0.5,
+  });
+  materials.add(glow);
+  mesh(new THREE.CylinderGeometry(1.9, 2.1, 0.5, 32), glow, lamp, 0, 0.25, 0);
+  mesh(new THREE.CylinderGeometry(0.75, 1.1, 5.2, 24), glow, lamp, 0, 2.9, 0);
+  const cap = mesh(
+    new THREE.SphereGeometry(4.2, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2),
+    glow,
+    lamp,
+    0,
+    5.2,
+    0,
+  );
+  cap.scale.y = 0.72;
+  cap.castShadow = false;
+  const capUnder = mesh(
+    new THREE.CircleGeometry(4.2, 40),
+    new THREE.MeshBasicMaterial({ color: '#ffd9a3' }),
+    lamp,
+    0,
+    5.19,
+    0,
+  );
+  materials.add(capUnder.material as THREE.Material);
+  capUnder.rotation.x = Math.PI / 2;
+  capUnder.castShadow = false;
+  const lampLight = new THREE.PointLight('#ffb86e', 0, 0, 2);
+  lampLight.position.set(19, ROOM.deskTop + lampStack.height + 4.4, -11);
+  lampLight.castShadow = false;
+  group.add(lampLight);
+  // Bounce on the wall behind the lamp: an additive glow card.
+  const bounceCanvas = document.createElement('canvas');
+  bounceCanvas.width = bounceCanvas.height = 128;
+  const bounceInk = bounceCanvas.getContext('2d');
+  if (bounceInk) {
+    const gradient = bounceInk.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gradient.addColorStop(0, 'rgba(255,255,255,1)');
+    gradient.addColorStop(0.35, 'rgba(255,255,255,.35)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    bounceInk.fillStyle = gradient;
+    bounceInk.fillRect(0, 0, 128, 128);
+  }
+  const bounceMaterial = new THREE.MeshBasicMaterial({
+    map: canvasTexture(bounceCanvas),
+    color: '#ff9f55',
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  materials.add(bounceMaterial);
+  const bounce = mesh(
+    new THREE.PlaneGeometry(52, 40),
+    bounceMaterial,
+    group,
+    19,
+    ROOM.deskTop + lampStack.height + 6,
+    ROOM.backWall + 0.2,
+  );
+  bounce.castShadow = bounce.receiveShadow = false;
+  bounce.name = 'lamp-bounce';
+
+  // Floating shelf above with books, a vase and a twig.
+  const shelf = mesh(
+    new THREE.BoxGeometry(22, 0.8, 5),
+    sillWood,
+    group,
+    31,
+    20,
+    ROOM.backWall + 2.5,
+  );
+  shelf.name = 'wall-shelf';
+  for (let i = 0; i < 7; i++) {
+    const h = 5 + random() * 2.2;
+    const book = mesh(
+      new RoundedBoxGeometry(0.9 + random() * 0.4, h, 4, 2, 0.06),
+      material(bookColors[i % bookColors.length], 0.84),
+      group,
+      22 + i * 1.25,
+      20.4 + h / 2,
+      ROOM.backWall + 2.5,
+    );
+    if (i === 6) book.rotation.z = -0.24;
+  }
+  const vase = mesh(
+    new THREE.LatheGeometry(
+      [
+        new THREE.Vector2(0, 0),
+        new THREE.Vector2(1.1, 0),
+        new THREE.Vector2(1.5, 1.4),
+        new THREE.Vector2(0.9, 3.2),
+        new THREE.Vector2(0.55, 4.2),
+        new THREE.Vector2(0.7, 4.6),
+      ],
+      28,
+    ),
+    material('#8f7f6c', 0.7),
+    group,
+    36.5,
+    20.4,
+    ROOM.backWall + 2.6,
+  );
+  vase.name = 'vase';
+  const twigMaterial = material('#3b2a1e', 0.9);
+  for (let i = 0; i < 3; i++) {
+    const lean = (i - 1) * 0.5;
+    const curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(36.5, 24.6, ROOM.backWall + 2.6),
+      new THREE.Vector3(36.5 + lean * 1.5, 28, ROOM.backWall + 2.6),
+      new THREE.Vector3(36.5 + lean * 3.2, 32 + i, ROOM.backWall + 2.3),
+    ]);
+    mesh(
+      new THREE.TubeGeometry(curve, 12, 0.08, 4, false),
+      twigMaterial,
+      group,
+    );
   }
 
-  // A sunroom beyond the desk gives the workbench a believable setting.
-  const plaster = material('#364639', 0.98),
-    timber = material('#86775b', 0.81);
-  mesh(new THREE.BoxGeometry(150, 160, 0.5), plaster, group, 0, -2, -25);
-  const windowGlass = new THREE.MeshBasicMaterial({
-    color: '#80987d',
-    transparent: true,
-    opacity: 0.56,
+  // --------------------------------------------------------------- lights
+  const sun = new THREE.DirectionalLight('#ffffff', 0);
+  sun.name = 'room-sun';
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(software ? 1024 : 2048, software ? 1024 : 2048);
+  Object.assign(sun.shadow.camera, {
+    left: -70,
+    right: 70,
+    top: 70,
+    bottom: -70,
+    near: 1,
+    far: 320,
   });
-  materials.add(windowGlass);
-  new THREE.TextureLoader().load(
-    new URL('textures/solarpunk-window-garden.png', document.baseURI).href,
-    (texture) => {
-      if (disposed) {
-        texture.dispose();
-        return;
-      }
-      texture.colorSpace = THREE.SRGBColorSpace;
-      texture.anisotropy = 4;
-      textures.add(texture);
-      windowGlass.map = texture;
-      windowGlass.color.set('#dde1cb');
-      windowGlass.opacity = 0.9;
-      windowGlass.needsUpdate = true;
-      invalidate();
-    },
-  );
-  mesh(new THREE.PlaneGeometry(38, 25), windowGlass, group, -8, 11, -24.68);
-  for (let i = 0; i < 6; i++)
-    mesh(
-      new THREE.BoxGeometry(0.22, 25, 0.32),
-      timber,
-      group,
-      -27 + i * 7.6,
-      11,
-      -24.3,
-    );
-  for (const y of [-1.5, 11, 23.5])
-    mesh(new THREE.BoxGeometry(38, 0.2, 0.32), timber, group, -8, y, -24.3);
-  for (let i = 0; i < 9; i++) {
-    const louver = mesh(
-      new THREE.BoxGeometry(38, 0.13, 1.2),
-      timber,
-      group,
-      -8,
-      16 + i * 0.85,
-      -24.1,
-    );
-    louver.rotation.x = 0.3;
+  sun.shadow.camera.updateProjectionMatrix();
+  sun.shadow.normalBias = 0.05;
+  sun.shadow.bias = -0.0004;
+  sun.shadow.radius = 2;
+  sun.shadow.blurSamples = 6;
+  sun.target.position.set(-6, 0, 0);
+  group.add(sun, sun.target);
+  const skyLight = new THREE.HemisphereLight('#c4d4d6', '#4a3e2e', 0);
+  skyLight.name = 'room-sky';
+  group.add(skyLight);
+  // A soft key from the viewer's side keeps keycaps legible in every preset.
+  const keyFill = new THREE.DirectionalLight('#f2efe8', 0);
+  keyFill.position.set(10, 26, 30);
+  keyFill.target.position.set(0, 0, 0);
+  group.add(keyFill, keyFill.target);
+
+  // ------------------------------------------------- efficient-path shafts
+  // Software GL cannot afford the raymarched pass, so a swept prism from the
+  // window aperture carries striped additive light instead.
+  const shaftUniforms = {
+    travel: { value: new THREE.Vector3(0, -1, 1) },
+    color: { value: new THREE.Color('#fff2dc') },
+    density: { value: 0 },
+    opening: { value: 0.5 },
+  };
+  const shaftMaterial = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    uniforms: shaftUniforms,
+    vertexShader: `varying vec3 vWorld; void main(){ vec4 w = modelMatrix*vec4(position,1.0); vWorld=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }`,
+    fragmentShader: `
+      varying vec3 vWorld; uniform vec3 travel, color; uniform float density, opening;
+      void main(){
+        float t = (vWorld.z - (${ROOM.backWall.toFixed(2)})) / travel.z;
+        vec3 pane = vWorld - travel * t;
+        float u = smoothstep(${x0.toFixed(1)}, ${(x0 + 4).toFixed(1)}, pane.x) * smoothstep(${x1.toFixed(1)}, ${(x1 - 4).toFixed(1)}, pane.x);
+        float v = smoothstep(${y0.toFixed(1)}, ${(y0 + 3).toFixed(1)}, pane.y) * smoothstep(${y1.toFixed(1)}, ${(y1 - 3).toFixed(1)}, pane.y);
+        float mullion = smoothstep(0.6, 1.6, abs(pane.x - (${ROOM.window.mullion.toFixed(1)})));
+        float slat = fract((${y1.toFixed(1)} - pane.y) / ${ROOM.slatSpacing.toFixed(2)});
+        float clear = 1.0 - smoothstep(opening*0.5 - 0.06, opening*0.5 + 0.06, abs(slat - 0.5));
+        float blind = pane.y > ${ROOM.blindBottom.toFixed(1)} ? clear : 1.0;
+        float fade = exp(-t / 70.0) * smoothstep(0.0, 6.0, t);
+        float a = u * v * mullion * blind * fade * density * 0.045;
+        gl_FragColor = vec4(color * a, 1.0);
+        #include <colorspace_fragment>
+      }`,
+  });
+  materials.add(shaftMaterial);
+  const shaftGeometry = new THREE.BoxGeometry(1, 1, 1);
+  geometries.add(shaftGeometry);
+  const shaftVolume = new THREE.Mesh(shaftGeometry, shaftMaterial);
+  shaftVolume.name = 'efficient-shafts';
+  shaftVolume.matrixAutoUpdate = false;
+  shaftVolume.visible = software;
+  shaftVolume.frustumCulled = false;
+  shaftVolume.renderOrder = 5;
+  group.add(shaftVolume);
+  function placeShaftVolume(travel: THREE.Vector3) {
+    const length = 120;
+    const width = new THREE.Vector3(x1 - x0, 0, 0);
+    const height = new THREE.Vector3(0, y1 - y0, 0);
+    const along = travel.clone().multiplyScalar(length);
+    const origin = new THREE.Vector3(
+      (x0 + x1) / 2,
+      (y0 + y1) / 2,
+      ROOM.backWall,
+    ).addScaledVector(along, 0.5);
+    shaftVolume.matrix.makeBasis(width, height, along).setPosition(origin);
+    shaftVolume.matrixWorldNeedsUpdate = true;
   }
-  mesh(new THREE.BoxGeometry(38, 0.35, 3), wood, group, -8, -1.3, -23.6);
-  plant(-20, -20, 1.9, -1.15);
-  plant(10, -20, 1.35, -1.15);
-  mesh(new THREE.BoxGeometry(9, 0.3, 2.8), wood, group, 18, 11, -23);
-  for (let i = 0; i < 6; i++) {
-    const volume = mesh(
-      new RoundedBoxGeometry(0.6, 2.2 + (i % 3) * 0.3, 1.5, 2, 0.04),
-      i % 2 ? cover : paper,
-      group,
-      15.4 + i * 0.68,
-      12.3,
-      -23,
-    );
-    volume.rotation.z = i === 5 ? -0.15 : 0;
+
+  // ---------------------------------------------------------- transitions
+  let target: LightingState = { preset: 'afternoon', brightness: 72 };
+  let from = mixedFrom(ROOM_LIGHT.afternoon);
+  const to = mixedFrom(ROOM_LIGHT.afternoon);
+  const current = mixedFrom(ROOM_LIGHT.afternoon);
+  let progress = 1;
+  let gainFrom = brightnessGain(72),
+    gainTo = gainFrom,
+    gain = gainFrom;
+  let screenKind: Wallpaper = 'day';
+  let flash = 0;
+  let nextFlash = 4;
+  const travel = new THREE.Vector3();
+  function copyMixed(
+    into: ReturnType<typeof mixedFrom>,
+    source: ReturnType<typeof mixedFrom>,
+  ) {
+    for (const key of colorKeys) into[key].copy(source[key]);
+    for (const key of numberKeys) into[key] = source[key];
   }
+  function apply() {
+    const light = current;
+    travel.copy(sunTravel(light));
+    sun.position.copy(sun.target.position).addScaledVector(travel, -150);
+    sun.color.copy(light.sunColor);
+    sun.intensity = light.sunIntensity;
+    skyLight.color.copy(light.skyColor);
+    skyLight.groundColor.copy(light.groundColor);
+    skyLight.intensity = light.skyIntensity * (1 + flash * 4);
+    keyFill.intensity = light.keyFill;
+    lampLight.intensity = light.lampIntensity * 60;
+    glow.emissiveIntensity = 0.5 + light.lampIntensity * 0.9;
+    bounceMaterial.opacity = Math.min(1, 0.12 + light.lampIntensity * 0.12);
+    screenUniforms.gain.value = light.screenGain;
+    screenLight.intensity = light.screenGain * 14;
+    for (const surface of outsideMaterials)
+      surface.color
+        .copy(light.outside)
+        .multiplyScalar(light.outsideGain * (1 + flash * 2.5));
+    plaster.color.copy(light.wall);
+    glassUniforms.rain.value = light.rain;
+    glassUniforms.tint.value.copy(light.outside);
+    glassUniforms.flash.value = flash;
+    placeSlats(light.blindTilt);
+    shaftUniforms.travel.value.copy(travel);
+    shaftUniforms.color.value.copy(light.shaftColor);
+    shaftUniforms.density.value = light.shaftDensity * light.sunIntensity * 0.4;
+    shaftUniforms.opening.value = blindOpening(
+      light.blindTilt,
+      light.sunElevation,
+    );
+    placeShaftVolume(travel);
+  }
+  apply();
+
   const transform = new THREE.Object3D();
   return {
     group,
     monitor,
     screen,
+    sun,
+    /** Current blended light, read by the renderer for exposure and the shaft pass. */
+    light: current,
+    travel,
+    get gain() {
+      return gain;
+    },
+    get flash() {
+      return flash;
+    },
+    get progress() {
+      return progress;
+    },
+    setShaftMode(mode: 'raymarch' | 'geometry' | 'off') {
+      shaftVolume.visible = mode === 'geometry';
+    },
+    /** Retarget the room; it eases there over ~1.2 s unless `instant`. */
+    setLighting(next: LightingState, instant: boolean) {
+      const presetChanged = next.preset !== target.preset;
+      target = next;
+      from = mixedFrom(ROOM_LIGHT.afternoon);
+      copyMixed(from, current);
+      copyMixed(to, mixedFrom(ROOM_LIGHT[next.preset]));
+      gainFrom = gain;
+      gainTo = brightnessGain(next.brightness);
+      const kind = ROOM_LIGHT[next.preset].screen;
+      if (kind !== screenKind) {
+        screenUniforms.mapA.value =
+          screenUniforms.mixT.value > 0.5
+            ? screenUniforms.mapB.value
+            : screenUniforms.mapA.value;
+        screenUniforms.mapB.value = wallpaper(kind);
+        screenUniforms.mixT.value = 0;
+        screenKind = kind;
+      }
+      progress = presetChanged || gainFrom !== gainTo ? 0 : progress;
+      if (instant) {
+        progress = 1;
+        copyMixed(current, to);
+        gain = gainTo;
+        screenUniforms.mapA.value = screenUniforms.mapB.value;
+        screenUniforms.mixT.value = 0;
+        apply();
+      }
+      invalidate();
+    },
+    /**
+     * Advance transitions and weather. Returns true while something is still
+     * moving, so the renderer keeps drawing frames.
+     */
+    step(delta: number, ambient: boolean, reduced: boolean) {
+      let moving = false;
+      if (progress < 1) {
+        progress = reduced ? 1 : Math.min(1, progress + delta / 1.2);
+        const t = progress * progress * (3 - 2 * progress);
+        for (const key of colorKeys)
+          current[key].copy(from[key]).lerp(to[key], t);
+        for (const key of numberKeys)
+          current[key] = from[key] + (to[key] - from[key]) * t;
+        gain = gainFrom + (gainTo - gainFrom) * t;
+        if (screenUniforms.mapA.value !== screenUniforms.mapB.value) {
+          screenUniforms.mixT.value = t;
+          if (progress >= 1) {
+            screenUniforms.mapA.value = screenUniforms.mapB.value;
+            screenUniforms.mixT.value = 0;
+          }
+        }
+        moving = progress < 1;
+      }
+      // Lightning: occasional soft flashes during the storm, never under reduced motion.
+      const storm = current.rain > 0.5 && ambient && !reduced;
+      if (storm) {
+        nextFlash -= delta;
+        if (nextFlash <= 0) {
+          flash = 1;
+          nextFlash = 6 + random() * 9;
+        }
+      }
+      if (flash > 0) {
+        flash = storm ? Math.max(0, flash - delta * 2.6) : 0;
+        moving = true;
+      }
+      apply();
+      return moving;
+    },
     updateAmbient(time: number, camera: THREE.Camera) {
       foliage.forEach((crown, i) => {
         crown.rotation.z = Math.sin(time * 0.37 + i * 1.9) * 0.009;
@@ -803,6 +1382,7 @@ export function createDeskScene(invalidate: () => void) {
         mesh.instanceMatrix.needsUpdate = true;
       });
       steamMaterial.uniforms.time.value = time;
+      glassUniforms.time.value = time;
       const local = camera.position.clone();
       mug.worldToLocal(local);
       steam.rotation.y = Math.atan2(local.x, local.z);
@@ -812,6 +1392,7 @@ export function createDeskScene(invalidate: () => void) {
       geometries.forEach((g) => g.dispose());
       materials.forEach((m) => m.dispose());
       textures.forEach((t) => t.dispose());
+      sun.shadow.map?.dispose();
     },
   };
 }
