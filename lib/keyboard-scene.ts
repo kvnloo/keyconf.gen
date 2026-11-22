@@ -287,7 +287,8 @@ export function createKeyboardScene(
   studioReport.shafts = software ? 'geometry' : 'raymarch';
   studioReport.glass = software ? 'css' : 'webgl';
   const unsubscribeLighting = studioLighting.subscribe((state) => {
-    desk.setLighting(state, reduced);
+    // Read the live preference: its change event can arrive after a preset.
+    desk.setLighting(state, preference.matches);
     deskCacheDirty = true;
     wake();
   });
@@ -690,6 +691,9 @@ export function createKeyboardScene(
     if (stopped || !visible || document.hidden) return;
     const delta = Math.min((time - lastFrame) / 1000 || 1 / 60, 0.05);
     lastFrame = time;
+    // The change event can be missed (for example across a reload while the
+    // preference is being emulated), so trust the live query every frame.
+    if (reduced !== preference.matches) motion();
     let moving = false;
     const approach = (current: number, target: number, speed: number) => {
       if (reduced || software || Math.abs(current - target) < 0.0005)
