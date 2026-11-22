@@ -106,9 +106,69 @@ function computeTheme(p: PaletteLike) {
   };
 }
 
+/**
+ * Liquid-glass chrome over the lit studio room. Panels are a smoked tint
+ * (GLASS.tint at GLASS.alpha) composited over whatever the room shows behind
+ * them, so text must pass against that composite over both the brightest and
+ * the darkest backdrop any lighting preset produces. The extremes below were
+ * sampled from rendered frames under the chrome (Afternoon at brightness 100,
+ * Night at 0) and padded toward white and black.
+ */
+export const GLASS = {
+  ink: '#ffffff',
+  muted: '#dde4e0',
+  tint: '#0c1211',
+  alpha: 0.62,
+  /** The WebGL lens multiplies the room by this, then adds `lensLift`. */
+  lensBody: 0.38,
+  lensLift: '#090b0b',
+  brightest: '#f0efe8',
+  darkest: '#030405',
+} as const;
+
+function mixHex(top: string, bottom: string, alpha: number) {
+  return blendColor(top, bottom, alpha);
+}
+
+/** The colour a glass panel shows over `backdrop`. */
+export function glassComposite(backdrop: string, alpha: number = GLASS.alpha) {
+  return mixHex(GLASS.tint, backdrop, alpha);
+}
+
+/** The colour a WebGL lens shows over `backdrop` (multiply, then lift). */
+export function lensComposite(backdrop: string) {
+  const channel = (hex: string, offset: number) =>
+    parseInt(hex.slice(offset, offset + 2), 16);
+  const toHex = (v: number) =>
+    Math.max(0, Math.min(255, Math.round(v)))
+      .toString(16)
+      .padStart(2, '0');
+  return `#${[1, 3, 5]
+    .map((o) =>
+      toHex(channel(backdrop, o) * GLASS.lensBody + channel(GLASS.lensLift, o)),
+    )
+    .join('')}`;
+}
+
+/** Worst-case contrast of glass ink and muted text across both extremes. */
+export function glassContrast() {
+  const surfaces = [GLASS.brightest, GLASS.darkest].flatMap((backdrop) => [
+    glassComposite(backdrop),
+    lensComposite(backdrop),
+  ]);
+  return {
+    ink: Math.min(...surfaces.map((s) => contrastRatio(GLASS.ink, s))),
+    muted: Math.min(...surfaces.map((s) => contrastRatio(GLASS.muted, s))),
+  };
+}
+
 export type PaletteThemeOptions = {
-  /** Sync UI chrome tokens (--surface, --ink, …). Landing only; studio keeps defaults. */
-  chrome?: boolean;
+  /**
+   * Sync UI chrome tokens (--surface, --ink, …). `true` derives them from the
+   * palette; `'glass'` uses the contrast-checked glass tokens over the room;
+   * false keeps the studio defaults.
+   */
+  chrome?: boolean | 'glass';
 };
 
 export function applyPaletteTheme(
@@ -126,7 +186,20 @@ export function applyPaletteTheme(
   style.textContent = theme;
   if (!style.isConnected) target.head.appendChild(style);
   target.documentElement.style.setProperty('--palette-space', paletteSpace);
-  if (syncChrome) {
+  if (syncChrome === 'glass') {
+    const worst = glassComposite(GLASS.brightest);
+    target.documentElement.style.setProperty('--surface', worst);
+    target.documentElement.style.setProperty('--paper', DEFAULT_CHROME.paper);
+    target.documentElement.style.setProperty('--ink', GLASS.ink);
+    target.documentElement.style.setProperty('--muted', GLASS.muted);
+    // The palette accent still tints focus and highlights, made readable on glass.
+    const glassAccent = readableOn(worst, p.accent, {
+      light: '#d4e8d4',
+      dark: '#6a946a',
+    });
+    target.documentElement.style.setProperty('--focus', glassAccent);
+    target.documentElement.style.setProperty('--green', glassAccent);
+  } else if (syncChrome) {
     target.documentElement.style.setProperty('--surface', uiSurface);
     target.documentElement.style.setProperty('--paper', paper);
     target.documentElement.style.setProperty('--ink', ink);
@@ -147,4 +220,4 @@ export function applyPaletteTheme(
   return style;
 }
 
-export { computeTheme, blendColor, contrastRatio, readableOn };
+export { computeTheme, blendColor, contrastRatio, readableOn, MIN_UI_CONTRAST };
