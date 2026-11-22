@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   GLASS,
   MIN_UI_CONTRAST,
-  contrastRatio,
+  wcagContrast as contrastRatio,
   glassComposite,
   glassContrast,
   lensComposite,
@@ -18,14 +18,17 @@ import {
   parseLighting,
 } from '../lib/studio-lighting.ts';
 
+// WCAG 2 ratios (with the 0.05 flare term).
 test('glass ink and muted text pass over the brightest and darkest room', () => {
   const { ink, muted } = glassContrast();
   assert.ok(ink >= MIN_UI_CONTRAST, `glass ink ${ink.toFixed(2)}`);
   assert.ok(muted >= MIN_UI_CONTRAST, `glass muted ${muted.toFixed(2)}`);
-  for (const backdrop of [GLASS.brightest, GLASS.darkest]) {
+  for (const backdrop of [GLASS.brightestBlurred, GLASS.darkest]) {
     assert.ok(
-      contrastRatio(GLASS.ink, glassComposite(backdrop)) >= MIN_UI_CONTRAST,
+      contrastRatio(GLASS.muted, glassComposite(backdrop)) >= MIN_UI_CONTRAST,
     );
+  }
+  for (const backdrop of [GLASS.brightestSharp, GLASS.darkest]) {
     assert.ok(
       contrastRatio(GLASS.muted, lensComposite(backdrop)) >= MIN_UI_CONTRAST,
     );
@@ -34,7 +37,7 @@ test('glass ink and muted text pass over the brightest and darkest room', () => 
 
 test('a thinner glass tint would fail, so the check has teeth', () => {
   assert.ok(
-    contrastRatio(GLASS.muted, glassComposite(GLASS.brightest, 0.3)) <
+    contrastRatio(GLASS.muted, glassComposite(GLASS.brightestBlurred, 0.3)) <
       MIN_UI_CONTRAST,
   );
 });

@@ -206,14 +206,17 @@
   min-height: 760px;
   background: #0d1412;
 }
-/* The room needs no vignette; keep a light floor fade for the gallery. */
+/* A light floor fade under the gallery and a soft scrim behind the hero
+   copy, which sits on the bright window rather than on glass. */
 .screen-home .stage::after {
-  background: linear-gradient(
-    0deg,
-    rgb(5 8 7 / 0.55) 0%,
-    transparent 18%,
-    transparent 100%
-  );
+  background:
+    linear-gradient(0deg, rgb(5 8 7 / 0.55) 0%, transparent 18%),
+    linear-gradient(
+      90deg,
+      rgb(5 8 7 / 0.5) 0%,
+      rgb(5 8 7 / 0.28) 22%,
+      transparent 34%
+    );
 }
 .screen-home .stage-heading {
   top: 124px;

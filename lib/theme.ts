@@ -45,6 +45,25 @@ function contrastRatio(ink: string, background: string): number {
   return Math.max(L1, L2) / Math.min(L1, L2);
 }
 
+/**
+ * WCAG 2 contrast with the 0.05 flare term. `contrastRatio` above omits it,
+ * which overstates contrast on dark colours; the palette chrome still relies
+ * on that older measure, so the glass checks use this one instead.
+ */
+function wcagContrast(ink: string, background: string): number {
+  const lum = (hex: string) => {
+    const [r, g, b] = [1, 3, 5].map(
+      (off) => parseInt(hex.slice(off, off + 2), 16) / 255,
+    );
+    const adjust = (v: number) =>
+      v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    return 0.2126 * adjust(r) + 0.7152 * adjust(g) + 0.0722 * adjust(b);
+  };
+  const a = lum(ink),
+    b = lum(background);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
 function readableOn(
   background: string,
   preferred: string,
@@ -110,9 +129,15 @@ function computeTheme(p: PaletteLike) {
  * Liquid-glass chrome over the lit studio room. Panels are a smoked tint
  * (GLASS.tint at GLASS.alpha) composited over whatever the room shows behind
  * them, so text must pass against that composite over both the brightest and
- * the darkest backdrop any lighting preset produces. The extremes below were
- * sampled from rendered frames under the chrome (Afternoon at brightness 100,
- * Night at 0) and padded toward white and black.
+ * the darkest backdrop any lighting preset produces.
+ *
+ * The extremes come from rendered frames with the chrome hidden, sampled
+ * inside every glass element's box for each preset at brightness 0 and 100
+ * (1440x900 and 390x844). CSS panels see the room through a 22px blur: the
+ * brightest blurred sample was #75a1b9 (luminance 0.33), padded here to
+ * #cfd8de. WebGL lenses refract the sharp frame: the brightest sharp sample
+ * was #fff3da, so they are checked against pure white. The darkest sample was
+ * #000303, checked as black.
  */
 export const GLASS = {
   ink: '#ffffff',
@@ -120,10 +145,11 @@ export const GLASS = {
   tint: '#0c1211',
   alpha: 0.62,
   /** The WebGL lens multiplies the room by this, then adds `lensLift`. */
-  lensBody: 0.38,
+  lensBody: 0.34,
   lensLift: '#090b0b',
-  brightest: '#f0efe8',
-  darkest: '#030405',
+  brightestBlurred: '#cfd8de',
+  brightestSharp: '#ffffff',
+  darkest: '#000000',
 } as const;
 
 function mixHex(top: string, bottom: string, alpha: number) {
@@ -152,13 +178,15 @@ export function lensComposite(backdrop: string) {
 
 /** Worst-case contrast of glass ink and muted text across both extremes. */
 export function glassContrast() {
-  const surfaces = [GLASS.brightest, GLASS.darkest].flatMap((backdrop) => [
-    glassComposite(backdrop),
-    lensComposite(backdrop),
-  ]);
+  const surfaces = [
+    glassComposite(GLASS.brightestBlurred),
+    glassComposite(GLASS.darkest),
+    lensComposite(GLASS.brightestSharp),
+    lensComposite(GLASS.darkest),
+  ];
   return {
-    ink: Math.min(...surfaces.map((s) => contrastRatio(GLASS.ink, s))),
-    muted: Math.min(...surfaces.map((s) => contrastRatio(GLASS.muted, s))),
+    ink: Math.min(...surfaces.map((s) => wcagContrast(GLASS.ink, s))),
+    muted: Math.min(...surfaces.map((s) => wcagContrast(GLASS.muted, s))),
   };
 }
 
@@ -187,7 +215,7 @@ export function applyPaletteTheme(
   if (!style.isConnected) target.head.appendChild(style);
   target.documentElement.style.setProperty('--palette-space', paletteSpace);
   if (syncChrome === 'glass') {
-    const worst = glassComposite(GLASS.brightest);
+    const worst = glassComposite(GLASS.brightestBlurred);
     target.documentElement.style.setProperty('--surface', worst);
     target.documentElement.style.setProperty('--paper', DEFAULT_CHROME.paper);
     target.documentElement.style.setProperty('--ink', GLASS.ink);
@@ -220,4 +248,11 @@ export function applyPaletteTheme(
   return style;
 }
 
-export { computeTheme, blendColor, contrastRatio, readableOn, MIN_UI_CONTRAST };
+export {
+  computeTheme,
+  blendColor,
+  contrastRatio,
+  wcagContrast,
+  readableOn,
+  MIN_UI_CONTRAST,
+};

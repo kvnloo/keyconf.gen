@@ -78,7 +78,7 @@ export function createGlassPass(renderer: THREE.WebGLRenderer) {
         vec3 glass = vec3(room(bent + split).r, room(bent).g, room(bent - split).b);
         // Smoke the body so white type keeps its contrast over bright rooms.
         // Matches GLASS.lensBody / lensLift in lib/theme.ts, which the contrast test checks.
-        float body = 0.38 - 0.04 * selected;
+        float body = 0.34 - 0.03 * selected;
         glass = glass * body + vec3(0.035, 0.043, 0.043);
         glass += room(px + normal * r * 2.0) * (lip * 0.2 + crest * 0.13);
         glass += vec3(1.0, 0.97, 0.9) * (0.5 * exp(-depth / 1.1) + 0.12 * pow(lip, 3.0)) * (0.6 + 0.4 * dot(normal, normalize(vec2(-0.6, -1.0))));
