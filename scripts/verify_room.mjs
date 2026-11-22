@@ -37,10 +37,9 @@ try {
         response.status(),
       );
   });
-  const textureLoads = [
-    'solarpunk-sketchbook.png',
-    'solarpunk-window-garden.png',
-  ].map((name) =>
+  // The studio room paints its forest, plaster, walnut and wallpapers
+  // procedurally; the sketchbook illustration is the only texture it fetches.
+  const textureLoads = ['solarpunk-sketchbook.png'].map((name) =>
     page
       .waitForResponse((response) =>
         response.url().endsWith('/textures/' + name),
@@ -68,13 +67,36 @@ try {
   );
   const roomBounds = await page.locator('.scene-host canvas').boundingBox();
   assert.ok(roomBounds && roomBounds.width > 0 && roomBounds.height > 0);
-  const captureRoom = () => page.screenshot({ clip: roomBounds });
+  // The landing chrome now floats over the canvas (glass header, panels,
+  // lazy thumbnails, backdrop blur), so hide it while capturing: these checks
+  // are about the rendered room, not the DOM above it.
+  const captureRoom = async () => {
+    await page.addStyleTag({
+      content:
+        '.studio-header,.stage > :not(.scene-host),.scene-host > :not(canvas){visibility:hidden !important}',
+    });
+    const shot = await page.screenshot({ clip: roomBounds });
+    await page.evaluate(
+      () =>
+        document.head.lastElementChild?.matches('style') &&
+        document.head.lastElementChild.remove(),
+    );
+    return shot;
+  };
+  const framesBefore = await page
+    .locator('.scene-host')
+    .getAttribute('data-render-frames');
   const frozen = await captureRoom();
   await page.waitForTimeout(750);
-  assert.deepEqual(
-    await captureRoom(),
-    frozen,
-    'Pausing must freeze the actual rendered room',
+  // Buffer.equals, not deepEqual: a failing deepEqual on two full-page PNGs
+  // spends minutes building its diff and looks like a hang.
+  const after = await captureRoom();
+  const framesAfter = await page
+    .locator('.scene-host')
+    .getAttribute('data-render-frames');
+  assert.ok(
+    after.equals(frozen),
+    `Pausing must freeze the actual rendered room (frames ${framesBefore} -> ${framesAfter})`,
   );
   await page.screenshot({
     path: 'outputs/solarpunk-landing.png',
@@ -118,18 +140,76 @@ try {
     () =>
       document.querySelector('.scene-host')?.dataset.renderState === 'active',
   );
+  // Lighting presets re-light the actual rendered room and persist.
+  await page
+    .getByRole('button', { name: 'Pause room motion', exact: true })
+    .click();
+  await page.waitForFunction(
+    () => document.querySelector('.scene-host')?.dataset.renderState === 'idle',
+  );
+  const afternoon = await captureRoom();
+  await page.getByRole('button', { name: /^Night lighting/ }).click();
+  await page.waitForFunction(
+    () =>
+      window.__studio?.state().preset === 'night' &&
+      window.__studio.state().transition === 1,
+  );
+  await page.waitForFunction(
+    () => document.querySelector('.scene-host')?.dataset.renderState === 'idle',
+  );
+  assert.equal(
+    await page
+      .getByRole('button', { name: /^Night lighting/ })
+      .getAttribute('aria-pressed'),
+    'true',
+  );
+  assert.ok(
+    !(await captureRoom()).equals(afternoon),
+    'A lighting preset must change the rendered room',
+  );
+  const night = await page.evaluate(() => window.__studio.state());
+  await page.getByRole('slider', { name: 'Brightness' }).focus();
+  await page.keyboard.press('End');
+  await page.waitForFunction(() => window.__studio.state().brightness === 100);
+  await page.waitForFunction(
+    (before) => window.__studio.state().exposure > before + 0.05,
+    night.exposure,
+  );
+  await page.reload();
+  await page.locator('.scene-host[data-scene-status="ready"]').waitFor();
+  assert.deepEqual(
+    await page.evaluate(() => {
+      const { preset, brightness } = window.__studio.state();
+      return { preset, brightness };
+    }),
+    { preset: 'night', brightness: 100 },
+    'Preset and brightness must survive a reload',
+  );
+  await page.evaluate(() => {
+    window.__studio.setPreset('afternoon');
+    window.__studio.setBrightness(72);
+  });
   await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.evaluate(() => window.__studio.setPreset('sunset'));
+  assert.equal(
+    await page.evaluate(() => window.__studio.state().transition),
+    1,
+    'Reduced motion must apply a preset without a transition',
+  );
   await page.waitForFunction(
     () => document.querySelector('.scene-host')?.dataset.renderState === 'idle',
   );
   await page
     .getByRole('button', { name: 'Pause room motion', exact: true })
     .waitFor({ state: 'hidden' });
-  assert.equal(textures.get('solarpunk-sketchbook.png'), 200);
-  assert.equal(textures.get('solarpunk-window-garden.png'), 200);
+  // The reload above revalidates the texture, so a 304 also proves it loaded.
+  assert.ok(
+    [200, 304].includes(textures.get('solarpunk-sketchbook.png')),
+    'The sketchbook texture must load',
+  );
   assert.deepEqual(errors, []);
   evidence.push(
-    'Actual room pixels animate, pause freezes them, offscreen frames stop, return resumes, and live reduced-motion changes stop ambient work. Both original texture assets load without runtime or shader errors.',
+    'Actual room pixels animate, pause freezes them, offscreen frames stop, return resumes, and live reduced-motion changes stop ambient work. A lighting preset changes the rendered room, brightness raises exposure, both persist across reload, and reduced motion applies presets instantly. The sketchbook texture loads and no runtime or shader errors occur.',
   );
   await page.close();
 } finally {
