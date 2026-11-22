@@ -61,8 +61,9 @@ export function createShaftPass(depthTexture: THREE.Texture) {
           if (p.z < ${f(ROOM.backWall)} || p.y < ${f(ROOM.floor)} || p.y > ${f(ROOM.ceiling)}) continue;
           float t = (p.z - (${f(ROOM.backWall)})) / travel.z;
           vec3 pane = p - travel * t;
-          float window = smoothstep(${f(x0)}, ${f(x0 + 1.5)}, pane.x) * smoothstep(${f(x1)}, ${f(x1 - 1.5)}, pane.x)
-            * smoothstep(${f(y0)}, ${f(y0 + 1.0)}, pane.y) * smoothstep(${f(y1)}, ${f(y1 - 1.0)}, pane.y)
+          // smoothstep needs edge0 < edge1; reversed edges are undefined in GLSL.
+          float window = smoothstep(${f(x0)}, ${f(x0 + 1.5)}, pane.x) * (1.0 - smoothstep(${f(x1 - 1.5)}, ${f(x1)}, pane.x))
+            * smoothstep(${f(y0)}, ${f(y0 + 1.0)}, pane.y) * (1.0 - smoothstep(${f(y1 - 1.0)}, ${f(y1)}, pane.y))
             * smoothstep(0.45, 0.9, abs(pane.x - (${f(mullion)})));
           if (window <= 0.0) continue;
           // The open lower panes scatter less than the slatted blind, which
@@ -87,7 +88,7 @@ export function createShaftPass(depthTexture: THREE.Texture) {
           float fade = smoothstep(0.0, 5.0, t) * exp(-t / 70.0);
           light += window * blind * under * fade * dust * (0.04 + gaps) * ds;
         }
-        gl_FragColor = vec4(base.rgb + shaftColor * light * density * 0.04, base.a);
+        gl_FragColor = vec4(base.rgb + shaftColor * light * density * 0.055, base.a);
       }`,
   });
   // ShaderPass clones its uniforms, which would copy the depth texture rather

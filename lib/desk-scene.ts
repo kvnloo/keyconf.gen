@@ -285,13 +285,13 @@ export function createDeskScene(
           float speed = 2.0 + hash(column*3.1 + float(layer))*4.0;
           float y = fract(p.y*0.08 + time*speed*0.12 + hash(column));
           float x = abs(fract(p.x) - 0.5);
-          float drop = smoothstep(0.12, 0.0, x) * smoothstep(0.0, 0.05, y) * smoothstep(0.55, 0.05, y);
+          float drop = (1.0 - smoothstep(0.02, 0.16, x)) * smoothstep(0.0, 0.08, y) * (1.0 - smoothstep(0.08, 0.4, y));
           streaks += drop * step(0.55, hash(column*7.7 + float(layer)*13.0));
         }
         float beads = step(0.985, hash(floor(uv.x*3.0)*91.0 + floor(uv.y*3.0)*17.0)) * 0.6;
         float wet = clamp(streaks + beads, 0.0, 1.0) * rain;
-        vec3 color = tint * (0.12 + 0.5*wet + flash*0.6);
-        gl_FragColor = vec4(color, 0.04 + wet*0.32 + rain*0.1);
+        vec3 color = mix(tint * 0.3, vec3(0.62, 0.7, 0.74), wet) + flash * 0.6;
+        gl_FragColor = vec4(color, 0.04 + wet * 0.26 + rain * 0.2 + flash * 0.3);
         #include <colorspace_fragment>
       }`,
   });
@@ -1009,11 +1009,12 @@ export function createDeskScene(
   const lamp = new THREE.Group();
   lamp.name = 'mushroom-lamp';
   lamp.position.set(19, ROOM.deskTop + lampStack.height, -12);
+  lamp.scale.setScalar(0.72);
   group.add(lamp);
   const glow = new THREE.MeshStandardMaterial({
-    color: '#f3d9b0',
-    emissive: '#ffb468',
-    emissiveIntensity: 1.6,
+    color: '#e9c9a0',
+    emissive: '#ff9f4a',
+    emissiveIntensity: 1.2,
     roughness: 0.5,
   });
   materials.add(glow);
@@ -1041,7 +1042,7 @@ export function createDeskScene(
   capUnder.rotation.x = Math.PI / 2;
   capUnder.castShadow = false;
   const lampLight = new THREE.PointLight('#ffb86e', 0, 0, 2);
-  lampLight.position.set(19, ROOM.deskTop + lampStack.height + 4.4, -11);
+  lampLight.position.set(19, ROOM.deskTop + lampStack.height + 3.2, -11);
   lampLight.castShadow = false;
   group.add(lampLight);
   // Bounce on the wall behind the lamp: an additive glow card.
@@ -1175,26 +1176,50 @@ export function createDeskScene(
     side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
     uniforms: shaftUniforms,
-    vertexShader: `varying vec3 vWorld; void main(){ vec4 w = modelMatrix*vec4(position,1.0); vWorld=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }`,
+    // The prism is a unit box mapped onto (window width, window height, sun
+    // travel), so box-local position is directly (u, v, distance along the beam).
+    vertexShader: `varying vec3 vLocal; void main(){ vLocal = position + 0.5; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: `
-      varying vec3 vWorld; uniform vec3 travel, color; uniform float density, opening;
+      varying vec3 vLocal; uniform vec3 travel, color; uniform float density, opening;
       void main(){
-        float t = (vWorld.z - (${ROOM.backWall.toFixed(2)})) / travel.z;
-        vec3 pane = vWorld - travel * t;
-        float u = smoothstep(${x0.toFixed(1)}, ${(x0 + 4).toFixed(1)}, pane.x) * smoothstep(${x1.toFixed(1)}, ${(x1 - 4).toFixed(1)}, pane.x);
-        float v = smoothstep(${y0.toFixed(1)}, ${(y0 + 3).toFixed(1)}, pane.y) * smoothstep(${y1.toFixed(1)}, ${(y1 - 3).toFixed(1)}, pane.y);
-        float mullion = smoothstep(0.6, 1.6, abs(pane.x - (${ROOM.window.mullion.toFixed(1)})));
-        float slat = fract((${y1.toFixed(1)} - pane.y) / ${ROOM.slatSpacing.toFixed(2)});
-        float clear = 1.0 - smoothstep(opening*0.5 - 0.06, opening*0.5 + 0.06, abs(slat - 0.5));
-        float blind = pane.y > ${ROOM.blindBottom.toFixed(1)} ? clear : 1.0;
+        float px = ${x0.toFixed(1)} + vLocal.x * ${(x1 - x0).toFixed(1)};
+        float py = ${y0.toFixed(1)} + vLocal.y * ${(y1 - y0).toFixed(1)};
+        float t = vLocal.z * 120.0;
+        float u = smoothstep(0.0, 0.09, vLocal.x) * (1.0 - smoothstep(0.91, 1.0, vLocal.x));
+        float v = smoothstep(0.0, 0.08, vLocal.y) * (1.0 - smoothstep(0.92, 1.0, vLocal.y));
+        float mullion = smoothstep(0.6, 1.6, abs(px - (${ROOM.window.mullion.toFixed(1)})));
+        float slat = fract((${y1.toFixed(1)} - py) / ${ROOM.slatSpacing.toFixed(2)});
+        float clear = 1.0 - smoothstep(opening * 0.5 - 0.2, opening * 0.5 + 0.2, abs(slat - 0.5));
+        float blind = py > ${ROOM.blindBottom.toFixed(1)} ? mix(0.3, 0.9, clear) : 0.4;
+        float beam = px + py * 0.45;
+        float gaps = pow(max(0.0, sin(beam * 0.42 + 0.9) * 0.62 + sin(beam * 0.93 + 2.1) * 0.38), 2.6);
         float fade = exp(-t / 70.0) * smoothstep(0.0, 6.0, t);
-        float a = u * v * mullion * blind * fade * density * 0.045;
+        // One surface stands in for a whole column of air, hence the larger gain.
+        float a = u * v * mullion * blind * fade * (0.04 + gaps) * density * 0.065;
         gl_FragColor = vec4(color * a, 1.0);
         #include <colorspace_fragment>
       }`,
   });
   materials.add(shaftMaterial);
-  const shaftGeometry = new THREE.BoxGeometry(1, 1, 1);
+  // Interior slices through the beam volume (a box's own faces would sit on
+  // the aperture edge, where the beam fades to nothing): vertical sheets
+  // across the window width and horizontal sheets through its height.
+  const slices: number[] = [];
+  const quad = (a: number[], b: number[], c: number[], d: number[]) =>
+    slices.push(...a, ...b, ...c, ...a, ...c, ...d);
+  for (let i = 1; i < 8; i++) {
+    const x = i / 8 - 0.5;
+    quad([x, -0.5, -0.5], [x, 0.5, -0.5], [x, 0.5, 0.5], [x, -0.5, 0.5]);
+  }
+  for (let j = 1; j < 5; j++) {
+    const y = j / 5 - 0.5;
+    quad([-0.5, y, -0.5], [0.5, y, -0.5], [0.5, y, 0.5], [-0.5, y, 0.5]);
+  }
+  const shaftGeometry = new THREE.BufferGeometry();
+  shaftGeometry.setAttribute(
+    'position',
+    new THREE.Float32BufferAttribute(slices, 3),
+  );
   geometries.add(shaftGeometry);
   const shaftVolume = new THREE.Mesh(shaftGeometry, shaftMaterial);
   shaftVolume.name = 'efficient-shafts';
@@ -1248,7 +1273,7 @@ export function createDeskScene(
     skyLight.intensity = light.skyIntensity * (1 + flash * 4);
     keyFill.intensity = light.keyFill;
     lampLight.intensity = light.lampIntensity * 60;
-    glow.emissiveIntensity = 0.5 + light.lampIntensity * 0.9;
+    glow.emissiveIntensity = 0.25 + light.lampIntensity * 0.55;
     bounceMaterial.opacity = Math.min(1, 0.12 + light.lampIntensity * 0.12);
     screenUniforms.gain.value = light.screenGain;
     screenLight.intensity = light.screenGain * 14;
