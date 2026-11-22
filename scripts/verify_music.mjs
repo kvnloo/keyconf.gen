@@ -186,6 +186,16 @@ try {
   await mkdir('outputs', { recursive: true });
   for (const width of [1280, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
+    // The popover re-anchors on the next animation frame after a resize, so
+    // measuring on the same tick races it. Wait for it to settle (up to 2 s);
+    // a popup that really stays off screen still fails.
+    const fits = () =>
+      page.locator('.music-popup').evaluate((popup, width) => {
+        const r = popup.getBoundingClientRect();
+        return r.x >= 0 && r.x + r.width <= width + 1;
+      }, width);
+    for (let i = 0; i < 40 && !(await fits()); i++)
+      await page.waitForTimeout(50);
     const bounds = await page.locator('.music-popup').boundingBox();
     assert.ok(bounds && bounds.x >= 0 && bounds.x + bounds.width <= width + 1);
     assert.equal(
