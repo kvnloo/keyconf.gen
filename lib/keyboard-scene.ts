@@ -476,6 +476,11 @@ export function createKeyboardScene(
     controls.maxAzimuthAngle = options.environment === 'desk' ? 0.85 : Infinity;
     if (roomView) {
       const framing = roomFraming(deck);
+      // Exploded layers rise about five units; aim a little higher and closer.
+      if (options.exploded) {
+        framing.target.y += 1.5;
+        framing.position.lerp(framing.target, 0.18);
+      }
       cameraTarget = framing.position;
       focusX = framing.target.x;
       focusHeight = framing.target.y;
@@ -1162,7 +1167,11 @@ export function createKeyboardScene(
       options = next;
       if (modelChanged) void loadModel(next.device);
       else if (accessoriesChanged) updateAccessories();
-      if (viewChanged) setView();
+      const roomView =
+        next.environment === 'desk' &&
+        !next.closeUp &&
+        (next.view === 'perspective' || next.view === 'reset');
+      if (viewChanged || (assemblyChanged && roomView)) setView();
       else if (assemblyChanged) {
         const offset = camera.position.clone().sub(controls.target);
         if (next.exploded) assembledDistance = offset.length();

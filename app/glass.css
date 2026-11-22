@@ -506,3 +506,25 @@
     -webkit-backdrop-filter: none;
   }
 }
+
+/* Exploded layer guide: glass chips, lifted clear of the starting-build
+   gallery that the landing keeps along the bottom edge. */
+.screen-home .exploded-layer-guide {
+  bottom: 196px;
+  left: 49px;
+  z-index: 4;
+}
+.exploded-layer-guide > * {
+  background: rgb(12 18 17 / 0.62);
+  border-color: rgb(255 255 255 / 0.16);
+  border-radius: 14px;
+  color: #ffffff;
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  backdrop-filter: blur(18px) saturate(1.5);
+}
+@media (max-width: 850px) {
+  .screen-home .exploded-layer-guide {
+    left: 12px;
+    bottom: 204px;
+  }
+}
