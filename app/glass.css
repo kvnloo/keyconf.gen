@@ -1,0 +1,505 @@
+/*
+ * Liquid-glass chrome, after Meng To's "Studio Glass" desk demo.
+ *
+ * Panels are a smoked tint (GLASS.tint at GLASS.alpha in lib/theme.ts) over a
+ * blurred, saturated backdrop, with a 1px rim, a top highlight and a soft
+ * inner gradient. Ink is white and secondary text a pale grey; both are
+ * contrast-tested in tests/studio-glass.test.mjs against the brightest and
+ * darkest room the lighting presets produce. Layout changes are confined to
+ * the landing (.screen-home); elsewhere only surfaces and type change, so the
+ * mobile workbench keeps its measured heights.
+ */
+:root {
+  /* Geist when next/font provides it, otherwise the platform UI face (SF Pro on
+     Apple, Segoe UI on Windows). A bare var() to an unset property would void
+     every font shorthand that uses this token. */
+  --glass-font:
+    var(--font-geist-sans, -apple-system), BlinkMacSystemFont, 'SF Pro Text',
+    'Inter', 'Segoe UI', system-ui, sans-serif;
+  --glass-ink: #ffffff;
+  --glass-muted: #dde4e0;
+  --glass-tint: rgb(12 18 17 / 0.62);
+  --glass-tint-strong: rgb(12 18 17 / 0.78);
+  --glass-rim: rgb(255 255 255 / 0.2);
+  --glass-rim-strong: rgb(255 255 255 / 0.42);
+  --glass-highlight: rgb(255 255 255 / 0.3);
+  --glass-blur: blur(22px) saturate(1.6);
+  --glass-shadow: 0 18px 50px rgb(0 0 0 / 0.34);
+}
+
+.studio-shell {
+  font-family: var(--glass-font);
+}
+
+/* ---- shared glass surface ------------------------------------------------ */
+.studio-shell .header-search,
+.studio-shell .music-trigger,
+.studio-shell .header-utilities .button.secondary,
+.studio-shell .view-controls,
+.studio-shell .room-motion,
+.studio-shell .featured-inspector,
+.studio-shell .featured-card,
+.studio-shell .gallery-controls button,
+.studio-shell .config,
+.studio-shell .build-bar,
+.studio-shell .stage > .volume-dial,
+.studio-shell .modal,
+.studio-shell .toast {
+  background:
+    linear-gradient(160deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0) 42%),
+    var(--glass-tint);
+  border: 1px solid var(--glass-rim);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 -1px 0 rgb(255 255 255 / 0.05),
+    var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  color: var(--glass-ink);
+}
+/* Large panels stay denser so long text never sits on a bright window. */
+.studio-shell .config,
+.studio-shell .modal,
+.studio-shell .featured-inspector {
+  background:
+    linear-gradient(160deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0) 42%),
+    var(--glass-tint-strong);
+}
+.studio-shell .modal {
+  border-radius: 24px;
+}
+
+/* ---- type ---------------------------------------------------------------- */
+.studio-shell .featured-subtitle,
+.studio-shell .preview-part small,
+.studio-shell .preview-note,
+.studio-shell .preview-safe,
+.studio-shell .preview-deck-note,
+.studio-shell .featured-card small,
+.studio-shell .featured-card-line,
+.studio-shell .gallery-title,
+.studio-shell .preview-eyebrow,
+.studio-shell .header-resume,
+.studio-shell .studio-header nav,
+.studio-shell .stage-heading p,
+.studio-shell .stage-heading .eyebrow,
+.studio-shell .landing-actions > a,
+.landing-footer {
+  color: var(--glass-muted);
+}
+.studio-shell .featured-inspector h2,
+.studio-shell .featured-card strong,
+.studio-shell .preview-part div > span,
+.studio-shell .stage h1,
+.studio-shell .studio-header .brand,
+.studio-shell .studio-header nav [aria-current] {
+  color: var(--glass-ink);
+}
+.studio-shell .studio-header nav [aria-current]::after {
+  background: var(--glass-ink);
+}
+
+/* ---- buttons ------------------------------------------------------------- */
+.studio-shell .button {
+  border-radius: 999px;
+  background: linear-gradient(#ffffff, #ececea);
+  border-color: #ffffff;
+  color: #141817;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 8px 24px rgb(0 0 0 / 0.25);
+}
+.studio-shell .button:hover {
+  background: #ffffff;
+}
+.studio-shell .button.secondary {
+  color: var(--glass-ink);
+}
+.studio-shell .button.secondary:hover {
+  background:
+    linear-gradient(160deg, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.02)),
+    var(--glass-tint);
+}
+.studio-shell .view-controls {
+  border-radius: 22px;
+  padding: 5px;
+}
+.studio-shell .view-controls button {
+  border-radius: 16px;
+  color: var(--glass-ink);
+  border-color: transparent;
+}
+.studio-shell .view-controls button + button {
+  border-left: 1px solid rgb(255 255 255 / 0.12);
+}
+.studio-shell .view-controls button:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+.studio-shell .view-controls button[aria-pressed='true'] {
+  background:
+    linear-gradient(125deg, #f6d7ff2e, #c9f1ff26 40%, #fff1d026),
+    rgb(255 255 255 / 0.1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35);
+}
+.studio-shell .room-motion {
+  border-radius: 999px;
+}
+.studio-shell .header-search,
+.studio-shell .music-trigger,
+.studio-shell .header-utilities .button.secondary {
+  border-radius: 999px;
+}
+.studio-shell .header-search kbd {
+  background: rgb(255 255 255 / 0.12);
+  border: 1px solid rgb(255 255 255 / 0.18);
+  color: var(--glass-ink);
+  border-radius: 999px;
+}
+.studio-shell .header-search span {
+  color: var(--glass-muted);
+}
+
+/* ---- builder surfaces (colour only; layout untouched) -------------------- */
+.studio-shell .config {
+  border-radius: 26px;
+}
+.studio-shell .workspace .stage {
+  border-radius: 26px;
+  border-color: var(--glass-rim);
+}
+.studio-shell .build-bar {
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12);
+}
+.studio-shell .studio-header.header {
+  border-bottom-color: rgb(255 255 255 / 0.1);
+}
+
+/* ---- landing over the lit room ------------------------------------------ */
+.screen-home .studio-header.header {
+  position: absolute;
+  z-index: 8;
+  top: 14px;
+  left: 18px;
+  right: 18px;
+  height: 64px;
+  padding: 0 14px 0 26px;
+  border: 1px solid var(--glass-rim);
+  border-radius: 24px;
+  background:
+    linear-gradient(160deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0) 45%),
+    rgb(12 18 17 / 0.5);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+.screen-home .studio-header .brand span {
+  border-color: rgb(255 255 255 / 0.4);
+  color: var(--glass-ink);
+}
+.screen-home .workspace .stage {
+  height: 100svh;
+  min-height: 760px;
+  background: #0d1412;
+}
+/* The room needs no vignette; keep a light floor fade for the gallery. */
+.screen-home .stage::after {
+  background: linear-gradient(
+    0deg,
+    rgb(5 8 7 / 0.55) 0%,
+    transparent 18%,
+    transparent 100%
+  );
+}
+.screen-home .stage-heading {
+  top: 124px;
+  left: 3.4%;
+  width: 330px;
+  text-shadow: 0 2px 18px rgb(0 0 0 / 0.55);
+}
+.screen-home .stage h1 {
+  font-size: clamp(52px, 4.9vw, 76px);
+  font-weight: 500;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+  margin: 26px 0 18px;
+}
+.screen-home .stage-heading .eyebrow {
+  color: var(--glass-ink);
+  opacity: 0.92;
+}
+.screen-home .stage-heading p {
+  font-size: 15px;
+}
+.screen-home .landing-actions .button {
+  min-height: 48px;
+}
+.screen-home .featured-inspector {
+  top: 96px;
+  right: 18px;
+  width: 304px;
+  padding: 20px 20px 16px;
+  border-radius: 26px;
+  max-height: calc(100% - 214px);
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.screen-home .featured-inspector h2 {
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  margin: 8px 0 4px;
+}
+.screen-home .featured-color-strip {
+  margin: 12px 0 14px;
+}
+.screen-home .preview-parts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 14px;
+}
+.screen-home .preview-part {
+  gap: 10px;
+  padding: 10px 0;
+  align-items: flex-start;
+  border-top-color: rgb(255 255 255 / 0.12);
+}
+.screen-home .preview-part .part-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--glass-ink);
+}
+.screen-home .preview-part .part-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.screen-home .preview-part div > span {
+  font-size: 11px;
+  font-weight: 500;
+}
+.screen-home .preview-part small {
+  font-size: 11px;
+}
+.screen-home .preview-note {
+  margin: 10px 0 14px;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+.screen-home .featured-gallery {
+  left: 3.4%;
+  right: 340px;
+  bottom: 22px;
+}
+.screen-home .gallery-title {
+  margin-bottom: 10px;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.6);
+}
+.screen-home .gallery-controls button {
+  width: 40px;
+  height: 40px;
+}
+.screen-home .featured-cards {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: 196px;
+  gap: 10px;
+}
+.screen-home .featured-card {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+  column-gap: 10px;
+  align-items: start;
+  padding: 9px 12px 9px 8px;
+  border-radius: 20px;
+  min-height: 78px;
+}
+.screen-home .featured-card img {
+  grid-row: 1 / 4;
+  align-self: center;
+  width: 70px;
+}
+.screen-home .featured-card-line {
+  margin: 0 0 2px;
+  font-size: 10px;
+}
+.screen-home .featured-card strong {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.screen-home .featured-card small {
+  margin-top: 2px;
+  font-size: 10.5px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.screen-home .featured-card[aria-pressed='true'] {
+  border-color: var(--glass-rim-strong);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 0 0 1px rgb(255 255 255 / 0.25),
+    var(--glass-shadow);
+  background:
+    linear-gradient(125deg, #f6d7ff26, #c9f1ff1f 40%, #fff1d01f),
+    var(--glass-tint);
+}
+.screen-home .featured-card:hover {
+  background:
+    linear-gradient(160deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.02)),
+    var(--glass-tint);
+}
+.screen-home .stage-bottom {
+  left: auto;
+  right: 18px;
+  bottom: 22px;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 8px;
+}
+.screen-home .landing-footer {
+  display: none;
+}
+.screen-home .stage .studio-lighting:not([data-compact]) {
+  top: 98px;
+  left: clamp(372px, 29.5%, 560px);
+}
+
+@media (min-width: 1700px) {
+  .screen-home .featured-inspector {
+    width: 340px;
+    right: 28px;
+  }
+  .screen-home .featured-gallery {
+    right: 390px;
+  }
+  .screen-home .stage-bottom {
+    right: 28px;
+  }
+}
+@media (max-width: 1150px) {
+  .screen-home .featured-inspector {
+    width: 272px;
+  }
+  .screen-home .featured-gallery {
+    right: 300px;
+  }
+  .screen-home .stage-heading {
+    width: 260px;
+  }
+}
+/* Below 900px the landing stacks: header in flow, room, then inspector and
+   gallery below it, all on glass. */
+@media (max-width: 900px) {
+  .screen-home .studio-header.header {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    height: auto;
+    margin: 10px 10px 0;
+    padding: 10px 16px;
+    border-radius: 22px;
+  }
+  .screen-home .workspace .stage {
+    height: 730px;
+    min-height: 0;
+  }
+  .screen-home .stage-heading {
+    top: 26px;
+  }
+  .screen-home .featured-inspector {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: auto;
+    max-height: none;
+  }
+  .screen-home .featured-gallery {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+  }
+  .screen-home .featured-cards {
+    grid-auto-columns: 200px;
+  }
+  .screen-home .stage-bottom {
+    left: 20px;
+    right: 20px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+  .screen-home .landing-footer {
+    display: flex;
+  }
+  .studio-lighting:not([data-compact]) {
+    left: 50%;
+    top: auto;
+    bottom: 96px;
+    margin-left: -205px;
+  }
+}
+@media (max-width: 700px) {
+  .screen-home .stage .studio-lighting {
+    top: 352px;
+  }
+}
+@media (max-width: 520px) {
+  .screen-home .workspace .stage {
+    height: 740px;
+  }
+  .screen-home .stage h1 {
+    font-size: 58px;
+    margin: 20px 0 14px;
+  }
+  .screen-home .stage-heading {
+    left: 22px;
+    right: 22px;
+    top: 22px;
+  }
+}
+
+/* ---- phone workbench surfaces (colour only) ----------------------------- */
+@media (max-width: 700px) {
+  .studio-shell .mobile-workbench-inspector {
+    background:
+      linear-gradient(
+        170deg,
+        rgb(255 255 255 / 0.08),
+        rgb(255 255 255 / 0) 30%
+      ),
+      rgb(14 21 19 / 0.92);
+    border-top: 1px solid var(--glass-rim);
+    border-radius: 26px 26px 0 0;
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      0 -18px 40px rgb(0 0 0 / 0.35);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .studio-shell .header-search,
+  .studio-shell .music-trigger,
+  .studio-shell .view-controls,
+  .studio-shell .room-motion,
+  .studio-shell .featured-inspector,
+  .studio-shell .featured-card,
+  .studio-shell .config,
+  .studio-shell .build-bar,
+  .screen-home .studio-header.header {
+    background: #121a18;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

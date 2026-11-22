@@ -378,7 +378,7 @@ body {
 }
 .screen-home .stage .scene-host {
   inset: 0 0 0 0;
-  width: calc(100% - 265px);
+  width: 100%;
 }
 .screen-home .stage::after {
   content: '';

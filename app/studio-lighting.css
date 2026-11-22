@@ -1,0 +1,466 @@
+/*
+ * Studio lighting panel. When the renderer draws real refracted glass
+ * (data-glass="webgl") the tiles are transparent DOM over their lenses;
+ * otherwise the CSS fallback below gives frosted glass with a rim.
+ */
+.studio-lighting {
+  --tile: 80px;
+  --gap: 8px;
+  position: absolute;
+  z-index: 5;
+  top: 22px;
+  left: clamp(360px, 30%, 560px);
+  color: var(--glass-ink, #fff);
+  font-family: var(--glass-font);
+  transform: translate(var(--drag-x, 0px), var(--drag-y, 0px))
+    matrix(1, 0, var(--shear, 0), 1, 0, 0);
+  transform-origin: 50% 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.studio-lighting[data-dragging] {
+  cursor: grabbing;
+}
+.lighting-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 9px 2px;
+}
+.lighting-grip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 10px 0 2px;
+  border-radius: 10px;
+  color: var(--glass-ink, #fff);
+  font: 500 15px/1 var(--glass-font);
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 6px #0009;
+  cursor: grab;
+}
+.lighting-grip svg {
+  opacity: 0.75;
+}
+.lighting-reset {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--glass-ink, #fff);
+  background: #0e1513a8;
+  border: 1px solid #ffffff38;
+}
+.lighting-grid {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  grid-template-columns: 150px 150px 80px 64px;
+  grid-template-rows: var(--tile) var(--tile);
+  gap: var(--gap);
+}
+.lighting-tile {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 10px 11px 10px;
+  border-radius: 20px;
+  text-align: left;
+  color: var(--glass-ink, #fff);
+  text-shadow: 0 1px 4px #000a;
+  overflow: hidden;
+  transition: transform 160ms ease;
+}
+.lighting-tile[data-preset='morning'] {
+  grid-row: 1 / 3;
+  padding: 14px 15px 14px;
+}
+.lighting-tile[data-preset='thunderstorm'] {
+  grid-column: 2;
+  grid-row: 1;
+}
+.lighting-tile[data-preset='sunset'] {
+  grid-column: 2;
+  grid-row: 2;
+}
+.lighting-tile[data-preset='afternoon'] {
+  grid-column: 3;
+  grid-row: 1;
+}
+.lighting-tile[data-preset='night'] {
+  grid-column: 3;
+  grid-row: 2;
+}
+.lighting-tile-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+.lighting-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font: 500 12px/1 var(--glass-font);
+  font-variant-numeric: tabular-nums;
+}
+.lighting-tile[data-preset='morning'] .lighting-level {
+  font-size: 17px;
+}
+.lighting-level sup {
+  font-size: 0.55em;
+  opacity: 0.85;
+}
+.lighting-tile-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.lighting-tile strong {
+  position: relative;
+  font: 500 13.5px/1.15 var(--glass-font);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.lighting-tile[data-preset='afternoon'],
+.lighting-tile[data-preset='night'] {
+  padding: 9px 9px 10px;
+}
+.lighting-tile[data-preset='afternoon'] strong,
+.lighting-tile[data-preset='night'] strong {
+  font-size: 12px;
+}
+.lighting-tile[data-preset='morning'] strong {
+  font-size: 24px;
+  letter-spacing: -0.03em;
+}
+.lighting-tile small {
+  color: var(--glass-muted, #e2e8e4);
+  font: 400 10.5px/1.25 var(--glass-font);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lighting-tile[data-preset='morning'] small {
+  white-space: normal;
+  font-size: 11px;
+}
+.lighting-tile[data-preset='afternoon'] small,
+.lighting-tile[data-preset='night'] small {
+  display: none;
+}
+.lighting-tile[data-held] {
+  transform: scale(0.985);
+}
+/* Release crest: a brief chromatic split on the label, as in the press skill. */
+.lighting-tile strong::before,
+.lighting-tile strong::after {
+  content: attr(data-ink);
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.lighting-tile strong::before {
+  color: #9ef7ed;
+  transform: translateX(-1.4px);
+}
+.lighting-tile strong::after {
+  color: #ffc1b1;
+  transform: translateX(1.4px);
+}
+.lighting-tile[data-waving] strong::before,
+.lighting-tile[data-waving] strong::after {
+  animation: lighting-fringe 820ms ease-out;
+}
+@keyframes lighting-fringe {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Brightness pill: white fill shows the level, like the reference. */
+.lighting-brightness {
+  position: relative;
+  grid-column: 4;
+  grid-row: 1 / 3;
+  border-radius: 34px;
+  overflow: hidden;
+  cursor: ns-resize;
+  touch-action: none;
+  outline-offset: 4px;
+}
+.lighting-brightness-fill {
+  position: absolute;
+  inset: auto 0 0;
+  height: var(--level);
+  background: linear-gradient(#ffffff, #eeeeea);
+  border-radius: 0 0 34px 34px;
+  box-shadow: inset 0 1px 0 #fff;
+  transition: height 120ms ease;
+}
+.lighting-brightness-label {
+  position: absolute;
+  inset: auto 0 10px;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  font: 500 9.5px/1 var(--glass-font);
+  color: #1b1f1e;
+  mix-blend-mode: normal;
+}
+.lighting-brightness-value {
+  font-variant-numeric: tabular-nums;
+  color: #3a403e;
+}
+/* Below the label the fill is gone, so the label switches to light ink. */
+.lighting-brightness[data-low] .lighting-brightness-label,
+.lighting-brightness[data-low] .lighting-brightness-value {
+  color: var(--glass-ink, #fff);
+  text-shadow: 0 1px 4px #000c;
+}
+
+/* A native range carries the semantics and keyboard support; it is clear
+   so the fill and label below show through. */
+.lighting-brightness input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border-radius: inherit;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  cursor: ns-resize;
+  touch-action: none;
+}
+.lighting-brightness input::-webkit-slider-runnable-track {
+  background: transparent;
+  border: 0;
+}
+.lighting-brightness input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 64px;
+  height: 18px;
+  background: transparent;
+  border: 0;
+}
+.lighting-brightness input::-moz-range-thumb {
+  opacity: 0;
+}
+.studio-lighting[data-compact] .lighting-brightness input {
+  writing-mode: horizontal-tb;
+  direction: ltr;
+  cursor: ew-resize;
+}
+
+/* Focus rings sit outside the lens so the refraction never hides them. */
+.lighting-tile:focus-visible,
+.lighting-brightness input:focus-visible,
+.lighting-grip:focus-visible,
+.lighting-reset:focus-visible,
+.lighting-chip:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px #0a0f0e99;
+}
+
+/* CSS glass (no WebGL lens): frosted body, rim and a pearl selection. */
+.studio-lighting[data-glass='css'] .lighting-tile,
+.studio-lighting[data-glass='css'] .lighting-brightness,
+.studio-lighting .lighting-chip {
+  background:
+    radial-gradient(
+      120% 90% at var(--contact-x, 30%) var(--contact-y, 0%),
+      #ffffff1c,
+      transparent 60%
+    ),
+    linear-gradient(160deg, #1b2523b8, #0c1211c7);
+  border: 1px solid #ffffff3d;
+  box-shadow:
+    inset 0 1px 0 #ffffff59,
+    inset 0 -1px 0 #ffffff14,
+    inset 0 0 18px #ffffff0d,
+    0 10px 30px #0006;
+  backdrop-filter: blur(14px) saturate(1.5);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+}
+.studio-lighting[data-glass='css'] .lighting-tile[aria-pressed='true'] {
+  background:
+    linear-gradient(125deg, #f6d7ff33, #c9f1ff2e 35%, #fff1d02e 65%, #f0d4ff33),
+    linear-gradient(160deg, #222c2ac4, #101716d0);
+  border-color: #ffffff80;
+}
+.studio-lighting[data-glass='css'] .lighting-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--contact-x, 50%) var(--contact-y, 50%),
+    #ffffff30 0,
+    transparent 22%
+  );
+  opacity: 0;
+}
+.studio-lighting[data-glass='css'] .lighting-tile[data-held]::after {
+  opacity: 1;
+}
+.studio-lighting[data-glass='css'] .lighting-tile[data-waving]::after {
+  opacity: 1;
+  background: radial-gradient(
+    circle at var(--contact-x, 50%) var(--contact-y, 50%),
+    transparent 30%,
+    #ffffff3a 38%,
+    transparent 48%
+  );
+  background-size: 100% 100%;
+  animation: lighting-ring 820ms ease-out forwards;
+}
+@keyframes lighting-ring {
+  from {
+    transform: scale(0.3);
+    opacity: 1;
+  }
+  to {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+/* WebGL lens: the renderer draws body and rim; DOM keeps a hairline for crispness. */
+.studio-lighting[data-glass='webgl'] .lighting-tile,
+.studio-lighting[data-glass='webgl'] .lighting-brightness {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px #ffffff24;
+}
+
+/* Phone: a chip that opens a compact row. */
+.lighting-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 20px;
+  color: var(--glass-ink, #fff);
+  font: 500 12px/1 var(--glass-font);
+}
+.lighting-chip-value {
+  color: var(--glass-muted, #e2e8e4);
+}
+.lighting-chip-caret {
+  transition: transform 160ms;
+}
+.lighting-chip[aria-expanded='true'] .lighting-chip-caret {
+  transform: rotate(180deg);
+}
+.studio-lighting[data-compact] {
+  --tile: 58px;
+  top: auto;
+  left: auto;
+  right: 12px;
+  transform: none;
+}
+.studio-lighting[data-compact] .lighting-body {
+  position: absolute;
+  right: 0;
+  top: 48px;
+  width: min(366px, calc(100vw - 24px));
+}
+.studio-lighting[data-compact] .lighting-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: var(--tile) 40px;
+  gap: 6px;
+}
+.studio-lighting[data-compact] .lighting-tile {
+  grid-column: auto;
+  grid-row: 1;
+  padding: 7px 7px 7px;
+  border-radius: 16px;
+}
+.studio-lighting[data-compact] .lighting-tile[data-preset='morning'] {
+  grid-row: 1;
+  padding: 7px;
+}
+.studio-lighting[data-compact] .lighting-tile strong,
+.studio-lighting[data-compact] .lighting-tile[data-preset='morning'] strong {
+  font-size: 11.5px;
+}
+.studio-lighting[data-compact] .lighting-tile small {
+  display: none;
+}
+.studio-lighting[data-compact] .lighting-level,
+.studio-lighting[data-compact]
+  .lighting-tile[data-preset='morning']
+  .lighting-level {
+  font-size: 9.5px;
+}
+.studio-lighting[data-compact] .lighting-brightness {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  border-radius: 20px;
+  cursor: ew-resize;
+}
+.studio-lighting[data-compact] .lighting-brightness-fill {
+  inset: 0 auto 0 0;
+  height: auto;
+  width: var(--level);
+  border-radius: 20px 0 0 20px;
+  transition: width 120ms ease;
+}
+.studio-lighting[data-compact] .lighting-brightness-label {
+  inset: 0 auto 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--glass-ink, #fff);
+  text-shadow: 0 1px 4px #000c;
+}
+.studio-lighting[data-compact] .lighting-brightness-value {
+  color: inherit;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lighting-tile,
+  .lighting-brightness-fill,
+  .lighting-chip-caret {
+    transition: none;
+  }
+  .lighting-tile[data-held] {
+    transform: none;
+  }
+  .lighting-tile[data-waving] strong::before,
+  .lighting-tile[data-waving] strong::after,
+  .studio-lighting[data-glass='css'] .lighting-tile[data-waving]::after {
+    animation: none;
+  }
+  /* A static held highlight stands in for the travelling wave. */
+  .studio-lighting[data-glass='css'] .lighting-tile[data-waving]::after {
+    opacity: 0.6;
+    background: radial-gradient(
+      circle at var(--contact-x, 50%) var(--contact-y, 50%),
+      #ffffff26,
+      transparent 40%
+    );
+  }
+}

@@ -62,6 +62,7 @@ import { encodeDeck } from '../lib/control-deck';
 import CommunityDiscovery from './community-discovery';
 import TechnologyGuide from './technology-guide';
 import './studio.css';
+import './glass.css';
 import SoundReferences, { type SoundReference } from './sound-references';
 import type { SamplePreview } from '../lib/audio-preview';
 import SampleWaveform from './sample-waveform';
@@ -95,6 +96,7 @@ import { soundPacks } from '../lib/sound-packs';
 import { registerStudioTools } from '../lib/webmcp';
 import { catalog, categories, checkBuild } from '../lib/catalog';
 import { KeyboardAudio, type SoundSettings } from '../lib/audio';
+import StudioLighting from './studio-lighting';
 
 function subscribeLocation(onChange: () => void) {
   window.addEventListener('hashchange', onChange);
@@ -386,7 +388,7 @@ function KeyboardStudio({
         space: p.space,
       },
       document,
-      { chrome: landing },
+      { chrome: landing ? 'glass' : false },
     );
     document.documentElement.setAttribute(
       'data-palette',
@@ -546,6 +548,7 @@ function KeyboardStudio({
         view,
         environment: 'desk',
         roomMotion,
+        closeUp: experience === 'focus',
       };
     }
     return {
@@ -568,6 +571,7 @@ function KeyboardStudio({
       environment:
         experience === 'typing' ? 'typing' : landing ? 'desk' : 'studio',
       roomMotion,
+      closeUp: landing && experience === 'focus',
     };
   }, [visibleBuild, landing, featured, exploded, view, experience, roomMotion]);
   function customizePreview() {
@@ -1176,6 +1180,7 @@ function KeyboardStudio({
                 />
               )}
             </KeyboardScene>
+            {landing && experience === 'builder' && <StudioLighting />}
             {exploded &&
               options.device.kind === 'keyboard' &&
               experience !== 'typing' && (
