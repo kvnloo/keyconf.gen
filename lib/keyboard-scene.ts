@@ -811,6 +811,7 @@ export function createKeyboardScene(
       ground.visible = false;
     } else if (desk.group.visible && effects) effects.composer.render(delta);
     else renderer.render(scene, camera);
+    studioReport.frames += 1;
     studioReport.lenses = 0;
     if (
       glass &&

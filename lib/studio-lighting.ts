@@ -281,6 +281,8 @@ export const studioReport: {
   glass: string;
   /** Lenses drawn in the last rendered frame. */
   lenses: number;
+  /** Frames the renderer has drawn (one per render loop pass). */
+  frames: number;
 } = {
   transition: 1,
   exposure: 1,
@@ -288,6 +290,7 @@ export const studioReport: {
   shafts: '',
   glass: '',
   lenses: 0,
+  frames: 0,
 };
 
 declare global {
